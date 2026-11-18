@@ -49,6 +49,7 @@ import { makePlywoodSheet, makeGlassShards, makePasteWall, makePickupZone } from
 import { makeDumpTruck, makePipeBarrier, makeSiteSign, makeWeeds } from './models/dumpsite.js';
 import { makeDeliveryBag, makeCupCarrier, makePaperBag } from './models/delivery.js';
 import { makeUndergroundMall } from './models/mall28f.js';
+import { makeStairEntrance } from './models/stairs28g.js';
 import { WalkControls } from './walk.js';
 import { fontsReady } from './fonts.js';
 await fontsReady;   // sign fonts must be loaded before any canvas sign is drawn
@@ -1042,6 +1043,14 @@ const mall = makeUndergroundMall();
 mall.position.set(MALL.x, 0, MALL.z);
 add(mall);
 for (const [x0, x1, z0, z1, y0, y1] of mall.userData.colliders) colliders.push({ type: 'box', minX: MALL.x + x0, maxX: MALL.x + x1, minZ: MALL.z + z0, maxZ: MALL.z + z1, y0, y1 });
+// ------------------------------------------------------------------ stair entrance to a Go club (city photo, 28g)
+// On the forecourt's east edge, facing the mall kiosk; its stair runs east into the building.
+const SE = { x: 14, z: 61, rot: -Math.PI / 2 };
+const stairEnt = makeStairEntrance();
+stairEnt.position.set(SE.x, 0, SE.z); stairEnt.rotation.y = SE.rot; add(stairEnt);
+// local (x, z) -> world for this rotation: wx = SE.x - z, wz = SE.z + x
+for (const [x0, x1, z0, z1] of stairEnt.userData.colliders) colliders.push({ type: 'box', minX: SE.x - z1, maxX: SE.x - z0, minZ: SE.z + x0, maxZ: SE.z + x1 });
+const seArea = (() => { const a = stairEnt.userData.area; return { minX: SE.x - a.maxZ, maxX: SE.x - a.minZ, minZ: SE.z + a.minX, maxZ: SE.z + a.maxX }; })();
 const mallAreas = mall.userData.areas.map((a) => ({ ...a, minX: a.minX + MALL.x, maxX: a.maxX + MALL.x, minZ: a.minZ + MALL.z, maxZ: a.maxZ + MALL.z }));
 {
   // forecourt paving like the station plaza, cut around the stair well
@@ -1075,12 +1084,15 @@ const walk = new WalkControls(camera, renderer.domElement, {
     junkArea, // junk shop interior
     { minX: -9.2, maxX: 13.7, minZ: 49.5, maxZ: 69.7, y0: -0.5, y1: 0.6 }, // underground-mall forecourt (street level)
     ...mallAreas, // the mall hall + its stair (below the street)
+    seArea, // the Go-club stair
   ],
   colliders,
 });
 walk.ground = (x, z, prevY) => {
   const my = mall.userData.floorY(x - MALL.x, z - MALL.z, prevY);
   if (my !== null) return my;
+  const sy = stairEnt.userData.floorY(z - SE.z, SE.x - x);
+  if (sy !== null) return sy;
   const ay = apt.userData.floorY(z - AP.z, AP.x - x, prevY);
   return ay !== null ? ay : rampFloorY(x, z);
 };
@@ -1197,6 +1209,9 @@ const VIEWS = {
   malleast: { pos: [3.0, -2.6, 36], target: [9, -2.8, 42] },
   mallstair: { pos: [2.0, 1.2, 60.5], target: [2.0, -3.2, 48] },
   mallkiosk: { pos: [6.5, 1.8, 66], target: [2.0, 1.0, 57] },
+  stairent: { pos: [7.6, 1.7, 63.2], target: [14, 2.3, 61] },
+  stairsign: { pos: [10.9, 2.3, 60.1], target: [14, 2.5, 61.3] },
+  stairdown: { pos: [21.4, 5.6, 61], target: [14.6, 0.6, 61] },
   rockdoorside: { pos: [-36.4, 1.6, 10.6], target: [-38.5, 2.0, 12.0] },
   walkinshelf: { pos: [17.6, 1.6, -44.0], target: [21.4, 1.0, -45.6] },
   van: { pos: [25.5, 1.9, -22.4], target: [21.5, 0.9, -26.5] },

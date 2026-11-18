@@ -7,6 +7,7 @@ Rules (from you):
   sign's shape and material. Keep text that's already generic (LIQUOR).
 
 ## Approved
+- 28f Underground mall
 - 28e Station gateway, lotus pond, rock bar door (polish later)
 - 28d Street props (after detail pass)
 - Elmwood Apartments v2 (good for now)
@@ -49,7 +50,7 @@ Rules (from you):
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- 28f Underground mall (underground-mall-shutters photo): granite floor + marble from the photo, six shuttered boutiques (one half open), chrome pillars with a captured reflection, lattice ceiling + LED strips, deli, café, staff door, fire shutter, granite stair up to a glass kiosk on a new forecourt east of the station plaza. Made-up names throughout.
+- 28g Stairway entrance (in progress)
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
@@ -59,7 +60,6 @@ Rules (from you):
    Screenshot: `screenshots/burger-poster.png`.
 
 ## Up next (in order)
-28g. Stairway entrance (stairway-sign-entrance): narrow stair up between mixed brick + tile walls, rusty lightbox sign, steel pole with an address plate (all made up).
 28h. Covered electronics market alley (electronics-market-arcade): concrete deck overhead, stalls with PCB / parts signs (made up), crates, stools, hand trucks, drain channel.
 28i. Bar alley (izakaya-alley-signs): brick paving, vertical lit signs, paper lanterns, string lights, wires, menu stands (made-up names).
 28j. Teahouse (teahouse-painted-ceiling): painted coffered ceiling, tea tins wall, carved white plaster, brick pillars, curtains, bar + tables.
@@ -269,6 +269,15 @@ Rules (from you):
     metal fins, wood-chip mulch bed with concrete curb + flowering shrub, tan stucco wall with a
     stacked-stone band and stone cap, patchy dry grass on sandy dirt, bare sandy dirt with pebbles.
     General-purpose: use for new builds and for re-texturing older ones in the polish pass.
+61. Sport coupe (photos/car/car01-05, 5 photos): white 90s hatchback coupe with a black roof and
+    pillars, black aftermarket body kit (bumpers, side skirts, taped-up front lip), clear tail-light bar
+    with round red lamps, wing spoiler, 5-spoke silver wheels, big exhaust tip. Build two versions:
+    intact and crashed. Made-up plate (no real plate number); no brand badges.
+62. Storage + snacks batch (photos/storage/, 5 photos): a wall of stacked soda cans (made-up can
+    designs, no brands), a storage unit packed with cardboard moving boxes (made-up box printing),
+    paintings, backpacks, blankets, a long flat box; the orange corrugated roll-up unit door with its
+    silver frame, number plate (made-up number) and brass slide latch (close-up for detail); a gold
+    foil snack pack with a made-up name. Corrugated silver unit walls as a texture.
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"
