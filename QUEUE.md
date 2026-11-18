@@ -291,6 +291,11 @@ Rules (from you):
     skyline poster on a weighted base, a blue course-price board, a ramen ticket-machine menu panel
     (food photo tiles with gold frames + buttons), a lit A-frame theatre poster. Make-up all names,
     prices and phone numbers; no real people's photos (draw generic figures/illustrations instead).
+66. Grocery 2 (photos/grocery2/, 5 photos): twist-tied bags of shredded red pickled ginger in a
+    shelf bin with a price strip, a bag of 5 mini pizzas with a green label and an e-ink shelf tag,
+    an open refrigerated sushi case (vented steel base, black shelves) full of nigiri trays (red/gold
+    patterned trays, clear lids, labels, ginger + soy packets), round wood-grain glasses on a
+    croc-embossed wallet, a small drink carton with a straw. Made-up labels and prices only.
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"
