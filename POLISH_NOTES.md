@@ -103,3 +103,11 @@ This is a running list, added to as models get built. Nothing here is urgent.
   for stencils, Yuji Syuku / Zen Antique for Japanese brush and print signs.
 - Every sign was switched off Arial/Georgia. fitText() keeps lettering inside its board.
 - Still to check in the walk-around: every sign's height, depth (no z-fighting), and that it faces where people walk.
+
+## Elmwood Apartments rework (after your notes)
+- Parking ramp now opens toward the tire-shop lot (it was reversed).
+- Building rebuilt with real window openings; the 7 new units + the living room each have windows that
+  match the outside. The 3rd floor still has no interior (curtained windows only).
+- Possible next: furniture variety per unit (only 3 layouts), unit kitchens on the upper floor need
+  backsplash tile, bathrooms aren't modelled, hallway ceiling could use the drop-ceiling tiles from the
+  stairs photo.

@@ -525,10 +525,16 @@ const streetTrees = [];
 // ------------------------------------------------------------------ objects & locations (objects/locations photos)
 // Underground parking ramp down from the tire-shop lot, with a lit tunnel and roll-up door.
 const ramp = makeParkingRamp({ x0: 13, x1: 17, z0: -9, z1: -17, zDoor: -23, depth: 2.8 });
-add(ramp);
-rect(12.75, 13.0, -23.2, -9);   // side walls / parapets (you enter from the open end)
-rect(17.0, 17.25, -23.2, -9);
-rect(13, 17, -23.4, -23.0);    // garage door
+// built facing north, then turned 180 deg about its centre so the open top of the ramp faces the
+// lot by the tire shop (south end, z -23) and the garage door is at the north end (z -9)
+const rampPivot = new THREE.Group();
+rampPivot.position.set(15, 0, -16); rampPivot.rotation.y = Math.PI;
+ramp.position.set(-15, 0, 16); rampPivot.add(ramp);
+add(rampPivot);
+const rampFloorY = (x, z) => ramp.userData.floorY(30 - x, -32 - z);
+rect(12.75, 13.0, -23, -8.8);   // side walls / parapets (you enter from the open end)
+rect(17.0, 17.25, -23, -8.8);
+rect(13, 17, -9.0, -8.6);      // garage door
 const parkSign = makeParkingSignBlock();
 parkSign.position.set(18.2, 0, -8.4);
 add(parkSign);
@@ -583,12 +589,11 @@ for (const [x0, x1, z0, z1, y0, y1] of apt.userData.colliders) {
   colliders.push(col);
   interactables.push({ name: 'front door', kind: 'door', setOpen: d.setOpen, x: AP.x - d.at[1] + 0.6, z: AP.z + d.at[0], t: 0, target: 0, col, speed: 2.2 });
 }
-{
-  const d = apt.userData.unitDoor;
+for (const d of apt.userData.unitDoors) {
   const [a, b, c, e] = d.gap;      // local x range a..b, z range c..e
-  const col = { type: 'box', minX: AP.x - e, maxX: AP.x - c, minZ: AP.z + a, maxZ: AP.z + b, y0: d.y, y1: d.y + 3 };
+  const col = { type: 'box', minX: AP.x - e, maxX: AP.x - c, minZ: AP.z + a, maxZ: AP.z + b, y0: d.y, y1: d.y + 1 };
   colliders.push(col);
-  interactables.push({ name: 'apartment door', kind: 'door', setOpen: d.setOpen, x: AP.x - d.at[1], z: AP.z + d.at[0], t: 0, target: 0, col, speed: 2.2 });
+  interactables.push({ name: 'apartment door', kind: 'door', setOpen: d.setOpen, x: AP.x - d.at[1], z: AP.z + d.at[0], y: d.y, t: 0, target: 0, col, speed: 2.2 });
 }
 
 // ------------------------------------------------------------------ soup pots on the bar (soup photos)
@@ -1008,7 +1013,7 @@ const walk = new WalkControls(camera, renderer.domElement, {
 });
 walk.ground = (x, z, prevY) => {
   const ay = apt.userData.floorY(z - AP.z, AP.x - x, prevY);
-  return ay !== null ? ay : ramp.userData.floorY(x, z);
+  return ay !== null ? ay : rampFloorY(x, z);
 };
 walk.position.set(6.6, 0, 0.2);
 walk.yaw = 1.25;
@@ -1044,13 +1049,19 @@ const VIEWS = {
   spruce: { pos: [33.5, 2.2, -5.5], target: [39, 4, -12] },
   streettrees: { pos: [23.5, 1.9, 4.6], target: [19, 2.6, 10.4] },
   trunks: { pos: [37.3, 0.9, -8.4], target: [39.6, 0.9, -11.3] },
-  ramp: { pos: [15, 2.6, -4.5], target: [15, -1.5, -17] },
+  ramp: { pos: [15, 2.6, -27.5], target: [15, -1.5, -15] },
   tealshop: { pos: [44, 1.8, -10.5], target: [45, 1.8, -16] },
   rabbit: { pos: [17.4, 1.5, 7.6], target: [16, 1.6, 10.3] },
   newsbox: { pos: [10.2, 1.3, -1.6], target: [8.55, 0.5, -3.1] },
   canvases: { pos: [-1, 1.7, 1.2], target: [-1, 1.8, 5] },
   mural: { pos: [5.2, 2.2, 10.2], target: [10, 3, 16.2] },
   apartment: { pos: [38.5, 3.5, 4.5], target: [52, 5, -1] },
+  aptside: { pos: [62.5, 4.2, 12.5], target: [57, 4.0, 4.0] },
+  aptback: { pos: [70.0, 4.5, -1.0], target: [62, 4.2, -1.0] },
+  apthall: { pos: [52.6, 3.0, -1.1], target: [60.0, 2.6, -0.6] },
+  apthall2: { pos: [61.2, 6.1, -0.4], target: [52.5, 5.6, -0.8] },
+  aptunit: { pos: [58.5, 3.0, -3.6], target: [63.0, 2.2, -6.0] },
+  aptunit2: { pos: [55.0, 6.0, 1.9], target: [56.5, 5.2, 5.6] },
   stoop: { pos: [47.6, 2.4, 3.4], target: [50.5, 1.0, -1] },
   alien: { pos: [40.4, 2.4, 1.6], target: [44.5, 1.4, -3] },
   doortree: { pos: [10.4, 1.3, 5.7], target: [12.8, 0.9, 5.2] },
@@ -1249,7 +1260,8 @@ function frame() {
     it.setOpen(it.t);
     it.col.active = it.t < 0.6;
     const dd = Math.hypot(walk.position.x - it.x, walk.position.z - it.z);
-    if (mode === 'walk' && dd < bestD) { best = it; bestD = dd; }
+    const sameFloor = it.y === undefined || Math.abs(walk.gy - it.y) < 1.2;
+    if (mode === 'walk' && sameFloor && dd < bestD) { best = it; bestD = dd; }
   }
   nearest = best;
   useBtn.hidden = !best;

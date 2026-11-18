@@ -7,6 +7,7 @@ Rules (from you):
   sign's shape and material. Keep text that's already generic (LIQUOR).
 
 ## Approved
+- 28c Shops (noodle machine detail = the bar for everything from here on)
 - 28b Old-town shopping street
 - 28a City plaza (approved for now)
 - 27e Small misc props (misc batch 27 complete)
@@ -45,7 +46,7 @@ Rules (from you):
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- 28c Shops south of the restaurant strip: closed-up HIKARI RADIO & TV with yellow shutters and an original radio-robot mascot (sign/phone made up), NOODLE TIME cup-noodle vending machine (made up), walk-in JUNK & RETRO shop full of CRT TVs, beige retro computers, keyboards, blue crates of records/CDs.
+- Elmwood Apartments rework: ramp direction, wall blocking the entry, ceiling over the stairs, better doors, top-floor hallway window over the entry, every door opens into a unit, remove the untextured front AC, side windows with real metal AC units matching the unit interiors, windows line up with the rooms behind them.
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text

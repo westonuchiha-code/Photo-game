@@ -239,7 +239,6 @@ export function makeLivingRoom({ F1, FH, x0, x1, z0, z1, doorZ, doorW }) {
   });
   const viewMat = new THREE.MeshBasicMaterial({ map: view, color: new THREE.Color(0.8, 0.8, 0.8) });
   for (const [c, w] of WINS) {
-    g.add(plane(w, WTOP - SILL, viewMat, c, F1 + (SILL + WTOP) / 2, z1 + 0.06, Math.PI));
     const frame = std({ color: '#f4f2ec', roughness: 0.45 });
     for (const sx of [-1, 1]) g.add(box(0.07, WTOP - SILL + 0.1, 0.12, frame, c + sx * (w / 2 - 0.03), F1 + (SILL + WTOP) / 2, z1 - 0.02));
     g.add(box(w, 0.07, 0.12, frame, c, F1 + WTOP - 0.03, z1 - 0.02));
