@@ -166,7 +166,7 @@ export function makeApartment() {
 
   // ------------------------------------------------ brick stoop (front photos)
   // Grey concrete steps between thick brick cheek walls; each wall slopes down with
-  // the stair and ends in a short wing that flares outward, with a stone cap.
+  // the stair and ends in a square brick pier with a stone cap.
   const steps = 8, rise = F1 / steps, run = 0.32;
   const sw = 1.9, scx = (dx0 + dx1) / 2;
   const landD = 1.1;
@@ -184,7 +184,7 @@ export function makeApartment() {
   for (const s of [-1, 1]) {
     const xc = scx + s * (sw / 2 + T / 2);
     // profile in (z, y): level beside the landing, then sloping down with the steps
-    const top = (z) => (z <= zf + landD ? F1 + 0.9 : Math.max(0.55, F1 + 0.9 - (z - zf - landD) * (rise / run)));
+    const top = (z) => (z <= zf + landD ? F1 + 0.9 : Math.max(0.8, F1 + 0.9 - (z - zf - landD) * (rise / run)));
     const pts = [[zf, 0], [stoopEnd, 0], [stoopEnd, top(stoopEnd)], [zf + landD, F1 + 0.9], [zf, F1 + 0.9]];
     const shape = new THREE.Shape(pts.map(([z, y]) => new THREE.Vector2(z, y)));
     const geo = new THREE.ExtrudeGeometry(shape, { depth: T, bevelEnabled: false });
@@ -201,19 +201,13 @@ export function makeApartment() {
     const cap = box(T + 0.08, 0.07, slopeLen, M.stone, xc, (F1 + 0.9 + top(stoopEnd)) / 2 + 0.035, (zf + landD + stoopEnd) / 2);
     cap.rotation.x = Math.atan2(F1 + 0.9 - top(stoopEnd), stoopEnd - zf - landD);
     g.add(cap);
-    // flared wing at the bottom: a low brick block angled 35 degrees outward, with a square pier
-    const wingL = 0.9;
-    const wing = new THREE.Group();
-    wing.add(box(T, 0.55, wingL, M.brick, 0, 0.275, wingL / 2));
-    wing.add(box(T + 0.08, 0.07, wingL, M.stone, 0, 0.585, wingL / 2));
-    wing.position.set(xc, 0, stoopEnd);
-    wing.rotation.y = s * 0.6;
-    g.add(wing);
-    const pier = box(0.55, 0.7, 0.55, M.brick, xc + s * Math.sin(0.6) * wingL, 0.35, stoopEnd + Math.cos(0.6) * wingL);
+    // the wall ends in a square brick pier with a stone cap (front photos)
+    const P = 0.56;
+    const pier = box(P, 0.8, P, M.brick, xc, 0.4, stoopEnd + P / 2 - 0.05);
     g.add(pier);
-    g.add(box(0.62, 0.07, 0.62, M.stone, pier.position.x, 0.735, pier.position.z));
+    g.add(box(P + 0.08, 0.08, P + 0.08, M.stone, xc, 0.84, pier.position.z));
     solid(xc - T / 2, xc + T / 2, zf, stoopEnd);
-    solid(pier.position.x - 0.3, pier.position.x + 0.3, pier.position.z - 0.3, pier.position.z + 0.3);
+    solid(xc - P / 2, xc + P / 2, pier.position.z - P / 2, pier.position.z + P / 2);
   }
 
   // ------------------------------------------------ interior
