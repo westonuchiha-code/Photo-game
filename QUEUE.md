@@ -7,14 +7,15 @@ Rules (from you):
   sign's shape and material. Keep text that's already generic (LIQUOR).
 
 ## Approved
+- Wall textures + blinds (street row)
 - Rusty pole
 - Tire shop
 - Rental pole sign (Maple Creek Properties)
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- Wall textures + blinds: street row of six buildings across from the restaurant, one per wall photo.
-  Screenshots: `screenshots/walls-*.png`.
+- Rocks, grass tufts, leaf litter: river-rock beds, dry grass tufts, curb with gutter leaf drifts,
+  loose oak leaves, teal bike rack. Screenshots: `screenshots/rocks-*.png`, `curb-leaves.png`.
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
@@ -24,7 +25,6 @@ Rules (from you):
    Screenshot: `screenshots/burger-poster.png`.
 
 ## Up next (in order)
-5. Rocks, grass tufts, leaf litter on curbs.
 6. More ground / sidewalk: pavers, crosswalk, curbs, cracks, utility box, dirt lot.
 7. Sky, clouds and moon.
 8. Walk signal pole: button sign plus hand and walking-man lights.
@@ -43,6 +43,28 @@ Rules (from you):
     (mushroom-egg, corn-shrimp, packaged display), canned drinks, dashi bottles in a vending
     machine, noodle-shop menu board with lanterns. Food models + textures; all packaging,
     can and menu text made up.
+17. Old rusty two-tone van in a junkyard (old-van): model + textures, made-up badge.
+18. Red motor scooter (photos/scooter/): model with opening seat, under-seat storage +
+    battery bay (oil/gas caps, wiring, fuse), top box; two scooter batteries as props.
+    Made-up brand names on scooter and batteries.
+19. More food (photos/food/): waffle ice-cream sandwich, frozen cereal puffs in a cup, clear soda
+    bottle, dark soda cans, cup noodles with fish-cake slices. Made-up labels.
+20. Creepy character (photos/character/): hollow-eyed skull in a black hoodie, hands in pocket,
+    ripped jeans, high-top sneakers; walking pose. Character model.
+21. Police vehicles (photos/police/): three-wheel mini patrol cart and white patrol scooter.
+    Generic made-up department name and badge (no real agency markings).
+22. Grocery store inside + walk-in dairy cooler (photos/store/): glass-door milk cooler with
+    gallon jugs and cartons, egg/butter case under a green canopy, walk-in cooler with
+    insulated panel walls, evaporator fans, stacked blue/black milk crates on pallets, green
+    U-boat carts with boxes, white rolling shelves, strip curtain. Made-up brands/prices.
+23. Warehouse pallets (photos/pallets/): plywood back wall, green/orange pallet racking, wood
+    and plastic pallets stacked with cases (baking mixes, flour bags in shrink wrap, canned
+    drinks, water bottle packs, crates, totes, dollies). Made-up brands.
+24. Two small roadside shrines (photos/shrines/): weathered red wooden shelters with picket
+    fences; stone statues with patterned bibs, stone lanterns, offerings; a standing stone with
+    a hanging bell and streamer, small stone marker. Signboard text made generic.
+25. Car tire + two-tone alloy wheel (car-tire-wheel): tire with tread and sidewall pattern,
+    black/machined-silver wheel. Made-up tire brand.
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"

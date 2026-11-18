@@ -710,6 +710,80 @@ band = TCA2[1455:1525, 1800:2440]
 band = np.asarray(to_img(band).resize((1024, 112), Image.BICUBIC)).astype(np.float32)
 save("tire_base.png", seamless(band, axes=(1,)))
 
+# ---------------------------------------------------------------- leaf litter v2
+# A clean single-leaf cut-out (largest bright blob only), then litter made by
+# stamping hundreds of rotated, scaled, tinted copies, like the gutter photos.
+_, OK2 = load("oak-leaf")
+h, w = OK2.shape[:2]
+leaf = OK2[int(0.15 * h):int(0.72 * h), int(0.03 * w):int(0.92 * w)]
+m = blur(lum(leaf), 3) > 110
+# keep only the biggest connected region (flood fill from the brightest point)
+from collections import deque
+lab = np.zeros(m.shape, bool)
+sy, sx = np.unravel_index(np.argmax(blur(lum(leaf), 25) * m), m.shape)
+q = deque([(sy, sx)]); lab[sy, sx] = True
+while q:
+    y, x = q.popleft()
+    for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+        ny, nx = y + dy, x + dx
+        if 0 <= ny < m.shape[0] and 0 <= nx < m.shape[1] and m[ny, nx] and not lab[ny, nx]:
+            lab[ny, nx] = True; q.append((ny, nx))
+alpha = blur(lab.astype(np.float32) * 255, 1.2)
+ys, xs = np.where(lab)
+leaf, alpha = leaf[ys.min():ys.max(), xs.min():xs.max()], alpha[ys.min():ys.max(), xs.min():xs.max()]
+leaf_img = Image.fromarray(np.clip(np.concatenate([leaf, alpha[..., None]], -1), 0, 255).astype(np.uint8), "RGBA").resize((220, 256), Image.LANCZOS)
+leaf_img.save(os.path.join(OUT, "oak_leaf.png"))
+print("wrote oak_leaf.png (clean)")
+
+_, LVC = load("leaves-curb")
+lpx = LVC[int(0.25 * LVC.shape[0]):int(0.45 * LVC.shape[0]), :int(0.5 * LVC.shape[1])].reshape(-1, 3)
+lpx = lpx[(lpx[:, 0] > lpx[:, 2] + 40) & (lum(lpx[None])[0] > 70)]
+LEAF_TINTS = [np.percentile(lpx, q_, axis=0) for q_ in (15, 35, 55, 75, 90)]
+base_l = np.asarray(leaf_img).astype(np.float32)
+base_g = lum(base_l[..., :3]) / max(lum(base_l[..., :3])[base_l[..., 3] > 128].mean(), 1)
+
+
+def stamp_leaves(canvas_rgba, n, size_px, wrap=True, region=None):
+    H, W = canvas_rgba.shape[:2]
+    for _ in range(n):
+        sc = size_px * rng.uniform(0.6, 1.1) / 256
+        tint = LEAF_TINTS[rng.integers(0, len(LEAF_TINTS))] * rng.uniform(0.75, 1.15)
+        rgb = np.clip(base_g[..., None] * tint, 0, 255)
+        im = Image.fromarray(np.concatenate([rgb, base_l[..., 3:]], -1).astype(np.uint8), "RGBA")
+        im = im.resize((max(4, int(220 * sc)), max(4, int(256 * sc))), Image.LANCZOS).rotate(rng.uniform(0, 360), expand=True, resample=Image.BICUBIC)
+        a = np.asarray(im).astype(np.float32)
+        if region is not None:
+            y0, x0 = region()
+        else:
+            y0, x0 = rng.integers(0, H), rng.integers(0, W)
+        hh, ww = a.shape[:2]
+        yy = (np.arange(hh) + y0 - hh // 2) % H
+        xx = (np.arange(ww) + x0 - ww // 2) % W
+        sub = canvas_rgba[np.ix_(yy, xx)]
+        al = a[..., 3:] / 255
+        # slight shadow under each leaf so the pile has depth
+        sub[..., :3] = sub[..., :3] * (1 - al * 0.35)
+        sub[..., :3] = sub[..., :3] * (1 - al) + a[..., :3] * al
+        sub[..., 3:] = np.maximum(sub[..., 3:], a[..., 3:])
+        canvas_rgba[np.ix_(yy, xx)] = sub
+
+
+# full-coverage litter (tiles), 512 px = 0.6 m
+lit = np.zeros((512, 512, 4), np.float32)
+lit[..., :3] = np.array([70, 52, 36]); lit[..., 3] = 255
+stamp_leaves(lit, 520, 120)
+save("leaf_litter.png", lit[..., :3])
+save("leaf_litter_normal.png", normal_from_height(blur(lum(lit[..., :3]) / 255, 1.0), 3.0))
+# curb strip with ragged edge: denser near the curb (top of the texture), 1024 x 256 = 2.4 m x 0.6 m
+strip = np.zeros((256, 1024, 4), np.float32)
+strip[..., :3] = np.array([70, 52, 36])
+def _reg():
+    return int(abs(rng.normal(0, 0.28)) * 256) % 256, rng.integers(0, 1024)
+stamp_leaves(strip, 900, 100, region=_reg)
+Image.fromarray(np.clip(strip, 0, 255).astype(np.uint8), "RGBA").save(os.path.join(OUT, "leaf_strip.png"))
+print("wrote leaf_strip.png (v2)")
+palette["leaf_tints"] = [hexc(t) for t in LEAF_TINTS]
+
 with open(os.path.join(OUT, "palette.json"), "w") as f:
     json.dump(palette, f, indent=2)
 print("wrote palette.json")

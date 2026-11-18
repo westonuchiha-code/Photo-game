@@ -23,6 +23,7 @@ import { plane } from './world/util.js';
 import { makeTireShop, TIRE_SHOP } from './models/tireshop.js';
 import { makeRustyPole } from './models/street.js';
 import { makeStreetBuilding } from './models/buildings.js';
+import { makeRockBed, makeGrassTufts, makeCurbWithLeaves, makeLooseLeaves, makeBikeRack } from './models/ground.js';
 import { WalkControls } from './walk.js';
 
 // ------------------------------------------------------------------ renderer
@@ -405,6 +406,28 @@ for (const [wall, w, floors] of [['red_brick', 7, 2], ['olive_stucco', 5.6, 1], 
   rx += w + 0.25;
 }
 
+// ------------------------------------------------------------------ rocks, grass, leaves (rock / leaf photos)
+// River-rock bed with dry grass tufts between the sidewalk and the rental sign.
+add(makeRockBed(11.2, 16.8, 3.6, 8.6, { seed: 2 }));
+const tuftSpots = [];
+{
+  let s = 7;
+  const r = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+  for (let i = 0; i < 22; i++) tuftSpots.push([11.5 + r() * 5, 3.9 + r() * 4.4]);
+}
+add(makeGrassTufts(tuftSpots));
+// Narrow rock strip along the restaurant sidewalk (sidewalk-rocks photo).
+add(makeRockBed(10.6, 11.2, -9.5, 2.4, { seed: 5, density: 170 }));
+// Curb between the lot and the street-row sidewalk, leaves drifted in the gutter.
+add(makeCurbWithLeaves(10, 48, 9.0, { dir: -1 }));
+add(makeLooseLeaves(10, 46, 6.5, 11.8, 90));
+add(makeLooseLeaves(8.2, 11, -9, 9, 40, 23));
+// Teal bike rack on the street-row sidewalk (curb photo).
+const rack = makeBikeRack(5);
+rack.position.set(22.5, 0, 10.3);
+add(rack);
+rect(22.4, 25.6, 10.0, 10.6);
+
 // ------------------------------------------------------------------ controls
 const walk = new WalkControls(camera, renderer.domElement, {
   bounds: null,
@@ -437,6 +460,9 @@ const VIEWS = {
   tireshop: { pos: [36, 2.6, -2], target: [24, 2.2, -14] },
   pole: { pos: [12.2, 1.6, -5.6], target: [10.4, 1.8, -7.2] },
   streetrow: { pos: [24, 3.2, -1], target: [26, 3.5, 12] },
+  rocks: { pos: [12.6, 1.5, 1.2], target: [14.2, 0.1, 5.6] },
+  rockclose: { pos: [13.6, 0.75, 3.3], target: [14.3, 0.05, 4.9] },
+  curb: { pos: [20.5, 1.4, 6.8], target: [23.5, 0.1, 9.6] },
   abandoned: { pos: [13.0, 2.0, 2.0], target: [19.5, 1.4, 0.2] },
 };
 let mode = 'walk';
