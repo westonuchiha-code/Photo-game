@@ -115,3 +115,77 @@ export function makeMural(file, w, h) {
   g.add(fx, lens);
   return g;
 }
+
+// Stock pot of lentil soup (soup photos): brushed aluminium pot with a rolled
+// rim stained orange, two riveted handles, a glossy lentil-soup surface, a
+// ladle resting in it, and a little rising steam. Faces +z, base at y = 0.
+export function makeSoupPot({ soup = 'soup_lentil', r = 0.2, h = 0.24 } = {}) {
+  const loader = new THREE.TextureLoader();
+  const tx = (n, color = true) => { const t = loader.load(`assets/textures/${n}`); t.wrapS = t.wrapT = THREE.RepeatWrapping; if (color) t.colorSpace = THREE.SRGBColorSpace; return t; };
+  const g = new THREE.Group();
+  g.name = 'soup_pot';
+  const alu = new THREE.MeshStandardMaterial({ color: '#b9bdc0', metalness: 0.3, roughness: 0.4, emissive: '#2a2c2e', side: THREE.DoubleSide }); // no env map: keep metalness low so it reads silver
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(r, r * 0.97, h, 40, 1, true), alu);
+  body.position.y = h / 2;
+  g.add(body);
+  const base = new THREE.Mesh(new THREE.CircleGeometry(r * 0.97, 40), alu);
+  base.rotation.x = -Math.PI / 2;
+  base.position.y = 0.004;
+  g.add(base);
+  // stained rolled rim (texture wraps once around)
+  const rimTex = tx('pot_rim_stain.png');
+  rimTex.repeat.set(2, 1);
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(r, 0.008, 8, 48), new THREE.MeshStandardMaterial({ map: rimTex, metalness: 0.2, roughness: 0.45 }));
+  rim.rotation.x = Math.PI / 2;
+  rim.position.y = h;
+  g.add(rim);
+  // orange splash stains on the inner wall above the soup line
+  const inner = new THREE.Mesh(new THREE.CylinderGeometry(r - 0.002, r - 0.002, h * 0.22, 40, 1, true),
+    new THREE.MeshStandardMaterial({ map: rimTex, roughness: 0.6, metalness: 0.2, side: THREE.BackSide }));
+  inner.position.y = h * 0.89;
+  g.add(inner);
+  // soup surface
+  const soupMat = new THREE.MeshStandardMaterial({ map: tx(`${soup}.png`), normalMap: tx(`${soup}_normal.png`, false), normalScale: new THREE.Vector2(0.8, 0.8), roughness: 0.25, emissive: '#3a1408' });
+  soupMat.map.repeat.set(1.2, 1.2);
+  const surf = new THREE.Mesh(new THREE.CircleGeometry(r - 0.004, 40), soupMat);
+  surf.rotation.x = -Math.PI / 2;
+  surf.position.y = h * 0.78;
+  g.add(surf);
+  // riveted loop handles
+  for (const s of [-1, 1]) {
+    const hnd = new THREE.Mesh(new THREE.TorusGeometry(0.035, 0.007, 8, 16, Math.PI), alu);
+    hnd.rotation.set(0, s > 0 ? Math.PI / 2 : -Math.PI / 2, 0);
+    hnd.position.set(s * (r + 0.004), h * 0.86, 0);
+    hnd.rotation.z = Math.PI / 2;
+    g.add(hnd);
+  }
+  // ladle
+  const steel = new THREE.MeshStandardMaterial({ color: '#d7d9db', metalness: 0.3, roughness: 0.3, emissive: '#2a2c2e' });
+  const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.36, 8), steel);
+  handle.position.set(r * 0.35, h * 0.95, 0);
+  handle.rotation.z = -0.75;
+  g.add(handle);
+  // steam: a few soft white sprites drifting up
+  const sc = document.createElement('canvas'); sc.width = sc.height = 64;
+  const cx = sc.getContext('2d');
+  const grd = cx.createRadialGradient(32, 32, 2, 32, 32, 30);
+  grd.addColorStop(0, 'rgba(255,255,255,0.5)'); grd.addColorStop(1, 'rgba(255,255,255,0)');
+  cx.fillStyle = grd; cx.fillRect(0, 0, 64, 64);
+  const steamTex = new THREE.CanvasTexture(sc);
+  const puffs = [];
+  for (let i = 0; i < 6; i++) {
+    const p = new THREE.Sprite(new THREE.SpriteMaterial({ map: steamTex, transparent: true, depthWrite: false, opacity: 0.35 }));
+    p.userData.phase = i / 6;
+    g.add(p);
+    puffs.push(p);
+  }
+  g.userData.update = (t) => {
+    puffs.forEach((p, i) => {
+      const k = (t * 0.25 + p.userData.phase) % 1;
+      p.position.set(Math.sin(t * 0.7 + i) * 0.04 * k, h * 0.8 + k * 0.45, Math.cos(t * 0.5 + i * 2) * 0.04 * k);
+      p.scale.setScalar(0.06 + k * 0.18);
+      p.material.opacity = 0.32 * Math.sin(Math.PI * k);
+    });
+  };
+  return g;
+}

@@ -7,6 +7,7 @@ Rules (from you):
   sign's shape and material. Keep text that's already generic (LIQUOR).
 
 ## Approved
+- Tree with a door
 - Alien rock formation
 - Elmwood Apartments (revisit later)
 - Wall art (canvases + mural)
@@ -25,8 +26,8 @@ Rules (from you):
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- Tree with a door: big oak with a white-painted carved door in the trunk base, bark lip, knob
-  plate, burl; by the rental sign. Screenshot: `screenshots/doortree.png`.
+- Soup: lentil + smooth soup textures, stained pot rim; two steaming pots with ladles on the bar.
+  Screenshot: `screenshots/soup.png`.
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
@@ -36,7 +37,6 @@ Rules (from you):
    Screenshot: `screenshots/burger-poster.png`.
 
 ## Up next (in order)
-15. Pot of chili/curry/soup textures (soup-pot, soup-lentil-closeup, soup-smooth).
 16. Food inspiration (photos/food/, 17 photos): corn dog in a paper boat with sauce, spaghetti
     on an oval plate with tray + condiments, ramen bowl on a tray, katsu curry, black curry with
     rice, pork bun (whole + bitten), steamed bun, melon bread, smoked cheese sticks, pizzas

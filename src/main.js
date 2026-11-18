@@ -16,7 +16,7 @@ import { makeCounter } from './models/counter.js';
 import { makeBooth, makeTerrazzoTable } from './models/booth.js';
 import { makeInfinityBox } from './models/neon.js';
 import { makeDoubleDoor, makeWindowBay, makeDoorMat } from './models/entrance.js';
-import { makeNapkinDispenser, makePoster, makeOpenPlaque, makeWallGlobe, makeCanvas, makeMural } from './models/props.js';
+import { makeNapkinDispenser, makePoster, makeOpenPlaque, makeWallGlobe, makeCanvas, makeMural, makeSoupPot } from './models/props.js';
 import { makeLiquorSign, makeTwoRiversSign } from './models/signs.js';
 import { makeAbandonedBuilding, makeStreetLamp, makeFireHydrant, makePlasticBottle } from './models/abandoned.js';
 import { plane } from './world/util.js';
@@ -566,6 +566,15 @@ for (const [x0, x1, z0, z1, y0, y1] of apt.userData.colliders) {
   interactables.push({ name: 'front door', kind: 'door', setOpen: d.setOpen, x: AP.x - d.at[1] + 0.6, z: AP.z + d.at[0], t: 0, target: 0, col, speed: 2.2 });
 }
 
+// ------------------------------------------------------------------ soup pots on the bar (soup photos)
+const soupPots = [];
+for (const [x, soup] of [[-3.1, 'soup_lentil'], [0.45, 'soup_smooth']]) {
+  const p = makeSoupPot({ soup });
+  p.position.set(x, 1.07, Z0 + 0.3);
+  add(p);
+  soupPots.push(p);
+}
+
 // ------------------------------------------------------------------ tree with a door (tree-door photos)
 // In the gravel + leaf patch by the rental sign, door facing the sidewalk.
 const doorTree = makeDoorTree();
@@ -641,6 +650,7 @@ const VIEWS = {
   stoop: { pos: [47.6, 2.4, 3.4], target: [50.5, 1.0, -1] },
   alien: { pos: [40.4, 2.4, 1.6], target: [44.5, 1.4, -3] },
   doortree: { pos: [10.4, 1.3, 5.7], target: [12.8, 0.9, 5.2] },
+  soup: { pos: [-2.85, 1.62, -4.0], target: [-3.1, 1.2, -4.7] },
   abandoned: { pos: [13.0, 2.0, 2.0], target: [19.5, 1.4, 0.2] },
 };
 let mode = 'walk';
@@ -755,6 +765,7 @@ function frame() {
   else orbit.update();
   sky.userData.update(camera, t);
   alien.userData.update(t);
+  soupPots.forEach((p) => p.userData.update(t));
   if ((lightTimer += dt) > 0.4) { lightTimer = 0; updateLightBudget(); }
   walkPoles.forEach((p, i) => p.userData.update(t, i * 0.3));
   // Doors swing open when you walk up to them (inside or out).

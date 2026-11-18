@@ -973,6 +973,26 @@ for i in range(1, 6):
     glow = crev[..., None] * np.array([90, 255, 220], np.float32)
     save(f"alien_{i}_glow.png", glow)
 
+# ---------------------------------------------------------------- soup / curry (soup photos)
+# Two seamless surfaces: chunky lentil (close-up) and smooth puree; plus a
+# stained pot-rim texture from the edge of the pot photo.
+for name, out, box_, tint in [("soup-lentil-closeup", "soup_lentil", (0.1, 0.1, 0.9, 0.9), (196, 92, 42)),
+                              ("soup-smooth", "soup_smooth", (0.1, 0.25, 0.9, 0.9), (204, 104, 46))]:
+    SPi, _ = load(name)
+    w0, h0 = SPi.size
+    crop = SPi.crop((int(box_[0] * w0), int(box_[1] * h0), int(box_[2] * w0), int(box_[3] * h0))).resize((768, 768), Image.LANCZOS)
+    src = np.asarray(crop).astype(np.float32)
+    src = delight(src, 160)
+    out_img = seamless(src[128:640, 128:640])          # one real patch, edges crossfaded (no quilt blocks)
+    out_img = match_stats(out_img, np.array(tint, np.float32), 1.1)   # back to the photo's red-orange
+    save(out + ".png", out_img)
+    save(out + "_normal.png", normal_from_height(blur(lum(out_img) / 255.0, 1.5), 3.0))
+_, SPT = load("soup-pot")
+h, w = SPT.shape[:2]
+rim = SPT[int(0.0 * h):int(0.12 * h), int(0.3 * w):int(0.95 * w)]
+rim = np.asarray(to_img(delight(rim, 120)).resize((1024, 128), Image.BICUBIC)).astype(np.float32)
+save("pot_rim_stain.png", seamless(rim, axes=(1,)))
+
 with open(os.path.join(OUT, "palette.json"), "w") as f:
     json.dump(palette, f, indent=2)
 print("wrote palette.json")
