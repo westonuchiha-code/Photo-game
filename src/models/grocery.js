@@ -6,6 +6,7 @@
 // panels, evaporator fans, stacked blue + black milk crates, green U-boat
 // carts with boxes) behind a strip curtain. Automatic sliding front doors.
 import * as THREE from 'three';
+import { makeStockroom } from './stockroom.js';
 
 const std = (o) => new THREE.MeshStandardMaterial({ roughness: 0.6, ...o });
 const glow = (r, g, b) => new THREE.MeshBasicMaterial({ color: new THREE.Color(r, g, b), toneMapped: false });
@@ -340,9 +341,12 @@ export function makeGrocery() {
 
   // exterior shell: back + sides solid; front glass storefront with a sign band
   const brick = std({ color: '#b9b2a6', roughness: 0.9, side: THREE.DoubleSide });
-  g.add(plane(W, H, brick, 0, H / 2, zb, 0));
+  // back wall with the stockroom doorway at x 5.3..7.1
+  g.add(plane(5.3 - x0, H, brick, (x0 + 5.3) / 2, H / 2, zb, 0));
+  g.add(plane(x1 - 7.1, H, brick, (7.1 + x1) / 2, H / 2, zb, 0));
+  g.add(plane(1.8, H - 2.4, brick, 6.2, 2.4 + (H - 2.4) / 2, zb, 0));
   for (const s of [-1, 1]) g.add(plane(D, H, brick, s * W / 2, H / 2, 0, s * Math.PI / 2));
-  solid(x0, x1, zb - 0.2, zb + 0.1); solid(x0 - 0.2, x0 + 0.1, zb, zf); solid(x1 - 0.1, x1 + 0.2, zb, zf);
+  solid(x0, 5.3, zb - 0.2, zb + 0.1); solid(7.1, x1, zb - 0.2, zb + 0.1); solid(x0 - 0.2, x0 + 0.1, zb, zf); solid(x1 - 0.1, x1 + 0.2, zb, zf);
   const roof = plane(W, D, std({ color: '#2f3033' }), 0, H, 0, 0, -Math.PI / 2);
   g.add(roof);
   // storefront: mullions + glass, opening for doors in the middle
@@ -471,6 +475,10 @@ export function makeGrocery() {
     solid(x - 0.25, x + 0.25, z - 0.65, z + 0.65);
   }
 
+  // back stockroom (warehouse pallet photos)
+  const stock = makeStockroom();
+  g.add(stock);
+  colliders.push(...stock.userData.colliders);
   g.userData.colliders = colliders;
   g.userData.doorCol = doorCol;
   g.userData.update = (dt, near) => {

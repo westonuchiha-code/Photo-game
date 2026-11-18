@@ -708,6 +708,7 @@ const walk = new WalkControls(camera, renderer.domElement, {
     { minX: X0 + 0.3, maxX: X1 - 0.3, minZ: Z0 + 0.3, maxZ: Z1 - 0.3 }, // restaurant
     { minX: X1 - 0.5, maxX: X1 + 0.6, minZ: DOOR_Z - 0.9, maxZ: DOOR_Z + 0.9 }, // doorway
     { minX: X1 + 0.3, maxX: 66, minZ: -47.5, maxZ: 11.7 }, // outside (incl. the grocery)
+    { minX: GS.x + 0.3, maxX: GS.x + 8.7, minZ: GS.z - 13.7, maxZ: GS.z - 5.5 }, // grocery stockroom
   ],
   colliders,
 });
@@ -770,6 +771,8 @@ const VIEWS = {
   dairy: { pos: [24.2, 1.6, -42.3], target: [25.2, 1.0, -46.5] },
   walkin: { pos: [21.0, 1.8, -42.6], target: [16.5, 0.9, -46] },
   eggs: { pos: [29.2, 1.7, -39.2], target: [32.5, 1.2, -41.0] },
+  stockroom: { pos: [30.6, 1.7, -48.3], target: [27.0, 1.0, -53.5] },
+  stockroom2: { pos: [31.6, 1.9, -53.2], target: [25.0, 0.9, -51.0] },
   walkinshelf: { pos: [17.6, 1.6, -44.0], target: [21.4, 1.0, -45.6] },
   van: { pos: [25.5, 1.9, -22.4], target: [21.5, 0.9, -26.5] },
   vanside: { pos: [24.6, 1.3, -29.2], target: [21.5, 0.7, -26.3] },

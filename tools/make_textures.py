@@ -1088,6 +1088,23 @@ save("store_floor.png", fq)
 cb = np.asarray(Image.open(os.path.join(OUT, "store_cardboard.png")).convert("RGB")).astype(np.float32)
 Image.fromarray(np.clip(cb * 1.35 + 10, 0, 255).astype(np.uint8)).save(os.path.join(OUT, "store_cardboard.png"))
 
+# ---------------------------------------------------------------- warehouse stockroom (pallet photos)
+def _pal(i):
+    return ImageOps.exif_transpose(Image.open(f"photos/pallets/pallet{i}.jpg")).convert("RGB")
+_P2, _P3 = _pal(2), _pal(3)
+def _pc(im, b, size):
+    k = im.size[0] / 700
+    return im.crop(tuple(int(v * k) for v in b)).resize(size, Image.LANCZOS)
+# plywood sheathing wall (knots, warm orange), flat-lit + tileable
+pw = delight(np.asarray(_pc(_P2, (170, 20, 560, 225), (640, 336))).astype(np.float32), 90)
+save("wh_ply.png", seamless(pw))
+# sealed warehouse concrete
+wf = delight(np.asarray(_pc(_P3, (150, 700, 650, 860), (800, 256))).astype(np.float32), 80)
+save("wh_floor.png", quilt(wf, (512, 512), patch=96, contrast=1.05))
+# shrink-wrapped water case side + soda can tray top
+_pc(_P3, (345, 255, 460, 352), (512, 432)).save(os.path.join(OUT, "wh_water.png"))
+_pc(_P3, (342, 492, 482, 578), (512, 314)).save(os.path.join(OUT, "wh_cans.png"))
+
 with open(os.path.join(OUT, "palette.json"), "w") as f:
     json.dump(palette, f, indent=2)
 print("wrote palette.json")

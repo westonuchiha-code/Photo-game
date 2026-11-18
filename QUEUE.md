@@ -7,6 +7,7 @@ Rules (from you):
   sign's shape and material. Keep text that's already generic (LIQUOR).
 
 ## Approved
+- Grocery store (you'll send more photos later to update it)
 - Police vehicles
 - Creepy hoodie figure
 - Food set 2 (snacks)
@@ -33,9 +34,7 @@ Rules (from you):
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- Grocery store (made-up FRESHWAY MARKET): glass storefront with automatic sliding doors, milk coolers,
-  egg/butter case under a green canopy + wave band, two aisles, checkout, walk-in cooler with crates,
-  U-boat carts, evaporator, strip curtain. Screenshots: `screenshots/grocery.png`, `dairy.png`, `walkin.png`.
+- Warehouse stockroom (pallet photos): back room of the grocery through an EMPLOYEES ONLY doorway. Plywood walls + concrete floor from the photos, teal/orange pallet racking, pallets of made-up cases (SUNNY BAKE, OLDE MILL flour, ORCHARD juice, ALOE CO., BUBBLY, ROAR), soda can trays + water packs from photos, crates, tote, yellow dolly.
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
