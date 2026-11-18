@@ -3,6 +3,7 @@
 //   dry grass tufts (blade colours from the tuft photos), curbs with leaf
 //   litter piled in the gutter, loose oak leaves, and the teal bike rack.
 import * as THREE from 'three';
+import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 
 const loader = new THREE.TextureLoader();
 function tex(name, color = true) {
@@ -24,21 +25,46 @@ const ROCK_COLORS = ['#8c8a86', '#a39e95', '#6f6d6a', '#b8b0a2', '#7d7671', '#9a
 // Dry grass colours from the tuft photos.
 const GRASS_COLORS = ['#58492e', '#817456', '#ac9f7f', '#c7bb9b'];
 
-// One smooth, rounded river stone: an indexed sphere (so normals stay smooth)
-// pushed in and out by a few low-frequency bumps, then flattened.
+// One river stone: the irregular, chunky shape of a jagged rock (random
+// per-vertex push on a coarse icosahedron, like the first version), but with
+// shared vertices so the shading is smooth instead of faceted. Extra low-
+// frequency bumps keep each stone lopsided rather than egg-like.
 function pebbleGeometry(seed) {
   const r = rng(seed);
-  const g = new THREE.SphereGeometry(1, 14, 10);
+  let g = new THREE.IcosahedronGeometry(1, 2);
+  g.deleteAttribute('normal');
+  g.deleteAttribute('uv');
+  g = mergeVertices(g);
   const p = g.attributes.position;
-  const bumps = Array.from({ length: 4 }, () => [r() * 2 - 1, r() * 2 - 1, r() * 2 - 1, (r() - 0.5) * 0.35]);
+  const bumps = Array.from({ length: 3 }, () => [r() * 2 - 1, r() * 2 - 1, r() * 2 - 1, (r() - 0.5) * 0.3]);
   const v = new THREE.Vector3();
   for (let i = 0; i < p.count; i++) {
-    v.fromBufferAttribute(p, i);
-    let k = 1;
+    v.fromBufferAttribute(p, i).normalize();
+    let k = 0.84 + r() * 0.26;                       // the jagged part
     for (const [bx, by, bz, a] of bumps) k += a * Math.max(0, v.x * bx + v.y * by + v.z * bz);
-    p.setXYZ(i, v.x * k, v.y * k * 0.55, v.z * k);
+    p.setXYZ(i, v.x * k, v.y * k * 0.6, v.z * k);
+  }
+  // one light relaxation pass: rounds off the sharpest spikes but keeps the lumps
+  const idx = g.index.array, sum = new Float32Array(p.count * 3), cnt = new Uint16Array(p.count);
+  for (let t = 0; t < idx.length; t += 3) {
+    for (let e = 0; e < 3; e++) {
+      const a0 = idx[t + e], a1 = idx[t + (e + 1) % 3];
+      sum[a0 * 3] += p.getX(a1); sum[a0 * 3 + 1] += p.getY(a1); sum[a0 * 3 + 2] += p.getZ(a1); cnt[a0]++;
+    }
+  }
+  for (let i = 0; i < p.count; i++) {
+    const f = 0.35;
+    p.setXYZ(i, p.getX(i) * (1 - f) + sum[i * 3] / cnt[i] * f, p.getY(i) * (1 - f) + sum[i * 3 + 1] / cnt[i] * f, p.getZ(i) * (1 - f) + sum[i * 3 + 2] / cnt[i] * f);
   }
   g.computeVertexNormals();
+  // spherical UVs so the photo grain still maps onto the stone
+  const uv = new Float32Array(p.count * 2);
+  for (let i = 0; i < p.count; i++) {
+    v.fromBufferAttribute(p, i).normalize();
+    uv[i * 2] = 0.5 + Math.atan2(v.z, v.x) / (2 * Math.PI);
+    uv[i * 2 + 1] = 0.5 + Math.asin(Math.max(-1, Math.min(1, v.y))) / Math.PI;
+  }
+  g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
   return g;
 }
 
