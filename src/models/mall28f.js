@@ -175,7 +175,7 @@ function shopSignTex(name, sub, font, ink, wing) {
 export function makeUndergroundMall() {
   const g = new THREE.Group();
   g.name = 'underground_mall';
-  const FY = -4.2, CY = -1.1, HX = 7, HZ = 14;         // floor, ceiling, half width, half length
+  const FY = -4.2, CY = -0.6, HX = 7, HZ = 14;         // floor, ceiling, half width, half length
   const colliders = [], envMats = [], hide = [];
   const col = (x0, x1, z0, z1, y0 = -4.6, y1 = -1.6) => colliders.push([x0, x1, z0, z1, y0, y1]);
 
@@ -218,10 +218,10 @@ export function makeUndergroundMall() {
     const lt = latticeTex(); lt.repeat.set(HX * 2 / 0.6, HZ * 2 / 0.6);
     const lat = new THREE.Mesh(new THREE.PlaneGeometry(HX * 2, HZ * 2), std({ map: lt, alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.8 }));
     lat.rotation.x = Math.PI / 2; lat.position.y = CY; g.add(lat);
-    const pl = quad(HX * 2, HZ * 2, plenum); pl.rotation.x = Math.PI / 2; pl.position.y = CY + 0.75; g.add(pl);
-    for (const x of [-4.2, 2.2]) { const d = box(0.9, 0.45, HZ * 2, duct, x, CY + 0.42, 0); d.castShadow = false; g.add(d); }
-    for (const x of [-1.2, 5.2]) { const t = box(0.4, 0.06, HZ * 2, darkRing, x, CY + 0.3, 0); t.castShadow = false; g.add(t); }
-    for (let z = -12; z <= 12; z += 3) g.add(tube(V(-HX, CY + 0.55, z), V(HX, CY + 0.55, z + 0.2), 0.05, duct, 8));
+    const pl = quad(HX * 2, HZ * 2, plenum); pl.rotation.x = Math.PI / 2; pl.position.y = CY + 0.35; g.add(pl);
+    for (const x of [-4.2, 2.2]) { const d = box(0.9, 0.3, HZ * 2, duct, x, CY + 0.18, 0); d.castShadow = false; g.add(d); }
+    for (const x of [-1.2, 5.2]) { const t = box(0.4, 0.06, HZ * 2, darkRing, x, CY + 0.1, 0); t.castShadow = false; g.add(t); }
+    for (let z = -12; z <= 12; z += 3) g.add(tube(V(-HX, CY + 0.26, z), V(HX, CY + 0.26, z + 0.2), 0.05, duct, 8));
     // LED strips across the hall (two staggered lines like the photo) + short ones over the shops
     for (let i = 0; i < 12; i++) {
       const z = -13 + i * 2.4;
@@ -252,7 +252,7 @@ export function makeUndergroundMall() {
     ['NORDE', 'OPTIQUE', F.wayfind, '#1d2b3a'],
     ['Pearl & Tide', 'FINE JEWELLERY', F.couture, '#2f3b44'],
   ];
-  const PITCH = 4.5, SH = 2.55, WX = -HX;               // shutter height, west front plane
+  const PITCH = 4.5, SH = 2.4, WX = -HX;               // shutter height, west front plane
   for (let i = 0; i < 6; i++) {
     const zc = -11.25 + i * PITCH, z0 = zc - PITCH / 2;
     // pilaster at the south edge of this shop (and one more after the last)
@@ -284,7 +284,7 @@ export function makeUndergroundMall() {
     sg.add(box(0.2, 0.56, 1.14, white, 0, 0, 0));
     const fm = quad(1.1, 0.55, face); fm.position.x = 0.101; fm.rotation.y = Math.PI / 2; sg.add(fm);
     sg.add(box(0.22, 0.02, 1.16, steel, 0, 0.29, 0));
-    sg.position.set(WX + 0.1, FY + SH + 0.75, zc); g.add(sg);
+    sg.position.set(WX + 0.1, FY + SH + 0.72, zc); g.add(sg);
     // behind the shutter: a shallow shop box (lit for the half-open one)
     const back = box(0.1, 3.0, PITCH, white, WX - 3.2, FY + 1.5, zc); g.add(back);
     if (half) {
@@ -649,8 +649,8 @@ export function makeUndergroundMall() {
   {
     const shell = std({ color: '#2a2a2c', roughness: 1, side: THREE.BackSide });
     // (no +z face: the stair opening is in that end)
-    const sb = new THREE.Mesh(new THREE.BoxGeometry(HX * 2 + 7, -FY + 0.1, HZ * 2 + 0.8), [shell, shell, shell, shell, new THREE.MeshBasicMaterial({ visible: false }), shell]);
-    sb.position.set(-1.5, (FY - 0.4) / 2 - 0.15, 0); g.add(sb);
+    const sb = new THREE.Mesh(new THREE.BoxGeometry(HX * 2 + 7, -FY + 0.2, HZ * 2 + 0.8), [shell, shell, shell, shell, new THREE.MeshBasicMaterial({ visible: false }), shell]);
+    sb.position.set(-1.5, (FY - 0.4) / 2 - 0.1, 0); g.add(sb);
   }
 
   g.traverse((o) => { if (o.isMesh && o.material && o.material.transparent) o.castShadow = false; });
