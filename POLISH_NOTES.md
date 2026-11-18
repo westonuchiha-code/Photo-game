@@ -47,8 +47,9 @@ This is a running list, added to as models get built. Nothing here is urgent.
 - The deli box contents are small and hard to read.
 
 ## Boarded blue house + cats (27c)
-- Cats are simple capsule shapes. The lying tortie reads like a sausage and the sitting tabby is stiff.
-  They need a proper sculpt: shoulders, haunches, paws and a curled tail.
+- Cats were rebuilt as sculpted single-surface models (src/models/cat.js). Still possible: fur shading
+  or a fuzzy shell, softer eye shape, idle animation (tail flick, breathing), and a ~2-3 s build on
+  load (could be precomputed and saved).
 - The OSB and stucco textures have tree shadows baked in from the photo.
 - The roof is plain; it could sag and have missing shingles. Sides and back are blank siding.
 - The basement window sash is a flat frame; the photo shows glass and a broken pane.

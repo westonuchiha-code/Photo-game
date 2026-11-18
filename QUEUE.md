@@ -40,7 +40,7 @@ Rules (from you):
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- 27c Boarded blue house + cats: west side of the house lane. Boarded half (peeling navy base, cracked white panel with a broken hole and a peeking kitten, OSB over the window) and blue lap siding over blue stucco with an open basement window. Kibble pile, tortie lying down, tabby kitten sitting. Textures from the two photos.
+- 27c Boarded blue house + cats: west side of the house lane. Boarded half (peeling navy base, cracked white panel with a broken hole and a peeking kitten, OSB over the window) and blue lap siding over blue stucco with an open basement window. Kibble pile, tortie lying down, tabby kitten sitting (cats rebuilt as sculpted models after your notes). Textures from the two photos.
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
