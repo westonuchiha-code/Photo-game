@@ -18,6 +18,7 @@ import { makeInfinityBox } from './models/neon.js';
 import { makeDoubleDoor, makeWindowBay, makeDoorMat } from './models/entrance.js';
 import { makeNapkinDispenser, makePoster, makeOpenPlaque, makeWallGlobe } from './models/props.js';
 import { makeLiquorSign, makeTwoRiversSign } from './models/signs.js';
+import { makeAbandonedBuilding, makeStreetLamp, makeFireHydrant, makePlasticBottle } from './models/abandoned.js';
 import { plane } from './world/util.js';
 import { WalkControls } from './walk.js';
 
@@ -123,15 +124,17 @@ add(plaque);
 
 // ------------------------------------------------------------------ outside (night)
 const outside = new THREE.Group();
-const pavement = new THREE.Mesh(new THREE.PlaneGeometry(80, 80), new THREE.MeshStandardMaterial({ color: '#2a2c30', roughness: 0.9 }));
+const pavement = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.MeshStandardMaterial({ color: '#2a2c30', roughness: 0.9 }));
 pavement.rotation.x = -Math.PI / 2;
-pavement.position.y = -0.01;
+pavement.position.set(20, -0.01, -20);
 outside.add(pavement);
 const nightMat = new THREE.MeshBasicMaterial({ color: '#0d1420' });
 const backN = new THREE.Mesh(new THREE.PlaneGeometry(80, 14), nightMat);
-backN.position.set(0, 5, Z0 - 16);
+backN.position.set(20, 5, -70);
+backN.scale.x = 2.5;
 const backE = new THREE.Mesh(new THREE.PlaneGeometry(80, 14), nightMat);
-backE.position.set(X1 + 16, 5, 0);
+backE.position.set(75, 5, -20);
+backE.scale.x = 2.5;
 backE.rotation.y = -Math.PI / 2;
 outside.add(backN, backE);
 // Vertical slatted fence seen through the bar window (bar photo).
@@ -167,7 +170,7 @@ const farLights = new THREE.InstancedMesh(new THREE.SphereGeometry(0.06, 8, 6),
   new THREE.MeshBasicMaterial({ color: new THREE.Color(3, 2.2, 1.2), toneMapped: false }), 40);
 for (let i = 0; i < 40; i++) {
   const a = Math.random(), y = 0.6 + Math.random() * 3;
-  m4.makeTranslation(...(i < 22 ? [-18 + a * 36, y, Z0 - 15.8] : [X1 + 15.8, y, -18 + a * 36]));
+  m4.makeTranslation(...(i < 22 ? [-30 + a * 100, y, -69.8] : [74.8, y, -70 + a * 90]));
   farLights.setMatrixAt(i, m4);
 }
 outside.add(farLights);
@@ -309,7 +312,7 @@ add(neon);
 
 // ------------------------------------------------------------------ outside the front doors
 // Sidewalk, dirt and gravel from the two sign photos, with both signs.
-add(plane(mats.sidewalk, X1, X1 + 3, -9, 9, 0.003, 1.5));
+add(plane(mats.sidewalk, X1, X1 + 3, -9.5, 9, 0.003, 1.5));
 add(plane(mats.dirt, X1 + 3, X1 + 9, -9, 1.0, 0.003, 2.0));
 add(plane(mats.gravel, X1 + 3, X1 + 9, 1.0, 9, 0.003, 1.2));
 const liquor = makeLiquorSign(mats);
@@ -320,9 +323,6 @@ const twoRivers = makeTwoRiversSign();
 twoRivers.position.set(X1 + 4.6, 0, 3.0);
 twoRivers.rotation.y = -Math.PI / 2;
 add(twoRivers);
-const signLight = new THREE.PointLight('#fff1dc', 4, 7, 2); // soft light so the Two Rivers face reads at night
-signLight.position.set(X1 + 2.8, 3.2, 3.0);
-scene.add(signLight);
 for (const s of [liquor, twoRivers]) {
   s.updateMatrixWorld(true);
   for (const [px, , r] of s.userData.poles) {
@@ -338,9 +338,34 @@ colliders.push(doorCollider);
 circle(X1 + 1.2, 0.07, 0.25);
 circle(X1 + 1.2, 4.2, 0.25);
 
+// ------------------------------------------------------------------ boarded-up storefront across the lot
+// (four "abandoned" photos) with the street lamp and fire hydrant from the side photo.
+const abandoned = makeAbandonedBuilding();
+const AB = { x: X1 + 11.5, z: 0 }; // facade line, facing -x (toward the signs and the restaurant)
+abandoned.position.set(AB.x, 0, AB.z);
+abandoned.rotation.y = -Math.PI / 2;
+add(abandoned);
+add(plane(mats.sidewalkLeaves, X1 + 9, AB.x + 1.45, -6, 6.5, 0.004, 1.5)); // runs into the recessed doorways
+// local (x, z) -> world (AB.x - z, AB.z + x) for this rotation
+for (const [x0, x1, z0, z1] of abandoned.userData.colliders) rect(AB.x - z1, AB.x - z0, AB.z + x0, AB.z + x1);
+const lamp = makeStreetLamp();
+lamp.position.set(X1 + 9.4, 0, 0.9);
+add(lamp);
+circle(lamp.position.x, lamp.position.z, 0.3);
+const hydrant = makeFireHydrant();
+hydrant.position.set(X1 + 9.4, 0, -4.2);
+hydrant.rotation.y = -Math.PI / 2;
+add(hydrant);
+circle(hydrant.position.x, hydrant.position.z, 0.25);
+
 // ------------------------------------------------------------------ controls
 const walk = new WalkControls(camera, renderer.domElement, {
-  bounds: { minX: X0 + 0.3, maxX: X1 + 8.6, minZ: Z0 + 0.3, maxZ: Z1 - 0.3 },
+  bounds: null,
+  areas: [
+    { minX: X0 + 0.3, maxX: X1 - 0.3, minZ: Z0 + 0.3, maxZ: Z1 - 0.3 }, // restaurant
+    { minX: X1 - 0.5, maxX: X1 + 0.6, minZ: DOOR_Z - 0.9, maxZ: DOOR_Z + 0.9 }, // doorway
+    { minX: X1 + 0.3, maxX: 46, minZ: -40, maxZ: 9 }, // outside
+  ],
   colliders,
 });
 walk.position.set(6.6, 0, 0.2);
@@ -362,6 +387,7 @@ const VIEWS = {
   neon: { pos: [5.8, 1.5, -2.6], target: [7.9, 1.4, -3.65] },
   entrance: { pos: [4.4, 1.7, 2.2], target: [7.6, 0.6, -1.0] },
   signs: { pos: [9.4, 1.8, 1.4], target: [13.2, 2.6, -0.8] },
+  abandoned: { pos: [13.0, 2.0, 2.0], target: [19.5, 1.4, 0.2] },
 };
 let mode = 'walk';
 const modeBtn = document.getElementById('mode');
@@ -419,6 +445,9 @@ const ASSETS = {
   glass_double_door: () => door,
   liquor_pole_sign: () => liquor,
   two_rivers_pole_sign: () => twoRivers,
+  abandoned_storefront: () => abandoned,
+  street_lamp: () => lamp,
+  fire_hydrant: () => hydrant,
   napkin_dispenser: () => napkinProto,
   globe_pendant: () => pendantProto,
 };

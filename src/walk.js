@@ -6,11 +6,13 @@ const EYE = 1.62;
 const SPEED = 2.2;
 
 export class WalkControls {
-  constructor(camera, dom, { bounds, colliders = [] }) {
+  constructor(camera, dom, { bounds, colliders = [], areas = null }) {
     this.camera = camera;
     this.dom = dom;
     this.bounds = bounds;
     this.colliders = colliders;
+    // walkable rectangles {minX,maxX,minZ,maxZ}; if set, you can only stand inside one of them
+    this.areas = areas;
     this.position = new THREE.Vector3();
     this.yaw = 0;
     this.pitch = 0;
@@ -100,9 +102,17 @@ export class WalkControls {
     if (len > 1) { f /= len; s /= len; }
     const sp = SPEED * (k.has('ShiftLeft') || k.has('ShiftRight') ? 1.8 : 1) * dt;
     const sin = Math.sin(this.yaw), cos = Math.cos(this.yaw);
+    const ox = this.position.x, oz = this.position.z;
     this.position.x += (-sin * f + cos * s) * sp;
     this.position.z += (-cos * f - sin * s) * sp;
     this._collide();
+    if (this.areas && !this._inArea(this.position.x, this.position.z)) {
+      // slide along the edge: keep whichever single-axis move is still allowed
+      const nx = this.position.x, nz = this.position.z;
+      if (this._inArea(nx, oz)) this.position.set(nx, 0, oz);
+      else if (this._inArea(ox, nz)) this.position.set(ox, 0, nz);
+      else this.position.set(ox, 0, oz);
+    }
     this.apply();
   }
 
@@ -123,8 +133,14 @@ export class WalkControls {
         }
       }
     }
-    p.x = Math.max(b.minX, Math.min(b.maxX, p.x));
-    p.z = Math.max(b.minZ, Math.min(b.maxZ, p.z));
+    if (b) {
+      p.x = Math.max(b.minX, Math.min(b.maxX, p.x));
+      p.z = Math.max(b.minZ, Math.min(b.maxZ, p.z));
+    }
+  }
+
+  _inArea(x, z) {
+    return this.areas.some((a) => x >= a.minX && x <= a.maxX && z >= a.minZ && z <= a.maxZ);
   }
 
   apply() {

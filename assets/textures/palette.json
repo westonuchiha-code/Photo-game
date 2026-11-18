@@ -17,5 +17,9 @@
   "booth_vinyl": "#aeaa6e",
   "booth_frame": "#868453",
   "walnut_floor": "#a0816a",
-  "liquor_letters": "#ab9f81"
+  "liquor_letters": "#ab9f81",
+  "osb": "#9f8259",
+  "siding": "#bdac96",
+  "gray_patch": "#879191",
+  "teal_steps": "#719092"
 }

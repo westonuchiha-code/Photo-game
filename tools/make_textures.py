@@ -398,6 +398,63 @@ gravel = quilt(gravel_src, (512, 512), patch=112, contrast=1.2)
 save("gravel.png", gravel)
 save("gravel_normal.png", normal_from_height(blur(lum(gravel) / 255.0, 0.6), 6.0))
 
+# ---------------------------------------------------------------- abandoned building photos
+AF, AFA = load("abandoned-front")
+AS, ASA = load("abandoned-side")
+AD, ADA = load("abandoned-alcove-door")
+AT, ATA = load("abandoned-alcove-steps")
+
+
+def rect_(im, pts, size, name):
+    im.transform(size, Image.QUAD, [v * 2 for v in pts], Image.BICUBIC).save(os.path.join(OUT, name))
+    print("wrote", name)
+
+
+# Hero pieces kept whole (straightened): the boarded alcove door with its
+# handle cut-out, the boarded front door with paper scraps, the "1402"
+# transom, the flattened cardboard box.
+rect_(AD, (240, 280, 330, 1175, 912, 1125, 975, 345), (600, 700), "osb_alcove_door.png")
+rect_(AF, (1068, 280, 1068, 640, 1240, 630, 1240, 285), (240, 500), "osb_front_door.png")
+rect_(AF, (1070, 165, 1070, 270, 1243, 268, 1243, 180), (320, 160), "transom_1402.png")
+rect_(AD, (325, 1170, 322, 1312, 650, 1288, 600, 1160), (400, 180), "cardboard.png")
+
+# OSB sheathing: tiling version quilted from the evenly lit middle of the alcove board.
+_osb_full = np.asarray(Image.open(os.path.join(OUT, "osb_alcove_door.png")).convert("RGB")).astype(np.float32)
+osb_src = np.concatenate([_osb_full[230:420, 20:540], _osb_full[520:690, 20:540]], 0)  # skip the handle cut-out
+osb_src = delight(osb_src, 60)
+osb = quilt(osb_src, (512, 512), patch=128, contrast=1.15)
+save("osb.png", osb)
+save("osb_normal.png", normal_from_height(blur(lum(osb) / 255.0, 0.8), 3.0))
+palette["osb"] = hexc(osb_src.reshape(-1, 3).mean(0))
+
+# Tan brick with black spray-paint blobs (planter front).
+brick = np.asarray(AF.transform((900, 260), Image.QUAD, [570, 1730, 580, 2252, 2450, 1720, 2456, 1380], Image.BICUBIC)).astype(np.float32)
+brick = delight(brick, 60)
+brick = seamless(brick, axes=(1,))
+save("brick_planter.png", brick)
+save("brick_planter_normal.png", normal_from_height(blur(lum(brick) / 255.0, 1.0), 3.0))
+
+# Vertical ribbed siding with peeling paint (side photo pier), straightened.
+siding = np.asarray(AS.transform((360, 820), Image.QUAD, [2340, 700, 2310, 1880, 2830, 1880, 2860, 700], Image.BICUBIC)).astype(np.float32)
+siding = delight(siding, 90)
+siding = seamless(siding, axes=(0, 1))
+siding = match_stats(siding, np.array([190, 172, 150], np.float32), 1.0)  # remove the sodium-light cast; paint reads tan-pink in person
+save("siding.png", siding)
+save("siding_normal.png", normal_from_height(blur(lum(siding) / 255.0, 1.2), 4.0))
+palette["siding"] = hexc(siding.reshape(-1, 3).mean(0))
+
+# Planter soil, and the leaf-strewn sidewalk in front of the building.
+soil_src = delight(AFA[1340:1500, 1000:1900], 50)
+save("planter_soil.png", quilt(soil_src, (256, 256), patch=64, contrast=1.2))
+leafwalk_src = delight(AFA[1700:2240, 2700:3950], 90)
+leafwalk = quilt(leafwalk_src, (512, 512), patch=128, contrast=1.3)
+save("sidewalk_leaves.png", leafwalk)
+save("sidewalk_leaves_normal.png", normal_from_height(blur(lum(leafwalk) / 255.0, 0.8), 2.0))
+
+# Colours: grey painted-over patch, teal steps.
+palette["gray_patch"] = hexc(med(AFA, (2840, 760, 3220, 960)))
+palette["teal_steps"] = hexc(med(ATA, (100, 2500, 2000, 3100), lambda p: (p[:, 2] > p[:, 0] + 10) & (p[:, 1] > p[:, 0])) * 1.1)
+
 with open(os.path.join(OUT, "palette.json"), "w") as f:
     json.dump(palette, f, indent=2)
 print("wrote palette.json")
