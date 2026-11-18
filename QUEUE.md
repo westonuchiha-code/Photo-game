@@ -278,6 +278,14 @@ Rules (from you):
     paintings, backpacks, blankets, a long flat box; the orange corrugated roll-up unit door with its
     silver frame, number plate (made-up number) and brass slide latch (close-up for detail); a gold
     foil snack pack with a made-up name. Corrugated silver unit walls as a texture.
+63. Monkey snacking (photos/monkey/, 5 photos): a young macaque sitting hunched on sandy ground,
+    peeling and eating nuts held in both hands, grooming; soft grey-tan fur, pink face and ears.
+    A posed animal model (sitting + eating), plus the sandy speckled ground as a texture.
+64. Random street batch (photos/random/, 5 photos): a corner convenience store at night (lit blue-
+    and-white fascia band with a made-up name, glass front, tiled base, wet street and crossing),
+    a black-and-white police sedan with a red light bar (generic POLICE text only, made-up plate),
+    and an old aircraft nose section mounted on a steel frame over a carport with a brick wall and
+    a sliding steel gate (made-up number).
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"
