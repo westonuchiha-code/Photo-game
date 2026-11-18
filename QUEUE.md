@@ -7,6 +7,7 @@ Rules (from you):
   sign's shape and material. Keep text that's already generic (LIQUOR).
 
 ## Approved
+- Food set 2 (snacks)
 - Scooter + batteries
 - Old van
 - Food set 1 (pizzas, ramen, spaghetti, curry rice)
@@ -30,9 +31,9 @@ Rules (from you):
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- Food set 2: waffle ice cream sandwich, frozen cereal puffs in a green cup (with mist), clear soda
-  (made-up GLACIER POP), two black cans (made-up PEAK Night Black), cup noodles with lid peeled back.
-  On the lime-wall two-tops. Screenshots: `screenshots/snacks1-3.png`.
+- Creepy hoodie figure: oversized skull with huge hollow eyes in a black hood, hands in pocket,
+  faded jeans, white-toed high-tops; slowly paces the street-row sidewalk with a slouched walk.
+  Screenshot: `screenshots/creep.png`.
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
@@ -48,8 +49,6 @@ Rules (from you):
     (mushroom-egg, corn-shrimp, packaged display), canned drinks, dashi bottles in a vending
     machine, noodle-shop menu board with lanterns. Food models + textures; all packaging,
     can and menu text made up.
-20. Creepy character (photos/character/): hollow-eyed skull in a black hoodie, hands in pocket,
-    ripped jeans, high-top sneakers; walking pose. Character model.
 21. Police vehicles (photos/police/): three-wheel mini patrol cart and white patrol scooter.
     Generic made-up department name and badge (no real agency markings).
 22. Grocery store inside + walk-in dairy cooler (photos/store/): glass-door milk cooler with

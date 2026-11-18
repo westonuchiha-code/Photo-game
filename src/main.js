@@ -26,6 +26,7 @@ import { makeStreetBuilding } from './models/buildings.js';
 import { makePaverSidewalk, makeDrainCover, makePaverCrosswalk, makeTactilePlate, makeCracks, makeUtilityLid, makeTrafficIsland, makeDirtLot } from './models/streetground.js';
 import { makeSky } from './models/sky.js';
 import { makeOldVan } from './models/van.js';
+import { makeCreep } from './models/creep.js';
 import { makeScooter, makeBattery } from './models/scooter.js';
 import { makePizza, makeRamenTray, makeSpaghettiTray, makeCurryPlate, makeWaffleSandwich, makeCerealPuffCup, makeClearSoda, makeDarkSodaCan, makeCupNoodles } from './models/food.js';
 import { makeAlienFormation } from './models/alien.js';
@@ -650,6 +651,21 @@ interactables.push({ name: 'scooter seat', kind: 'door', setOpen: scooter.userDa
   rect(TS.x + 5.8, TS.x + 7.2, TS.z - 3.3, TS.z - 2.7);
 }
 
+// ------------------------------------------------------------------ the creepy hoodie figure (character photos)
+// Slowly paces the street-row sidewalk, turning at each end.
+const creep = makeCreep();
+add(creep);
+const CREEP = { x0: 11.2, x1: 30.0, z: 11.55, speed: 0.75 };
+creep.userData.update = (t) => {
+  const len = CREEP.x1 - CREEP.x0, period = (2 * len) / CREEP.speed;
+  const u = (t % period) / period;                 // 0..1 there and back
+  const out = u < 0.5;
+  const k = out ? u * 2 : 2 - u * 2;
+  creep.position.set(CREEP.x0 + k * len, 0, CREEP.z);
+  creep.rotation.y = out ? Math.PI / 2 : -Math.PI / 2;
+  creep.userData.pose(t * CREEP.speed * 4.2);
+};
+
 // ------------------------------------------------------------------ controls
 const walk = new WalkControls(camera, renderer.domElement, {
   bounds: null,
@@ -711,6 +727,7 @@ const VIEWS = {
   scooter: { pos: [48.9, 1.0, 4.0], target: [50.4, 0.55, 5.3] },
   scooterseat: { pos: [50.75, 1.75, 6.15], target: [50.45, 0.7, 5.5] },
   batteries: { pos: [32.5, 1.12, -19.6], target: [32.5, 0.96, -20.0] },
+  creep: { pos: [21.6, 1.35, 9.4], target: [19.5, 1.05, 11.55] },
   van: { pos: [25.5, 1.9, -22.4], target: [21.5, 0.9, -26.5] },
   vanside: { pos: [24.6, 1.3, -29.2], target: [21.5, 0.7, -26.3] },
   soup: { pos: [-2.85, 1.62, -4.0], target: [-3.1, 1.2, -4.7] },
@@ -838,6 +855,7 @@ function frame() {
   alien.userData.update(t);
   soupPots.forEach((p) => p.userData.update(t));
   puffCup.userData.update(t);
+  creep.userData.update(t);
   if ((lightTimer += dt) > 0.4) { lightTimer = 0; updateLightBudget(); }
   walkPoles.forEach((p, i) => p.userData.update(t, i * 0.3));
   // Doors swing open when you walk up to them (inside or out).
@@ -870,4 +888,4 @@ window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
   composer.setSize(window.innerWidth, window.innerHeight);
 });
-window.__scene = { scene, camera, walk, setMode, interactables, walkPoles };
+window.__scene = { scene, camera, walk, setMode, interactables, walkPoles, creep };
