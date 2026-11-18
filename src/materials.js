@@ -100,6 +100,10 @@ export function makeMaterials() {
     teal: new THREE.MeshStandardMaterial({ color: '#2f7273', roughness: 0.45, metalness: 0.3 }),
     black: new THREE.MeshStandardMaterial({ color: '#151516', roughness: 0.45 }),
     chrome: new THREE.MeshStandardMaterial({ color: '#c8cbcf', roughness: 0.25, metalness: 0.9 }),
+    // Outside ground from the two sign photos (repeat 1; geometry UVs set the size).
+    sidewalk: surface('sidewalk', 1, 1, { normalScale: 0.5, roughness: 0.9, color: new THREE.Color(0.92, 0.94, 1.0) }),
+    dirt: surface('dirt', 1, 1, { normalScale: 0.8, roughness: 1 }),
+    gravel: surface('gravel', 1, 1, { normalScale: 1.0, roughness: 1 }),
     // Framed poster, straightened from the bar photo.
     poster: new THREE.MeshStandardMaterial({ map: tex('poster.png'), roughness: 0.35 }),
   };

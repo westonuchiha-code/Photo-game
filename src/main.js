@@ -17,6 +17,7 @@ import { makeBooth, makeTerrazzoTable } from './models/booth.js';
 import { makeInfinityBox } from './models/neon.js';
 import { makeDoubleDoor, makeWindowBay, makeDoorMat } from './models/entrance.js';
 import { makeNapkinDispenser, makePoster, makeOpenPlaque, makeWallGlobe } from './models/props.js';
+import { makeLiquorSign, makeTwoRiversSign } from './models/signs.js';
 import { plane } from './world/util.js';
 import { WalkControls } from './walk.js';
 
@@ -63,11 +64,14 @@ function tilePanel(w, h, x, y, z, ry) {
   const uv = geo.attributes.uv;
   for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * w / 0.3, uv.getY(i) * h / 0.3);
   const m = new THREE.Mesh(geo, mats.subwayTile(1, 1));
+  m.material.side = THREE.DoubleSide;
   m.position.set(x, y, z);
   m.rotation.y = ry;
   m.receiveShadow = true;
   return add(m);
 }
+// Walls seen from both sides now that you can walk outside.
+mats.wall.side = THREE.DoubleSide;
 // West: white subway tile.
 tilePanel(Z1 - Z0, H, X0, H / 2, 0, Math.PI / 2);
 // South: lime green paint + black baseboard.
@@ -303,9 +307,40 @@ neon.position.set(X1 - 0.08, 1.3, -3.65);
 neon.rotation.y = -Math.PI / 2;
 add(neon);
 
+// ------------------------------------------------------------------ outside the front doors
+// Sidewalk, dirt and gravel from the two sign photos, with both signs.
+add(plane(mats.sidewalk, X1, X1 + 3, -9, 9, 0.003, 1.5));
+add(plane(mats.dirt, X1 + 3, X1 + 9, -9, 1.0, 0.003, 2.0));
+add(plane(mats.gravel, X1 + 3, X1 + 9, 1.0, 9, 0.003, 1.2));
+const liquor = makeLiquorSign(mats);
+liquor.position.set(X1 + 5.2, 0, -2.8);
+liquor.rotation.y = -Math.PI / 2; // face toward the sidewalk and the doors
+add(liquor);
+const twoRivers = makeTwoRiversSign();
+twoRivers.position.set(X1 + 4.6, 0, 3.0);
+twoRivers.rotation.y = -Math.PI / 2;
+add(twoRivers);
+const signLight = new THREE.PointLight('#fff1dc', 4, 7, 2); // soft light so the Two Rivers face reads at night
+signLight.position.set(X1 + 2.8, 3.2, 3.0);
+scene.add(signLight);
+for (const s of [liquor, twoRivers]) {
+  s.updateMatrixWorld(true);
+  for (const [px, , r] of s.userData.poles) {
+    const v = new THREE.Vector3(px, 0, 0).applyMatrix4(s.matrixWorld);
+    circle(v.x, v.z, r);
+  }
+}
+// Walls of the storefront either side of the doors, and the doors themselves.
+rect(X1 - 0.1, X1 + 0.1, Z0, DOOR_Z - 1.03);
+rect(X1 - 0.1, X1 + 0.1, DOOR_Z + 1.03, Z1);
+const doorCollider = { type: 'box', minX: X1 - 0.12, maxX: X1 + 0.12, minZ: DOOR_Z - 1.03, maxZ: DOOR_Z + 1.03 };
+colliders.push(doorCollider);
+circle(X1 + 1.2, 0.07, 0.25);
+circle(X1 + 1.2, 4.2, 0.25);
+
 // ------------------------------------------------------------------ controls
 const walk = new WalkControls(camera, renderer.domElement, {
-  bounds: { minX: X0 + 0.3, maxX: X1 - 0.3, minZ: Z0 + 0.3, maxZ: Z1 - 0.3 },
+  bounds: { minX: X0 + 0.3, maxX: X1 + 8.6, minZ: Z0 + 0.3, maxZ: Z1 - 0.3 },
   colliders,
 });
 walk.position.set(6.6, 0, 0.2);
@@ -326,6 +361,7 @@ const VIEWS = {
   tables: { pos: [3.8, 1.8, 3.2], target: [0.8, 0.5, 0.2] },
   neon: { pos: [5.8, 1.5, -2.6], target: [7.9, 1.4, -3.65] },
   entrance: { pos: [4.4, 1.7, 2.2], target: [7.6, 0.6, -1.0] },
+  signs: { pos: [9.4, 1.8, 1.4], target: [13.2, 2.6, -0.8] },
 };
 let mode = 'walk';
 const modeBtn = document.getElementById('mode');
@@ -381,6 +417,8 @@ const ASSETS = {
   terrazzo_table: () => tables[0],
   neon_open_sign_lightbox: () => neon,
   glass_double_door: () => door,
+  liquor_pole_sign: () => liquor,
+  two_rivers_pole_sign: () => twoRivers,
   napkin_dispenser: () => napkinProto,
   globe_pendant: () => pendantProto,
 };
@@ -398,6 +436,7 @@ document.getElementById('export')?.addEventListener('click', async () => {
 // ------------------------------------------------------------------ loop
 const clock = new THREE.Clock();
 let t = 0;
+let doorOpen = 0;
 const amberMats = new Set();
 neon.traverse((o) => { if (o.isMesh && o.material.isMeshBasicMaterial && o.material.color.r > 1.9 && o.material.color.b === 0) amberMats.add(o.material); });
 function frame() {
@@ -405,6 +444,11 @@ function frame() {
   t += dt;
   if (mode === 'walk') walk.update(dt);
   else orbit.update();
+  // Doors swing open when you walk up to them (inside or out).
+  const near = mode === 'walk' && Math.hypot(walk.position.x - X1, walk.position.z - DOOR_Z) < 2.3;
+  doorOpen += ((near ? 1 : 0) - doorOpen) * Math.min(1, dt * 4);
+  door.userData.setOpen(doorOpen);
+  doorCollider.active = doorOpen < 0.7;
   const f = 0.94 + 0.06 * Math.sin(t * 31) * Math.sin(t * 7.3); // subtle neon buzz
   for (const m of amberMats) m.color.setRGB(2.0 * f, 0.42 * f, 0.0);
   composer.render();

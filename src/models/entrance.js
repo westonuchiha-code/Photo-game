@@ -32,9 +32,13 @@ export function makeDoubleDoor(mats, { w = 1.9, h = 2.2 } = {}) {
   g.name = 'glass_double_door';
   const t = 0.12; // wide stiles like the photo's bronze frames
   const leafW = w / 2;
+  const leaves = [];
   for (const s of [-1, 1]) {
+    // each leaf pivots on its hinge at the outer edge of the opening
     const leaf = new THREE.Group();
-    const cx = s * leafW / 2;
+    leaf.position.x = s * w / 2;
+    leaf.userData.side = s;
+    const cx = s * leafW / 2 - s * w / 2;
     leaf.add(box(leafW, 0.2, 0.05, mats.doorFrame, cx, 0.1, 0));           // kick rail
     leaf.add(box(leafW, t, 0.05, mats.doorFrame, cx, h - t / 2, 0));        // top rail
     leaf.add(box(t, h, 0.05, mats.doorFrame, cx - leafW / 2 + t / 2, h / 2, 0));
@@ -50,7 +54,13 @@ export function makeDoubleDoor(mats, { w = 1.9, h = 2.2 } = {}) {
     leaf.add(bar);
     for (const e of [-1, 1]) leaf.add(box(0.03, 0.03, 0.06, mats.bolt, cx + e * (leafW / 2 - t - 0.04), 1.05, 0.03));
     g.add(leaf);
+    leaves.push(leaf);
   }
+  g.userData.leaves = leaves;
+  // Swing both leaves outward (toward local -z, the street) by `amount` 0..1.
+  g.userData.setOpen = (amount) => {
+    for (const l of leaves) l.rotation.y = -l.userData.side * amount * 1.45;
+  };
   // Outer frame + threshold.
   g.add(box(w + 0.16, 0.1, 0.12, mats.doorFrame, 0, h + 0.05, 0));
   g.add(box(0.08, h + 0.1, 0.12, mats.doorFrame, -w / 2 - 0.04, (h + 0.1) / 2, 0));

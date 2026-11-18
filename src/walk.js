@@ -109,6 +109,7 @@ export class WalkControls {
   _collide() {
     const p = this.position, R = 0.25, b = this.bounds;
     for (const c of this.colliders) {
+      if (c.active === false) continue; // e.g. an open door
       if (c.type === 'circle') {
         const dx = p.x - c.x, dz = p.z - c.z, d = Math.hypot(dx, dz), m = c.r + R;
         if (d < m && d > 1e-6) { p.x = c.x + (dx / d) * m; p.z = c.z + (dz / d) * m; }

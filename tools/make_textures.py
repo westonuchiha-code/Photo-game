@@ -368,6 +368,36 @@ _poster = photo.transform((300, 600), Image.QUAD, [1927, 474, 1921, 825, 2075, 8
 _poster.transform((256, 640), Image.QUAD, [72, 22, 36, 578, 252, 580, 284, 22], Image.BICUBIC).save(os.path.join(OUT, "poster.png"))
 print("wrote poster.png")
 
+# ---------------------------------------------------------------- street sign photos
+LQ, LA = load("liquor-sign")
+TR, TA = load("two-rivers-sign")
+
+# Sign faces, straightened. The LIQUOR face is backlit, so its baked light is kept.
+LQ.transform((1024, 400), Image.QUAD, [396, 670, 450, 1344, 1656, 1330, 1652, 864], Image.BICUBIC).save(os.path.join(OUT, "liquor_face.png"))
+TR.transform((600, 540), Image.QUAD, [890, 550, 890, 1110, 1490, 1096, 1504, 696], Image.BICUBIC).save(os.path.join(OUT, "two_rivers_face.png"))
+print("wrote liquor_face.png, two_rivers_face.png")
+palette["liquor_letters"] = hexc(med(LA, (600, 900, 1500, 1200), lambda p: (p[:, 1] > p[:, 2]) & (p[:, 0] < 190) & (p[:, 0] > 90)))
+
+# Sidewalk concrete (Two Rivers photo): quilt a smooth patch, then cut the
+# tooled joints back in at the slab size seen in the photos (~1.5 m).
+walk_src = delight(TA[2350:2680, 0:450], 70)
+walk = quilt(walk_src, (512, 512), patch=96, contrast=1.4)
+yy, xx = np.mgrid[0:512, 0:512]
+joint = (np.minimum(yy, 511 - yy) < 2) | (np.minimum(xx, 511 - xx) < 2)
+walk[joint] *= 0.62
+save("sidewalk.png", walk)
+save("sidewalk_normal.png", normal_from_height(blur(np.where(joint, 0.0, 1.0) + lum(walk) / 255.0 * 0.3, 1.0), 2.0))
+
+# Packed dirt (LIQUOR photo, outside the shadow) and gravel bed (Two Rivers photo).
+dirt_src = delight(LA[2500:3000, 1550:2240], 80)
+dirt = quilt(dirt_src, (512, 512), patch=96, contrast=1.3)
+save("dirt.png", dirt)
+save("dirt_normal.png", normal_from_height(blur(lum(dirt) / 255.0, 0.7), 4.0))
+gravel_src = delight(TA[2000:2700, 1300:2252], 80)
+gravel = quilt(gravel_src, (512, 512), patch=112, contrast=1.2)
+save("gravel.png", gravel)
+save("gravel_normal.png", normal_from_height(blur(lum(gravel) / 255.0, 0.6), 6.0))
+
 with open(os.path.join(OUT, "palette.json"), "w") as f:
     json.dump(palette, f, indent=2)
 print("wrote palette.json")
