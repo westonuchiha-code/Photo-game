@@ -124,4 +124,4 @@ This is a running list, added to as models get built. Nothing here is urgent.
 - Ivy pillars: leaf clumps are low-poly; could use leaf cards. The hall behind is a simple glass box.
 - Pond: water reflections are painted streaks, not real reflections. Skyline towers sit inside the world
   (west of the plaza) rather than on the horizon.
-- Rock door: rock slabs are boxes; the photo's are more organic.
+- Rock door: rebuilt as a relief-sculpted surface from the photo. The bottom edge of the shutter shows a smear where the photo had debris.

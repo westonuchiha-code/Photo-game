@@ -250,52 +250,66 @@ export function makeLotusPond(W = 26, D = 30) {
 // ---------------------------------------------------------------- fake-rock bar door
 export function makeRockDoor() {
   const g = new THREE.Group();
-  const rockT = ptex('fr_rock.png', 1, 1);
-  const rock = std({ map: rockT, roughness: 0.8, color: '#f0f0f0', emissive: '#1a1a1a' });
-  const W = 2.2, H = 4.2, T = 0.35;
-  const OW = 1.25, OH = 2.5;                       // door opening
-  // rock facade: a lumpy slab with the arched opening cut out (frame pieces around it)
-  const r = rng(7);
-  const left = lumpyBox((W - OW) / 2, H, T, rock, 0.06, 1, 0.9, 0.12); left.position.set(-W / 2 + (W - OW) / 4, H / 2, 0); g.add(left);
-  const right = lumpyBox((W - OW) / 2, H, T, rock, 0.06, 2, 0.9, 0.12); right.position.set(W / 2 - (W - OW) / 4, H / 2, 0); g.add(right);
-  const top = lumpyBox(OW, H - OH - 0.45, T, rock, 0.06, 3, 0.9, 0.12); top.position.set(0, OH + 0.45 + (H - OH - 0.45) / 2, 0); g.add(top);
-  // jagged protruding slabs (the stacked-stone look in the photo)
-  for (let i = 0; i < 70; i++) {
-    const w = 0.12 + r() * 0.22, h = 0.05 + r() * 0.07;
-    const x = (r() - 0.5) * (W - 0.45), y = r() * H;
-    if (Math.abs(x) < OW / 2 + 0.05 && y < OH + 0.6) continue;
-    const slab = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.12 + r() * 0.1, 2, 1, 1), rock);
-    slab.position.set(x, y, T / 2 + 0.03); slab.rotation.set((r() - 0.5) * 0.3, (r() - 0.5) * 0.4, (r() - 0.5) * 0.25); slab.castShadow = true; g.add(slab);
-  }
-  // irregular silhouette on the top edge
-  for (let i = 0; i < 9; i++) { const c2 = new THREE.Mesh(new THREE.DodecahedronGeometry(0.2 + r() * 0.15, 0), rock); c2.position.set(-W / 2 + 0.12 + i * (W - 0.24) / 8, H + (r() - 0.3) * 0.15, 0); c2.scale.z = 0.6; g.add(c2); }
-  // arch of rounded stones over the shutter
-  const ar = OW / 2 + 0.12;
-  for (let i = 0; i <= 12; i++) {
-    const a = Math.PI - i / 12 * Math.PI;
-    const st = new THREE.Mesh(new THREE.SphereGeometry(0.15, 12, 10), rock);
-    st.scale.set(1.0, 0.75, 0.8); st.position.set(Math.cos(a) * ar, OH + Math.sin(a) * ar * 0.75 - 0.05, T / 2 + 0.06); st.rotation.z = a - Math.PI / 2; st.castShadow = true; g.add(st);
-  }
-  for (const s of [-1, 1]) for (let i = 0; i < 6; i++) { const st = new THREE.Mesh(new THREE.SphereGeometry(0.14, 10, 8), rock); st.scale.set(0.8, 1.1, 0.7); st.position.set(s * (OW / 2 + 0.1), 0.2 + i * 0.42, T / 2 + 0.05); g.add(st); }
-  // dark recess + roll shutter with made-up notices
-  g.add(box(OW, OH + 0.4, 0.05, std({ color: '#0c0c0c' }), 0, (OH + 0.4) / 2, -0.15));
-  const sh = canvasTex(256, 512, (c, w, h) => { c.fillStyle = '#4a4642'; c.fillRect(0, 0, w, h); for (let y = 0; y < h; y += 14) { c.fillStyle = '#6a6460'; c.fillRect(0, y, w, 8); c.fillStyle = '#1a1816'; c.fillRect(0, y + 10, w, 3); } const rr = rng(3); for (let i = 0; i < 40; i++) { c.fillStyle = `rgba(${rr() < 0.5 ? '160,120,80' : '200,200,190'},${rr() * 0.25})`; c.fillRect(rr() * w, rr() * h, 4 + rr() * 30, 3); } c.fillStyle = 'rgba(200,60,40,0.5)'; c.fillRect(40, 60, 30, 6); });
-  g.add(box(OW - 0.02, OH + 0.3, 0.04, std({ map: sh, metalness: 0.4, roughness: 0.6 }), 0, (OH + 0.3) / 2, -0.1));
-  const notice = (x, y, head, lines, col) => {
-    const t = canvasTex(160, 220, (c, w, h) => { c.fillStyle = '#f6f6f2'; c.fillRect(0, 0, w, h); c.fillStyle = col; c.fillRect(0, 0, w, 30); c.fillStyle = '#fff'; fitText(c, head, w / 2, 16, w - 16, 22, '"Oswald"', { weight: '600' }); c.fillStyle = '#222'; lines.forEach((l, i) => fitText(c, l, w / 2, 60 + i * 30, w - 20, 22, '"Roboto Condensed"')); });
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(0.32, 0.44), std({ map: t })); m.position.set(x, y, -0.075); g.add(m);
+  const W = 2.2, H = W * 1650 / 760;            // facade size taken from the photo's proportions
+  const T = 0.3;
+  // sculpted facade: a dense grid displaced by the relief map baked from the photo (lit stone faces
+  // stand proud, cracks sink), coloured by the photo itself; the shutter area is recessed and flat
+  const SX = 150, SY = 320;
+  const geo = new THREE.PlaneGeometry(W, H, SX, SY);
+  const faceT = ptex('fr_face.png'); faceT.wrapS = faceT.wrapT = THREE.ClampToEdgeWrapping;
+  const faceM = new THREE.MeshStandardMaterial({ map: faceT, alphaTest: 0.5, roughness: 0.75, color: '#f4f4f4', emissive: '#141414', side: THREE.DoubleSide });
+  const face = new THREE.Mesh(geo, faceM);
+  face.position.set(0, H / 2, 0); face.castShadow = face.receiveShadow = true;
+  g.add(face);
+  const img = new Image();
+  img.onload = () => {
+    const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+    const x = c.getContext('2d'); x.drawImage(img, 0, 0);
+    const d = x.getImageData(0, 0, img.width, img.height).data;
+    const at = (u, v) => { const px = Math.min(img.width - 1, Math.max(0, Math.round(u * (img.width - 1)))), py = Math.min(img.height - 1, Math.max(0, Math.round((1 - v) * (img.height - 1)))); const i = (py * img.width + px) * 4; return [d[i] / 255, d[i + 1] / 255]; };
+    const p = geo.attributes.position, uv = geo.attributes.uv;
+    for (let i = 0; i < p.count; i++) {
+      // average a small neighbourhood so the relief is smooth, not noisy
+      let h = 0, m = 0; const u = uv.getX(i), v = uv.getY(i);
+      const N = [[0, 0], [0.006, 0], [-0.006, 0], [0, 0.003], [0, -0.003], [0.004, 0.002], [-0.004, -0.002], [0.004, -0.002], [-0.004, 0.002]];
+      for (const [du, dv] of N) { const [a, b] = at(u + du, v + dv); h += a; m += b; }
+      h /= N.length; m /= N.length;
+      const rockZ = 0.03 + h * 0.11;
+      p.setZ(i, m > 0.5 ? rockZ : -0.1);
+    }
+    geo.computeVertexNormals();
+    p.needsUpdate = true;
   };
-  notice(-0.2, 1.75, 'NO PARKING', ['Keep the door', 'clear at all', 'times — thanks'], '#c8202a');
-  notice(0.2, 1.75, 'GROTTO BAR', ['Open late', 'Wed – Sun', '8 PM till dawn'], '#2a4a8a');
-  // red raised numbers above the arch (made-up)
-  const num = canvasTex(256, 128, (c, w, h) => { c.clearRect(0, 0, w, h); c.fillStyle = '#c8202a'; c.strokeStyle = '#3a0a0a'; c.lineWidth = 8; fitText(c, '717', w / 2, h / 2 + 6, w - 20, 110, '"Alfa Slab One"', { stroke: 1 }); });
-  const nm = new THREE.Mesh(new THREE.PlaneGeometry(0.75, 0.37), std({ map: num, transparent: true, alphaTest: 0.4, roughness: 0.35 }));
-  nm.position.set(0, OH + 1.0, T / 2 + 0.08); g.add(nm);
-  // vertical carved bar name down the right jamb (made up)
-  const vt = canvasTex(64, 320, (c, w, h) => { c.clearRect(0, 0, w, h); c.fillStyle = 'rgba(200,60,40,0.85)'; ['G', 'R', 'O', 'T', 'T', 'O'].forEach((ch, i) => fitText(c, ch, w / 2, 30 + i * 50, 50, 44, '"Alfa Slab One"')); });
-  const vm = new THREE.Mesh(new THREE.PlaneGeometry(0.16, 0.8), std({ map: vt, transparent: true, alphaTest: 0.3 })); vm.position.set(W / 2 - 0.25, 1.5, T / 2 + 0.07); g.add(vm);
-  // round stone step slab
-  const step = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.66, 0.16, 28), std({ color: '#5a5856', roughness: 0.9 })); step.scale.z = 0.6; step.position.set(0, 0.08, 0.35); step.castShadow = true; g.add(step);
+  img.src = 'assets/textures/fr_height.png';
+  // body behind the facade so the sides read solid, plus a dark void behind the shutter edges
+  g.add(box(W - 0.1, H - 0.25, T, std({ color: '#2a2a2c', roughness: 0.9 }), 0, (H - 0.25) / 2, -T / 2 - 0.13));
+  // made-up raised red number: a stack of layers so it has real thickness
+  const numT = canvasTex(256, 128, (c, w, h) => { c.clearRect(0, 0, w, h); c.fillStyle = '#c41e22'; fitText(c, '808', w / 2, h / 2 + 6, w - 30, 112, '"Alfa Slab One"'); });
+  const numSide = canvasTex(256, 128, (c, w, h) => { c.clearRect(0, 0, w, h); c.fillStyle = '#7a1214'; fitText(c, '808', w / 2, h / 2 + 6, w - 30, 112, '"Alfa Slab One"'); });
+  for (let i = 0; i < 6; i++) {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.31), new THREE.MeshStandardMaterial({ map: i === 5 ? numT : numSide, transparent: true, alphaTest: 0.5, roughness: 0.35 }));
+    m.position.set(0.02, H * (1 - 190 / 825), 0.11 + i * 0.008); m.castShadow = i === 0; g.add(m);
+  }
+  // made-up notices taped to the shutter (on the recessed plane)
+  const notice = (x, y, head, lines, col) => {
+    const t = canvasTex(160, 220, (c, w, h) => { c.fillStyle = '#f6f6f2'; c.fillRect(0, 0, w, h); c.fillStyle = col; c.fillRect(0, 0, w, 30); c.fillStyle = '#fff'; fitText(c, head, w / 2, 16, w - 16, 22, '"Oswald"', { weight: '600' }); c.fillStyle = '#222'; lines.forEach((l, i) => fitText(c, l, w / 2, 60 + i * 30, w - 20, 22, '"Roboto Condensed"')); c.fillStyle = 'rgba(220,220,200,0.8)'; c.fillRect(w / 2 - 20, 0, 40, 8); });
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.41), std({ map: t, roughness: 0.8 })); m.position.set(x, y, -0.092); m.rotation.z = (x > 0 ? 0.02 : -0.015); g.add(m);
+  };
+  notice(-0.2, H * (1 - 427 / 825), 'NO PARKING', ['Keep the door', 'clear at all', 'times — thanks'], '#c8202a');
+  notice(0.17, H * (1 - 427 / 825), 'GROTTO BAR', ['Open late', 'Wed – Sun', '8 PM till dawn'], '#2a4a8a');
+  // small carved name down the right jamb (made-up), painted red like the photo's
+  const vt = canvasTex(64, 320, (c, w, h) => { c.clearRect(0, 0, w, h); c.fillStyle = 'rgba(190,40,30,0.9)'; ['G', 'R', 'O', 'T', 'T', 'O'].forEach((ch, i) => fitText(c, ch, w / 2, 30 + i * 50, 50, 44, '"Alfa Slab One"')); });
+  const vm = new THREE.Mesh(new THREE.PlaneGeometry(0.13, 0.65), std({ map: vt, transparent: true, alphaTest: 0.3 })); vm.position.set(0.81, H * (1 - 470 / 825), 0.13); g.add(vm);
+  // shutter bottom bar + a padlock, the round stone step (photo texture on top)
+  g.add(box(1.36, 0.06, 0.06, std({ color: '#3a3836', metalness: 0.5 }), 0.0, 0.06, -0.07));
+  const lockB = box(0.06, 0.07, 0.03, std({ color: '#b8923a', metalness: 0.7, roughness: 0.3 }), 0.25, 0.12, -0.03); g.add(lockB);
+  const stepTop = ptex('fr_step.png'); stepTop.wrapS = stepTop.wrapT = THREE.ClampToEdgeWrapping;
+  const step = new THREE.Mesh(new THREE.CylinderGeometry(0.66, 0.7, 0.16, 36), [std({ map: ptex('fr_rock.png', 3, 0.3), color: '#9a9a9a', roughness: 0.9 }), std({ map: stepTop, color: '#8a8a8a', roughness: 0.85 }), std({ color: '#3a3836' })]);
+  step.scale.z = 0.55; step.position.set(0, 0.08, 0.4); step.castShadow = step.receiveShadow = true; g.add(step);
+  // pebbles at the foot like the photo
+  const rr = rng(13);
+  for (let i = 0; i < 30; i++) { const pb = new THREE.Mesh(new THREE.DodecahedronGeometry(0.02 + rr() * 0.03, 0), std({ color: ['#c8c4bc', '#8a8680', '#e0dcd4'][i % 3] })); pb.position.set((rr() < 0.5 ? -1 : 1) * (0.6 + rr() * 0.4), 0.02, 0.15 + rr() * 0.3); g.add(pb); }
+  const ll2 = new THREE.PointLight('#ffe0b8', 4, 5, 1.5); ll2.position.set(0, 2.2, 1.3); g.add(ll2);
   // right: grey stucco wall, wire grille with umbrellas, grey pipe, black lamp, dark plaque
   const stucco = std({ color: '#d8d6d0', roughness: 0.95 });
   g.add(box(2.4, H + 0.6, 0.2, stucco, W / 2 + 1.2, (H + 0.6) / 2, -0.2));
@@ -311,7 +325,6 @@ export function makeRockDoor() {
   g.add(box(0.04, 0.04, 0.12, std({ color: '#141414' }), W / 2 + 1.8, 3.2, -0.12));
   const lens = new THREE.Mesh(new THREE.CircleGeometry(0.05, 14), glow(2.0, 1.8, 1.4)); lens.position.set(W / 2 + 1.8, 3.2, 0.101); g.add(lens);
   const ll = new THREE.PointLight('#ffd8a0', 6, 7, 1.4); ll.position.set(W / 2 + 0.6, 3.0, 1.0); g.add(ll);
-  const ll2 = new THREE.PointLight('#ffe0b8', 4, 5, 1.5); ll2.position.set(0, 2.2, 1.3); g.add(ll2);
   const plq = canvasTex(256, 256, (c, w, h) => { c.fillStyle = '#2a1e16'; c.fillRect(0, 0, w, h); c.strokeStyle = '#7a5a30'; c.lineWidth = 6; c.strokeRect(8, 8, w - 16, h - 16); c.fillStyle = '#e8c870'; fitText(c, 'GROTTO', w / 2, 90, w - 50, 54, '"Cinzel"', { weight: '700' }); fitText(c, 'BASEMENT BAR', w / 2, 150, w - 50, 30, '"Cinzel"', { weight: '700' }); fitText(c, 'since 1987', w / 2, 200, w - 70, 24, '"Caveat"', { weight: '700' }); });
   g.add(box(0.6, 0.6, 0.04, [std({ color: '#2a1e16' }), std({ color: '#2a1e16' }), std({ color: '#2a1e16' }), std({ color: '#2a1e16' }), std({ map: plq, roughness: 0.4 }), std({ color: '#2a1e16' })], W / 2 + 1.5, 2.2, -0.08));
   // wooden sandwich board on the left (made-up)
@@ -322,6 +335,6 @@ export function makeRockDoor() {
   sb.position.set(-W / 2 - 0.7, 0, 0.6); sb.rotation.y = 0.35; g.add(sb);
   // left neighbour wall (orange timber shop front, just the edge)
   g.add(box(1.8, H + 0.4, 0.2, std({ color: '#c8783a', roughness: 0.7 }), -W / 2 - 0.9, (H + 0.4) / 2, -0.25));
-  g.userData.colliders = [[-W / 2, -OW / 2, -0.2, T / 2 + 0.1], [OW / 2, W / 2, -0.2, T / 2 + 0.1], [-OW / 2, OW / 2, -0.2, 0.0], [W / 2, W / 2 + 2.4, -0.3, 0.35], [-W / 2 - 1.8, -W / 2, -0.35, -0.1]];
+  g.userData.colliders = [[-W / 2, W / 2, -T, 0.25], [-0.7, 0.7, 0.2, 0.62], [W / 2, W / 2 + 2.4, -0.3, 0.35], [-W / 2 - 1.8, -W / 2, -0.35, -0.1]];
   return g;
 }

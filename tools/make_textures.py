@@ -1273,6 +1273,56 @@ alpha = np.clip((lumr - 70) / 40, 0, 1) * np.clip((warm + 5) / 20, 0, 1)
 alpha = np.maximum(alpha, (yy > 0.35).astype(np.float32))
 Image.fromarray(np.dstack([np.clip(_rd[..., :3], 0, 255), alpha * 255]).astype(np.uint8), "RGBA").save(os.path.join(OUT, "pd_reeds.png"))
 
+# ---------------------------------------------------------------- rock bar facade: colour + relief (fake-rock photo)
+# work in the 900-px thumbnail frame of the photo; facade x 250..630, y 20..845
+def _fr_build():
+    from PIL import ImageFilter as _IF
+    full = _cl("fake-rock-bar-door"); k = full.size[0] / 900
+    S = 2.0                                                # output px per thumbnail px
+    fx0, fy0, fx1, fy1 = 250, 20, 630, 845
+    face = full.crop(tuple(int(v * k) for v in (fx0, fy0, fx1, fy1))).resize((int((fx1 - fx0) * S), int((fy1 - fy0) * S)), Image.LANCZOS)
+    A = np.asarray(face).astype(np.float32)
+    def box_(x0, y0, x1, y1): return int((x0 - fx0) * S), int((y0 - fy0) * S), int((x1 - fx0) * S), int((y1 - fy0) * S)
+    def patch(dst, src):                                  # copy src box over dst box with feathered edges
+        a = box_(*dst); b = box_(*src)
+        h, w = a[3] - a[1], a[2] - a[0]
+        P = A[b[1]:b[1] + h, b[0]:b[0] + w].copy()
+        yy, xx = np.mgrid[0:h, 0:w]
+        f = np.minimum(np.minimum(xx, w - 1 - xx), np.minimum(yy, h - 1 - yy)).astype(np.float32)
+        wgt = np.clip(f / 10, 0, 1)[..., None]
+        A[a[1]:a[3], a[0]:a[2]] = A[a[1]:a[3], a[0]:a[2]] * (1 - wgt) + P * wgt
+    patch((385, 170, 500, 250), (270, 170, 385, 250))      # the real house number
+    patch((365, 400, 505, 495), (365, 545, 505, 640))      # paper notices on the shutter -> plain slats
+    patch((555, 430, 605, 545), (555, 590, 605, 705))      # carved name down the right jamb
+    col = np.clip(A, 0, 255).astype(np.uint8)
+    # relief: high-passed luminance (lit stone faces protrude), plus a gentle overall bulge
+    lum = A.mean(-1)
+    L = Image.fromarray(np.clip(lum, 0, 255).astype(np.uint8))
+    fine = np.asarray(L.filter(_IF.GaussianBlur(5))).astype(np.float32)
+    broad = np.asarray(L.filter(_IF.GaussianBlur(40))).astype(np.float32)
+    hgt = np.clip((fine - broad) / 90 + 0.5, 0, 1)
+    hgt = np.asarray(Image.fromarray((hgt * 255).astype(np.uint8)).filter(_IF.GaussianBlur(3))).astype(np.float32) / 255
+    # shutter mask: arch-topped rectangle (thumbnail coords: x 316..548, sides to y 380, crown at 326)
+    H_, W_ = lum.shape
+    yy, xx = np.mgrid[0:H_, 0:W_]
+    tx = xx / S + fx0; ty = yy / S + fy0
+    cx, crown, spring = 432, 326, 395
+    rx = 116.0
+    inside = (tx > 316) & (tx < 548) & (ty < 798) & ((ty > spring) | (((tx - cx) / rx) ** 2 + ((ty - spring) / (spring - crown)) ** 2 < 1))
+    # background (wall above the irregular top): bright + grey
+    sat = A.max(-1) - A.min(-1)
+    bg = (lum > 175) & (sat < 30) & (ty < 75)
+    bg = bg | (tx < 259) | ((tx > 612) & (ty > 470))      # neighbour sign / grille at the edges
+    out_h = np.where(inside, 0.0, 0.15 + hgt * 0.85)
+    rgba = np.dstack([col, (np.where(bg, 0, 255)).astype(np.uint8)])
+    Image.fromarray(rgba, "RGBA").save(os.path.join(OUT, "fr_face.png"))
+    m = np.where(inside, 0, 255).astype(np.uint8)
+    Image.fromarray(np.dstack([(out_h * 255).astype(np.uint8), m, np.where(bg, 0, 255).astype(np.uint8)]), "RGB").save(os.path.join(OUT, "fr_height.png"))
+    # round step stone texture
+    full.crop(tuple(int(v * k) for v in (345, 805, 515, 885))).resize((512, 240), Image.LANCZOS).save(os.path.join(OUT, "fr_step.png"))
+    print("wrote fr_face / fr_height", face.size)
+_fr_build()
+
 with open(os.path.join(OUT, "palette.json"), "w") as f:
     json.dump(palette, f, indent=2)
 print("wrote palette.json")
