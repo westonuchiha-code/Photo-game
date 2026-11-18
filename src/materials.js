@@ -95,7 +95,7 @@ export function makeMaterials() {
     subwayTile: (rx, ry) => surface('subway_tile', rx, ry, { normalScale: 1.0, roughness: 0.15 }),
     wall: new THREE.MeshStandardMaterial({ color: palette.wall, roughness: 0.9 }),
     limeWall: new THREE.MeshStandardMaterial({ color: palette.lime_wall, roughness: 0.85 }),
-    ceiling: new THREE.MeshStandardMaterial({ color: '#f4f3ef', emissive: '#5a5855', roughness: 1 }),
+    ceiling: new THREE.MeshStandardMaterial({ color: '#f4f3ef', emissive: '#26251f', roughness: 1 }),
     // Teal window trim (sampled from the frame beside the tile wall in the bar photo).
     teal: new THREE.MeshStandardMaterial({ color: '#2f7273', roughness: 0.45, metalness: 0.3 }),
     black: new THREE.MeshStandardMaterial({ color: '#151516', roughness: 0.45 }),

@@ -7,6 +7,7 @@ Rules (from you):
   sign's shape and material. Keep text that's already generic (LIQUOR).
 
 ## Approved
+- Trees
 - Walk signal poles
 - Moon behind clouds
 - Sky, clouds, moon

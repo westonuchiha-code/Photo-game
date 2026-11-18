@@ -30,13 +30,13 @@ import { makeRockBed, makeGrassTufts, makeCurbWithLeaves, makeLooseLeaves, makeB
 import { WalkControls } from './walk.js';
 
 // ------------------------------------------------------------------ renderer
-const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true, precision: 'highp', powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, matchMedia('(pointer: coarse)').matches ? 1.5 : 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.05;
+renderer.toneMappingExposure = 0.85;
 document.getElementById('app').appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
@@ -182,7 +182,7 @@ outside.add(farLights);
 scene.add(outside);
 
 // ------------------------------------------------------------------ lights
-scene.add(new THREE.HemisphereLight('#ffffff', '#7a6c5c', 0.9));
+scene.add(new THREE.HemisphereLight('#dfe6f0', '#5e544a', 0.55));
 const key = new THREE.DirectionalLight('#fff6ea', 1.2);
 key.position.set(1.5, 8, 2);
 key.target.position.set(0, 0, 0);
@@ -193,7 +193,7 @@ key.shadow.bias = -0.0004;
 key.shadow.normalBias = 0.02;
 scene.add(key, key.target);
 for (const [x, z] of [[-5, -2.5], [0, -2.5], [5, -2.5], [-5, 2.5], [0, 2.5], [5, 2.5]]) {
-  const p = new THREE.PointLight('#eef7ff', 3.0, 7, 2);
+  const p = new THREE.PointLight('#eef7ff', 2.2, 7, 2);
   p.position.set(x, H - 0.3, z);
   scene.add(p);
 }
@@ -562,7 +562,7 @@ setMode(qs.get('mode') === 'orbit' ? 'orbit' : 'walk', qs.get('view') || 'room')
 // ------------------------------------------------------------------ post: neon glow
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
-composer.addPass(new UnrealBloomPass(new THREE.Vector2(window.innerWidth / 2, window.innerHeight / 2), 0.55, 0.5, 1.35));
+composer.addPass(new UnrealBloomPass(new THREE.Vector2(window.innerWidth / 2, window.innerHeight / 2), 0.35, 0.45, 1.5));
 composer.addPass(new OutputPass());
 
 // ------------------------------------------------------------------ GLB export
@@ -613,6 +613,24 @@ document.getElementById('export')?.addEventListener('click', async () => {
   for (const [name, blob] of Object.entries(files)) setTimeout(() => download(blob, `${name}.glb`), 400 * i++);
 });
 
+// ------------------------------------------------------------------ light budget
+// Phone GPUs garble colours (green/pink surfaces) when a shader has to handle
+// too many lights. Only the MAX_LIGHTS point lights nearest the camera are on;
+// the count never changes, so shaders compile once and stay small.
+const IS_PHONE = matchMedia('(pointer: coarse)').matches;
+const MAX_LIGHTS = IS_PHONE ? 4 : 8;
+const pointLights = [];
+scene.traverse((o) => { if (o.isPointLight) pointLights.push(o); });
+const _lp = new THREE.Vector3();
+let lightTimer = 0;
+function updateLightBudget() {
+  const cam = camera.position;
+  pointLights.forEach((l) => { l.getWorldPosition(_lp); l.userData.d = _lp.distanceToSquared(cam); });
+  const sorted = [...pointLights].sort((a, b) => a.userData.d - b.userData.d);
+  sorted.forEach((l, i) => { l.visible = i < MAX_LIGHTS; });
+}
+updateLightBudget();
+
 // ------------------------------------------------------------------ loop
 const clock = new THREE.Clock();
 let t = 0;
@@ -630,6 +648,7 @@ function frame() {
   if (mode === 'walk') walk.update(dt);
   else orbit.update();
   sky.userData.update(camera, t);
+  if ((lightTimer += dt) > 0.4) { lightTimer = 0; updateLightBudget(); }
   walkPoles.forEach((p, i) => p.userData.update(t, i * 0.3));
   // Doors swing open when you walk up to them (inside or out).
   const near = mode === 'walk' && Math.hypot(walk.position.x - X1, walk.position.z - DOOR_Z) < 2.3;

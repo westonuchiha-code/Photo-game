@@ -38,7 +38,7 @@ function wallMat(kind) {
 }
 
 // A wall plane w x h whose UVs give the texture its real size.
-function wallPlane(kind, w, h) {
+export function wallPlane(kind, w, h) {
   const g = new THREE.PlaneGeometry(w, h);
   const [sw, sh] = WALLS[kind].size;
   const uv = g.attributes.uv;
@@ -66,7 +66,7 @@ function blinds(lit) {
 }
 
 // Window: white frame, sill, blinds behind glass. Faces +z.
-function makeWindow(w, h, lit) {
+export function makeWindow(w, h, lit) {
   const g = new THREE.Group();
   const t = 0.07;
   g.add(box(w + 0.02, h + 0.02, 0.06, shared.dark, 0, 0, -0.02, { shadow: false }));

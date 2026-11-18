@@ -919,6 +919,30 @@ for t in np.linspace(0.12, 0.85, 7):
 spr.save(os.path.join(OUT, "spruce_spray.png"))
 print("wrote spruce_spray.png")
 
+# ---------------------------------------------------------------- rabbit sculpture cut-out (clean)
+# Largest bright region of the rabbit photo only (drops street-light specks),
+# eye hole kept, painted white with the photo's soft shading.
+from collections import deque as _dq
+_r = np.asarray(Image.open(os.path.join(OUT, "rabbit.png"))).astype(np.float32)
+_m = _r[..., 3] > 128
+_lab = np.zeros(_m.shape, bool)
+_sy, _sx = np.unravel_index(np.argmax(blur(_m.astype(np.float32) * 255, 30)), _m.shape)
+_q = _dq([(_sy, _sx)]); _lab[_sy, _sx] = True
+while _q:
+    y, x = _q.popleft()
+    for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+        ny, nx = y + dy, x + dx
+        if 0 <= ny < _m.shape[0] and 0 <= nx < _m.shape[1] and _m[ny, nx] and not _lab[ny, nx]:
+            _lab[ny, nx] = True; _q.append((ny, nx))
+ys, xs = np.where(_lab)
+_lab = _lab[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
+shade = lum(_r[ys.min():ys.max() + 1, xs.min():xs.max() + 1, :3])
+shade = 0.85 + 0.15 * shade / max(shade[_lab].mean(), 1)
+rgb = np.clip(shade[..., None] * np.array([238, 236, 228], np.float32), 0, 255)
+a = blur(_lab.astype(np.float32) * 255, 0.8)
+Image.fromarray(np.concatenate([rgb, a[..., None]], -1).astype(np.uint8), "RGBA").save(os.path.join(OUT, "rabbit_cut.png"))
+print("wrote rabbit_cut.png", _lab.shape)
+
 with open(os.path.join(OUT, "palette.json"), "w") as f:
     json.dump(palette, f, indent=2)
 print("wrote palette.json")
