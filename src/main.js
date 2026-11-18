@@ -1002,7 +1002,7 @@ const junkArea = {};
     const pts = [[c[0], c[2]], [c[1], c[2]], [c[0], c[3]], [c[1], c[3]]].map(([x, z]) => [gx + x * cs + z * sn, gz - x * sn + z * cs]);
     rect(Math.min(...pts.map((p) => p[0])), Math.max(...pts.map((p) => p[0])), Math.min(...pts.map((p) => p[1])), Math.max(...pts.map((p) => p[1])));
   };
-  put(makeGraffitiFront(4.4), -15.5, 12.1, Math.PI);
+  { const gf = makeGraffitiFront(4.4); put(gf, -15.5, 12.1, Math.PI); const c = gf.userData.collider2; rect(-15.5 - c[1], -15.5 - c[0], 12.1 - c[3], 12.1 - c[2]); }
   add(plane(new THREE.MeshStandardMaterial({ color: '#4a4c4e', roughness: 0.9 }), -18.4, -12.6, 12.1, 16, 2.0, 1));
   put(makeArcadeCabinet(), -12.2, 11.55, Math.PI);
   put(makeCargoTrike({ cab: false, seed: 2 }), -19.0, 8.6, 0.0);
@@ -1136,7 +1136,7 @@ const VIEWS = {
   junkfront: { pos: [3.5, 2.2, 5.8], target: [3.5, 2.0, 12.2] },
   graffiti: { pos: [-15.2, 1.9, 7.0], target: [-15.5, 1.9, 12.1] },
   arcade: { pos: [-11.6, 1.6, 9.8], target: [-12.2, 1.3, 11.4] },
-  trike: { pos: [-16.4, 1.6, 6.2], target: [-19.4, 0.8, 8.6] },
+  trike: { pos: [-18.6, 1.5, 5.2], target: [-19.2, 0.7, 8.6] },
   trike2: { pos: [-2.6, 1.6, 6.2], target: [0.6, 1.0, 7.6] },
   walkinshelf: { pos: [17.6, 1.6, -44.0], target: [21.4, 1.0, -45.6] },
   van: { pos: [25.5, 1.9, -22.4], target: [21.5, 0.9, -26.5] },
