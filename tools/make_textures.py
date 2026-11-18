@@ -1177,12 +1177,6 @@ save("ab_osb.png", seamless(delight(_mt("kittens-boarded-wall", (0, 0, 800, 200)
 Image.fromarray(_mt("kittens-boarded-wall", (300, 215, 810, 650), (768, 656), 900).astype(np.uint8)).save(os.path.join(OUT, "ab_panel.png"))
 Image.fromarray(_mt("kittens-boarded-wall", (0, 632, 900, 795), (1024, 186), 900).astype(np.uint8)).save(os.path.join(OUT, "ab_navybase.png"))
 
-# ---------------------------------------------------------------- dirt site (rock-cairns photo)
-_rc = ImageOps.exif_transpose(Image.open("photos/misc/rock-cairns.jpg")).convert("RGB")
-_rk = _rc.size[0] / 563
-_rd = np.asarray(_rc.crop(tuple(int(v * _rk) for v in (20, 760, 540, 1000))).resize((1024, 472), Image.LANCZOS)).astype(np.float32)
-save("ds_dirt.png", quilt(delight(_rd, 90), (512, 512), patch=96, contrast=1.0))
-
 with open(os.path.join(OUT, "palette.json"), "w") as f:
     json.dump(palette, f, indent=2)
 print("wrote palette.json")

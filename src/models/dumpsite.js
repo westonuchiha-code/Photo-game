@@ -4,7 +4,6 @@
 //                     six big lugged tyres with yellow hubs. Made-up brand "TERRAMAX HX40".
 //   makePipeBarrier(len)  rusty steel pipe rail on pipe posts with diagonal braces (photo).
 //   makeSiteSign()    blue site-entrance sign on two posts, generic text.
-//   makeCairn(seed)   stack of flat stones balanced on each other.
 //   makeWeeds(n, w, d, seed) clumps of tall dry weeds (crossed alpha cards).
 // All face +x (truck forward) / +z (signs), origin at ground level.
 import * as THREE from 'three';
@@ -144,7 +143,7 @@ export function makeDumpTruck() {
   // made-up branding on the body side + hood
   const decal = (text, w, h, size) => new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshStandardMaterial({ transparent: true, roughness: 0.5, map: canvasTex(512, Math.round(512 * h / w), (c, cw, ch) => { c.fillStyle = '#151515'; c.font = `bold ${size}px Arial`; c.textBaseline = 'middle'; c.fillText(text, 8, ch / 2); }) }));
   for (const s of [-1, 1]) {
-    const d1 = decal('TERRAMAX', 2.2, 0.4, 110); d1.position.set(-1.5, 2.6, s * 1.72); d1.rotation.y = s < 0 ? Math.PI : 0; d1.rotation.x = s * -0.18; g.add(d1);
+    const d1 = decal('TERRAMAX', 2.2, 0.4, 82); d1.position.set(-1.5, 2.6, s * 1.72); d1.rotation.y = s < 0 ? Math.PI : 0; d1.rotation.x = s * -0.18; g.add(d1);
     const d2 = decal('HX40', 0.8, 0.28, 120); d2.position.set(4.3, 2.2, s * 1.11); d2.rotation.y = s < 0 ? Math.PI : 0; g.add(d2);
   }
   g.userData.collider = [-5.6, 5.3, -1.85, 1.85];
@@ -185,29 +184,6 @@ export function makeSiteSign() {
   });
   g.add(box(1.6, 1.2, 0.04, new THREE.MeshStandardMaterial({ map: t, roughness: 0.5 }), 0, 1.6, 0));
   for (const x of [-0.65, 0.65]) g.add(box(0.08, 2.2, 0.08, std({ color: '#8a8d90', metalness: 0.5 }), x, 1.1, -0.05));
-  return g;
-}
-export function makeCairn(seed = 1) {
-  const g = new THREE.Group();
-  const r = rng(seed);
-  const cols = ['#c9a89a', '#b8907e', '#d8c6b4', '#9aa6ac', '#bfa08a', '#e0cdb8'];
-  let y = 0;
-  const n = 5 + Math.floor(r() * 3);
-  for (let i = 0; i < n; i++) {
-    const big = i === 0 ? 1.4 : 1 - i * 0.08;
-    const w = (0.09 + r() * 0.05) * big, h = 0.025 + r() * 0.03, d = (0.06 + r() * 0.04) * big;
-    const geo = new THREE.DodecahedronGeometry(1, 1);
-    const p = geo.attributes.position;
-    for (let k = 0; k < p.count; k++) { const j = 0.85 + r() * 0.3; p.setXYZ(k, p.getX(k) * j, p.getY(k), p.getZ(k) * j); }
-    geo.computeVertexNormals();
-    const s = new THREE.Mesh(geo, std({ color: cols[Math.floor(r() * cols.length)], roughness: 0.95, flatShading: true }));
-    s.scale.set(w / 2, h / 2, d / 2);
-    s.position.set((r() - 0.5) * 0.02, y + h / 2, (r() - 0.5) * 0.02);
-    s.rotation.y = r() * 3; s.rotation.z = (r() - 0.5) * 0.12;
-    s.castShadow = true;
-    g.add(s);
-    y += h * 0.92;
-  }
   return g;
 }
 let weedMat = null;

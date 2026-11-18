@@ -41,7 +41,7 @@ Rules (from you):
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- 27d Dirt construction site north of the house lane: yellow articulated dump truck (made-up TERRAMAX HX40) with big lugged tyres, rusty pipe barrier with braces, blue site sign (generic text), dry weeds, dirt berms, tyre ruts, floodlight, two rock cairns + loose stones. Dirt texture from the cairn photo.
+- 27d Dirt construction site north of the house lane: yellow articulated dump truck (made-up TERRAMAX HX40) with big lugged tyres, rusty pipe barrier with braces, blue site sign (generic text), dry weeds, dirt berms, tyre ruts, floodlight. Uses the existing dirt texture (cairns + rocky ground dropped at your request).
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text

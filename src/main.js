@@ -40,7 +40,7 @@ import { makeStatueShrine, makeStoneShrine } from './models/shrines.js';
 import { makeTireWheel } from './models/wheel.js';
 import { makeHouse } from './models/houses.js';
 import { makeBlueHouse } from './models/bluehouse.js';
-import { makeDumpTruck, makePipeBarrier, makeSiteSign, makeCairn, makeWeeds } from './models/dumpsite.js';
+import { makeDumpTruck, makePipeBarrier, makeSiteSign, makeWeeds } from './models/dumpsite.js';
 import { makeDeliveryBag, makeCupCarrier, makePaperBag } from './models/delivery.js';
 import { WalkControls } from './walk.js';
 
@@ -834,10 +834,8 @@ const blueHouse = makeBlueHouse();
 // ------------------------------------------------------------------ dirt construction site (dump-truck + cairn photos)
 // North of the house lane, behind a rusty pipe barrier with a gap to walk through.
 {
-  const dt = new THREE.TextureLoader().load('assets/textures/ds_dirt.png');
-  dt.colorSpace = THREE.SRGBColorSpace; dt.wrapS = dt.wrapT = THREE.RepeatWrapping;
-  const dirtMat = new THREE.MeshStandardMaterial({ map: dt, roughness: 1 });
-  add(plane(dirtMat, 33, 63, -64, -47.7, 0.006, 2.5));
+  const dirtMat = mats.dirt;                // same dirt as the other lots
+  add(plane(dirtMat, 33, 63, -64, -47.7, 0.006, 1.6));
   // tyre ruts
   const rut = new THREE.MeshStandardMaterial({ color: '#4a3a2c', roughness: 1, transparent: true, opacity: 0.45, depthWrite: false });
   for (const z of [-55.6, -58.4]) { const m = new THREE.Mesh(new THREE.PlaneGeometry(26, 0.7), rut); m.rotation.x = -Math.PI / 2; m.rotation.z = 0.12; m.position.set(48, 0.009, z); add(m); }
@@ -857,11 +855,6 @@ const blueHouse = makeBlueHouse();
     const w = makeWeeds(Math.round((x1 - x0) * 1.2), x1 - x0, 0.9, Math.round(x0)); w.position.set((x0 + x1) / 2, 0, -48.3); add(w);
   }
   const sign = makeSiteSign(); sign.position.set(50.2, 0, -48.9); sign.rotation.y = -0.15; add(sign); rect(49.5, 50.9, -49.05, -48.75);
-  for (const [x, z, sd] of [[41.0, -52.2, 4], [41.42, -52.3, 9]]) { const c = makeCairn(sd); c.position.set(x, 0, z); add(c); }
-  // a few loose stones round the cairns
-  const stoneMat = new THREE.MeshStandardMaterial({ color: '#b9a090', roughness: 1, flatShading: true });
-  { let s = 21; const r = () => ((s = (s * 16807) % 2147483647) / 2147483647);
-    for (let i = 0; i < 26; i++) { const m = new THREE.Mesh(new THREE.DodecahedronGeometry(0.012 + r() * 0.025, 0), stoneMat); m.position.set(39.8 + r() * 3.0, 0.01, -53.4 + r() * 2.4); m.scale.y = 0.55; m.rotation.set(r() * 3, r() * 3, 0); add(m); } }
   // site floodlight
   const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 6, 10), new THREE.MeshStandardMaterial({ color: '#77797c', metalness: 0.5, roughness: 0.5 }));
   pole.position.set(39.0, 3, -57.5); add(pole); circle(39.0, -57.5, 0.2);
@@ -967,7 +960,6 @@ const VIEWS = {
   kitten: { pos: [39.7, 1.0, -32.3], target: [38.4, 0.8, -32.6] },
   dumpsite: { pos: [44.5, 2.6, -48.2], target: [48.0, 1.6, -57.0] },
   dumptruck: { pos: [54.6, 2.4, -53.0], target: [48.0, 1.8, -57.0] },
-  cairns: { pos: [41.9, 0.55, -51.5], target: [41.2, 0.1, -52.3] },
   walkinshelf: { pos: [17.6, 1.6, -44.0], target: [21.4, 1.0, -45.6] },
   van: { pos: [25.5, 1.9, -22.4], target: [21.5, 0.9, -26.5] },
   vanside: { pos: [24.6, 1.3, -29.2], target: [21.5, 0.7, -26.3] },

@@ -59,6 +59,5 @@ This is a running list, added to as models get built. Nothing here is urgent.
   planes overlapping (house lane / walkways). Find and fix in the overlap pass.
 - Truck: built from boxes, so the cab and hood are blocky. Could use rounded edges, a proper sloped
   hood, mud splatter, a raised dump bed variant, and a working beacon flash.
-- Cairn stones are lumpy; the photo shows flatter slabs.
 - The berms are plain half-spheres; they need a lumpier shape and tyre tracks running up them.
 - The pipe barrier gap lines up with the house lane but there's no path to it.
