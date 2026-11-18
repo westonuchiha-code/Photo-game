@@ -26,6 +26,7 @@ import { makeStreetBuilding } from './models/buildings.js';
 import { makePaverSidewalk, makeDrainCover, makePaverCrosswalk, makeTactilePlate, makeCracks, makeUtilityLid, makeTrafficIsland, makeDirtLot } from './models/streetground.js';
 import { makeSky } from './models/sky.js';
 import { makeOldVan } from './models/van.js';
+import { makeGrocery } from './models/grocery.js';
 import { makePatrolCart, makePatrolScooter } from './models/police.js';
 import { makeCreep } from './models/creep.js';
 import { makeScooter, makeBattery } from './models/scooter.js';
@@ -685,13 +686,28 @@ for (const [x, z] of [[32.6, -9.9], [33.6, -9.8]]) {
   circle(x, z, 0.5);
 }
 
+// ------------------------------------------------------------------ grocery store (store / dairy-cooler photos)
+// North of the tire-shop lot, front facing the lot. local (x, z) -> world (GS.x + x, GS.z + z)
+const GS = { x: 24, z: -41 };
+const grocery = makeGrocery();
+grocery.position.set(GS.x, 0, GS.z);
+add(grocery);
+add(plane(mats.lotConcrete, 12, 42, -35, -32, 0.003, 4));
+const groceryCols = [];
+for (const [x0, x1, z0, z1] of grocery.userData.colliders) {
+  const c = { type: 'box', minX: GS.x + x0, maxX: GS.x + x1, minZ: GS.z + z0, maxZ: GS.z + z1 };
+  colliders.push(c);
+  groceryCols.push(c);
+}
+const groceryDoor = groceryCols[grocery.userData.colliders.indexOf(grocery.userData.doorCol)];
+
 // ------------------------------------------------------------------ controls
 const walk = new WalkControls(camera, renderer.domElement, {
   bounds: null,
   areas: [
     { minX: X0 + 0.3, maxX: X1 - 0.3, minZ: Z0 + 0.3, maxZ: Z1 - 0.3 }, // restaurant
     { minX: X1 - 0.5, maxX: X1 + 0.6, minZ: DOOR_Z - 0.9, maxZ: DOOR_Z + 0.9 }, // doorway
-    { minX: X1 + 0.3, maxX: 66, minZ: -40, maxZ: 11.7 }, // outside
+    { minX: X1 + 0.3, maxX: 66, minZ: -47.5, maxZ: 11.7 }, // outside (incl. the grocery)
   ],
   colliders,
 });
@@ -750,6 +766,9 @@ const VIEWS = {
   creepface: { pos: [20.05, 1.72, 11.0], target: [19.5, 1.66, 11.55] },
   police: { pos: [34.0, 1.9, -5.4], target: [36.8, 0.8, -9.7] },
   policefront: { pos: [31.0, 1.3, -7.8], target: [33.1, 0.8, -9.8] },
+  grocery: { pos: [24, 3.2, -26], target: [24, 2, -35] },
+  dairy: { pos: [24.2, 1.6, -42.3], target: [25.2, 1.0, -46.5] },
+  walkin: { pos: [21.0, 1.8, -42.6], target: [16.5, 0.9, -46] },
   van: { pos: [25.5, 1.9, -22.4], target: [21.5, 0.9, -26.5] },
   vanside: { pos: [24.6, 1.3, -29.2], target: [21.5, 0.7, -26.3] },
   soup: { pos: [-2.85, 1.62, -4.0], target: [-3.1, 1.2, -4.7] },
@@ -879,6 +898,11 @@ function frame() {
   puffCup.userData.update(t);
   creep.userData.update(t);
   cart.userData.update(t);
+  {
+    const near = mode === 'walk' && Math.abs(walk.position.x - GS.x) < 2.2 && Math.abs(walk.position.z - (GS.z + 6)) < 2.6;
+    grocery.userData.update(dt, near);
+    groceryDoor.active = !grocery.userData.doorsOpen();
+  }
   if ((lightTimer += dt) > 0.4) { lightTimer = 0; updateLightBudget(); }
   walkPoles.forEach((p, i) => p.userData.update(t, i * 0.3));
   // Doors swing open when you walk up to them (inside or out).

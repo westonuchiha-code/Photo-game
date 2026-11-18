@@ -7,6 +7,7 @@ Rules (from you):
   sign's shape and material. Keep text that's already generic (LIQUOR).
 
 ## Approved
+- Police vehicles
 - Creepy hoodie figure
 - Food set 2 (snacks)
 - Scooter + batteries
@@ -32,8 +33,9 @@ Rules (from you):
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- Police vehicles (made-up Maple Creek Police / MCPD): three-wheel patrol cart with flashing roof
-  lights, two white patrol scooters; on the tire-shop lot. Screenshots: `screenshots/police*.png`.
+- Grocery store (made-up FRESHWAY MARKET): glass storefront with automatic sliding doors, milk coolers,
+  egg/butter case under a green canopy + wave band, two aisles, checkout, walk-in cooler with crates,
+  U-boat carts, evaporator, strip curtain. Screenshots: `screenshots/grocery.png`, `dairy.png`, `walkin.png`.
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
@@ -49,10 +51,6 @@ Rules (from you):
     (mushroom-egg, corn-shrimp, packaged display), canned drinks, dashi bottles in a vending
     machine, noodle-shop menu board with lanterns. Food models + textures; all packaging,
     can and menu text made up.
-22. Grocery store inside + walk-in dairy cooler (photos/store/): glass-door milk cooler with
-    gallon jugs and cartons, egg/butter case under a green canopy, walk-in cooler with
-    insulated panel walls, evaporator fans, stacked blue/black milk crates on pallets, green
-    U-boat carts with boxes, white rolling shelves, strip curtain. Made-up brands/prices.
 23. Warehouse pallets (photos/pallets/): plywood back wall, green/orange pallet racking, wood
     and plastic pallets stacked with cases (baking mixes, flour bags in shrink wrap, canned
     drinks, water bottle packs, crates, totes, dollies). Made-up brands.
