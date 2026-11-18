@@ -1202,6 +1202,37 @@ save("as_chipseal.png", quilt(cs, (512, 512), patch=96, contrast=1.05))
 save("wp_teal.png", seamless(delight(np.asarray(_m8("wheatpaste-street-art", (20, 560, 430, 790), (768, 432), 450)).astype(np.float32), 120)))
 _m8("wheatpaste-street-art", (176, 178, 304, 452), (256, 548), 450).save(os.path.join(OUT, "wp_skeleton.png"))
 
+# ---------------------------------------------------------------- city plaza (city photos, 28a)
+def _cl(n):
+    im = Image.open(f"photos/city/{n}.jpg")
+    try:
+        o = im.getexif().get(274, 1)
+    except Exception:
+        o = 1
+    im = im.convert("RGB")
+    return {3: im.rotate(180, expand=True), 6: im.rotate(270, expand=True), 8: im.rotate(90, expand=True)}.get(o, im)
+def _cc(im, b, size, thumb):
+    k = im.size[0] / thumb
+    return np.asarray(im.crop(tuple(int(v * k) for v in b)).resize(size, Image.LANCZOS)).astype(np.float32)
+_wh = _cl("brick-warehouse-sculptures")
+def _level(im, box_, thumb):
+    """Crop a patch and rotate it so its brick courses run level (max row-variance search)."""
+    k = im.size[0] / thumb
+    x0, y0, x1, y1 = (int(v * k) for v in box_)
+    pad = int(max(x1 - x0, y1 - y0) * 0.25)
+    big = im.crop((x0 - pad, y0 - pad, x1 + pad, y1 + pad))
+    best, ba = -1, 0.0
+    for a10 in range(-120, 121, 5):
+        a = a10 / 10
+        r = np.asarray(big.rotate(a, resample=Image.BILINEAR).convert("L")).astype(np.float32)[pad:-pad, pad:-pad]
+        v = r.mean(1).var()
+        if v > best:
+            best, ba = v, a
+    print("  level", ba)
+    return big.rotate(ba, resample=Image.BICUBIC).crop((pad, pad, pad + x1 - x0, pad + y1 - y0))
+save("cy_brick.png", seamless(delight(np.asarray(_level(_wh, (600, 430, 880, 590), 900).resize((512, 292), Image.LANCZOS)).astype(np.float32), 80)))
+save("cy_brickband.png", seamless(delight(np.asarray(_level(_wh, (320, 650, 600, 750), 900).resize((640, 228), Image.LANCZOS)).astype(np.float32), 80)))
+
 with open(os.path.join(OUT, "palette.json"), "w") as f:
     json.dump(palette, f, indent=2)
 print("wrote palette.json")

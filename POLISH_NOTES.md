@@ -73,3 +73,11 @@ This is a running list, added to as models get built. Nothing here is urgent.
 ## Texture tool
 - Fixed: quilted textures had flat holes (blank bricks in the red brick, flat spots in dirt and
   terrazzo). Those are filled now. The earlier "light cross patches" in the dirt site were this.
+
+## City plaza (28a)
+- Planter trees are lumpy low-poly spheres; swap for the real tree models.
+- The spiral sculptures are a bit thin and the curl is loose; the photo's are fatter with a tighter curl.
+- Grey paver band shows black gaps between pavers.
+- Warehouse brick reads dark at night; needs a wash light. The inscription repeats.
+- Oval building: windows are flat; could add depth and interior lights at night.
+- No buildings yet on the south/east edges of the plaza; city items 28b+ can fill those.

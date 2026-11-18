@@ -40,6 +40,7 @@ import { makeStatueShrine, makeStoneShrine } from './models/shrines.js';
 import { makeTireWheel } from './models/wheel.js';
 import { makeHouse } from './models/houses.js';
 import { makeBlueHouse } from './models/bluehouse.js';
+import { makeBrickGable, makeSpiral, makeOvalBuilding, makePebbleBench, makeOrnateLamp, makePlanter, makePaverTexture, makeGreyBandTexture } from './models/cityplaza.js';
 import { makePlywoodSheet, makeGlassShards, makePasteWall, makePickupZone } from './models/misc27e.js';
 import { makeDumpTruck, makePipeBarrier, makeSiteSign, makeWeeds } from './models/dumpsite.js';
 import { makeDeliveryBag, makeCupCarrier, makePaperBag } from './models/delivery.js';
@@ -883,6 +884,47 @@ const blueHouse = makeBlueHouse();
   const gl = makeGlassShards(1.4, 0.9, 420, 7); gl.position.set(23.3, 0, -25.6); add(gl);
 }
 
+// ------------------------------------------------------------------ city plaza (city photos, 28a)
+// West of the restaurant: a paved square reached by a sidewalk strip along the restaurant's south wall.
+{
+  const PX0 = -44, PX1 = -9, PZ0 = -14, PZ1 = 11.8;
+  const pt = makePaverTexture(); pt.repeat.set(1, 1);
+  const pavMat = new THREE.MeshStandardMaterial({ map: pt, roughness: 0.85 });
+  const placeRot = (o, gx, gz, rot) => {
+    o.position.set(gx, 0, gz); o.rotation.y = rot; add(o);
+    const c = Math.cos(rot), s = Math.sin(rot);
+    const col = (r) => { const [x0, x1, z0, z1] = r; const pts = [[x0, z0], [x1, z0], [x0, z1], [x1, z1]].map(([x, z]) => [gx + x * c + z * s, gz - x * s + z * c]);
+      rect(Math.min(...pts.map((p) => p[0])), Math.max(...pts.map((p) => p[0])), Math.min(...pts.map((p) => p[1])), Math.max(...pts.map((p) => p[1]))); };
+    if (o.userData.collider) col(o.userData.collider);
+    return o;
+  };
+  add(plane(pavMat, PX0, PX1, PZ0, PZ1, 0.006, 2.4));
+  add(plane(pavMat, PX1, 9.0, 5.3, 11.8, 0.006, 2.4));                    // connecting strip
+  // grey paver bands crossing the square (photo)
+  const bandMat = new THREE.MeshStandardMaterial({ map: makeGreyBandTexture(), roughness: 0.85 });
+  add(plane(bandMat, PX0, PX1, 2.2, 3.4, 0.008, 1.2, 2.4));
+  add(plane(bandMat, -27.6, -26.4, PZ0, PZ1, 0.009, 1.2, 2.4));
+  // brick warehouse gable on the west side, facing the square
+  placeRot(makeBrickGable(16, 12, 5.0, 4.0), PX0 + 0.2, -3.0, Math.PI / 2);
+  const sp1 = makeSpiral(false); placeRot(sp1, PX0 + 3.0, -6.2, 0.4); circle(PX0 + 2.6, -6.0, 0.6);
+  const sp2 = makeSpiral(true); placeRot(sp2, PX0 + 3.4, 1.4, -2.6); circle(PX0 + 3.5, 1.2, 0.6);
+  // white oval-window building on the north side
+  const ov = placeRot(makeOvalBuilding(24, 14, 11), -25.5, PZ0 + 0.2, 0);
+  // pebble benches in front of it
+  [[-35, -11.4, 0.1], [-32.8, -11.6, -0.2], [-30.6, -11.3, 0.3], [-19.6, -11.4, 0.2], [-17.2, -11.5, -0.1], [-15, -11.2, 0.4]].forEach(([x, z, r]) => {
+    const b = makePebbleBench(); b.position.set(x, 0, z); b.rotation.y = r; add(b); circle(x, z, 0.4);
+  });
+  // ornate lamps (lit) round the square
+  [[-38.5, -6.5], [-38.5, 8.5], [-30.2, -8.0], [-26.8, 8.5], [-14.0, -6.5], [-14.0, 8.5], [-2.0, 10.8]].forEach(([x, z]) => {
+    const l = makeOrnateLamp(); l.position.set(x, 0, z); add(l); circle(x, z, 0.25);
+    const pl = new THREE.PointLight('#ffd9a8', 7, 11, 1.5); pl.position.set(x, 3.4, z); add(pl);
+  });
+  // raised planters with small trees
+  [[-33, 0, 3.2, 2.0, 2], [-20, 0, 3.6, 2.2, 5], [-22, 7.5, 2.6, 1.8, 8], [-34, 7.8, 2.2, 1.8, 11]].forEach(([x, z, w, d, sd]) => {
+    const p = makePlanter(w, d, sd); p.position.set(x, 0, z); add(p); rect(x - w / 2, x + w / 2, z - d / 2, z + d / 2);
+  });
+}
+
 // delivery props elsewhere: drinks + bag outside an Elmwood unit door, a delivery tote by the scooter
 {
   const c = makeCupCarrier(); c.position.set(-0.6, 1.4, -2.8); apt.add(c);
@@ -898,6 +940,8 @@ const walk = new WalkControls(camera, renderer.domElement, {
     { minX: X1 + 0.3, maxX: 66, minZ: -47.5, maxZ: 11.7 }, // outside (incl. the grocery)
     { minX: GS.x + 0.3, maxX: GS.x + 8.7, minZ: GS.z - 13.7, maxZ: GS.z - 5.5 }, // grocery stockroom
     { minX: 34.0, maxX: 62.5, minZ: -63.5, maxZ: -47.0 }, // dirt site
+    { minX: -43.6, maxX: -9.0, minZ: -13.6, maxZ: 11.7 }, // city plaza
+    { minX: -9.5, maxX: 9.0, minZ: 5.4, maxZ: 11.7 }, // strip along the restaurant's south wall
   ],
   colliders,
 });
@@ -984,6 +1028,9 @@ const VIEWS = {
   pastewall: { pos: [36.4, 1.6, -54.2], target: [34.25, 1.4, -54.4] },
   plywood: { pos: [37.4, 1.7, -28.9], target: [36.6, 1.25, -31.5] },
   glass: { pos: [23.6, 1.1, -24.4], target: [23.3, 0.0, -25.6] },
+  plaza: { pos: [-12.0, 4.5, 10.5], target: [-28.0, 1.5, -2.0] },
+  warehouse: { pos: [-33.0, 2.4, -1.0], target: [-44.0, 4.5, -3.0] },
+  ovalbuilding: { pos: [-25.5, 2.4, 1.5], target: [-25.5, 4.5, -14.0] },
   walkinshelf: { pos: [17.6, 1.6, -44.0], target: [21.4, 1.0, -45.6] },
   van: { pos: [25.5, 1.9, -22.4], target: [21.5, 0.9, -26.5] },
   vanside: { pos: [24.6, 1.3, -29.2], target: [21.5, 0.7, -26.3] },

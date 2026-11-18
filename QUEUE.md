@@ -7,6 +7,7 @@ Rules (from you):
   sign's shape and material. Keep text that's already generic (LIQUOR).
 
 ## Approved
+- 27e Small misc props (misc batch 27 complete)
 - 27d Dump truck + dirt site
 - 27c Boarded blue house + cats (cats can stay generic: one cat model + a kitten)
 - 27b Delivery props
@@ -42,7 +43,7 @@ Rules (from you):
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- 27e Small misc props: night pickup crosswalk in the grocery lot (chip-seal from the photo, zebra bars, yellow hatched bays, cones, red Pickup 1 gantry + numbered pillars, generic text); teal paste-up wall at the dirt site (skeleton print from the photo + redrawn notes with made-up words); plywood sheet with the ink stamp leaning on the blue house; broken car glass by the van.
+- 28a City plaza (city photos): paved square west of the restaurant with tan/coloured pavers + grey bands, red brick warehouse gable (brick from the photo, arched windows, inscribed coping with made-up text), white spiral sculptures, white oval-window building with arched entrance + porthole, pebble benches, ornate black lamps, planters. Remaining city items (28b onward) next.
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
@@ -226,6 +227,16 @@ Rules (from you):
 56. Fabric photos (photos/fabric/): dark knit (hoodie grain), dark denim + cargo pocket (jeans twill),
     black fleece, black velour, faded grey speckled cotton, black/grey/white/red plaid flannel,
     navy/tan plaid flannel (for a flannel shirt, blanket or curtains later).
+
+57. Dentist office waiting room (photos/dentist/, 15 photos): floor-to-ceiling storefront windows
+    with frosted lettering (practice name made up), black accent wall with TVs (made-up programs),
+    herringbone charcoal carpet, grey leather lounge chairs on black frames, tan leather sofa,
+    black massage chair, black fabric stacking chairs, geometric wire coffee table with
+    picture books (made-up titles), wood cube side tables, black console with lamp + plants,
+    reception counter with a wood top, cow-pumpkin, flask plant and "Treasure!" sign, black coffee
+    cabinet with ribbed-glass doors + pod coffee maker, framed forest photo, cough-etiquette
+    poster (redrawn generic), thermostat, fake bamboo, smiling tooth figurine, drop ceiling with
+    recessed lights, square diffusers and speaker grilles.
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"
