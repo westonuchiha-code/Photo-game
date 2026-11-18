@@ -191,6 +191,12 @@ Rules (from you):
     confetti watercolor - good canvases); dairy tub cart; pizza slice on checker paper with a
     soda can, gumball machines; cardboard bale + plastic bag on a pallet at a dock door. All
     brands, characters and labels made up.
+50. Bad-parker easter egg (photos/badparker/): huge red heavy-duty pickup with a black louvered
+    headache rack + side rails, chrome ball hitch, crooked across the yellow lines of a
+    compact space, next to a split-face block retaining wall with a hedge, river-rock strip and
+    a yellow-painted light-pole base marked "8". Wall sign: "COMPACT CARS ONLY / NO TRUCKS
+    PLEASE" (with the taped-over "NO"). Generic truck, no real brand badges; made-up plate
+    (e.g. "BIG-RIG 1"). Wet parking-lot asphalt.
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"
