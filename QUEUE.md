@@ -66,6 +66,10 @@ Rules (from you):
     a hanging bell and streamer, small stone marker. Signboard text made generic.
 25. Car tire + two-tone alloy wheel (car-tire-wheel): tire with tread and sidewall pattern,
     black/machined-silver wheel. Made-up tire brand.
+26. Apartment living-room interior (photos/interior/): built-in white bookshelf with adjustable
+    shelves, books (spines with made-up titles), figurines, bowl; window seat with striped
+    cushion and cabinet doors, floral roman shade, yellow walls with crown molding, ceramic
+    table lamp, framed painting, blue-and-white vase, wood side table, photo frames.
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"
