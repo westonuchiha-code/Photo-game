@@ -1145,6 +1145,22 @@ _ic(_I3, (28, 432, 100, 530), (256, 352)).save(os.path.join(OUT, "liv_lamp.png")
 _ic(_I3, (171, 533, 214, 634), (160, 352)).save(os.path.join(OUT, "liv_vase.png"))
 _ic(_I2, (52, 586, 222, 628), (512, 128)).save(os.path.join(OUT, "liv_floralbox.png"))
 
+# ---------------------------------------------------------------- house fronts (misc door photos)
+def _mc(n, b, size):
+    im = ImageOps.exif_transpose(Image.open(f"photos/misc/{n}.jpg")).convert("RGB")
+    k = max(im.size) / 400
+    return np.asarray(im.crop(tuple(int(v * k) for v in b)).resize(size, Image.LANCZOS)).astype(np.float32)
+for name, f, b, size, r in [
+    ("hs_brick", "door-brick-brown", (5, 40, 80, 320), (256, 1024), 90),
+    ("hs_ybrick", "door-red-yellow-brick", (2, 170, 38, 300), (128, 448), 60),
+    ("hs_tbrick", "door-white-tan-brick", (5, 215, 80, 318), (384, 512), 80),
+    ("hs_stone", "door-black-stone-veneer", (122, 10, 215, 200), (384, 768), 90),
+    ("hs_siding", "door-white-gray-siding", (3, 110, 70, 228), (256, 448), 90),
+    ("hs_grass", "cats-blue-house-vent", (10, 232, 215, 390), (768, 576), 120),
+    ("hs_deck", "door-brick-brown", (5, 346, 160, 398), (768, 256), 80),
+]:
+    save(name + ".png", seamless(delight(_mc(f, b, size), r)))
+
 with open(os.path.join(OUT, "palette.json"), "w") as f:
     json.dump(palette, f, indent=2)
 print("wrote palette.json")

@@ -38,6 +38,7 @@ import { makeSpruce, makeCherry, makePaleTree, makeOak, makeTreePit, makeMulchBe
 import { makeRockBed, makeGrassTufts, makeCurbWithLeaves, makeLooseLeaves, makeBikeRack } from './models/ground.js';
 import { makeStatueShrine, makeStoneShrine } from './models/shrines.js';
 import { makeTireWheel } from './models/wheel.js';
+import { makeHouse } from './models/houses.js';
 import { WalkControls } from './walk.js';
 
 // ------------------------------------------------------------------ renderer
@@ -781,6 +782,39 @@ const groceryDoor = groceryCols[grocery.userData.colliders.indexOf(grocery.userD
   add(makeGrassTufts([[52.2, -33.0], [57.0, -33.6], [62.8, -34.2], [55.2, -40.6], [58.2, -39.8], [63.4, -38.6]], 45));
 }
 
+// ------------------------------------------------------------------ house fronts (misc door photos)
+// A little lane east of the grocery lot: four houses facing west along x = 46, two facing north
+// along z = -44, dry-grass lawns (cat photo grass) and concrete walks to each door.
+const houseLights = [];
+{
+  const gt = new THREE.TextureLoader().load('assets/textures/hs_grass.png');
+  gt.colorSpace = THREE.SRGBColorSpace; gt.wrapS = gt.wrapT = THREE.RepeatWrapping;
+  add(plane(new THREE.MeshStandardMaterial({ map: gt, roughness: 1 }), 34.5, 46, -47.5, -27.6, 0.004, 2.2));
+  const walkMat = new THREE.MeshStandardMaterial({ color: '#b3b0a8', roughness: 0.95 });
+  const placeHouse = (kind, w, gx, gz, rot) => {
+    const h = makeHouse(kind, w);
+    h.position.set(gx, 0, gz); h.rotation.y = rot; add(h);
+    const c = Math.cos(rot), s = Math.sin(rot);
+    for (const [x0, x1, z0, z1] of h.userData.colliders) {
+      const pts = [[x0, z0], [x1, z0], [x0, z1], [x1, z1]].map(([x, z]) => [gx + x * c + z * s, gz - x * s + z * c]);
+      rect(Math.min(...pts.map((p) => p[0])), Math.max(...pts.map((p) => p[0])), Math.min(...pts.map((p) => p[1])), Math.max(...pts.map((p) => p[1])));
+    }
+    return h;
+  };
+  // east row, fronts at x = 46 facing -x (local z -> world -x)
+  let z = -44.0;
+  for (const [kind, w, dz] of [['brick', 4.0, -0.2], ['yellow', 4.0, 0], ['gray', 3.8, -0.25], ['porch', 4.6, 0]]) {
+    placeHouse(kind, w, 46, z + w / 2, -Math.PI / 2);
+    add(plane(walkMat, 41.5, 46 - (kind === 'porch' ? 2.9 : 1.3), z + w / 2 + dz - 0.45 + (kind === 'porch' ? -0.9 : 0), z + w / 2 + dz + 0.45 + (kind === 'porch' ? -0.9 : 0), 0.008, 1));
+    z += w + 0.1;
+  }
+  // south row, fronts at z = -44 facing +z
+  for (const [kind, x, dx] of [['stone', 37.6, -0.3], ['tan', 42.0, -0.4]]) {
+    placeHouse(kind, 4.2, x, -44, 0);
+    add(plane(walkMat, x + dx - 0.45, x + dx + 0.45, -42.7, -38.5, 0.008, 1));
+  }
+}
+
 const walk = new WalkControls(camera, renderer.domElement, {
   bounds: null,
   areas: [
@@ -860,6 +894,9 @@ const VIEWS = {
   livingroom: { pos: [56.6, 3.0, -2.2], target: [52.6, 2.4, -6.6] },
   bookshelves: { pos: [55.2, 2.6, -4.6], target: [52.4, 2.5, -6.9] },
   lamptable: { pos: [54.6, 2.7, -4.4], target: [54.6, 2.3, -7.6] },
+  houses: { pos: [38.5, 2.6, -33.0], target: [46.0, 1.6, -38.5] },
+  housesouth: { pos: [40.0, 1.8, -36.5], target: [40.0, 1.4, -44.0] },
+  porchhouse: { pos: [40.8, 1.9, -27.8], target: [46.0, 1.5, -31.2] },
   walkinshelf: { pos: [17.6, 1.6, -44.0], target: [21.4, 1.0, -45.6] },
   van: { pos: [25.5, 1.9, -22.4], target: [21.5, 0.9, -26.5] },
   vanside: { pos: [24.6, 1.3, -29.2], target: [21.5, 0.7, -26.3] },

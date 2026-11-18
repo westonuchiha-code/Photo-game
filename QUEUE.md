@@ -7,6 +7,7 @@ Rules (from you):
   sign's shape and material. Keep text that's already generic (LIQUOR).
 
 ## Approved
+- Living room (Elmwood unit)
 - Car tire + alloy wheel
 - Roadside shrines
 - Warehouse stockroom (grocery back room)
@@ -37,7 +38,7 @@ Rules (from you):
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- Living room (interior photos): ground-floor unit of Elmwood Apartments through a working door in the first-floor hallway. Yellow walls, crown molding, dark wood floor, wide corner bookshelf + narrow one between the windows (made-up book titles, figurines, bowl, floral box), window seat with striped cushion + cabinet doors, floral roman shades, side table with the painted ceramic lamp + photo frames (generic pictures), framed painting, blue-and-white vase, night city view.
+- 27a House fronts (misc door photos): lane east of the grocery lot with six houses built around the photographed entries (brick/brown door/deck, yellow brick/red nine-lite door/wreath/shutters/rail, gray siding/white door/sidelight/214 tag, stone veneer/black door/glass storm door/wreath/plants, covered porch/red door/flag/railing/stone piers, tan siding/storm door/hose reel/1840). Dry-grass lawns + concrete walks. Next parts of 27: delivery props, boarded blue house + cats, dump truck site + cairns, small textures.
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
