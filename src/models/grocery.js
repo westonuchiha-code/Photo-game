@@ -219,9 +219,14 @@ function eggCase(len) {
   const r = rng(9);
   const egg = std({ color: '#f1ece0', roughness: 0.8 });
   const butter = ['#f3d34a', '#e85b3a', '#3a6fc4', '#f1efe6'];
-  // lower shelves show the photographed egg flats
-  const eggPhoto = std({ map: ptex('store_eggs.png', len / 1.4, 1), roughness: 0.7, emissive: '#2a2620' });
-  g.add(plane(len - 0.1, 0.55, eggPhoto, 0, 0.6, 0.2));
+  // bottom of the case: stacks of egg flats, front faces cut square-on from the photo
+  const eggFront = std({ map: ptex('store_eggs.png'), roughness: 0.75, emissive: '#2a2620', emissiveMap: ptex('store_eggs.png') });
+  const eggTop = std({ color: '#cdb994', roughness: 0.8 });
+  for (let x = -len / 2 + 0.4; x < len / 2 - 0.3; x += 0.72) {
+    const st = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.34, 0.3), [eggTop, eggTop, eggTop, eggTop, eggFront, eggTop]);
+    st.position.set(x + (r() - 0.5) * 0.05, 0.345 + 0.17, -0.05);
+    g.add(st);
+  }
   for (let shelf = 0; shelf < 3; shelf++) {
     const y = 0.88 + shelf * 0.38;
     g.add(box(len, 0.02, 0.5 - shelf * 0.06, m.steel, 0, y, -0.12 - shelf * 0.03));

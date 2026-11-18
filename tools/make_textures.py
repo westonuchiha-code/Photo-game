@@ -1071,7 +1071,7 @@ _crop(_cr, (182, 187, 298, 262), (256, 168)).save(os.path.join(OUT, "store_crate
 _crop(_cr, (192, 274, 298, 343), (256, 168)).save(os.path.join(OUT, "store_crate_black.png"))
 _crop(_ca, (868, 332, 925, 364), (256, 144)).save(os.path.join(OUT, "store_cardboard.png"))
 _crop(_eg, (0, 0, 1400, 80), (2048, 116)).save(os.path.join(OUT, "store_swirl.png"))
-_crop(_eg, (200, 425, 480, 535), (512, 200)).save(os.path.join(OUT, "store_eggs.png"))
+_crop(_eg, (497, 446, 640, 524), (512, 280)).save(os.path.join(OUT, "store_eggs.png"))   # front-on stack of egg flats
 _crop(_cr, (880, 470, 1200, 560), (512, 144)).save(os.path.join(OUT, "store_curb.png"))
 # walk-in wall panel (white insulated) - flat-lit, tiled, with panel seams
 wp = np.asarray(_crop(_ca, (430, 240, 570, 375), (256, 256))).astype(np.float32)
