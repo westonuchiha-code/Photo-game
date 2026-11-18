@@ -90,7 +90,7 @@ This is a running list, added to as models get built. Nothing here is urgent.
 - The clock tower sits past the end of the street on blank ground; the street needs an end (a building or turn).
 
 ## Shops 28c (shutter shop, noodle vending, junk shop)
-- The vending machine body is a plain box; it could have a rounded top, real buttons and coin slot depth.
+- Vending machine rebuilt in detail after your notes. Note: photos/city/cup-noodle-vending-machine.jpg and yellow-shutter-shop-night.jpg have each other's names.
 - The vending machine sits in front of the junk shop glass; it could move to the shutter shop's side.
 - Junk shop: CRTs are simple boxes. Could add retro PCs with drive slots, CD cases spilling, a counter with a till, the hanging green sign.
 - The shutter shop has no side/back detail and the planters are simple.

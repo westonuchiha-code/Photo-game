@@ -979,7 +979,7 @@ const junkArea = {};
   const junk = makeJunkShop(9, 12); rotPI(junk, 3.5, 12.2, junk.userData.colliders);
   const a2 = junk.userData.area;
   Object.assign(junkArea, { minX: 3.5 - a2.x1, maxX: 3.5 - a2.x0, minZ: 12.2 - a2.z1, maxZ: 12.2 - a2.z0 });
-  const vm = makeVendingMachine(); vm.position.set(-1.0, 0, 11.75); vm.rotation.y = Math.PI; add(vm); rect(-1.42, -0.58, 11.7, 12.5);
+  const vm = makeVendingMachine(); vm.position.set(-0.85, 0, 11.7); vm.rotation.y = Math.PI; add(vm); rect(-1.25, -0.4, 11.65, 12.45);
 }
 
 // delivery props elsewhere: drinks + bag outside an Elmwood unit door, a delivery tote by the scooter
@@ -1094,7 +1094,9 @@ const VIEWS = {
   oldtownshops: { pos: [-23.5, 1.7, 20.0], target: [-31.0, 1.8, 24.0] },
   monkey: { pos: [-29.8, 1.0, 19.0], target: [-32.2, 0.5, 17.3] },
   shutters: { pos: [-5.0, 1.8, 6.4], target: [-6.4, 1.7, 12.2] },
-  vending: { pos: [-1.3, 1.5, 9.6], target: [-1.0, 1.1, 11.8] },
+  vending: { pos: [-0.95, 1.45, 9.9], target: [-0.85, 1.0, 11.7] },
+  vendingclose: { pos: [-0.75, 1.55, 10.85], target: [-0.85, 1.45, 11.7] },
+  vendinglow: { pos: [-0.8, 0.95, 10.75], target: [-0.85, 0.7, 11.7] },
   junkshop: { pos: [6.8, 1.8, 13.2], target: [1.5, 1.0, 20.5] },
   junkfront: { pos: [3.5, 2.2, 5.8], target: [3.5, 2.0, 12.2] },
   walkinshelf: { pos: [17.6, 1.6, -44.0], target: [21.4, 1.0, -45.6] },
