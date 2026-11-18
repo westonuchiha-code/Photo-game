@@ -11,6 +11,7 @@
 //                      wall poster; returns colliders + an interior walk area
 // Faces +z, origin at the front-centre at ground level.
 import * as THREE from 'three';
+import { fitText } from '../fonts.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 
 function canvasTex(w, h, draw) {
@@ -69,16 +70,33 @@ export function makeShutterShop(W = 11) {
   g.add(box(1.8, 0.9, 0.05, std({ color: '#1a1c1e' }), -0.8, H1 + 2.2, 0.01));
   for (let i = 0; i < 9; i++) g.add(box(0.02, 0.95, 0.04, std({ color: '#d8d8d4', metalness: 0.6 }), -1.6 + i * 0.2, H1 + 2.2, 0.06));
   // sign band
-  const sign = canvasTex(1024, 128, (c, w, h) => {
+  // sign band (aspect matched to the board so lettering isn't stretched): COLOR TV panel | shop name | phone strip
+  const SBW = W * 0.62, SBH = 0.75;
+  const sign = canvasTex(2048, Math.round(2048 * SBH / SBW), (c, w, h) => {
     c.fillStyle = '#f2f0e8'; c.fillRect(0, 0, w, h);
-    c.fillStyle = '#d8323a'; c.fillRect(0, 0, w, 10);
-    c.fillStyle = '#2a4aa8'; c.font = 'bold 54px Arial'; c.fillText('COLOR TV', 30, 72);
-    c.fillStyle = '#1a1a1a'; c.font = 'bold 64px Arial'; c.fillText('HIKARI RADIO & TV', 380, 74);
-    c.fillStyle = '#e8d24a'; c.fillRect(0, h - 30, w, 30);
-    c.fillStyle = '#1a1a1a'; c.font = 'bold 22px Arial'; c.fillText('TEL 0123-45-6789', 740, h - 8);
-    c.fillStyle = 'rgba(120,100,60,0.15)'; for (let i = 0; i < 60; i++) c.fillRect(Math.random() * w, Math.random() * h, 30, 2);
+    c.fillStyle = '#d8323a'; c.fillRect(0, 0, w, 16);
+    const bandY = h - 52;
+    c.fillStyle = '#e8d24a'; c.fillRect(0, bandY, w, 52);
+    const split = w * 0.3;
+    c.fillStyle = '#d8d6cc'; c.fillRect(split - 3, 26, 6, bandY - 36);
+    // multicoloured letters like the old painted panel
+    const word = 'COLOR TV', cols = ['#2a4aa8', '#2a8a9a', '#d8323a', '#e88a2a', '#2a4aa8', '#2a4aa8', '#2a4aa8', '#2a4aa8'];
+    c.font = '96px "Righteous"';
+    let tw = 0; for (const ch of word) tw += c.measureText(ch).width;
+    const sc = Math.min(1, (split - 80) / tw);
+    c.font = `${Math.floor(96 * sc)}px "Righteous"`; c.textBaseline = 'middle'; c.textAlign = 'left';
+    let x = (split - tw * sc) / 2;
+    [...word].forEach((ch, i) => { c.fillStyle = cols[i]; c.fillText(ch, x, (16 + bandY) / 2 + 4); x += c.measureText(ch).width; });
+    c.fillStyle = '#1a1a1a';
+    fitText(c, 'HIKARI RADIO & TV', split + (w - split) / 2, (16 + bandY) / 2 + 4, w - split - 120, 120, '"Righteous"', { spacing: 4 });
+    fitText(c, 'TEL  0123 - 45 - 6789', w - 260, bandY + 27, 440, 34, '"Oswald"', { weight: '600', spacing: 3 });
+    c.fillStyle = 'rgba(120,100,60,0.12)'; for (let i = 0; i < 90; i++) c.fillRect(Math.random() * w, Math.random() * h, 40, 3);
   });
-  g.add(box(W * 0.62, 0.75, 0.12, [std({ color: '#ccc' }), std({ color: '#ccc' }), std({ color: '#ccc' }), std({ color: '#ccc' }), std({ map: sign, roughness: 0.6 }), std({ color: '#ccc' })], -W * 0.18, H1 + 0.45, 0.08));
+  const frameM = std({ color: '#b8b6ae', metalness: 0.4, roughness: 0.5 });
+  const sbx = -W / 2 + 0.25 + SBW / 2;                     // flush with the left end, like the photo
+  g.add(box(SBW, SBH, 0.12, [frameM, frameM, frameM, frameM, std({ map: sign, roughness: 0.6 }), frameM], sbx, H1 + 0.45, 0.08));
+  for (const dy of [-SBH / 2, SBH / 2]) g.add(box(SBW + 0.04, 0.04, 0.14, frameM, sbx, H1 + 0.45 + dy, 0.08));
+  for (const dx of [-SBW / 2, SBW / 2]) g.add(box(0.04, SBH + 0.04, 0.14, frameM, sbx + dx, H1 + 0.45, 0.08));
   g.add(box(W, 0.8, 0.06, mm, 0, H1 + 0.4, 0.0));
   // four roll shutters, yellow with a green band; mascot + shop name painted on
   const bays = [[-W / 2 + 0.15, -W / 2 + 2.85], [-W / 2 + 3.0, -W / 2 + 5.7], [-W / 2 + 5.85, -W / 2 + 8.4], [-W / 2 + 8.6, W / 2 - 0.15]];
@@ -90,10 +108,10 @@ export function makeShutterShop(W = 11) {
       c.fillStyle = '#3f6a5a'; c.fillRect(0, h * 0.8, w, h * 0.2); c.fillStyle = '#e8e6dc'; c.fillRect(0, h * 0.78, w, 10);
       if (i === 3) { c.fillStyle = '#e8e6dc'; c.fillRect(0, h * 0.82, w, h * 0.18); for (let y = h * 0.82; y < h; y += 10) { c.fillStyle = '#b8b8b0'; c.fillRect(0, y, w, 2); } }
       c.fillStyle = 'rgba(0,0,0,0.04)'; for (let k = 0; k < 200; k++) c.fillRect(Math.random() * w, Math.random() * h, 20, 1);
-      c.fillStyle = '#2a4a3a'; c.font = 'bold 40px Arial';
+      c.fillStyle = '#2a4a3a'; c.font = '46px "Righteous"';
       if (i === 0) drawMascot(c, 210, 420, 1.3);
-      if (i === 1) c.fillText('HIKARI RADIO', 110, 420);
-      if (i === 3) c.fillText('HIKARI  RADIO', 90, 300);
+      if (i === 1) fitText(c, 'HIKARI RADIO', w / 2, 400, w - 120, 46, '"Righteous"', { spacing: 6 });
+      if (i === 3) fitText(c, 'HIKARI RADIO', w / 2, 300, w - 160, 46, '"Righteous"', { spacing: 6 });
       if (i === 2) { c.save(); c.globalAlpha = 0.6; drawMascot(c, 220, 220, 0.6); c.restore(); }
     });
     g.add(box(bw, H1 - 0.1, 0.06, std({ map: t, roughness: 0.55, metalness: 0.2 }), (x0 + x1) / 2, (H1 - 0.1) / 2, 0.02));
@@ -120,9 +138,9 @@ function cupLabel(top, band, text, sub) {
     c.fillStyle = top; c.fillRect(0, 0, w, 18);                     // printed rim band
     c.fillStyle = 'rgba(0,0,0,0.12)'; for (let x = 0; x < w; x += 6) c.fillRect(x, 4, 2, 10);
     c.fillStyle = band; c.beginPath(); c.moveTo(0, 46); c.lineTo(w, 40); c.lineTo(w, 98); c.lineTo(0, 104); c.fill();
-    c.fillStyle = '#fff'; c.font = 'bold 26px Arial Black, Arial'; c.textAlign = 'center'; c.fillText(text, w / 2, 82);
-    c.fillStyle = '#d8323a'; c.font = 'bold 15px Arial'; c.fillText(sub, w / 2, 32);
-    c.fillStyle = 'rgba(0,0,0,0.25)'; c.font = '10px Arial'; c.fillText('NOODLE TIME  •  77g', w / 2, 120);
+    c.fillStyle = '#fff'; c.font = '27px "Archivo Black"'; c.textAlign = 'center'; c.fillText(text, w / 2, 82);
+    c.fillStyle = '#d8323a'; c.font = '600 16px "Oswald"'; c.fillText(sub, w / 2, 32);
+    c.fillStyle = 'rgba(0,0,0,0.25)'; c.font = '11px "Roboto Condensed"'; c.fillText('NOODLE TIME  •  77g', w / 2, 120);
   });
 }
 const CUPS = [['#d8323a', '#2f8a3a', 'SPICY', 'TOMATO'], ['#d8323a', '#c8202a', 'TOMATO', 'CHILI'], ['#d8323a', '#f2f0e8', 'CLASSIC', 'ORIGINAL'],
@@ -170,8 +188,8 @@ function stickerTex(lines, head, headCol, w = 256, h = 128) {
   return canvasTex(w, h, (c, cw, ch) => {
     c.fillStyle = '#f6f5f0'; c.fillRect(0, 0, cw, ch);
     c.strokeStyle = '#8a8a86'; c.lineWidth = 2; c.strokeRect(1, 1, cw - 2, ch - 2);
-    if (head) { c.fillStyle = headCol; c.fillRect(0, 0, cw, 24); c.fillStyle = '#fff'; c.font = 'bold 15px Arial'; c.fillText(head, 8, 17); }
-    c.fillStyle = '#333'; c.font = '13px Arial'; lines.forEach((t, i) => c.fillText(t, 8, (head ? 42 : 20) + i * 17));
+    if (head) { c.fillStyle = headCol; c.fillRect(0, 0, cw, 24); c.fillStyle = '#fff'; c.font = '600 15px "Oswald"'; c.fillText(head, 8, 17); }
+    c.fillStyle = '#333'; c.font = '14px "Roboto Condensed"'; lines.forEach((t, i) => c.fillText(t, 8, (head ? 42 : 20) + i * 17));
   });
 }
 export function makeVendingMachine() {
@@ -212,14 +230,14 @@ export function makeVendingMachine() {
     c.fillStyle = '#f7f6f1'; c.fillRect(0, 0, w, h);
     // logo: red outlined bubble lettering + pill sub-band (made-up brand)
     c.textAlign = 'center'; c.lineJoin = 'round';
-    c.font = 'bold 62px Georgia, serif'; c.lineWidth = 12; c.strokeStyle = '#d8323a'; c.fillStyle = '#fff';
-    for (const [t, y] of [['NOODLE', 84], ['TIME', 146]]) { c.strokeText(t, w * 0.4, y); c.fillText(t, w * 0.4, y); }
+    c.font = '60px "Shrikhand"'; c.lineWidth = 12; c.strokeStyle = '#d8323a'; c.fillStyle = '#fff';
+    for (const [t, y] of [['NOODLE', 70], ['TIME', 132]]) fitText(c, t, w * 0.4, y, w * 0.66, 64, '"Shrikhand"', { stroke: 1 });
     c.fillStyle = '#d8323a'; c.beginPath(); c.roundRect(w * 0.4 - 105, 160, 210, 30, 15); c.fill();
-    c.fillStyle = '#fff'; c.font = 'bold 18px Arial'; c.fillText('INSTANT RAMEN', w * 0.4, 181);
+    c.fillStyle = '#fff'; c.font = '600 19px "Oswald"'; c.fillText('INSTANT RAMEN', w * 0.4, 181);
     // corner badge
     c.fillStyle = '#d8323a'; c.beginPath(); c.moveTo(w - 110, 40); c.lineTo(w - 20, 40); c.lineTo(w - 30, 72); c.quadraticCurveTo(w - 65, 92, w - 100, 72); c.fill();
-    c.fillStyle = '#fff'; c.font = 'bold 22px Arial'; c.fillText('NT', w - 65, 68);
-    c.fillStyle = '#222'; c.font = 'bold 18px Arial'; c.fillText('NT FOODS', w - 65, 112);
+    c.fillStyle = '#fff'; c.font = '22px "Archivo Black"'; c.fillText('NT', w - 65, 68);
+    c.fillStyle = '#222'; c.font = '600 19px "Oswald"'; c.fillText('NT FOODS', w - 65, 112);
   });
   const pg = new THREE.ExtrudeGeometry(shape, { depth: 0.008, bevelEnabled: false });
   const pu = pg.attributes.uv, pp = pg.attributes.position;
@@ -245,7 +263,7 @@ export function makeVendingMachine() {
       const cx = x0 + (i + 0.5) * (x1 - x0) / n;
       const cup = noodleCup(cupI++); cup.position.set(cx, yBot + 0.012, -0.09); cup.rotation.y = -Math.PI / 2 + (i - 1) * 0.06; g.add(cup);
       // price tab + button below the window
-      const tag = new THREE.Mesh(new THREE.PlaneGeometry(0.05, 0.016), new THREE.MeshStandardMaterial({ map: canvasTex(96, 32, (c, w, h) => { c.fillStyle = '#fff'; c.fillRect(0, 0, w, h); c.fillStyle = '#222'; c.font = 'bold 22px Arial'; c.textAlign = 'center'; c.fillText('250', w / 2, 24); }) }));
+      const tag = new THREE.Mesh(new THREE.PlaneGeometry(0.05, 0.016), new THREE.MeshStandardMaterial({ map: canvasTex(96, 32, (c, w, h) => { c.fillStyle = '#fff'; c.fillRect(0, 0, w, h); c.fillStyle = '#222'; c.font = '28px "Bebas Neue"'; c.textAlign = 'center'; c.fillText('250', w / 2, 24); }) }));
       tag.position.set(cx, yBot - 0.022, 0.0095); g.add(tag);
       const ring = new THREE.Mesh(new THREE.CylinderGeometry(0.017, 0.017, 0.008, 20), black); ring.rotation.x = Math.PI / 2; ring.position.set(cx, yBot - 0.058, 0.012); g.add(ring);
       const btn = new THREE.Mesh(new THREE.CylinderGeometry(0.011, 0.012, 0.01, 20), chrome); btn.rotation.x = Math.PI / 2; btn.position.set(cx, yBot - 0.058, 0.017); g.add(btn);
@@ -257,9 +275,9 @@ export function makeVendingMachine() {
 
   // ---- money section: bill acceptor, LED display, coin unit with an orange return lever
   const bill = box(X(0.36) - X(0.2), Y(0.52) - Y(0.57), 0.03, black, (X(0.2) + X(0.36)) / 2, (Y(0.52) + Y(0.57)) / 2, 0.012); g.add(bill);
-  g.add(box((X(0.36) - X(0.2)) * 0.75, 0.018, 0.004, new THREE.MeshStandardMaterial({ map: canvasTex(128, 32, (c, w, h) => { c.fillStyle = '#e8902a'; c.fillRect(0, 0, w, h); c.fillStyle = '#111'; c.font = 'bold 18px Arial'; c.textAlign = 'center'; c.fillText('1000 NOTE', w / 2, 23); }) }), (X(0.2) + X(0.36)) / 2, (Y(0.52) + Y(0.57)) / 2 + 0.006, 0.029));
+  g.add(box((X(0.36) - X(0.2)) * 0.75, 0.018, 0.004, new THREE.MeshStandardMaterial({ map: canvasTex(128, 32, (c, w, h) => { c.fillStyle = '#e8902a'; c.fillRect(0, 0, w, h); c.fillStyle = '#111'; c.font = '600 19px "Oswald"'; c.textAlign = 'center'; c.fillText('1000 NOTE', w / 2, 23); }) }), (X(0.2) + X(0.36)) / 2, (Y(0.52) + Y(0.57)) / 2 + 0.006, 0.029));
   g.add(box((X(0.36) - X(0.2)) * 0.7, 0.004, 0.006, new THREE.MeshBasicMaterial({ color: new THREE.Color(0.2, 1.8, 0.5), toneMapped: false }), (X(0.2) + X(0.36)) / 2, (Y(0.52) + Y(0.57)) / 2 - 0.016, 0.028));
-  const disp = box(X(0.59) - X(0.42), Y(0.52) - Y(0.545), 0.012, [black, black, black, black, new THREE.MeshBasicMaterial({ map: canvasTex(128, 32, (c, w, h) => { c.fillStyle = '#0a0a0a'; c.fillRect(0, 0, w, h); c.fillStyle = '#ff5a2a'; c.font = 'bold 22px monospace'; c.textAlign = 'right'; c.fillText('READY', w - 6, 24); }), color: new THREE.Color(1.3, 1.3, 1.3), toneMapped: false }), black], (X(0.42) + X(0.59)) / 2, (Y(0.52) + Y(0.545)) / 2, 0.006);
+  const disp = box(X(0.59) - X(0.42), Y(0.52) - Y(0.545), 0.012, [black, black, black, black, new THREE.MeshBasicMaterial({ map: canvasTex(128, 32, (c, w, h) => { c.fillStyle = '#0a0a0a'; c.fillRect(0, 0, w, h); c.fillStyle = '#ff5a2a'; c.font = '30px "VT323"'; c.textAlign = 'right'; c.fillText('READY', w - 6, 24); }), color: new THREE.Color(1.3, 1.3, 1.3), toneMapped: false }), black], (X(0.42) + X(0.59)) / 2, (Y(0.52) + Y(0.545)) / 2, 0.006);
   g.add(disp);
   const cw = X(0.93) - X(0.66), chh = Y(0.51) - Y(0.57);
   const coin = new THREE.Mesh(new RoundedBoxGeometry(cw, chh, 0.03, 3, 0.02), black); coin.position.set((X(0.66) + X(0.93)) / 2, (Y(0.51) + Y(0.57)) / 2, 0.01); g.add(coin);
@@ -317,7 +335,7 @@ function crt(beige, s, seed) {
   scr.scale.set(w * 0.85, h * 0.8, 0.1); scr.position.set(0, h * 0.52, -0.08); g.add(scr);
   g.add(box(w * 0.86, h * 0.72, 0.01, std({ color: '#1e2428', roughness: 0.1, metalness: 0.5, emissive: r() < 0.3 ? '#14242a' : '#000' }), 0, h * 0.53, 0.005));
   // price tag (made-up price)
-  const pt = canvasTex(96, 48, (c, cw, ch) => { c.fillStyle = '#fff'; c.fillRect(0, 0, cw, ch); c.fillStyle = '#d82a2a'; c.fillRect(0, 0, cw, 12); c.font = 'bold 20px Arial'; c.fillText('¥' + (2 + Math.floor(r() * 18)) + ',800', 4, 38); });
+  const pt = canvasTex(96, 48, (c, cw, ch) => { c.fillStyle = '#fff'; c.fillRect(0, 0, cw, ch); c.fillStyle = '#d82a2a'; c.fillRect(0, 0, cw, 12); c.font = '30px "Bebas Neue"'; c.fillText('¥' + (2 + Math.floor(r() * 18)) + ',800', 4, 38); });
   const tag = new THREE.Mesh(new THREE.PlaneGeometry(0.12, 0.06), std({ map: pt })); tag.position.set(w * 0.3, h * 0.12, 0.012); g.add(tag);
   return g;
 }
@@ -362,8 +380,8 @@ export function makeJunkShop(W = 9, D = 12) {
   g.add(box(W, 0.25, 0.14, std({ color: '#2a2b2e' }), 0, H - 0.12, 0));
   // shop sign over the front (made up)
   const sg = canvasTex(1024, 160, (c, w, h) => {
-    c.fillStyle = '#f6c21a'; c.fillRect(0, 0, w, h); c.fillStyle = '#1a1a1a'; c.font = 'bold 96px Arial Black, Arial'; c.textAlign = 'center'; c.fillText('JUNK & RETRO', w / 2 - 80, 112);
-    c.fillStyle = '#d82a2a'; c.beginPath(); c.arc(w - 110, 80, 60, 0, 7); c.fill(); c.fillStyle = '#fff'; c.font = 'bold 40px Arial'; c.fillText('USED', w - 110, 94);
+    c.fillStyle = '#f6c21a'; c.fillRect(0, 0, w, h); c.fillStyle = '#1a1a1a'; c.fillRect(0, h - 14, w, 6); fitText(c, 'JUNK & RETRO', (w - 160) / 2 + 20, h / 2 + 4, w - 260, 100, '"Bungee"', { spacing: 2 });
+    c.fillStyle = '#d82a2a'; c.beginPath(); c.arc(w - 100, h / 2, 62, 0, 7); c.fill(); c.fillStyle = '#fff'; fitText(c, 'USED', w - 100, h / 2 + 3, 96, 34, '"Bungee"');
   });
   g.add(box(W * 0.9, 0.9, 0.1, [outer, outer, outer, outer, new THREE.MeshBasicMaterial({ map: sg, color: new THREE.Color(1.1, 1.1, 1.1), toneMapped: false }), outer], 0, H + 0.6, 0.12));
   solid(-W / 2 - 0.2, -W / 2, -D, 0); solid(W / 2, W / 2 + 0.2, -D, 0); solid(-W / 2, W / 2, -D - 0.2, -D);
@@ -404,7 +422,7 @@ export function makeJunkShop(W = 9, D = 12) {
   counter.position.set(0, 0, -6.2); g.add(counter);
   solid(-1.25, 1.25, -8.1, -4.3);
   // green poster on the back wall (made up)
-  const pst = canvasTex(256, 256, (c, w, h) => { c.fillStyle = '#2f8a4a'; c.fillRect(0, 0, w, h); c.strokeStyle = '#fff'; c.lineWidth = 8; c.beginPath(); c.arc(w / 2, 120, 70, 0, 7); c.stroke(); c.fillStyle = '#fff'; c.font = 'bold 30px Arial'; c.textAlign = 'center'; c.fillText('RECYCLE', w / 2, 128); c.font = 'bold 22px Arial'; c.fillText('WE BUY OLD TECH', w / 2, 230); });
+  const pst = canvasTex(256, 256, (c, w, h) => { c.fillStyle = '#2f8a4a'; c.fillRect(0, 0, w, h); c.strokeStyle = '#fff'; c.lineWidth = 8; c.beginPath(); c.arc(w / 2, 120, 70, 0, 7); c.stroke(); c.fillStyle = '#fff'; c.font = '34px "Archivo Black"'; c.textAlign = 'center'; c.fillText('RECYCLE', w / 2, 128); c.font = '600 22px "Oswald"'; c.fillText('WE BUY OLD TECH', w / 2, 230); });
   const ps = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.9), std({ map: pst })); ps.position.set(2.8, 2.6, -D + 0.02); g.add(ps);
   g.userData.colliders = colliders;
   g.userData.area = { x0: -W / 2 + 0.2, x1: W / 2 - 0.2, z0: -D + 0.2, z1: 0.4 };

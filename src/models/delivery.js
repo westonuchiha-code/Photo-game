@@ -60,7 +60,7 @@ export function makeDeliveryBag() {
     c.fillStyle = '#e8332a'; c.fillRect(0, 0, w, h);
     c.fillStyle = 'rgba(0,0,0,0.12)'; for (let i = 0; i < w; i += 6) for (let j = 0; j < h; j += 6) c.fillRect(i, j, 2, 2);   // mesh weave
     c.save(); c.translate(w / 2, h / 2); c.rotate(-0.5);
-    c.fillStyle = '#fff'; c.font = 'bold 34px Arial'; c.textAlign = 'center'; c.fillText('QUICKDROP', 10, 14);
+    c.fillStyle = '#fff'; c.font = '38px "Archivo Black"'; c.textAlign = 'center'; c.fillText('QUICKDROP', 10, 14);
     c.beginPath(); c.moveTo(-105, 0); c.lineTo(-80, -14); c.lineTo(-80, 14); c.fill();
     c.restore();
   });
@@ -84,7 +84,7 @@ export function makePlasticBag({ logo = null, seed = 1, withPaper = false, tint 
     c.fillStyle = tint; c.fillRect(0, 0, w, h);
     c.fillStyle = '#f5c21a'; c.beginPath(); c.ellipse(w / 2, h * 0.55, 80, 74, 0, 0, 7); c.fill();
     c.fillStyle = '#1b1b1b'; c.beginPath(); c.ellipse(w / 2, h * 0.55, 62, 56, 0, 0, 7); c.fill();
-    c.fillStyle = '#f5c21a'; c.font = 'bold 30px Arial'; c.textAlign = 'center'; c.fillText('WING', w / 2, h * 0.53); c.fillText('BARN', w / 2, h * 0.53 + 32);
+    c.fillStyle = '#f5c21a'; c.font = '30px "Bungee"'; c.textAlign = 'center'; c.fillText('WING', w / 2, h * 0.53); c.fillText('BARN', w / 2, h * 0.53 + 32);
   }) : null;
   const mat = new THREE.MeshStandardMaterial({ color: tex ? '#ffffff' : tint, map: tex, roughness: 0.45, side: THREE.DoubleSide, transparent: !tex, opacity: tex ? 1 : 0.92 });
   // body: a tapered, puffy box
@@ -117,7 +117,7 @@ export function makePaperBag({ pattern = 'tacos', seed = 2 } = {}) {
     if (pattern === 'tacos') {
       const cols = ['#8e3fa8', '#e86aa8', '#f2c23a'];
       for (let i = 0; i < 9; i++) { c.fillStyle = cols[i % 3]; c.beginPath(); c.moveTo(20 + (i % 3) * 80, 30 + Math.floor(i / 3) * 70); c.lineTo(70 + (i % 3) * 80, 10 + Math.floor(i / 3) * 70); c.lineTo(60 + (i % 3) * 80, 70 + Math.floor(i / 3) * 70); c.fill(); }
-      c.fillStyle = '#fff'; c.font = 'bold 30px Arial'; c.textAlign = 'center'; c.fillText('TACO NOVA', w / 2, h - 30);
+      c.fillStyle = '#fff'; c.font = '36px "Shrikhand"'; c.textAlign = 'center'; c.fillText('TACO NOVA', w / 2, h - 30);
     }
   });
   const kraft = std({ map: tex, roughness: 0.95 });
@@ -142,7 +142,7 @@ export function makeCup(kind = 'fountain') {
     const t = canvasTex(256, 128, (c, w, hh) => {
       c.fillStyle = '#f6f4ef'; c.fillRect(0, 0, w, hh);
       c.fillStyle = '#e8762a'; c.beginPath(); c.ellipse(w * 0.25, hh / 2, 34, 30, 0, 0, 7); c.fill();
-      c.fillStyle = '#c8322a'; c.font = 'bold 18px Arial'; c.textAlign = 'center'; c.fillText('BUN', w * 0.25, hh / 2 - 2); c.fillText('KING', w * 0.25, hh / 2 + 16);
+      c.fillStyle = '#c8322a'; c.font = '600 19px "Fredoka"'; c.textAlign = 'center'; c.fillText('BUN', w * 0.25, hh / 2 - 2); c.fillText('KING', w * 0.25, hh / 2 + 16);
       c.fillStyle = '#e8762a'; c.beginPath(); c.ellipse(w * 0.75, hh / 2, 34, 30, 0, 0, 7); c.fill();
     });
     g.add(lathe([[0, 0], [0.038, 0], [0.05, h], [0, h]], std({ map: t, roughness: 0.5, side: THREE.DoubleSide })));
@@ -175,10 +175,10 @@ export function makeTote() {
   const g = new THREE.Group();
   const t = canvasTex(256, 256, (c, w, h) => {
     c.fillStyle = '#f2efe4'; c.fillRect(0, 0, w, h);
-    c.strokeStyle = 'rgba(40,120,70,0.35)'; c.font = 'bold 34px Arial'; for (let i = 0; i < 4; i++) c.strokeText('QUIK 24', 20, 50 + i * 60);
+    c.strokeStyle = 'rgba(40,120,70,0.35)'; c.font = '34px "Archivo Black"'; for (let i = 0; i < 4; i++) c.strokeText('QUIK 24', 20, 50 + i * 60);
     c.fillStyle = '#e8622a'; c.fillRect(w / 2 - 34, 70, 68, 90);
-    c.fillStyle = '#fff'; c.font = 'bold 56px Arial'; c.textAlign = 'center'; c.fillText('24', w / 2, 135);
-    c.fillStyle = '#2a7a4a'; c.font = 'bold 18px Arial'; c.fillText('STORE TO DOOR', w / 2, 225);
+    c.fillStyle = '#fff'; c.font = '60px "Archivo Black"'; c.textAlign = 'center'; c.fillText('24', w / 2, 135);
+    c.fillStyle = '#2a7a4a'; c.font = '600 20px "Oswald"'; c.fillText('STORE TO DOOR', w / 2, 225);
   });
   const m = std({ map: t, roughness: 0.9 });
   const plain = std({ color: '#f2efe4', roughness: 0.9 });
@@ -203,7 +203,7 @@ export function makeTrashBag() {
 export function makeDeliBox() {
   const g = new THREE.Group();
   const card = std({ color: '#b98d5a', roughness: 0.95 });
-  const print = std({ roughness: 0.95, map: canvasTex(256, 96, (c, w, h) => { c.fillStyle = '#b98d5a'; c.fillRect(0, 0, w, h); c.strokeStyle = '#a8322a'; c.lineWidth = 3; c.strokeRect(150, 15, 70, 66); c.fillStyle = '#a8322a'; c.font = 'bold 16px Arial'; c.fillText('FRAGILE', 20, 50); }) });
+  const print = std({ roughness: 0.95, map: canvasTex(256, 96, (c, w, h) => { c.fillStyle = '#b98d5a'; c.fillRect(0, 0, w, h); c.strokeStyle = '#a8322a'; c.lineWidth = 3; c.strokeRect(150, 15, 70, 66); c.fillStyle = '#a8322a'; c.font = '18px "Black Ops One"'; c.fillText('FRAGILE', 20, 50); }) });
   g.add(box(0.5, 0.02, 0.32, card, 0, 0.01, 0));
   g.add(box(0.5, 0.16, 0.01, print, 0, 0.09, 0.16), box(0.5, 0.16, 0.01, card, 0, 0.09, -0.16));
   for (const s of [-1, 1]) g.add(box(0.01, 0.16, 0.32, card, s * 0.25, 0.09, 0));
@@ -218,9 +218,9 @@ export function makeSoilBag() {
   const t = canvasTex(256, 384, (c, w, h) => {
     c.fillStyle = '#f2f1ec'; c.fillRect(0, 0, w, h);
     c.fillStyle = '#2f8a3a'; c.fillRect(0, 90, w, 170);
-    c.fillStyle = '#e8c23a'; c.font = 'bold 34px Georgia'; c.textAlign = 'center'; c.fillText('GREEN ACRE', w / 2, 60);
-    c.fillStyle = '#fff'; c.font = 'bold 58px Georgia'; c.fillText('TOP', w / 2, 160); c.fillText('SOIL', w / 2, 220);
-    c.fillStyle = '#2f8a3a'; c.font = 'bold 26px Arial'; c.fillText('1 CU FT', w / 2, 310);
+    c.fillStyle = '#e8c23a'; c.font = '34px "Alfa Slab One"'; c.textAlign = 'center'; c.fillText('GREEN ACRE', w / 2, 60);
+    c.fillStyle = '#fff'; c.font = '62px "Alfa Slab One"'; c.fillText('TOP', w / 2, 160); c.fillText('SOIL', w / 2, 220);
+    c.fillStyle = '#2f8a3a'; c.font = '600 28px "Oswald"'; c.fillText('1 CU FT', w / 2, 310);
   });
   const geo = new THREE.BoxGeometry(0.42, 0.1, 0.62, 6, 2, 8);
   const p = geo.attributes.position;
@@ -236,7 +236,7 @@ export function makeSoilBag() {
 export function makeSodaBottle() {
   const t = canvasTex(256, 64, (c, w, h) => {
     c.fillStyle = '#2f9a2a'; c.fillRect(0, 0, w, h);
-    c.fillStyle = '#e8f04a'; c.font = 'bold 40px Arial'; c.fillText('ZING', 70, 46);
+    c.fillStyle = '#e8f04a'; c.font = '42px "Righteous"'; c.fillText('ZING', 70, 46);
     c.fillStyle = '#d42a2a'; c.fillRect(0, 50, w, 6);
   });
   const g = new THREE.Group();

@@ -126,7 +126,7 @@ function porchLight(x, y, z, style = 'lantern') {
 function numberTag(text, bg, fg, w, h) {
   return new THREE.Mesh(new THREE.PlaneGeometry(w, h), std({ roughness: 0.5, map: canvasTex(256, Math.round(256 * h / w), (x, cw, ch) => {
     if (bg) { x.fillStyle = bg; x.fillRect(0, 0, cw, ch); }
-    x.fillStyle = fg; x.font = `bold ${Math.round(ch * 0.7)}px Arial`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(text, cw / 2, ch / 2 + 2);
+    x.fillStyle = fg; x.font = `600 ${Math.round(ch * 0.7)}px "Oswald"`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(text, cw / 2, ch / 2 + 2);
   }), transparent: !bg }));
 }
 function doorbell(x, y) {
@@ -141,7 +141,7 @@ function doorMat(w, d, text) {
   const t = canvasTex(256, 128, (x, cw, ch) => {
     x.fillStyle = '#2b2622'; x.fillRect(0, 0, cw, ch);
     x.strokeStyle = '#3b342e'; x.lineWidth = 3; for (let i = 0; i < cw; i += 8) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i, ch); x.stroke(); }
-    if (text) { x.fillStyle = '#b9b0a2'; x.font = 'bold 34px Georgia'; x.textAlign = 'center'; x.fillText(text, cw / 2, ch / 2 + 12); }
+    if (text) { x.fillStyle = '#b9b0a2'; x.font = '700 34px "Cinzel"'; x.textAlign = 'center'; x.fillText(text, cw / 2, ch / 2 + 12); }
   });
   const m = box(w, 0.015, d, std({ map: t, roughness: 1 }), 0, 0.0075, 0);
   return m;
@@ -227,7 +227,7 @@ export function makeHouse(kind, W = 4.2) {
     const d = sixPanel('#b5352d', { lites: true }); d.position.set(0, FL, 0.03); g.add(d);
     surround(0, FL);
     g.add(makeWreath('autumn', 0, FL + 1.5, 0.11));
-    const sign = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.12), std({ map: canvasTex(256, 72, (x, w, h) => { x.fillStyle = '#f4efe2'; x.fillRect(0, 0, w, h); x.fillStyle = '#2a2a2a'; x.font = 'italic bold 40px Georgia'; x.textAlign = 'center'; x.fillText('Welcome', w / 2, 50); }) }));
+    const sign = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.12), std({ map: canvasTex(256, 72, (x, w, h) => { x.fillStyle = '#f4efe2'; x.fillRect(0, 0, w, h); x.fillStyle = '#2a2a2a'; x.font = '40px "Pacifico"'; x.textAlign = 'center'; x.fillText('Welcome', w / 2, 50); }) }));
     sign.position.set(0, FL + 0.95, 0.09); g.add(sign);
     for (const s of [-1, 1]) g.add(porchLight(s * 0.85, FL + 1.75, 0.02, 'carriage'));
     lights.push([0, FL + 1.8, 0.6]);

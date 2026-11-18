@@ -141,7 +141,7 @@ export function makeDumpTruck() {
   const tail = box(0.1, 0.9, Wb - 0.4, M.yellowFlat, -L / 2 + 0.05, 0.4, 0); tail.rotation.z = -0.5; body.add(tail);   // upswept tail floor
   body.position.set(-2.0, 1.65, 0); g.add(body);
   // made-up branding on the body side + hood
-  const decal = (text, w, h, size) => new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshStandardMaterial({ transparent: true, roughness: 0.5, map: canvasTex(512, Math.round(512 * h / w), (c, cw, ch) => { c.fillStyle = '#151515'; c.font = `bold ${size}px Arial`; c.textBaseline = 'middle'; c.fillText(text, 8, ch / 2); }) }));
+  const decal = (text, w, h, size) => new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshStandardMaterial({ transparent: true, roughness: 0.5, map: canvasTex(512, Math.round(512 * h / w), (c, cw, ch) => { c.fillStyle = '#151515'; c.font = `italic ${size}px "Archivo Black"`; c.textBaseline = 'middle'; c.fillText(text, 8, ch / 2); }) }));
   for (const s of [-1, 1]) {
     const d1 = decal('TERRAMAX', 2.2, 0.4, 82); d1.position.set(-1.5, 2.6, s * 1.72); d1.rotation.y = s < 0 ? Math.PI : 0; d1.rotation.x = s * -0.18; g.add(d1);
     const d2 = decal('HX40', 0.8, 0.28, 120); d2.position.set(4.3, 2.2, s * 1.11); d2.rotation.y = s < 0 ? Math.PI : 0; g.add(d2);
@@ -177,10 +177,10 @@ export function makeSiteSign() {
   const t = canvasTex(512, 384, (c, w, h) => {
     c.fillStyle = '#f2f2ee'; c.fillRect(0, 0, w, 90);
     c.fillStyle = '#2b55b8'; c.fillRect(0, 90, w, h - 90);
-    c.fillStyle = '#c8202a'; c.font = 'bold 70px Arial'; c.textAlign = 'center'; c.fillText('STOP', w / 2, 70);
-    c.fillStyle = '#fff'; c.font = 'bold 34px Arial';
+    c.fillStyle = '#c8202a'; c.font = '80px "Archivo Black"'; c.textAlign = 'center'; c.fillText('STOP', w / 2, 70);
+    c.fillStyle = '#fff'; c.font = '600 36px "Oswald"';
     ['ALL VISITORS', 'CHECK IN AT', 'SITE OFFICE'].forEach((s, i) => c.fillText(s, w / 2, 150 + i * 46));
-    c.font = 'bold 26px Arial'; c.fillText('HARD HATS REQUIRED', w / 2, 330);
+    c.font = '600 28px "Oswald"'; c.fillText('HARD HATS REQUIRED', w / 2, 330);
   });
   g.add(box(1.6, 1.2, 0.04, new THREE.MeshStandardMaterial({ map: t, roughness: 0.5 }), 0, 1.6, 0));
   for (const x of [-0.65, 0.65]) g.add(box(0.08, 2.2, 0.08, std({ color: '#8a8d90', metalness: 0.5 }), x, 1.1, -0.05));

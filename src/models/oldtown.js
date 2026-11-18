@@ -12,6 +12,7 @@
 // Everything faces +z, origin at ground level.
 import * as THREE from 'three';
 import { ellipsoid, cone, smin, surfaceNets, v3 } from './cat.js';
+import { fitText } from '../fonts.js';
 
 function canvasTex(w, h, draw) {
   const c = document.createElement('canvas');
@@ -102,8 +103,8 @@ export function makeShopHouse({ w = 6, d = 8, seed = 1, front = 'glass', sign = 
   g.add(box(w + 0.4, 0.12, 0.12, m.black, 0, H1 + 0.06, 0.95));
   // upper floor: plaster with a lattice window
   const ww = Math.min(2.6, w - 1.2);
-  g.add(box(ww, 1.0, 0.06, m.lattice, (r() - 0.5) * 0.6, H1 + 1.3, 0.03));
-  g.add(box(ww + 0.2, 0.08, 0.1, m.timber, 0, H1 + 0.76, 0.05));
+  g.add(box(ww, 1.0, 0.06, m.lattice, (r() - 0.5) * 0.6, H1 + 1.6, 0.03));
+  g.add(box(ww + 0.2, 0.08, 0.1, m.timber, 0, H1 + 1.06, 0.05));
   // main roof: gable facing the street
   const rise = 1.5, half = d / 2 + 0.3, sl = Math.hypot(rise, w / 2 + 0.3);
   const ang = Math.atan2(rise, w / 2 + 0.3);
@@ -119,11 +120,29 @@ export function makeShopHouse({ w = 6, d = 8, seed = 1, front = 'glass', sign = 
   const st = canvasTex(128, 320, (c, cw, ch) => {
     c.fillStyle = '#3a2516'; c.fillRect(0, 0, cw, ch);
     c.strokeStyle = '#c8a050'; c.lineWidth = 6; c.strokeRect(6, 6, cw - 12, ch - 12);
-    c.fillStyle = '#f2e6c8'; c.font = 'bold 84px serif'; c.textAlign = 'center';
-    [...word].forEach((ch2, i) => c.fillText(ch2, cw / 2, 110 + i * 100));
+    c.fillStyle = '#f2e6c8'; const n = [...word].length, step = Math.min(110, (ch - 60) / n);
+    [...word].forEach((ch2, i) => fitText(c, ch2, cw / 2, 30 + step * (i + 0.5), cw - 30, Math.min(96, step * 0.95), '"Yuji Syuku"'));
   });
-  const sb = box(0.45, 1.15, 0.06, [m.timber, m.timber, m.timber, m.timber, std({ map: st }), std({ map: st })], -w / 2 + 0.6, H1 - 0.75, 0.7);
+  // hung from an iron arm off the corner post, edge-on to the street so it reads from up and down the road
+  const armX = -w / 2 + 0.12;
+  g.add(box(0.035, 0.035, 0.85, m.black, armX, H1 - 0.12, 0.5));
+  const brace = box(0.02, 0.02, 0.5, m.black, armX, H1 - 0.3, 0.3); brace.rotation.x = 0.75; g.add(brace);
+  const sb = box(0.06, 1.0, 0.42, [std({ map: st }), std({ map: st }), m.timber, m.timber, m.timber, m.timber], armX, H1 - 0.72, 0.68);
   g.add(sb);
+  for (const dz of [-0.14, 0.14]) g.add(box(0.008, 0.1, 0.008, m.black, armX, H1 - 0.17, 0.68 + dz));
+  // roof board standing on the eave, centred on the shop (horizontal brush lettering)
+  const RW = Math.min(2.2, w - 2.2);
+  const roofWord = ['甘味本舗', '和紙本舗', '菓子本舗', '茶本舗', '酒', 'そば', '団子', '漬物本舗'][sign % 8];
+  const rt = canvasTex(1024, 192, (c, cw, ch) => {
+    const gr = c.createLinearGradient(0, 0, 0, ch); gr.addColorStop(0, '#2e1e12'); gr.addColorStop(1, '#1e140c');
+    c.fillStyle = gr; c.fillRect(0, 0, cw, ch);
+    c.strokeStyle = '#b8903a'; c.lineWidth = 8; c.strokeRect(14, 14, cw - 28, ch - 28);
+    c.fillStyle = '#e8c870';
+    fitText(c, roofWord, cw / 2, ch / 2 + 6, cw - 140, 124, '"Yuji Syuku"', { spacing: 20 });
+  });
+  const rb = box(RW, RW * 192 / 1024, 0.07, [m.timber, m.timber, m.timber, m.timber, std({ map: rt, roughness: 0.6, emissive: '#3a2a10', emissiveMap: rt }), m.timber], 0, H1 + 0.74, 0.07);
+  g.add(rb);
+  
   // noren curtain over the door
   const nt = canvasTex(256, 128, (c, cw, ch) => {
     c.fillStyle = noren; c.fillRect(0, 0, cw, ch);
@@ -157,7 +176,7 @@ export function makeStreetLamp() {
   // a banner bracket below the lamp (day photo)
   const ban = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.95), std({ side: THREE.DoubleSide, map: canvasTex(128, 288, (c, w, h) => {
     c.fillStyle = '#f2f2f2'; c.fillRect(0, 0, w, h); c.fillStyle = '#2a4aa8'; c.fillRect(0, 0, w, 70); c.fillStyle = '#d82a3a'; c.beginPath(); c.arc(w / 2, 170, 40, 0, 7); c.fill();
-    c.fillStyle = '#2a4aa8'; c.font = 'bold 30px serif'; c.textAlign = 'center'; c.fillText('祭', w / 2, 50);
+    c.fillStyle = '#2a4aa8'; c.font = '34px "Zen Antique"'; c.textAlign = 'center'; c.fillText('祭', w / 2, 50);
   }) }));
   ban.position.set(0.24, 2.3, 0); ban.rotation.y = Math.PI / 2; g.add(ban);
   g.add(box(0.5, 0.025, 0.025, m.black, 0.25, 2.8, 0));
@@ -247,7 +266,7 @@ export function makeBanner(col = '#2a4aa8', seed = 1) {
   const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 2.6, 6), std({ color: '#d8d8d4', metalness: 0.5 })); pole.position.y = 1.3; g.add(pole);
   const t = canvasTex(96, 320, (c, w, h) => {
     c.fillStyle = col; c.fillRect(0, 0, w, h); c.fillStyle = '#fff'; c.fillRect(8, 8, w - 16, h - 16); c.fillStyle = col;
-    c.font = 'bold 56px serif'; c.textAlign = 'center'; ['大', '売', '出'].forEach((ch, i) => c.fillText(ch, w / 2, 90 + i * 80));
+    c.font = '60px "Yuji Syuku"'; c.textAlign = 'center'; ['大', '売', '出'].forEach((ch, i) => c.fillText(ch, w / 2, 90 + i * 80));
   });
   const fl = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 1.4), std({ map: t, side: THREE.DoubleSide, roughness: 0.95 }));
   fl.position.set(0.21, 1.75, 0); g.add(fl);
@@ -279,7 +298,7 @@ export function makeGreenPillar() {
     c.fillStyle = '#1f8a4a'; c.fillRect(0, 0, w, h);
     c.fillStyle = '#fff'; c.beginPath(); c.arc(w / 2, 70, 38, 0, 7); c.fill();
     c.fillStyle = '#1f8a4a'; c.beginPath(); c.arc(w / 2, 70, 22, 0, 7); c.fill();
-    c.fillStyle = '#fff'; c.font = 'bold 58px serif'; c.textAlign = 'center'; ['信', '用', '金', '庫'].forEach((ch, i) => c.fillText(ch, w / 2, 200 + i * 120));
+    c.fillStyle = '#fff'; c.font = '62px "Zen Antique"'; c.textAlign = 'center'; ['信', '用', '金', '庫'].forEach((ch, i) => c.fillText(ch, w / 2, 200 + i * 120));
   });
   const mm = new THREE.MeshStandardMaterial({ map: t, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.35, roughness: 0.5 });
   g.add(box(0.7, 6, 0.4, [std({ color: '#1f8a4a' }), std({ color: '#1f8a4a' }), std({ color: '#1f8a4a' }), std({ color: '#1f8a4a' }), mm, mm], 0, 3, 0));

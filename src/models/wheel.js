@@ -82,11 +82,11 @@ function tireMaterial(keyT) {
       x.scale(-1, front ? 1 : -1);
       x.fillStyle = height ? '#ffffff' : '#2e2e30';
       x.textAlign = 'center'; x.textBaseline = 'middle';
-      x.font = `bold ${Math.round(band * 0.42)}px Arial`;
+      x.font = `${Math.round(band * 0.42)}px "Archivo Black"`;
       for (const cx of [w * 0.25 / 6 * 6 * 0.0 + w / 12 * 2, w / 12 * 8]) x.fillText('ROADMARK', cx, 0);
-      x.font = `italic bold ${Math.round(band * 0.3)}px Arial`;
+      x.font = `italic ${Math.round(band * 0.3)}px "Righteous"`;
       for (const cx of [w / 12 * 5, w / 12 * 11]) x.fillText('TRAILGRIP HP', cx, 0);
-      x.font = `${Math.round(band * 0.18)}px Arial`;
+      x.font = `${Math.round(band * 0.18)}px "Roboto Condensed"`;
       x.fillText('235/60 R18 104V', w / 12 * 3.5, band * 0.22);
       x.fillText('TUBELESS  RADIAL', w / 12 * 9.5, band * 0.22);
       x.restore();

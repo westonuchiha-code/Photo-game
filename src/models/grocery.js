@@ -6,6 +6,7 @@
 // panels, evaporator fans, stacked blue + black milk crates, green U-boat
 // carts with boxes) behind a strip curtain. Automatic sliding front doors.
 import * as THREE from 'three';
+import { fitText } from '../fonts.js';
 import { makeStockroom } from './stockroom.js';
 
 const std = (o) => new THREE.MeshStandardMaterial({ roughness: 0.6, ...o });
@@ -142,8 +143,8 @@ function jugLabel(capCol) {
   jugLabels[capCol] = new THREE.MeshStandardMaterial({ roughness: 0.5, map: canvasTex(128, 96, (x, w, h) => {
     x.fillStyle = '#fbfaf5'; x.fillRect(0, 0, w, h);
     x.fillStyle = capCol; x.fillRect(0, h * 0.62, w, h * 0.38);
-    x.fillStyle = '#1d4a2a'; x.font = 'bold 20px Georgia'; x.textAlign = 'center'; x.fillText('MEADOW', w / 2, 30); x.fillText('DAIRY', w / 2, 52);
-    x.fillStyle = '#fff'; x.font = 'bold 18px Arial'; x.fillText('MILK', w / 2, 86);
+    x.fillStyle = '#1d4a2a'; x.font = '20px "Alfa Slab One"'; x.textAlign = 'center'; x.fillText('MEADOW', w / 2, 30); x.fillText('DAIRY', w / 2, 52);
+    x.fillStyle = '#fff'; x.font = '600 20px "Oswald"'; x.fillText('MILK', w / 2, 86);
   }) });
   return jugLabels[capCol];
 }
@@ -195,7 +196,7 @@ function coolerDoor(capCol, kind, seed) {
   }
   lab.count = n;
   g.add(lab);
-  const tag = new THREE.MeshBasicMaterial({ map: canvasTex(96, 48, (x, w, h) => { x.fillStyle = '#f6d43a'; x.fillRect(0, 0, w, h); x.fillStyle = '#111'; x.font = 'bold 26px Arial'; x.fillText(['3.49', '2.99', '4.19'][seed % 3], 10, 34); }) });
+  const tag = new THREE.MeshBasicMaterial({ map: canvasTex(96, 48, (x, w, h) => { x.fillStyle = '#f6d43a'; x.fillRect(0, 0, w, h); x.fillStyle = '#111'; x.font = '36px "Bebas Neue"'; x.fillText(['3.49', '2.99', '4.19'][seed % 3], 10, 34); }) });
   for (let shelf = 0; shelf < 5; shelf++) {
     const t2 = new THREE.Mesh(new THREE.PlaneGeometry(0.08, 0.04), tag);
     t2.position.set(-0.3 + (shelf % 2) * 0.35, 0.17 + shelf * 0.38, -0.088);
@@ -352,12 +353,20 @@ export function makeGrocery() {
   // storefront: mullions + glass, opening for doors in the middle
   const DW = 2.4;
   g.add(box(W, 0.6, 0.3, std({ color: '#2a5d3d', roughness: 0.5 }), 0, 3.7, zf));   // green sign band
-  const sign = canvasTex(1024, 128, (x, w, h) => {
-    x.fillStyle = '#2a5d3d'; x.fillRect(0, 0, w, h);
-    x.fillStyle = '#f6f2e4'; x.font = 'bold 88px Arial'; x.textAlign = 'center'; x.fillText('FRESHWAY MARKET', w / 2, 96);
+  // lit letter box centred on the band, proportioned so the lettering keeps its shape, with a white
+  // leaf mark at the left and tracked-out condensed lettering, inset clear of the frame
+  const SW = 8.2, SH = 0.52;
+  const sign = canvasTex(2048, Math.round(2048 * SH / SW), (x, w, h) => {
+    x.fillStyle = '#245236'; x.fillRect(0, 0, w, h);
+    x.strokeStyle = 'rgba(246,242,228,0.55)'; x.lineWidth = 6; x.strokeRect(10, 10, w - 20, h - 20);
+    // leaf mark
+    x.fillStyle = '#9fd36a'; x.beginPath(); x.ellipse(110, h / 2, 46, 26, -0.6, 0, 7); x.fill();
+    x.strokeStyle = '#245236'; x.lineWidth = 6; x.beginPath(); x.moveTo(78, h / 2 + 22); x.lineTo(144, h / 2 - 22); x.stroke();
+    x.fillStyle = '#f6f2e4';
+    fitText(x, 'FRESHWAY MARKET', (190 + w - 60) / 2, h / 2 + 5, w - 300, Math.round(h * 0.86), '"Bebas Neue"', { spacing: 12 });
   });
-  g.add(plane(10, 1.25, glow(1, 1, 1), 0, 3.7, zf + 0.16));
-  g.children[g.children.length - 1].material = new THREE.MeshBasicMaterial({ map: sign, color: new THREE.Color(1.3, 1.3, 1.3), toneMapped: false });
+  g.add(box(SW + 0.1, SH + 0.1, 0.12, std({ color: '#1c3a28', roughness: 0.5 }), 0, 3.72, zf + 0.18));
+  g.add(plane(SW, SH, new THREE.MeshBasicMaterial({ map: sign, color: new THREE.Color(1.25, 1.25, 1.25), toneMapped: false }), 0, 3.72, zf + 0.245));
   g.add(box(W, 0.3, 0.3, m.dark, 0, 3.25, zf));
   for (let x = x0; x <= x1 + 0.01; x += 2) if (Math.abs(x) > DW / 2) g.add(box(0.1, 3.4, 0.12, m.dark, x, 1.7, zf));
   g.add(plane(x1 - DW / 2, 3.2, m.glass, (x1 + DW / 2) / 2, 1.6, zf));
@@ -466,7 +475,7 @@ export function makeGrocery() {
     u.position.set(x, 0, z);
     // clipboard sheet hanging on the cart end (photo: order sheets on every cart)
     const sheet = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.42), std({ map: canvasTex(128, 180, (c, w, h) => {
-      c.fillStyle = '#f7f6f1'; c.fillRect(0, 0, w, h); c.fillStyle = '#222'; c.font = 'bold 16px Arial'; c.fillText('DAIRY:', 10, 24);
+      c.fillStyle = '#f7f6f1'; c.fillRect(0, 0, w, h); c.fillStyle = '#222'; c.font = '700 22px "Caveat"'; c.fillText('DAIRY:', 10, 24);
       c.strokeStyle = '#9aa'; for (let i = 0; i < 8; i++) { c.beginPath(); c.moveTo(10, 44 + i * 16); c.lineTo(w - 10, 44 + i * 16); c.stroke(); }
     }), side: THREE.DoubleSide }));
     sheet.position.set(0, 0.95, 0.63);

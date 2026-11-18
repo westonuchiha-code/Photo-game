@@ -248,6 +248,19 @@ Rules (from you):
     safety glasses, bib clips, papers, desk fan; mayo tray stand with cassette of colourful
     instruments, suction tip, gauze; black saddle stool; tan bucket stool; steel bin.
 
+59. Utility + parking decoration (photos/utility/, 15 photos): green pad-mount transformer (front doors,
+    padlock hasp, side cooling fins, made-up ID numbers + stickers) on a concrete pad; grey + galvanized
+    wall electrical cabinets with white PVC conduits, pipe straps and a meter; pale-green ribbed
+    telecom pedestal; fire-department sprinkler connection on stacked-stone veneer (stone texture);
+    blue handicapped parking sign (generic wording) + painted blue wheelchair stall, striped access
+    aisle, plain stall lines; fresh black parking asphalt texture; fallen catalpa/sycamore leaves
+    (yellow-green and dry tan) as scatter decals; sandy dirt texture.
+
+60. Extra texture library (photos/textures2/, 7 photos): stacked-stone veneer (+ close-up), white ribbed
+    metal fins, wood-chip mulch bed with concrete curb + flowering shrub, tan stucco wall with a
+    stacked-stone band and stone cap, patchy dry grass on sandy dirt, bare sandy dirt with pebbles.
+    General-purpose: use for new builds and for re-texturing older ones in the polish pass.
+
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"
   transom and the "OPEN!" plaque (both generic, so low priority).

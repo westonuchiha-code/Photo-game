@@ -109,7 +109,7 @@ export function makeOldVan() {
   const grille = canvasTex(512, 64, (x, w, h) => {
     x.fillStyle = '#25272c'; x.fillRect(0, 0, w, h);
     for (let i = 0; i < 6; i++) { x.fillStyle = '#353841'; x.fillRect(0, 6 + i * 9, w, 3); }
-    x.fillStyle = '#c9cbd0'; x.font = 'bold 34px Arial'; x.textAlign = 'center'; x.fillText('KAZEMA', w / 2, 44);
+    x.fillStyle = '#c9cbd0'; x.font = '38px "Archivo Black"'; x.textAlign = 'center'; x.fillText('KAZEMA', w / 2, 44);
   });
   const gf = new THREE.Mesh(new THREE.PlaneGeometry(W - 0.5, 0.17), new THREE.MeshStandardMaterial({ map: grille, roughness: 0.5 }));
   gf.position.set(0, 0.78, L / 2 + 0.06);

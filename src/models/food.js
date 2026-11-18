@@ -397,8 +397,8 @@ export function makeClearSoda() {
   g.add(bottle);
   const label = canvasTex(512, 128, (x, w, h) => {
     x.fillStyle = '#f7f7f7'; x.fillRect(0, 0, w, h);
-    x.fillStyle = '#d4242b'; x.font = 'italic bold 44px Arial'; x.fillText('GLACIER', 30, 52);
-    x.fillStyle = '#1f4fb0'; x.font = 'bold 54px Arial'; x.fillText('POP', 40, 108);
+    x.fillStyle = '#d4242b'; x.font = '44px "Righteous"'; x.fillText('GLACIER', 30, 52);
+    x.fillStyle = '#1f4fb0'; x.font = '54px "Bungee"'; x.fillText('POP', 40, 108);
     x.fillStyle = '#d4242b'; x.fillRect(300, 70, 200, 14); x.fillStyle = '#1f4fb0'; x.fillRect(300, 90, 200, 14);
   });
   const lb = new THREE.Mesh(new THREE.CylinderGeometry(0.0345, 0.0345, 0.05, 28, 1, true), std({ map: label, roughness: 0.3 }));
@@ -418,8 +418,8 @@ export function makeDarkSodaCan() {
     x.fillStyle = '#0e0f10'; x.fillRect(0, 0, w, h);
     x.strokeStyle = '#2f9a3a'; x.lineWidth = 10;
     x.beginPath(); x.moveTo(40, 200); x.lineTo(140, 60); x.lineTo(230, 200); x.stroke();
-    x.fillStyle = '#d02a2a'; x.font = 'bold 66px Arial'; x.fillText('PEAK', 250, 110);
-    x.fillStyle = '#e8e8e8'; x.font = 'italic bold 46px Georgia'; x.fillText('Night Black', 250, 175);
+    x.fillStyle = '#d02a2a'; x.font = '84px "Bebas Neue"'; x.fillText('PEAK', 250, 110);
+    x.fillStyle = '#e8e8e8'; x.font = '40px "Pacifico"'; x.fillText('Night Black', 250, 175);
   });
   const can = new THREE.Mesh(new THREE.CylinderGeometry(0.033, 0.033, 0.12, 28), [std({ map: label, metalness: 0.4, roughness: 0.3 }), std({ color: '#b8babd', metalness: 0.5, roughness: 0.3 }), std({ color: '#b8babd', metalness: 0.5, roughness: 0.3 })]);
   can.position.y = 0.06;

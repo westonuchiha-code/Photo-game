@@ -310,16 +310,16 @@ export function makeStoneShrine() {
   // white signboard (house-shaped top) on the fence, made-up text
   const sign = canvasTex(256, 320, (x, w, h) => {
     x.fillStyle = '#f6f6f2'; x.beginPath(); x.moveTo(0, 60); x.lineTo(w / 2, 0); x.lineTo(w, 60); x.lineTo(w, h); x.lineTo(0, h); x.closePath(); x.fill();
-    x.fillStyle = '#222'; x.font = 'bold 30px Georgia'; x.textAlign = 'center';
+    x.fillStyle = '#222'; x.font = '700 30px "Cinzel"'; x.textAlign = 'center';
     ['OLD STONE', 'OF THE', 'HILL PATH'].forEach((t, i) => x.fillText(t, w / 2, 110 + i * 40));
-    x.font = 'italic 20px Georgia'; ['please leave', 'flowers only'].forEach((t, i) => x.fillText(t, w / 2, 250 + i * 26));
+    x.font = '700 26px "Caveat"'; ['please leave', 'flowers only'].forEach((t, i) => x.fillText(t, w / 2, 250 + i * 26));
   });
   const sm = new THREE.Mesh(new THREE.PlaneGeometry(0.32, 0.4), std({ map: sign, transparent: true, alphaTest: 0.5, roughness: 0.4 }));
   sm.position.set(0.58, 0.95, zc - D / 2 + 0.11); g.add(sm);
   // square stone marker post out front, carved with made-up lettering
   const carve = canvasTex(64, 256, (x, w, h) => {
     x.fillStyle = '#8f8b82'; x.fillRect(0, 0, w, h);
-    x.fillStyle = '#4b4842'; x.font = 'bold 34px Georgia'; x.textAlign = 'center';
+    x.fillStyle = '#4b4842'; x.font = '700 36px "Cinzel"'; x.textAlign = 'center';
     'PEACE'.split('').forEach((c, i) => x.fillText(c, w / 2, 44 + i * 44));
   });
   const carveM = std({ map: carve, roughness: 0.95 });

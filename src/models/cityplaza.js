@@ -122,7 +122,7 @@ export function makeBrickGable(W = 16, D = 12, H = 5.0, RISE = 4.0) {
   const rake = Math.hypot(W / 2, RISE), ang = Math.atan2(RISE, W / 2);
   const insc = canvasTex(2048, 64, (c, w, h) => {
     c.fillStyle = '#6f7275'; c.fillRect(0, 0, w, h);
-    c.fillStyle = '#3e4042'; c.font = 'bold 40px Georgia'; c.textBaseline = 'middle';
+    c.fillStyle = '#3e4042'; c.font = '700 38px "Cinzel"'; c.textBaseline = 'middle';
     c.fillText(INSCRIPTION + INSCRIPTION, 10, h / 2 + 2);
   });
   for (const s of [-1, 1]) {

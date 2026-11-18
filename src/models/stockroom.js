@@ -120,9 +120,9 @@ function caseMat(kind) {
   const side = canvasTex(256, 160, (x, w, h) => {
     x.fillStyle = spec[0]; x.fillRect(0, 0, w, h);
     x.fillStyle = spec[1]; x.fillRect(0, h * 0.62, w, h * 0.12);
-    x.font = 'bold 34px Arial'; x.textAlign = 'center'; x.fillText(spec[2], w / 2, 52);
-    x.font = 'bold 22px Arial'; x.fillText(spec[3], w / 2, 88);
-    x.fillStyle = 'rgba(0,0,0,0.6)'; x.font = '12px Arial'; x.fillText('12 / 15.25 OZ', w / 2, h - 12);
+    x.font = '34px "Archivo Black"'; x.textAlign = 'center'; x.fillText(spec[2], w / 2, 52);
+    x.font = '600 24px "Oswald"'; x.fillText(spec[3], w / 2, 88);
+    x.fillStyle = 'rgba(0,0,0,0.6)'; x.font = '13px "Roboto Condensed"'; x.fillText('12 / 15.25 OZ', w / 2, h - 12);
     x.fillStyle = '#fff'; x.fillRect(w - 52, 8, 44, 22); x.fillStyle = '#111'; for (let i = 0; i < 18; i++) x.fillRect(w - 50 + i * 2.3, 10, 1 + (i % 3 === 0), 16);
   });
   const top = std({ color: spec[0], roughness: 0.75 });
@@ -137,8 +137,8 @@ function flourMat(band) {       // paper flour bag, made-up GOLDEN MILL
     x.fillStyle = '#f3efe6'; x.fillRect(0, 0, w, h);
     x.fillStyle = band; x.fillRect(0, h * 0.55, w, h * 0.3);
     x.fillStyle = '#c23a3a'; x.beginPath(); x.arc(w / 2, h * 0.3, 16, 0, 7); x.fill();
-    x.fillStyle = '#fff'; x.font = 'bold 10px Arial'; x.textAlign = 'center'; x.fillText('GOLDEN', w / 2, h * 0.28); x.fillText('MILL', w / 2, h * 0.38);
-    x.fillStyle = '#fff'; x.font = 'bold 13px Arial'; x.fillText('FLOUR', w / 2, h * 0.75);
+    x.fillStyle = '#fff'; x.font = '11px "Alfa Slab One"'; x.textAlign = 'center'; x.fillText('GOLDEN', w / 2, h * 0.28); x.fillText('MILL', w / 2, h * 0.38);
+    x.fillStyle = '#fff'; x.font = '600 15px "Oswald"'; x.fillText('FLOUR', w / 2, h * 0.75);
   }) });
   return bagMats[band];
 }
@@ -270,7 +270,7 @@ function flourStack(r) {             // photo 4: shrink-wrapped flour bag bundle
   const tote = new THREE.Group();
   tote.add(box(0.6, 0.38, 0.4, std({ color: '#1a1b1d', roughness: 0.5 }), 0, 0.19, 0));
   tote.add(box(0.64, 0.04, 0.44, std({ color: '#121314', roughness: 0.5 }), 0, 0.4, 0));
-  tote.add(plane(0.3, 0.1, std({ map: canvasTex(128, 48, (x, w, h) => { x.fillStyle = '#1a1b1d'; x.fillRect(0, 0, w, h); x.fillStyle = '#eee'; x.font = 'bold 16px Arial'; x.textAlign = 'center'; x.fillText('STORE USE', w / 2, 20); x.fillText('ONLY', w / 2, 40); }) }), 0, 0.15, 0.201));
+  tote.add(plane(0.3, 0.1, std({ map: canvasTex(128, 48, (x, w, h) => { x.fillStyle = '#1a1b1d'; x.fillRect(0, 0, w, h); x.fillStyle = '#eee'; x.font = '15px "Black Ops One"'; x.textAlign = 'center'; x.fillText('STORE USE', w / 2, 20); x.fillText('ONLY', w / 2, 40); }) }), 0, 0.15, 0.201));
   tote.position.set(0.05, y0 + 0.82, 0.05);
   tote.rotation.y = 0.15;
   g.add(tote);
@@ -426,7 +426,7 @@ export function makeStockroom() {
   const trim = std({ color: '#5a5d60', metalness: 0.4 });
   for (const x of [DX0, DX1]) g.add(box(0.08, 2.4, 0.22, trim, x, 1.2, Z1));
   g.add(box(DX1 - DX0 + 0.08, 0.08, 0.22, trim, (DX0 + DX1) / 2, 2.4, Z1));
-  const sign = plane(0.9, 0.22, std({ map: canvasTex(256, 64, (x, w, h) => { x.fillStyle = '#c8232c'; x.fillRect(0, 0, w, h); x.fillStyle = '#fff'; x.font = 'bold 25px Arial'; x.textAlign = 'center'; x.fillText('EMPLOYEES ONLY', w / 2, 43); }) }), (DX0 + DX1) / 2, 2.7, Z1 + 0.12);
+  const sign = plane(0.9, 0.22, std({ map: canvasTex(256, 64, (x, w, h) => { x.fillStyle = '#c8232c'; x.fillRect(0, 0, w, h); x.fillStyle = '#fff'; x.font = '600 28px "Oswald"'; x.textAlign = 'center'; x.fillText('EMPLOYEES ONLY', w / 2, 43); }) }), (DX0 + DX1) / 2, 2.7, Z1 + 0.12);
   g.add(sign);
   // swinging stockroom doors held open (grey, with kick plates + windows)
   for (const s of [-1, 1]) {

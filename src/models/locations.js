@@ -28,9 +28,9 @@ export function makeNewsBox() {
   const front = canvasTexture(256, 512, (c, w, h) => {
     c.fillStyle = '#c42a22'; c.fillRect(0, 0, w, h);
     c.fillStyle = '#fff'; c.fillRect(18, 20, w - 36, 120);
-    c.fillStyle = '#c42a22'; c.font = 'bold 52px Arial'; c.textAlign = 'center';
+    c.fillStyle = '#c42a22'; c.font = '58px "Bebas Neue"'; c.textAlign = 'center';
     c.fillText('CITY', w / 2, 74); c.fillText('WEEKLY', w / 2, 126);
-    c.fillStyle = '#fff'; c.font = 'bold 40px Arial'; c.fillText('FREE', w / 2, 190);
+    c.fillStyle = '#fff'; c.font = '44px "Archivo Black"'; c.fillText('FREE', w / 2, 190);
     // window with the paper inside
     c.fillStyle = '#20262b'; c.fillRect(28, 220, w - 56, 200);
     c.fillStyle = '#e9e5da'; c.fillRect(44, 240, w - 88, 170);
@@ -59,8 +59,8 @@ export function makeParkingSignBlock() {
     c.fillStyle = '#f4f2ec'; c.fillRect(0, 0, w, h);
     c.strokeStyle = '#222'; c.lineWidth = 6; c.strokeRect(6, 6, w - 12, h - 12);
     c.fillStyle = '#c4271f'; c.fillRect(14, 14, w - 28, 44);
-    c.fillStyle = '#fff'; c.font = 'bold 30px Arial'; c.textAlign = 'center'; c.fillText('NO TRESPASSING', w / 2, 47);
-    c.fillStyle = '#111'; c.font = 'bold 32px Arial';
+    c.fillStyle = '#fff'; c.font = '600 32px "Oswald"'; c.textAlign = 'center'; c.fillText('NO TRESPASSING', w / 2, 47);
+    c.fillStyle = '#111'; c.font = '600 34px "Oswald"';
     ['TENANT', '-PARKING ONLY-', 'OTHERS WILL BE', 'TOWED AWAY'].forEach((l, i) => c.fillText(l, w / 2, 104 + i * 50));
   });
   const sign = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.58), std({ map: t, roughness: 0.5 }));
@@ -124,7 +124,7 @@ export function makeParkingRamp({ x0 = -2, x1 = 2, z0 = 0, z1 = -10, zDoor = -14
   g.add(box(W + 0.5, 0.35, 0.4, concrete, cx, -0.125, z1));
   const clear = canvasTexture(512, 96, (c, w, h) => {
     c.fillStyle = '#f1efe8'; c.fillRect(0, 0, w, h);
-    c.fillStyle = '#1b3f8f'; c.font = 'bold 54px Arial'; c.textAlign = 'center'; c.fillText("CLEARANCE 6'8\"", w / 2, 66);
+    c.fillStyle = '#1b3f8f'; c.font = '600 56px "Oswald"'; c.textAlign = 'center'; c.fillText("CLEARANCE 6'8\"", w / 2, 66);
   });
   const cs = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 0.34), std({ map: clear }));
   cs.position.set(cx, -0.5, z1 + 0.25);
@@ -221,7 +221,7 @@ export function makeTealStorefront({ w = 8, d = 10, h = 4.4, number = '714' } = 
   }
   const num = canvasTexture(256, 96, (c, w2, h2) => {
     c.fillStyle = '#f2f1ec'; c.fillRect(0, 0, w2, h2);
-    c.fillStyle = '#222'; c.font = 'bold 64px Georgia'; c.textAlign = 'center'; c.fillText(number, w2 / 2, 70);
+    c.fillStyle = '#222'; c.font = '600 68px "Oswald"'; c.textAlign = 'center'; c.fillText(number, w2 / 2, 70);
   });
   const np = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.15), std({ map: num }));
   np.position.set((R.a + R.b) / 2 + 0.6, R.top + 0.2, zf + 0.01);

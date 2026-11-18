@@ -152,7 +152,7 @@ export function makeUtilityLid(x, z, rotY = 0) {
     c.strokeStyle = 'rgba(214,52,38,0.85)'; c.lineWidth = 9; c.lineCap = 'round';
     c.beginPath(); c.moveTo(30, 200); c.lineTo(110, 200); c.lineTo(95, 185); c.moveTo(110, 200); c.lineTo(95, 215); c.stroke();
     c.beginPath(); c.moveTo(200, 30); c.lineTo(200, 120); c.stroke();
-    c.fillStyle = 'rgba(214,52,38,0.85)'; c.font = 'bold 34px sans-serif'; c.fillText('W', 150, 225);
+    c.fillStyle = 'rgba(214,52,38,0.85)'; c.font = '40px "Permanent Marker"'; c.fillText('W', 150, 225);
   });
   const deco = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 1.4),
     new THREE.MeshStandardMaterial({ map: paint, transparent: true, depthWrite: false, roughness: 1, polygonOffset: true, polygonOffsetFactor: -2 }));

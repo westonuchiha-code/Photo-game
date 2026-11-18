@@ -72,10 +72,10 @@ function spineMaterial() {
       x.rotate(-Math.PI / 2);
       x.fillStyle = light ? '#1d1d1f' : '#efe7d2';
       const t2 = TITLES[i];
-      x.font = `bold ${t2.length > 16 ? 22 : 28}px ${i % 2 ? 'Georgia' : 'Arial'}`;
+      x.font = (i % 2 ? `700 ${t2.length > 16 ? 20 : 26}px "Cinzel"` : `600 ${t2.length > 16 ? 24 : 30}px "Oswald"`);
       x.textAlign = 'center'; x.textBaseline = 'middle';
       x.fillText(t2, 20, 0, h - 120);
-      x.font = '16px Arial';
+      x.font = '16px "Roboto Condensed"';
       x.fillText(['B. ALVAREZ', 'M. CHEN', 'R. OKAFOR', 'L. MARTIN'][i % 4], -h / 2 + 70, 0);
       x.restore();
     }

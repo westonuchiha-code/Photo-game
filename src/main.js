@@ -47,6 +47,8 @@ import { makePlywoodSheet, makeGlassShards, makePasteWall, makePickupZone } from
 import { makeDumpTruck, makePipeBarrier, makeSiteSign, makeWeeds } from './models/dumpsite.js';
 import { makeDeliveryBag, makeCupCarrier, makePaperBag } from './models/delivery.js';
 import { WalkControls } from './walk.js';
+import { fontsReady } from './fonts.js';
+await fontsReady;   // sign fonts must be loaded before any canvas sign is drawn
 
 // ------------------------------------------------------------------ renderer
 const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true, precision: 'highp', powerPreference: 'high-performance' });

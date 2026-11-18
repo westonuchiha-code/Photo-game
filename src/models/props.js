@@ -44,7 +44,7 @@ export function makeOpenPlaque(mats) {
     c.fillStyle = '#5aa6ab'; c.fillRect(0, 0, w, h);
     c.strokeStyle = '#ffffff'; c.lineWidth = 10; c.strokeRect(14, 14, w - 28, h - 28);
     c.fillStyle = '#ffffff';
-    c.font = 'bold 132px "Arial Black", Impact, sans-serif';
+    c.font = '140px "Bungee"';
     c.textAlign = 'center'; c.textBaseline = 'middle';
     c.fillText('OPEN!', w / 2, h / 2 + 8);
   });
@@ -100,8 +100,8 @@ export function makeMural(file, w, h) {
   g.add(p);
   const plaque = canvasTexture(256, 96, (c, cw, ch) => {
     c.fillStyle = '#b08a3e'; c.fillRect(0, 0, cw, ch);
-    c.fillStyle = '#2a2014'; c.font = 'bold 26px Georgia'; c.textAlign = 'center';
-    c.fillText('"NIGHT FACES"', cw / 2, 42); c.font = '20px Georgia'; c.fillText('community mural', cw / 2, 74);
+    c.fillStyle = '#2a2014'; c.font = '700 26px "Cinzel"'; c.textAlign = 'center';
+    c.fillText('"NIGHT FACES"', cw / 2, 42); c.font = '700 24px "Caveat"'; c.fillText('community mural', cw / 2, 74);
   });
   const pl = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.15), new THREE.MeshStandardMaterial({ map: plaque, roughness: 0.3, metalness: 0.6 }));
   pl.position.set(w / 2 - 0.3, -h / 2 + 0.3, 0.02);

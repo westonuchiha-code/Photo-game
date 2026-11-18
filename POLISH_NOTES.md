@@ -94,3 +94,12 @@ This is a running list, added to as models get built. Nothing here is urgent.
 - The vending machine sits in front of the junk shop glass; it could move to the shutter shop's side.
 - Junk shop: CRTs are simple boxes. Could add retro PCs with drive slots, CD cases spilling, a counter with a till, the hanging green sign.
 - The shutter shop has no side/back detail and the planters are simple.
+
+## Signs + fonts (done after your note)
+- Sign fonts are now bundled open-licence display faces (assets/fonts, loaded by src/fonts.js):
+  Bebas Neue / Oswald for shop + transit signs, Archivo Black / Bungee for bold retail, Shrikhand for
+  food logos, Righteous for the old TV shop, Caveat / Permanent Marker for handwriting, VT323 for
+  LED displays, Cinzel for carved stone, Pacifico for welcome signs, Alfa Slab for decals, Black Ops
+  for stencils, Yuji Syuku / Zen Antique for Japanese brush and print signs.
+- Every sign was switched off Arial/Georgia. fitText() keeps lettering inside its board.
+- Still to check in the walk-around: every sign's height, depth (no z-fighting), and that it faces where people walk.

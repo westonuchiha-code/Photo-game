@@ -69,7 +69,7 @@ export function makeGlassShards(w, d, n = 400, seed = 5) {
 
 // ---------------------------------------------------------------- wheat-paste wall
 function hand(c, lines, x, y, size, col, lh) {
-  c.fillStyle = col; c.font = `${size}px "Comic Sans MS", "Segoe Print", cursive`;
+  c.fillStyle = col; c.font = `700 ${Math.round(size * 1.2)}px "Caveat"`;
   lines.forEach((t, i) => c.fillText(t, x, y + i * lh));
 }
 export function makePasteWall(len = 7, h = 2.6) {
@@ -155,9 +155,9 @@ export function makePickupZone(L = 9, Wd = 7) {
   g.add(box(L + 1.0, 0.25, 0.25, grey, 0, 5.2, -1.0));
   const signTex = canvasTex(1024, 256, (c, w, hh) => {
     c.fillStyle = '#c3202e'; c.fillRect(0, 0, w, hh);
-    c.fillStyle = '#fff'; c.font = 'bold 96px Arial'; c.textAlign = 'center'; c.fillText('Pickup 1', w / 2, 112);
+    c.fillStyle = '#fff'; c.font = '600 100px "Oswald"'; c.textAlign = 'center'; c.fillText('Pickup 1', w / 2, 112);
     c.font = 'bold 64px Arial'; c.fillText('←', 70, 110); c.fillText('→', w - 70, 110);
-    c.font = 'bold 44px Arial'; c.textAlign = 'left'; c.fillText('Rideshare', 30, 210); c.textAlign = 'right'; c.fillText('Taxi · Shuttles', w - 30, 210);
+    c.font = '600 46px "Oswald"'; c.textAlign = 'left'; c.fillText('Rideshare', 30, 210); c.textAlign = 'right'; c.fillText('Taxi · Shuttles', w - 30, 210);
     c.fillStyle = 'rgba(255,255,255,0.4)'; c.fillRect(0, 140, w, 4);
   });
   const sign = box(4.0, 1.0, 0.12, [red, red, red, red, new THREE.MeshBasicMaterial({ map: signTex, color: new THREE.Color(1.15, 1.15, 1.15), toneMapped: false }), red], 0, 4.4, -1.0);
@@ -166,9 +166,9 @@ export function makePickupZone(L = 9, Wd = 7) {
   // numbered red pillar signs on the islands
   for (const [x, z, num] of [[L / 2 + 0.4, 2.8, '2'], [-L / 2 - 0.4, 2.8, '1']]) {
     g.add(box(0.5, 3.0, 0.5, conc, x, 1.5, z));
-    const t = canvasTex(256, 256, (c, w, hh) => { c.fillStyle = '#c3202e'; c.fillRect(0, 0, w, hh); c.fillStyle = '#fff'; c.font = 'bold 170px Arial'; c.textAlign = 'center'; c.fillText(num, w / 2, 190); });
+    const t = canvasTex(256, 256, (c, w, hh) => { c.fillStyle = '#c3202e'; c.fillRect(0, 0, w, hh); c.fillStyle = '#fff'; c.font = '600 180px "Oswald"'; c.textAlign = 'center'; c.fillText(num, w / 2, 190); });
     const m = new THREE.MeshBasicMaterial({ map: t, color: new THREE.Color(1.1, 1.1, 1.1), toneMapped: false });
-    g.add(box(0.7, 0.7, 0.7, [m, m, red, red, m, m], x, 3.2, z));
+    g.add(box(0.7, 0.7, 0.7, [x > 0 ? red : m, x > 0 ? m : red, red, red, m, red], x, 3.2, z));   // number faces the lane + the front only
   }
   // bright canopy lights like the photo
   const lamp = new THREE.MeshBasicMaterial({ color: new THREE.Color(2.4, 2.4, 2.2), toneMapped: false });

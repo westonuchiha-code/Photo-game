@@ -99,7 +99,7 @@ export function makeScooter() {
     x.clearRect(0, 0, w, h);
     x.fillStyle = '#1b1b1d';
     for (let i = 0; i < 5; i++) x.fillRect(100, 150 + i * 11, 56, 5);
-    x.fillStyle = '#eee'; x.font = 'italic bold 40px Georgia'; x.textAlign = 'center'; x.fillText('Vellia', 128, 92);
+    x.fillStyle = '#eee'; x.font = '40px "Pacifico"'; x.textAlign = 'center'; x.fillText('Vellia', 128, 92);
   });
   const bp = new THREE.Mesh(new THREE.PlaneGeometry(0.26, 0.26), new THREE.MeshBasicMaterial({ map: badge, transparent: true }));
   bp.position.set(0, 0.62, 0.418);
@@ -128,7 +128,7 @@ export function makeScooter() {
 
   // body script + rear lights
   for (const s of [-1, 1]) {
-    const lbl = new THREE.Mesh(new THREE.PlaneGeometry(0.16, 0.05), new THREE.MeshBasicMaterial({ map: canvasTex(256, 80, (x, w, h) => { x.clearRect(0, 0, w, h); x.fillStyle = '#e8e8e8'; x.font = 'italic bold 52px Georgia'; x.fillText('Vellia', 20, 58); }), transparent: true }));
+    const lbl = new THREE.Mesh(new THREE.PlaneGeometry(0.16, 0.05), new THREE.MeshBasicMaterial({ map: canvasTex(256, 80, (x, w, h) => { x.clearRect(0, 0, w, h); x.fillStyle = '#e8e8e8'; x.font = '50px "Pacifico"'; x.fillText('Vellia', 20, 58); }), transparent: true }));
     lbl.position.set(s * 0.215, 0.48, -0.5);
     lbl.rotation.y = s * Math.PI / 2;
     g.add(lbl);
@@ -187,18 +187,18 @@ export function makeBattery(kind = 'old') {
   const label = canvasTex(456, 344, (x, w, h) => {
     if (kind === 'old') {
       x.fillStyle = '#1b1b1d'; x.fillRect(0, 0, w, h);
-      x.fillStyle = '#4fa6d9'; x.font = 'italic bold 84px Georgia'; x.fillText('Voltra', 80, 190);
-      x.font = 'bold 24px Arial'; x.fillText('SCOOTER BATTERY', 140, 230);
+      x.fillStyle = '#4fa6d9'; x.font = '84px "Righteous"'; x.fillText('Voltra', 80, 190);
+      x.font = '600 26px "Oswald"'; x.fillText('SCOOTER BATTERY', 140, 230);
       x.fillText('12V 3Ah', 300, 320); x.fillText('YTX4L-BS', 20, 320);
       x.font = 'bold 40px Arial'; x.fillText('−', 20, 60); x.fillText('+', 410, 60);
       for (let i = 0; i < 300; i++) { x.fillStyle = `rgba(150,140,120,${Math.random() * 0.15})`; x.fillRect(Math.random() * w, Math.random() * h, 3, 3); }
     } else {
       x.fillStyle = '#1b1b1d'; x.fillRect(0, 0, w, h);
-      x.fillStyle = '#f0f0f0'; x.font = 'italic bold 70px Arial'; x.fillText('Ironclad', 40, 110);
-      x.fillStyle = '#e8b631'; x.font = 'italic bold 40px Arial'; x.fillText('GOLD', 300, 160);
+      x.fillStyle = '#f0f0f0'; x.font = '70px "Black Ops One"'; x.fillText('Ironclad', 40, 110);
+      x.fillStyle = '#e8b631'; x.font = '52px "Bebas Neue"'; x.fillText('GOLD', 300, 160);
       x.fillStyle = '#e8b631'; x.fillRect(0, 250, w, 70);
-      x.fillStyle = '#1b1b1d'; x.font = 'bold 36px Arial'; x.fillText('BUILT TOUGH', 110, 298);
-      x.fillStyle = '#f0f0f0'; x.font = 'bold 22px Arial'; x.fillText('AGM  POWER SPORT BATTERY', 40, 205);
+      x.fillStyle = '#1b1b1d'; x.font = '44px "Bebas Neue"'; x.fillText('BUILT TOUGH', 110, 298);
+      x.fillStyle = '#f0f0f0'; x.font = '600 22px "Oswald"'; x.fillText('AGM  POWER SPORT BATTERY', 40, 205);
     }
   });
   const body = std({ color: '#1b1b1d', roughness: 0.6 });
