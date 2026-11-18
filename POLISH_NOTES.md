@@ -118,3 +118,10 @@ This is a running list, added to as models get built. Nothing here is urgent.
 - Sport trike fairing: the livery shows the logo twice; the engine is a box with fins.
 - Arcade cabinet: side art could carry the mascots; a red plastic stool beside it (photo) isn't modelled.
 - Graffiti shop: the pallet reads reddish under the lamp; the upper floor is just corrugated metal.
+
+## 28e station, pond, rock door
+- Station canopy is a flat white slab; the photo's has a curved underside and a glass strip down the middle.
+- Ivy pillars: leaf clumps are low-poly; could use leaf cards. The hall behind is a simple glass box.
+- Pond: water reflections are painted streaks, not real reflections. Skyline towers sit inside the world
+  (west of the plaza) rather than on the horizon.
+- Rock door: rock slabs are boxes; the photo's are more organic.

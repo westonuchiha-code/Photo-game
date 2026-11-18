@@ -7,6 +7,7 @@ Rules (from you):
   sign's shape and material. Keep text that's already generic (LIQUOR).
 
 ## Approved
+- 28d Street props (after detail pass)
 - Elmwood Apartments v2 (good for now)
 - 28c Shops (noodle machine detail = the bar for everything from here on)
 - 28b Old-town shopping street
@@ -47,7 +48,7 @@ Rules (from you):
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- 28d Street props on the plaza's south edge: KWANG ELECTRIC closed shop (shutters with the photo's graffiti, cracked concrete pier, made-up signs), wood pallet, BUBBLE BOUNCE arcade cabinet (original mascots + lit game screen), sport-bike cargo trike with tarp load (made-up DASHER 125), covered electric cargo trike with boxes.
+- 28e Station gateway ending the old-town street (ivy pillars + lintel from the photo, ELMWOOD letters, canopy on green tree columns, vine curtain, made-up banner, glass hall with ticket gates), night lotus pond west of it (900 pads, reeds from the photo, temple hall, lamps, lit towers), GROTTO fake-rock bar door on the plaza's south edge (rock texture from the photo, stone arch, shutter, made-up notices + 717).
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text

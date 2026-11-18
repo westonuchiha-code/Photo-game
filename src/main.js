@@ -40,6 +40,7 @@ import { makeStatueShrine, makeStoneShrine } from './models/shrines.js';
 import { makeTireWheel } from './models/wheel.js';
 import { makeHouse } from './models/houses.js';
 import { makeBlueHouse } from './models/bluehouse.js';
+import { makeStationGate, makeLotusPond, makeRockDoor } from './models/city28e.js';
 import { makeCargoTrike, makeArcadeCabinet, makeGraffitiFront } from './models/street28d.js';
 import { makeShutterShop, makeVendingMachine, makeJunkShop } from './models/shops28c.js';
 import { makeShopHouse, makeStreetLamp as makeOldTownLamp, makeBollard, makeMonkey, makeBanner, makeClockTower, makeGreenPillar } from './models/oldtown.js';
@@ -961,7 +962,7 @@ const blueHouse = makeBlueHouse();
   for (const w of [6, 5.5, 7, 6, 5, 6.5]) { placeR(makeShopHouse({ w, d: 8, seed: k + 3, front: k % 3 === 2 ? 'lattice' : 'glass', sign: k, noren: norens[k % 5] }), SX - 7, z + w / 2, Math.PI / 2); z += w + 0.3; k++; }
   z = Z0 + 3.5;
   for (const w of [5.5, 6.5, 5, 7, 6]) { placeR(makeShopHouse({ w, d: 8, seed: k + 9, front: k % 3 === 1 ? 'lattice' : 'glass', sign: k, noren: norens[k % 5] }), SX + 7, z + w / 2, -Math.PI / 2); z += w + 0.3; k++; }
-  placeR(makeClockTower(), SX + 9.5, Z1 + 2.5, Math.PI);
+  // (the clock tower made way for the station gateway that now ends the street)
   // lamps (lit) + stone bollards + banners along both edges
   for (let zz = Z0 + 4; zz < Z1; zz += 7) for (const s of [-1, 1]) {
     const l = makeOldTownLamp(); l.position.set(SX + s * 6.0, 0, zz); l.rotation.y = s > 0 ? Math.PI : 0; add(l); circle(SX + s * 6.0, zz, 0.2);
@@ -1009,6 +1010,28 @@ const junkArea = {};
   put(makeCargoTrike({ cab: true, seed: 5 }), 0.6, 7.6, Math.PI + 0.15);
 }
 
+// ------------------------------------------------------------------ station gateway, lotus pond, rock bar door (city photos, 28e)
+{
+  const put = (o, gx, gz, rot, list) => {
+    o.position.set(gx, 0, gz); o.rotation.y = rot; add(o);
+    const cs = Math.cos(rot), sn = Math.sin(rot);
+    for (const c of list) {
+      const pts = [[c[0], c[2]], [c[1], c[2]], [c[0], c[3]], [c[1], c[3]]].map(([x, z]) => [gx + x * cs + z * sn, gz - x * sn + z * cs]);
+      rect(Math.min(...pts.map((p) => p[0])), Math.max(...pts.map((p) => p[0])), Math.min(...pts.map((p) => p[1])), Math.max(...pts.map((p) => p[1])));
+    }
+  };
+  // station plaza paving (tan + grey squares like the photo) at the end of the old-town street
+  const sp = new THREE.CanvasTexture((() => { const c = document.createElement('canvas'); c.width = c.height = 512; const x = c.getContext('2d'); let s = 5; const r = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+    for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) { x.fillStyle = r() < 0.15 ? '#e8e2d4' : ['#a8a49c', '#b8b2a6', '#9a968e', '#c4bdb0'][Math.floor(r() * 4)]; x.fillRect(i * 64 + 2, j * 64 + 2, 60, 60); } return c; })());
+  sp.colorSpace = THREE.SRGBColorSpace; sp.wrapS = sp.wrapT = THREE.RepeatWrapping;
+  const spMat = new THREE.MeshStandardMaterial({ map: sp, roughness: 0.85 });
+  add(plane(spMat, -44, -9, 51.8, 72, 0.007, 4));
+  add(plane(spMat, -74, -44, 50.2, 54.2, 0.007, 4));
+  const st = makeStationGate(); put(st, -26.5, 57.5, Math.PI, st.userData.colliders);
+  const pd = makeLotusPond(26, 28); put(pd, -58.5, 50.2, 0, pd.userData.colliders); pd.position.y = 0.27;
+  const rd = makeRockDoor(); put(rd, -38.5, 12.15, Math.PI, rd.userData.colliders);
+}
+
 // delivery props elsewhere: drinks + bag outside an Elmwood unit door, a delivery tote by the scooter
 {
   const c = makeCupCarrier(); c.position.set(-0.6, 1.4, -2.8); apt.add(c);
@@ -1026,6 +1049,8 @@ const walk = new WalkControls(camera, renderer.domElement, {
     { minX: 34.0, maxX: 62.5, minZ: -63.5, maxZ: -47.0 }, // dirt site
     { minX: -43.6, maxX: -9.0, minZ: -13.6, maxZ: 11.7 }, // city plaza
     { minX: -33.3, maxX: -19.7, minZ: 11.0, maxZ: 51.8 }, // old-town street
+    { minX: -43.8, maxX: -9.2, minZ: 51.0, maxZ: 70.0 }, // station plaza
+    { minX: -73.6, maxX: -43.0, minZ: 50.6, maxZ: 54.0 }, // pond-side path
     { minX: -9.5, maxX: 9.0, minZ: 5.4, maxZ: 11.7 }, // strip along the restaurant's south wall
     junkArea, // junk shop interior
   ],
@@ -1138,6 +1163,10 @@ const VIEWS = {
   arcade: { pos: [-11.6, 1.6, 9.8], target: [-12.2, 1.3, 11.4] },
   trike: { pos: [-18.6, 1.5, 5.2], target: [-19.2, 0.7, 8.6] },
   trike2: { pos: [-2.6, 1.6, 6.2], target: [0.6, 1.0, 7.6] },
+  station: { pos: [-26.5, 2.4, 42.0], target: [-26.5, 6.5, 58.0] },
+  stationunder: { pos: [-24.5, 1.7, 53.2], target: [-26.5, 3.4, 62.0] },
+  pond: { pos: [-56.0, 1.7, 52.6], target: [-58.0, 1.2, 30.0] },
+  rockdoor: { pos: [-38.2, 1.7, 8.6], target: [-38.5, 2.0, 12.2] },
   walkinshelf: { pos: [17.6, 1.6, -44.0], target: [21.4, 1.0, -45.6] },
   van: { pos: [25.5, 1.9, -22.4], target: [21.5, 0.9, -26.5] },
   vanside: { pos: [24.6, 1.3, -29.2], target: [21.5, 0.7, -26.3] },

@@ -1256,6 +1256,23 @@ _gc((133, 345, 247, 636), (384, 980)).save(os.path.join(OUT, "gf_shutter_a.png")
 _gc((270, 345, 410, 472), (448, 406)).save(os.path.join(OUT, "gf_shutter_b.png"))
 save("gf_concrete.png", seamless(delight(np.asarray(_gc((62, 425, 118, 640), (192, 740))).astype(np.float32), 60)))
 
+# ---------------------------------------------------------------- station ivy wall, fake rock, reeds (city photos, 28e)
+_st = _cl("station-green-wall-arch"); _sk = _st.size[0] / 900
+def _stc(b, size): return _st.crop(tuple(int(v * _sk) for v in b)).resize(size, Image.LANCZOS)
+save("st_ivy.png", seamless(delight(np.asarray(_stc((95, 200, 210, 360), (384, 512))).astype(np.float32), 50)))
+_fr = _cl("fake-rock-bar-door"); _fk = _fr.size[0] / 900
+def _frc(b, size): return _fr.crop(tuple(int(v * _fk) for v in b)).resize(size, Image.LANCZOS)
+save("fr_rock.png", seamless(delight(np.asarray(_frc((255, 30, 420, 200), (512, 528))).astype(np.float32), 50)))
+_frc((250, 25, 630, 900), (512, 1180)).save(os.path.join(OUT, "fr_front.png"))
+_pd = _cl("pond-lotus-night-skyline"); _pk = _pd.size[0] / 900
+_rd = np.asarray(_pd.crop(tuple(int(v * _pk) for v in (0, 470, 900, 562))).resize((1024, 104), Image.LANCZOS)).astype(np.float32)
+# alpha: reeds are brighter + warmer than the dark sky/trees above them
+lumr = _rd[..., :3].mean(-1); warm = _rd[..., 0] - _rd[..., 2]
+yy = np.linspace(0, 1, _rd.shape[0])[:, None]
+alpha = np.clip((lumr - 70) / 40, 0, 1) * np.clip((warm + 5) / 20, 0, 1)
+alpha = np.maximum(alpha, (yy > 0.35).astype(np.float32))
+Image.fromarray(np.dstack([np.clip(_rd[..., :3], 0, 255), alpha * 255]).astype(np.uint8), "RGBA").save(os.path.join(OUT, "pd_reeds.png"))
+
 with open(os.path.join(OUT, "palette.json"), "w") as f:
     json.dump(palette, f, indent=2)
 print("wrote palette.json")
