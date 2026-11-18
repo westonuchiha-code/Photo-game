@@ -23,6 +23,7 @@ import { plane } from './world/util.js';
 import { makeTireShop, TIRE_SHOP } from './models/tireshop.js';
 import { makeRustyPole } from './models/street.js';
 import { makeStreetBuilding } from './models/buildings.js';
+import { makePaverSidewalk, makeDrainCover, makePaverCrosswalk, makeTactilePlate, makeCracks, makeUtilityLid, makeTrafficIsland, makeDirtLot } from './models/streetground.js';
 import { makeRockBed, makeGrassTufts, makeCurbWithLeaves, makeLooseLeaves, makeBikeRack } from './models/ground.js';
 import { WalkControls } from './walk.js';
 
@@ -419,7 +420,32 @@ add(makeGrassTufts(tuftSpots));
 // Narrow rock strip along the restaurant sidewalk (sidewalk-rocks photo).
 add(makeRockBed(10.6, 11.2, -9.5, 2.4, { seed: 5, density: 500 }));
 // Curb between the lot and the street-row sidewalk, leaves drifted in the gutter.
-add(makeCurbWithLeaves(10, 48, 9.0, { dir: -1 }));
+// Curb split for the crosswalk ramp (paver/curb photos).
+add(makeCurbWithLeaves(10, 29.6, 9.0, { dir: -1 }));
+add(makeCurbWithLeaves(32.4, 48, 9.0, { dir: -1, seed: 8 }));
+
+// ------------------------------------------------------------------ ground & sidewalks (paver / crack / lid photos)
+// Herringbone paver sidewalk in front of the first half of the street row.
+add(makePaverSidewalk(10, 29.6, 9.0, 12.0));
+for (const x of [14.2, 24.6]) { const d = makeDrainCover(); d.position.set(x, 0, 10.3); add(d); }
+// Paver crosswalk across the street, through a raised island, to the tire-shop lot.
+add(makePaverCrosswalk(29.8, 32.2, -8, 9.0));
+add(makeTrafficIsland(26.5, 35.5, -1.2, 0.8, [29.6, 32.4]));
+rect(26.5, 29.6, -1.2, 0.8);
+rect(32.4, 35.5, -1.2, 0.8);
+add(makeTactilePlate(31.0, 9.45));
+add(makeTactilePlate(31.0, -8.45));
+// Cracked concrete slabs on the rest of the sidewalk, a utility lid with locate paint.
+add(makeCracks(32.6, 47.6, 9.3, 11.8, 9, 4));
+add(makeUtilityLid(38.5, 10.6, Math.PI / 2));
+// Dirt lot behind a blue-screened fence at the end of the street (dirt-lot photo).
+add(makeDirtLot(42.5, 46.5, -7.5, 3.5));
+rect(46.5, 46.7, -7.5, 3.5);
+add(makeUtilityLid(43.6, 1.6));
+const lotLamp = makeStreetLamp();
+lotLamp.position.set(41.8, 0, -2);
+add(lotLamp);
+circle(41.8, -2, 0.3);
 add(makeLooseLeaves(10, 46, 6.5, 11.8, 90));
 add(makeLooseLeaves(8.2, 11, -9, 9, 40, 23));
 // Teal bike rack on the street-row sidewalk (curb photo).
@@ -463,6 +489,10 @@ const VIEWS = {
   rocks: { pos: [12.6, 1.5, 1.2], target: [14.2, 0.1, 5.6] },
   rockclose: { pos: [13.6, 0.75, 3.3], target: [14.3, 0.05, 4.9] },
   curb: { pos: [20.5, 1.4, 6.8], target: [23.5, 0.1, 9.6] },
+  pavers: { pos: [16.5, 1.7, 7.4], target: [19.5, 0, 10.4] },
+  crosswalk: { pos: [33.5, 2.6, 10.8], target: [31, 0, 0] },
+  cracks: { pos: [37, 1.8, 7.6], target: [39.5, 0, 10.6] },
+  dirtlot: { pos: [39.0, 2.4, -6.5], target: [44.5, 0.4, -1] },
   abandoned: { pos: [13.0, 2.0, 2.0], target: [19.5, 1.4, 0.2] },
 };
 let mode = 'walk';

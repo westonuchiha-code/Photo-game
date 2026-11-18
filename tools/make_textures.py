@@ -784,6 +784,85 @@ Image.fromarray(np.clip(strip, 0, 255).astype(np.uint8), "RGBA").save(os.path.jo
 print("wrote leaf_strip.png (v2)")
 palette["leaf_tints"] = [hexc(t) for t in LEAF_TINTS]
 
+# ---------------------------------------------------------------- pavers, cracks, lids (ground photos)
+# Brick grain: exposed-aggregate texture from the paver close-up, neutralised
+# (the photo has a purple streetlight cast), then each brick gets its own tint
+# from the herringbone photo's brick colours.
+_, PC = load("paver-closeup")
+h, w = PC.shape[:2]
+grain_src = delight(PC[int(0.3 * h):int(0.95 * h), int(0.05 * w):int(0.95 * w)], 80)
+grain = quilt(grain_src[::5, ::5], (512, 512), patch=64, contrast=1.0)  # finer aggregate
+grain = lum(grain)[..., None] / max(lum(grain).mean(), 1)
+grain = 1 + (grain - 1) * 0.45  # subtler speckle
+_, HB = load("pavers-herringbone-cover")
+hpx = HB[::6, ::6].reshape(-1, 3)
+hpx = hpx[(lum(hpx[None])[0] > np.percentile(lum(hpx[None])[0], 35))]
+BRICK_TINTS = [(lambda c: lum(c[None, None])[0, 0] * 0.55 + c * 0.45)(np.percentile(hpx, q_, axis=0)) * 1.08 for q_ in (25, 45, 60, 75, 88)]  # grey-tan, streetlight colour pulled out
+JOINT = np.array([58, 54, 50], np.float32)
+
+
+def brick_field(cells, cell_px, pairs, name, normal=3.0):
+    """Paint bricks. `pairs(x, y)` gives the partner cell of (x, y) in its brick."""
+    H_ = W_ = cells * cell_px
+    out = np.zeros((H_, W_, 3), np.float32) + JOINT
+    hgt = np.zeros((H_, W_), np.float32)
+    done = set()
+    for y in range(cells):
+        for x in range(cells):
+            if (x, y) in done:
+                continue
+            px, py = pairs(x, y)
+            done.add((x, y)); done.add((px % cells, py % cells))
+            x0, x1 = min(x, px), max(x, px) + 1
+            y0, y1 = min(y, py), max(y, py) + 1
+            tint = BRICK_TINTS[rng.integers(0, len(BRICK_TINTS))] * rng.uniform(0.9, 1.08)
+            J = 3
+            bw, bh = (x1 - x0) * cell_px - 2 * J, (y1 - y0) * cell_px - 2 * J
+            sy, sx = rng.integers(0, 512 - bh), rng.integers(0, 512 - bw)
+            b = grain[sy:sy + bh, sx:sx + bw] * tint
+            e = np.minimum(np.minimum(np.arange(bw)[None], bw - 1 - np.arange(bw)[None]), np.minimum(np.arange(bh)[:, None], bh - 1 - np.arange(bh)[:, None]))
+            b *= (0.8 + 0.2 * np.clip(e / 4, 0, 1))[..., None]
+            ys = (np.arange(y0 * cell_px + J, y0 * cell_px + J + bh)) % H_
+            xs = (np.arange(x0 * cell_px + J, x0 * cell_px + J + bw)) % W_
+            out[np.ix_(ys, xs)] = b
+            hgt[np.ix_(ys, xs)] = np.clip(e / 3, 0, 1)
+    save(name + ".png", out)
+    save(name + "_normal.png", normal_from_height(blur(hgt, 0.8), normal))
+
+
+# 90-degree herringbone of 1x2 bricks: d = (x - y) mod 4; d 0/1 form a horizontal
+# brick, d 2/3 a vertical one. 8x8 cells of 64 px = 0.8 m (brick 100 x 200 mm).
+def _herring(x, y):
+    d = (x - y) % 4
+    return {0: (x + 1, y), 1: (x - 1, y), 2: (x, y - 1), 3: (x, y + 1)}[d]
+
+
+brick_field(8, 64, _herring, "pavers_herringbone")
+
+
+# Stretcher band (the straight brick rows between herringbone and concrete):
+# running bond, 2 cells wide, offset each row.
+def _band(x, y):
+    off = y % 2
+    return (x + 1, y) if (x + off) % 2 == 0 else (x - 1, y)
+
+
+brick_field(8, 64, _band, "pavers_band")
+
+# Crack decals: dark crack lines pulled out of the three crack photos as alpha.
+for i in (1, 2, 3):
+    CRi, _ = load(f"crack{i}")
+    CR = np.asarray(CRi.resize((1024, int(1024 * CRi.height / CRi.width)), Image.LANCZOS)).astype(np.float32)
+    L_ = lum(CR)
+    bg = blur(L_, 30)
+    dark = np.clip((bg - L_ - 22) / 30, 0, 1)
+    m = Image.fromarray((dark * 255).astype(np.uint8))
+    m = m.filter(ImageFilter.MinFilter(3)).filter(ImageFilter.MaxFilter(3))   # drop speckle
+    dark = np.asarray(m.filter(ImageFilter.GaussianBlur(0.8))).astype(np.float32) / 255
+    rgba = np.concatenate([np.zeros_like(CR) + np.array([28, 26, 24], np.float32), dark[..., None] * 230], -1)
+    Image.fromarray(np.clip(rgba, 0, 255).astype(np.uint8), "RGBA").save(os.path.join(OUT, f"crack_{i}.png"))
+print("wrote crack_1..3.png")
+
 with open(os.path.join(OUT, "palette.json"), "w") as f:
     json.dump(palette, f, indent=2)
 print("wrote palette.json")

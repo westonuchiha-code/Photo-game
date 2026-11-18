@@ -7,6 +7,7 @@ Rules (from you):
   sign's shape and material. Keep text that's already generic (LIQUOR).
 
 ## Approved
+- Rocks, grass tufts, leaf litter, bike rack
 - Wall textures + blinds (street row)
 - Rusty pole
 - Tire shop
@@ -14,8 +15,9 @@ Rules (from you):
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- Rocks, grass tufts, leaf litter: river-rock beds, dry grass tufts, curb with gutter leaf drifts,
-  loose oak leaves, teal bike rack. Screenshots: `screenshots/rocks-*.png`, `curb-leaves.png`.
+- Ground & sidewalks: herringbone paver sidewalk with brick bands + drain covers, paver crosswalk
+  with white lines and island, rusty tactile plates, cracked concrete, utility lids with locate
+  paint, dirt lot with blue-screened fence. Screenshots: `screenshots/ground-*.png`.
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
@@ -25,7 +27,6 @@ Rules (from you):
    Screenshot: `screenshots/burger-poster.png`.
 
 ## Up next (in order)
-6. More ground / sidewalk: pavers, crosswalk, curbs, cracks, utility box, dirt lot.
 7. Sky, clouds and moon.
 8. Walk signal pole: button sign plus hand and walking-man lights.
 9. Trees: spruce with knots and roots, cherry, pale flaky bark, oak, mulch beds.
