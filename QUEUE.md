@@ -7,6 +7,7 @@ Rules (from you):
   sign's shape and material. Keep text that's already generic (LIQUOR).
 
 ## Approved
+- Scooter + batteries
 - Old van
 - Food set 1 (pizzas, ramen, spaghetti, curry rice)
 - Soup pots + textures
@@ -29,9 +30,9 @@ Rules (from you):
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- Scooter: red classic scooter (made-up Vellia badge) by the apartments, seat lifts with E to show
-  the battery + caps; two batteries (made-up Voltra / Ironclad Gold) on a red workbench in the tire
-  shop. Screenshots: `screenshots/scooter*.png`, `batteries.png`.
+- Food set 2: waffle ice cream sandwich, frozen cereal puffs in a green cup (with mist), clear soda
+  (made-up GLACIER POP), two black cans (made-up PEAK Night Black), cup noodles with lid peeled back.
+  On the lime-wall two-tops. Screenshots: `screenshots/snacks1-3.png`.
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
@@ -47,8 +48,6 @@ Rules (from you):
     (mushroom-egg, corn-shrimp, packaged display), canned drinks, dashi bottles in a vending
     machine, noodle-shop menu board with lanterns. Food models + textures; all packaging,
     can and menu text made up.
-19. More food (photos/food/): waffle ice-cream sandwich, frozen cereal puffs in a cup, clear soda
-    bottle, dark soda cans, cup noodles with fish-cake slices. Made-up labels.
 20. Creepy character (photos/character/): hollow-eyed skull in a black hoodie, hands in pocket,
     ripped jeans, high-top sneakers; walking pose. Character model.
 21. Police vehicles (photos/police/): three-wheel mini patrol cart and white patrol scooter.

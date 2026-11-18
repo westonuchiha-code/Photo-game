@@ -27,7 +27,7 @@ import { makePaverSidewalk, makeDrainCover, makePaverCrosswalk, makeTactilePlate
 import { makeSky } from './models/sky.js';
 import { makeOldVan } from './models/van.js';
 import { makeScooter, makeBattery } from './models/scooter.js';
-import { makePizza, makeRamenTray, makeSpaghettiTray, makeCurryPlate } from './models/food.js';
+import { makePizza, makeRamenTray, makeSpaghettiTray, makeCurryPlate, makeWaffleSandwich, makeCerealPuffCup, makeClearSoda, makeDarkSodaCan, makeCupNoodles } from './models/food.js';
 import { makeAlienFormation } from './models/alien.js';
 import { makeApartment } from './models/apartment.js';
 import { makeNewsBox, makeParkingSignBlock, makeParkingRamp, makeTealStorefront, makeRabbitSculpture } from './models/locations.js';
@@ -587,6 +587,14 @@ onTable(makeRamenTray(), -0.6, -1.4, 0.2);
 onTable(makeSpaghettiTray(), 2.2, -1.4, -0.3);
 onTable(makeCurryPlate(), -3.4, 1.4, 0.8);
 onTable(makePizza('corn'), 2.2, 1.4, 1.1);
+// Snacks on the two-tops along the lime wall (food set 2).
+const twoZ = Z1 - 0.35;
+onTable(makeWaffleSandwich(), -4.32, twoZ, 0.4);
+const puffCup = makeCerealPuffCup(); onTable(puffCup, -4.08, twoZ + 0.05, 0);
+onTable(makeCupNoodles(), -2.1, twoZ, 0.3);
+onTable(makeClearSoda(), -1.85, twoZ + 0.05, 1.88);
+onTable(makeDarkSodaCan(), 0.08, twoZ, -1.4);
+onTable(makeDarkSodaCan(), 0.17, twoZ + 0.04, -1.8);
 
 // ------------------------------------------------------------------ junked van behind the tire shop (old-van photo)
 const van = makeOldVan();
@@ -710,6 +718,9 @@ const VIEWS = {
   food2: { pos: [-0.35, 1.4, -0.95], target: [-0.62, 0.8, -1.4] },
   food3: { pos: [1.95, 1.4, -0.95], target: [2.2, 0.8, -1.4] },
   food4: { pos: [-3.1, 1.4, 1.95], target: [-3.4, 0.78, 1.4] },
+  snacks1: { pos: [-4.2, 1.0, 4.28], target: [-4.2, 0.82, 4.65] },
+  snacks2: { pos: [-1.95, 1.0, 4.28], target: [-1.97, 0.83, 4.65] },
+  snacks3: { pos: [0.13, 0.95, 4.35], target: [0.13, 0.83, 4.65] },
   food6: { pos: [2.5, 1.4, 1.95], target: [2.2, 0.78, 1.4] },
   abandoned: { pos: [13.0, 2.0, 2.0], target: [19.5, 1.4, 0.2] },
 };
@@ -826,6 +837,7 @@ function frame() {
   sky.userData.update(camera, t);
   alien.userData.update(t);
   soupPots.forEach((p) => p.userData.update(t));
+  puffCup.userData.update(t);
   if ((lightTimer += dt) > 0.4) { lightTimer = 0; updateLightBudget(); }
   walkPoles.forEach((p, i) => p.userData.update(t, i * 0.3));
   // Doors swing open when you walk up to them (inside or out).

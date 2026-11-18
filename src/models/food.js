@@ -293,3 +293,160 @@ export function makePorkBun() {
   g.add(wrap);
   return g;
 }
+
+// ---------------------------------------------------------------- food set 2
+function canvasTex(w, h, draw) {
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  draw(c.getContext('2d'), w, h);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 8;
+  return t;
+}
+
+// Waffle-cookie ice cream sandwich on crinkled wax paper (waffle photo).
+export function makeWaffleSandwich() {
+  const g = new THREE.Group();
+  g.name = 'waffle_ice_cream_sandwich';
+  const grid = canvasTex(256, 256, (x, w, h) => {
+    x.fillStyle = '#c98a45'; x.fillRect(0, 0, w, h);
+    x.save(); x.translate(128, 128); x.rotate(Math.PI / 4);
+    for (let i = -200; i < 200; i += 22) {
+      x.fillStyle = '#9c6230'; x.fillRect(i, -200, 6, 400); x.fillRect(-200, i, 400, 6);
+    }
+    x.restore();
+    for (let i = 0; i < 200; i++) { x.fillStyle = `rgba(90,50,20,${Math.random() * 0.12})`; x.fillRect(Math.random() * w, Math.random() * h, 4, 4); }
+  });
+  const waffle = std({ map: grid, roughness: 0.75 });
+  const edge = std({ color: '#b97a3c', roughness: 0.8 });
+  for (const y of [0.012, 0.05]) {
+    const c = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.01, 36), [edge, waffle, waffle]);
+    c.position.y = y;
+    c.castShadow = true;
+    g.add(c);
+  }
+  const cream = new THREE.Mesh(new THREE.CylinderGeometry(0.043, 0.044, 0.028, 36), std({ color: '#f5efdf', roughness: 0.5 }));
+  cream.position.y = 0.031;
+  g.add(cream);
+  const pg = new THREE.PlaneGeometry(0.2, 0.2, 10, 10);
+  const pp = pg.attributes.position;
+  for (let i = 0; i < pp.count; i++) pp.setZ(i, Math.random() * 0.008);
+  pg.computeVertexNormals();
+  const paper = new THREE.Mesh(pg, std({ color: '#f2f1ec', roughness: 0.35, side: THREE.DoubleSide }));
+  paper.rotation.x = -Math.PI / 2;
+  paper.position.y = 0.002;
+  g.add(paper);
+  g.children[0].position.x = g.children[1].position.x = g.children[2].position.x = 0.01;
+  return g;
+}
+
+// Frozen cereal puffs heaped in a green plastic cup, with a little cold mist.
+export function makeCerealPuffCup() {
+  const g = new THREE.Group();
+  g.name = 'frozen_cereal_puffs';
+  const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.036, 0.12, 28, 1, true), std({ color: '#5fd13a', roughness: 0.35, side: THREE.DoubleSide, emissive: '#0d2a05' }));
+  cup.position.y = 0.06;
+  g.add(cup);
+  const base = new THREE.Mesh(new THREE.CircleGeometry(0.036, 28), cup.material);
+  base.rotation.x = -Math.PI / 2;
+  base.position.y = 0.002;
+  g.add(base);
+  const cols = ['#ff4a5a', '#ff6b4a', '#ffd23f', '#ff3d6e', '#ff8a3c'];
+  const puffGeo = new THREE.IcosahedronGeometry(1, 2);
+  const pp = puffGeo.attributes.position;
+  for (let i = 0; i < pp.count; i++) { const k = 0.85 + Math.random() * 0.25; pp.setXYZ(i, pp.getX(i) * k, pp.getY(i) * k, pp.getZ(i) * k); }
+  puffGeo.computeVertexNormals();
+  for (let i = 0; i < 14; i++) {
+    const r = 0.016 + Math.random() * 0.01;
+    const a = Math.random() * Math.PI * 2, d = Math.random() * 0.035;
+    const m = new THREE.Mesh(puffGeo, std({ color: cols[i % cols.length], roughness: 0.9, emissive: '#2a0505' }));
+    m.scale.setScalar(r);
+    m.position.set(Math.cos(a) * d, 0.12 + Math.random() * 0.035 + (0.035 - d) * 0.6, Math.sin(a) * d);
+    m.castShadow = true;
+    g.add(m);
+  }
+  // mist puffs (slowly drifting in update)
+  const mistTex = canvasTex(64, 64, (x) => {
+    const gr = x.createRadialGradient(32, 32, 2, 32, 32, 30);
+    gr.addColorStop(0, 'rgba(255,255,255,0.6)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+    x.fillStyle = gr; x.fillRect(0, 0, 64, 64);
+  });
+  const mist = [];
+  for (let i = 0; i < 4; i++) {
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: mistTex, transparent: true, depthWrite: false, opacity: 0.25 }));
+    sp.userData.ph = i / 4;
+    g.add(sp);
+    mist.push(sp);
+  }
+  g.userData.update = (t) => mist.forEach((sp, i) => {
+    const k = (t * 0.15 + sp.userData.ph) % 1;
+    sp.position.set(Math.sin(t + i) * 0.03, 0.15 - k * 0.12, Math.cos(t * 0.7 + i) * 0.03);
+    sp.scale.setScalar(0.06 + k * 0.1);
+    sp.material.opacity = 0.25 * Math.sin(Math.PI * k);
+  });
+  return g;
+}
+
+// Clear soda in a 20 oz bottle, made-up label.
+export function makeClearSoda() {
+  const g = new THREE.Group();
+  g.name = 'clear_soda_bottle';
+  const pts = [[0, 0], [0.03, 0], [0.034, 0.01], [0.034, 0.14], [0.03, 0.17], [0.014, 0.205], [0.013, 0.225], [0, 0.225]].map(([x, y]) => new THREE.Vector2(x, y));
+  const bottle = new THREE.Mesh(new THREE.LatheGeometry(pts, 28), new THREE.MeshPhysicalMaterial({ color: '#e8f3f6', roughness: 0.08, transparent: true, opacity: 0.45 }));
+  g.add(bottle);
+  const label = canvasTex(512, 128, (x, w, h) => {
+    x.fillStyle = '#f7f7f7'; x.fillRect(0, 0, w, h);
+    x.fillStyle = '#d4242b'; x.font = 'italic bold 44px Arial'; x.fillText('GLACIER', 30, 52);
+    x.fillStyle = '#1f4fb0'; x.font = 'bold 54px Arial'; x.fillText('POP', 40, 108);
+    x.fillStyle = '#d4242b'; x.fillRect(300, 70, 200, 14); x.fillStyle = '#1f4fb0'; x.fillRect(300, 90, 200, 14);
+  });
+  const lb = new THREE.Mesh(new THREE.CylinderGeometry(0.0345, 0.0345, 0.05, 28, 1, true), std({ map: label, roughness: 0.3 }));
+  lb.position.y = 0.11;
+  g.add(lb);
+  const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.0145, 0.0145, 0.018, 16), std({ color: '#f4f4f2', roughness: 0.5 }));
+  cap.position.y = 0.232;
+  g.add(cap);
+  return g;
+}
+
+// Black soda can, made-up flavour.
+export function makeDarkSodaCan() {
+  const g = new THREE.Group();
+  g.name = 'dark_soda_can';
+  const label = canvasTex(512, 256, (x, w, h) => {
+    x.fillStyle = '#0e0f10'; x.fillRect(0, 0, w, h);
+    x.strokeStyle = '#2f9a3a'; x.lineWidth = 10;
+    x.beginPath(); x.moveTo(40, 200); x.lineTo(140, 60); x.lineTo(230, 200); x.stroke();
+    x.fillStyle = '#d02a2a'; x.font = 'bold 66px Arial'; x.fillText('PEAK', 250, 110);
+    x.fillStyle = '#e8e8e8'; x.font = 'italic bold 46px Georgia'; x.fillText('Night Black', 250, 175);
+  });
+  const can = new THREE.Mesh(new THREE.CylinderGeometry(0.033, 0.033, 0.12, 28), [std({ map: label, metalness: 0.4, roughness: 0.3 }), std({ color: '#b8babd', metalness: 0.5, roughness: 0.3 }), std({ color: '#b8babd', metalness: 0.5, roughness: 0.3 })]);
+  can.position.y = 0.06;
+  can.castShadow = true;
+  g.add(can);
+  return g;
+}
+
+// Instant cup noodles: foam bowl, lid peeled back, noodles with fish cake (photo top).
+export function makeCupNoodles() {
+  const g = new THREE.Group();
+  g.name = 'cup_noodles';
+  const foam = std({ color: '#f2f0ea', roughness: 0.9, side: THREE.DoubleSide });
+  const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.05, 0.075, 32, 1, true), foam);
+  bowl.position.y = 0.0375;
+  g.add(bowl);
+  const top = foodTop('food_cupnoodle_top', 0.067, 0.008, 0.6);
+  top.position.y = 0.06;
+  g.add(top);
+  const lip = new THREE.Mesh(new THREE.TorusGeometry(0.07, 0.004, 6, 32), foam);
+  lip.rotation.x = Math.PI / 2;
+  lip.position.y = 0.075;
+  g.add(lip);
+  // foil lid folded back
+  const lid = new THREE.Mesh(new THREE.CircleGeometry(0.075, 32, -0.6, 1.4), std({ color: '#d9dadb', metalness: 0.5, roughness: 0.4, side: THREE.DoubleSide }));
+  lid.rotation.set(-Math.PI / 2 + 1.1, 0, 0);
+  lid.position.set(0, 0.078, -0.05);
+  g.add(lid);
+  return g;
+}

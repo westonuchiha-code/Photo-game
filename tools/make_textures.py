@@ -1038,6 +1038,9 @@ save("food_pastry.png", pastry)
 save("food_pastry_normal.png", normal_from_height(blur(lum(pastry) / 255.0, 0.8), 4.0))
 food_crop("pork-bun-bitten", (1090, 1180, 1880, 1830), "food_porkbun_filling", (384, 320))
 
+# cup noodles top (food/cup-noodles): no brand in frame, use the photo directly
+food_disc("cup-noodles", (128, 25, 618, 515), "food_cupnoodle_top", size=384)
+
 with open(os.path.join(OUT, "palette.json"), "w") as f:
     json.dump(palette, f, indent=2)
 print("wrote palette.json")
