@@ -7,6 +7,7 @@ Rules (from you):
   sign's shape and material. Keep text that's already generic (LIQUOR).
 
 ## Approved
+- Soup pots + textures
 - Tree with a door
 - Alien rock formation
 - Elmwood Apartments (revisit later)
@@ -26,8 +27,11 @@ Rules (from you):
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- Soup: lentil + smooth soup textures, stained pot rim; two steaming pots with ladles on the bar.
-  Screenshot: `screenshots/soup.png`.
+- Food set 1 (from item 16): mushroom pizza on a board, corn pizza in a takeout tray, ramen on a
+  tray with cup + chopsticks, spaghetti on an oval plate on a tray, curry rice, corn dog in a paper
+  boat with dip, bitten pork bun. On the restaurant tables. Screenshots: `screenshots/food1-6.png`.
+  Still to do from item 16: katsu curry, steamed bun, melon bread, cheese snack, cans, dashi bottles,
+  noodle-shop menu board (later pass).
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text

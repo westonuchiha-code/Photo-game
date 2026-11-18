@@ -993,6 +993,35 @@ rim = SPT[int(0.0 * h):int(0.12 * h), int(0.3 * w):int(0.95 * w)]
 rim = np.asarray(to_img(delight(rim, 120)).resize((1024, 128), Image.BICUBIC)).astype(np.float32)
 save("pot_rim_stain.png", seamless(rim, axes=(1,)))
 
+# ---------------------------------------------------------------- food tops (food photos)
+# Round dishes: crop the food ellipse and stretch it to a square disc texture
+# (alpha outside the circle). Long foods: plain crops.
+def food_disc(name, box_, out, size=512, feather=6):
+    im = ImageOps.exif_transpose(Image.open(f"photos/food/{name}.jpg")).convert("RGB").crop(box_).resize((size, size), Image.LANCZOS)
+    a = np.asarray(im).astype(np.float32)
+    yy, xx = np.mgrid[0:size, 0:size]
+    d = np.hypot(xx - size / 2, yy - size / 2) / (size / 2)
+    alpha = np.clip((1 - d) * size / (2 * feather), 0, 1) * 255
+    Image.fromarray(np.concatenate([a, alpha[..., None]], -1).astype(np.uint8), "RGBA").save(os.path.join(OUT, out + ".png"))
+    print("wrote", out)
+
+
+def food_crop(name, box_, out, size):
+    ImageOps.exif_transpose(Image.open(f"photos/food/{name}.jpg")).convert("RGB").crop(box_).resize(size, Image.LANCZOS).save(os.path.join(OUT, out + ".png"))
+    print("wrote", out)
+
+
+food_disc("pizza-mushroom-egg", (110, 150, 2880, 2920), "food_pizza_mushroom")
+food_disc("pizza-corn-shrimp", (60, 1420, 2200, 3640), "food_pizza_corn")
+food_disc("ramen-tray", (307, 472, 1597, 1370), "food_ramen_top")
+food_disc("black-curry-rice", (170, 1180, 2250, 3260), "food_curry_rice")
+food_disc("spaghetti-tray", (571, 1028, 2485, 2028), "food_spaghetti")
+food_crop("corndog", (830, 820, 1250, 3260), "food_corndog", (128, 512))
+food_crop("corndog", (310, 2350, 840, 3250), "food_dip_sauce", (256, 256))
+food_crop("pork-bun-bitten", (700, 1100, 2200, 2250), "food_porkbun_bite", (512, 384))
+food_crop("pork-bun-bitten", (1500, 1100, 2150, 1500), "food_bun_crust", (256, 160))
+food_crop("katsu-curry-desk", (1650, 1220, 2600, 1650), "food_katsu", (512, 232))
+
 with open(os.path.join(OUT, "palette.json"), "w") as f:
     json.dump(palette, f, indent=2)
 print("wrote palette.json")
