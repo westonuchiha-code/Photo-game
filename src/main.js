@@ -417,7 +417,7 @@ const tuftSpots = [];
 }
 add(makeGrassTufts(tuftSpots));
 // Narrow rock strip along the restaurant sidewalk (sidewalk-rocks photo).
-add(makeRockBed(10.6, 11.2, -9.5, 2.4, { seed: 5, density: 170 }));
+add(makeRockBed(10.6, 11.2, -9.5, 2.4, { seed: 5, density: 500 }));
 // Curb between the lot and the street-row sidewalk, leaves drifted in the gutter.
 add(makeCurbWithLeaves(10, 48, 9.0, { dir: -1 }));
 add(makeLooseLeaves(10, 46, 6.5, 11.8, 90));

@@ -43,7 +43,7 @@ function pebbleGeometry(seed) {
 }
 
 // A bed of river rock filling the rectangle [x0,x1] x [z0,z1].
-export function makeRockBed(x0, x1, z0, z1, { density = 140, seed = 1 } = {}) {
+export function makeRockBed(x0, x1, z0, z1, { density = 420, seed = 1 } = {}) {
   const g = new THREE.Group();
   g.name = 'river_rock_bed';
   const r = rng(seed);
@@ -67,24 +67,74 @@ export function makeRockBed(x0, x1, z0, z1, { density = 140, seed = 1 } = {}) {
       '#ifdef USE_MAP\n vec4 texelColor = texture2D( map, vMapUv ); float l = dot(texelColor.rgb, vec3(0.299,0.587,0.114)); diffuseColor.rgb *= mix(0.7, 1.25, l);\n#endif');
   };
   const geos = [pebbleGeometry(seed), pebbleGeometry(seed + 7), pebbleGeometry(seed + 13)];
-  const per = Math.ceil(n / geos.length);
+  // Non-overlapping packing: generate n stone sizes, place biggest first, and
+  // only accept a spot where the stone's footprint circle touches no other.
+  // A grid of placed circles keeps the neighbour check fast.
+  // each shape's true footprint radius (largest x/z reach of its vertices)
+  const reach = geos.map((geo) => {
+    const p = geo.attributes.position;
+    let m = 0;
+    for (let i = 0; i < p.count; i++) m = Math.max(m, Math.hypot(p.getX(i), p.getZ(i)));
+    return m;
+  });
+  const stones = [];
+  for (let i = 0; i < n; i++) {
+    const size = 0.025 + Math.pow(r(), 2.2) * 0.09;    // mostly small, a few big
+    const sx = size * (0.85 + r() * 0.35), sz = size * (0.85 + r() * 0.35);
+    const gi = i % geos.length;
+    stones.push({ gi, size, sx, sz, rad: Math.max(sx, sz) * reach[gi] });
+  }
+  // gap fillers: small pebbles that only go where nothing else fit
+  for (let i = 0; i < n * 2; i++) {
+    const size = 0.012 + r() * 0.014;
+    const gi = i % geos.length;
+    stones.push({ gi, size, sx: size, sz: size * (0.85 + r() * 0.3), rad: size * 1.15 * reach[gi] });
+  }
+  stones.sort((a, b) => b.rad - a.rad);
+  const cell = stones[0].rad * 2;
+  const grid = new Map();
+  const key = (gx, gz) => gx * 73856093 ^ gz * 19349663;
+  const placed = [];
+  const fits = (x, z, rad) => {
+    const gx = Math.floor(x / cell), gz = Math.floor(z / cell);
+    for (let dx = -1; dx <= 1; dx++) for (let dz = -1; dz <= 1; dz++) {
+      for (const o of grid.get(key(gx + dx, gz + dz)) || []) {
+        if (Math.hypot(o.x - x, o.z - z) < o.rad + rad + 0.001) return false;
+      }
+    }
+    return true;
+  };
+  for (const st of stones) {
+    for (let t = 0; t < 90; t++) {
+      const x = x0 + st.rad + r() * (x1 - x0 - 2 * st.rad);
+      const z = z0 + st.rad + r() * (z1 - z0 - 2 * st.rad);
+      if (!fits(x, z, st.rad)) continue;
+      st.x = x; st.z = z;
+      const k = key(Math.floor(x / cell), Math.floor(z / cell));
+      if (!grid.has(k)) grid.set(k, []);
+      grid.get(k).push(st);
+      placed.push(st);
+      break;
+    }
+  }
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), s = new THREE.Vector3(), v = new THREE.Vector3();
   const c = new THREE.Color();
-  for (const geo of geos) {
-    const inst = new THREE.InstancedMesh(geo, mat, per);
-    for (let i = 0; i < per; i++) {
-      const size = 0.025 + Math.pow(r(), 2.2) * 0.09;   // mostly small, a few big
-      s.set(size * (0.8 + r() * 0.5), size, size * (0.8 + r() * 0.5));
-      e.set((r() - 0.5) * 0.4, r() * Math.PI * 2, (r() - 0.5) * 0.4);
+  geos.forEach((geo, gi) => {
+    const mine = placed.filter((st) => st.gi === gi);
+    const inst = new THREE.InstancedMesh(geo, mat, mine.length);
+    mine.forEach((st, i) => {
+      s.set(st.sx, st.size, st.sz);
+      e.set(0, r() * Math.PI * 2, 0);                 // upright, so footprints stay true
       q.setFromEuler(e);
-      v.set(x0 + r() * (x1 - x0), size * 0.3, z0 + r() * (z1 - z0));
+      v.set(st.x, st.size * 0.3, st.z);
       inst.setMatrixAt(i, m4.compose(v, q, s));
       c.set(ROCK_COLORS[Math.floor(r() * ROCK_COLORS.length)]).multiplyScalar(0.7 + r() * 0.3);
       inst.setColorAt(i, c);
-    }
+    });
     inst.castShadow = inst.receiveShadow = true;
     g.add(inst);
-  }
+  });
+  g.userData.stoneCount = placed.length;
   return g;
 }
 
