@@ -29,7 +29,7 @@ export class WalkControls {
     let dragging = false;
     this.dom.addEventListener('mousedown', () => { if (this.enabled) dragging = true; });
     addEventListener('mouseup', () => { dragging = false; });
-    this.dom.addEventListener('dblclick', () => { if (this.enabled) this.dom.requestPointerLock?.(); });
+    this.dom.addEventListener('dblclick', () => { if (this.enabled) this.dom.requestPointerLock?.()?.catch?.(() => {}); });
     addEventListener('mousemove', (e) => {
       if (!this.enabled) return;
       if (dragging || document.pointerLockElement === this.dom) this.look(e.movementX, e.movementY, 0.0025);

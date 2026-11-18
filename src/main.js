@@ -160,7 +160,7 @@ window.exportAssets = async () => ({
   stool: await exportGLB(stools[0], 'stool'),
   counter: await exportGLB(counter, 'counter'),
 });
-document.getElementById('export').addEventListener('click', async () => {
+document.getElementById('export')?.addEventListener('click', async () => {
   const { stool, counter: c } = await window.exportAssets();
   download(stool, 'yellow_bar_stool.glb');
   setTimeout(() => download(c, 'butcher_block_bar_counter.glb'), 400);
