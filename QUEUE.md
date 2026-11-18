@@ -107,6 +107,9 @@ Rules (from you):
     purple, blue, green, yellow, white (photos/grime/). Labels on the board made generic.
 34. Short canned-fish tin (food/tuna-can-pulltab): ringed lid with pull-tab, yellow/white/red
     wrap label. Model + made-up brand and flavor text.
+35. Claw hammer (photos/tools/): worn steel head with curved claw and paint-chipped striking
+    face, wooden handle with grime, dark grip spots and a peeling red label. Model + made-up
+    brand on the label (weight stamp can stay generic, e.g. "16 OZ").
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"
