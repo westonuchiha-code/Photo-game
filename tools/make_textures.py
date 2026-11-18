@@ -635,11 +635,16 @@ save("sky_clouds.png", sky)
 
 # Half moon cut out of black: alpha follows brightness.
 _, MO = load("moon2")
-h, w = MO.shape[:2]
-moon = MO[int(0.18 * h):int(0.82 * h), int(0.1 * w):int(1.0 * w)]
-a = np.clip((lum(moon) - 18) / 50, 0, 1)
-Image.fromarray(np.clip(np.concatenate([moon, a[..., None] * 255], -1), 0, 255).astype(np.uint8), "RGBA").resize((512, 640)).save(os.path.join(OUT, "moon.png"))
-print("wrote moon.png")
+L_ = lum(MO)
+ys, xs = np.where(blur(L_, 4) > 40)                     # the moon disc, tight crop
+y0, y1, x0, x1 = ys.min(), ys.max(), xs.min(), xs.max()
+pad = 40
+moon = MO[max(0, y0 - pad):y1 + pad, max(0, x0 - pad):x1 + pad]
+Lm = lum(moon)
+a = np.clip((blur(Lm, 1.5) - 22) / 28, 0, 1)
+moon = np.clip(moon * 1.35, 0, 255)
+Image.fromarray(np.clip(np.concatenate([moon, a[..., None] * 255], -1), 0, 255).astype(np.uint8), "RGBA").resize((384, int(384 * moon.shape[0] / moon.shape[1])), Image.LANCZOS).save(os.path.join(OUT, "moon.png"))
+print("wrote moon.png", moon.shape)
 
 rect_(load("walk-button3")[0], (352, 232, 342, 838, 746, 836, 735, 232), (300, 450), "walk_button_sign.png")
 _, PH = load("ped-signal-hand")

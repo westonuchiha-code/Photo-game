@@ -16,9 +16,8 @@ Rules (from you):
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- Ground & sidewalks: herringbone paver sidewalk with brick bands + drain covers, paver crosswalk
-  with white lines and island, rusty tactile plates, cracked concrete, utility lids with locate
-  paint, dirt lot with blue-screened fence. Screenshots: `screenshots/ground-*.png`.
+- Sky, clouds, moon: cloud layer from the sky photo on a dome, half-moon cut-out, moonlit halo.
+  Screenshots: `screenshots/sky-*.png`.
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
@@ -28,7 +27,6 @@ Rules (from you):
    Screenshot: `screenshots/burger-poster.png`.
 
 ## Up next (in order)
-7. Sky, clouds and moon.
 8. Walk signal pole: button sign plus hand and walking-man lights.
 9. Trees: spruce with knots and roots, cherry, pale flaky bark, oak, mulch beds.
 10. Objects and locations: news box (made-up magazine name), parking sign block,
@@ -92,6 +90,14 @@ Rules (from you):
     cargo trikes (parked + covered cab); stand-up arcade cabinet; narrow stairway entrance with
     mixed brick; graffiti roll shutters + pallets; covered electronics market alley.
     All shop names, mascots, logos, phone numbers and signage made up.
+29. Abandoned interior surfaces (photos/grime/): dingy tan painted walls (smooth + mottled),
+    damaged acoustic ceiling tiles with a rusty T-bar grid, orange-peel drywall (plain, stained,
+    chipped/patched), plain wood, grimy white wall tile with a hair, water-stained particleboard (x2),
+    white paint chipping off black metal. For abandoned interiors.
+30. More surfaces (photos/grime/): abstract grey + orange splatter painting, crackled tan
+    surface (x2), scratched stainless steel, warm-lit plaster scroll relief, gouged/worn stained
+    wood planks (x4); paintings: white drips on black, blurred pink/yellow sunset, black
+    splatter on mustard.
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"

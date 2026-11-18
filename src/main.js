@@ -24,6 +24,7 @@ import { makeTireShop, TIRE_SHOP } from './models/tireshop.js';
 import { makeRustyPole } from './models/street.js';
 import { makeStreetBuilding } from './models/buildings.js';
 import { makePaverSidewalk, makeDrainCover, makePaverCrosswalk, makeTactilePlate, makeCracks, makeUtilityLid, makeTrafficIsland, makeDirtLot } from './models/streetground.js';
+import { makeSky } from './models/sky.js';
 import { makeRockBed, makeGrassTufts, makeCurbWithLeaves, makeLooseLeaves, makeBikeRack } from './models/ground.js';
 import { WalkControls } from './walk.js';
 
@@ -39,7 +40,7 @@ document.getElementById('app').appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color('#0b1018');
-const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.05, 80);
+const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.05, 900);
 const mats = makeMaterials();
 
 // ------------------------------------------------------------------ shell
@@ -133,15 +134,13 @@ const pavement = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.Mes
 pavement.rotation.x = -Math.PI / 2;
 pavement.position.set(20, -0.01, -20);
 outside.add(pavement);
-const nightMat = new THREE.MeshBasicMaterial({ color: '#0d1420' });
-const backN = new THREE.Mesh(new THREE.PlaneGeometry(80, 14), nightMat);
-backN.position.set(20, 5, -70);
-backN.scale.x = 2.5;
-const backE = new THREE.Mesh(new THREE.PlaneGeometry(80, 14), nightMat);
-backE.position.set(75, 5, -20);
-backE.scale.x = 2.5;
-backE.rotation.y = -Math.PI / 2;
-outside.add(backN, backE);
+// Night sky with the photographed clouds and the half moon (sky + moon photos).
+const sky = makeSky();
+scene.add(sky);
+// Moonlight: a cool, faint key light from the moon's direction.
+const moonLight = new THREE.DirectionalLight('#b9c6dd', 0.35);
+moonLight.position.copy(sky.userData.moonDir).multiplyScalar(50);
+scene.add(moonLight);
 // Vertical slatted fence seen through the bar window (bar photo).
 const slatGeo = new THREE.BoxGeometry(0.06, 2.4, 0.03);
 const slatMat = new THREE.MeshStandardMaterial({ color: '#4b4741', roughness: 0.8 });
@@ -493,6 +492,7 @@ const VIEWS = {
   crosswalk: { pos: [33.5, 2.6, 10.8], target: [31, 0, 0] },
   cracks: { pos: [37, 1.8, 7.6], target: [39.5, 0, 10.6] },
   dirtlot: { pos: [39.0, 2.4, -6.5], target: [44.5, 0.4, -1] },
+  sky: { pos: [20, 1.7, 2], target: [14.5, 6.6, -5.5] },
   abandoned: { pos: [13.0, 2.0, 2.0], target: [19.5, 1.4, 0.2] },
 };
 let mode = 'walk';
@@ -587,6 +587,7 @@ function frame() {
   t += dt;
   if (mode === 'walk') walk.update(dt);
   else orbit.update();
+  sky.userData.update(camera, t);
   // Doors swing open when you walk up to them (inside or out).
   const near = mode === 'walk' && Math.hypot(walk.position.x - X1, walk.position.z - DOOR_Z) < 2.3;
   doorOpen += ((near ? 1 : 0) - doorOpen) * Math.min(1, dt * 4);
