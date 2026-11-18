@@ -224,6 +224,145 @@ palette["counter_wood"] = hexc(wood_mean)
 palette["floor_wood"] = hexc(floor_mean)
 palette["vinyl"] = hexc(vin_mean)
 
+# ================================================================ more photos
+from PIL import ImageOps  # noqa: E402
+
+
+def load(name):
+    im = ImageOps.exif_transpose(Image.open(f"photos/{name}.jpg")).convert("RGB")
+    return im, np.asarray(im).astype(np.float32)
+
+
+def quilt(src, size, patch=96, n=None, contrast=1.0):
+    """Texture synthesis: scatter soft-edged random patches of `src` over a
+    wrapping canvas. Good for isotropic surfaces (terrazzo, carpet, stone)."""
+    H, W = size
+    n = n or int(H * W / (patch * patch) * 3.5)
+    canvas = np.zeros((H, W, 3), np.float32) + src.reshape(-1, 3).mean(0) * 1e-4
+    weight = np.zeros((H, W, 1), np.float32) + 1e-4
+    win = np.outer(np.hanning(patch), np.hanning(patch))[..., None] + 1e-3
+    for _ in range(n):
+        sy, sx = rng.integers(0, src.shape[0] - patch), rng.integers(0, src.shape[1] - patch)
+        ty, tx = rng.integers(0, H), rng.integers(0, W)
+        yy, xx = (np.arange(patch) + ty) % H, (np.arange(patch) + tx) % W
+        canvas[np.ix_(yy, xx)] += src[sy:sy + patch, sx:sx + patch] * win
+        weight[np.ix_(yy, xx)] += win
+    out = canvas / weight
+    return match_stats(out, src.reshape(-1, 3).mean(0), contrast)
+
+
+def med(A, box, mask=None):
+    x0, y0, x1, y1 = box
+    px = A[y0:y1, x0:x1].reshape(-1, 3)
+    if mask is not None:
+        px = px[mask(px)]
+    return np.median(px, 0)
+
+
+# ---------------------------------------------------------------- entrance photo
+_, E = load("entrance-floor")
+
+# Triangle floor: real stone-look surfaces from a light and a dark tile,
+# laid into the harlequin triangle pattern from the photo.
+light_src = delight(E[2800:2980, 80:260], 60)
+dark_src = delight(E[3040:3220, 1320:1500], 60)
+light = quilt(light_src, (640, 512), patch=96, contrast=2.0) * 0.93
+dark = quilt(dark_src, (640, 512), patch=96, contrast=1.6)
+# one repeat = one "up" triangle (dark) + light around it; 0.40 m x 0.50 m
+h, w = 640, 512
+yy, xx = np.mgrid[0:h, 0:w]
+half = (yy / h) * (w / 2)  # half-width of the up-triangle at this row
+inside = np.abs(xx - w / 2) < half
+tri = np.where(inside[..., None], dark, light)
+edge = np.abs(np.abs(xx - w / 2) - half) < 1.6
+tri[edge] = tri[edge] * 0.55 + 20
+tri[:2] = tri[:2] * 0.55 + 20
+save("triangle_tile.png", tri)
+save("triangle_tile_normal.png", normal_from_height(blur(lum(tri) / 255.0, 1.2), 1.5))
+palette["tile_light"] = hexc(light_src.reshape(-1, 3).mean(0))
+palette["tile_dark"] = hexc(dark_src.reshape(-1, 3).mean(0))
+
+# Door mat.
+mat_src = delight(E[1800:2200, 400:1200], 50)
+mat = quilt(mat_src, (512, 512), patch=80, contrast=1.15)
+save("door_mat.png", mat)
+save("door_mat_normal.png", normal_from_height(lum(mat) / 255.0, 5.0))
+
+palette["lime_wall"] = hexc(med(E, (200, 300, 400, 600)) * 1.3)  # photo was underexposed
+palette["chair_pink"] = hexc(med(E, (450, 0, 1100, 1000),
+                                 lambda p: (p[:, 0] > 170) & (p[:, 0] - p[:, 2] > 45) & (p[:, 1] < p[:, 0] - 30) & (p[:, 1] > 90)))
+palette["door_frame"] = hexc(med(E, (1450, 300, 2252, 1900),
+                                 lambda p: (np.abs(p[:, 0] - p[:, 1]) < 15) & (p[:, 0] - p[:, 2] > 8) & (p[:, 0] > 70) & (p[:, 0] < 150)))
+
+# ---------------------------------------------------------------- booth photo
+_, B = load("booth")
+
+# Terrazzo table top.
+terr_src = delight(B[260:1040, 20:500], 60)
+terr = quilt(terr_src, (512, 512), patch=72, contrast=1.15)
+save("terrazzo.png", terr)
+palette["terrazzo"] = hexc(terr_src.reshape(-1, 3).mean(0))
+
+# Lime-green vinyl upholstery (back cushion of the booth).
+vin_src = delight(B[600:1700, 1500:2100], 80)
+vinylg = quilt(vin_src * 1.3, (512, 512), patch=96, contrast=1.6)  # lift exposure
+save("booth_vinyl.png", vinylg)
+save("booth_vinyl_normal.png", normal_from_height(blur(lum(vinylg) / 255.0, 0.8), 3.0))
+palette["booth_vinyl"] = hexc(vin_src.reshape(-1, 3).mean(0) * 1.3)
+palette["booth_frame"] = hexc(med(B, (1700, 2050, 2000, 2250)))
+
+# Walnut-look plank floor: three clean plank interiors, cut into lengths and
+# laid in staggered columns (planks run along the texture's V axis).
+o = (0, 2360)  # crop origin used when choosing these windows
+wins = [(450, 705), (735, 985), (1030, 1260)]
+sources = []
+for x0, x1 in wins:
+    s = B[o[1] + 340:o[1] + 780, x0:x1]
+    s = delight(s, 50)
+    sources.append(np.asarray(to_img(s).resize((256, 1300), Image.BICUBIC)).astype(np.float32))
+walnut_mean = np.mean([s.reshape(-1, 3).mean(0) for s in sources], 0)
+sources = [match_stats(s, walnut_mean) for s in sources]  # same tone, different grain
+cols = []
+for c in range(4):
+    col, hgt = [], 0
+    off = rng.integers(0, 1300)
+    while hgt < 2048 + 1300:
+        s = sources[rng.integers(0, 3)]
+        if rng.random() < 0.5:
+            s = s[::-1]
+        if rng.random() < 0.5:
+            s = s[:, ::-1]
+        s = s * rng.uniform(0.94, 1.06)
+        s = s.copy()
+        s[:2] *= 0.55  # butt joint
+        col.append(s)
+        hgt += s.shape[0]
+    col = np.concatenate(col, 0)[off:off + 2048]
+    col[:, :2] *= 0.6  # long edge
+    cols.append(col)
+walnut = np.concatenate(cols, 1)  # 2048 x 1024
+walnut = match_stats(walnut, walnut_mean, 1.05)
+walnut = np.asarray(to_img(walnut).resize((512, 1024), Image.BICUBIC)).astype(np.float32)
+save("walnut_floor.png", walnut)
+save("walnut_floor_normal.png", normal_from_height(blur(lum(walnut) / 255.0, 0.6), 4.0))
+palette["walnut_floor"] = hexc(walnut_mean)
+
+# White bevelled subway tile (pattern drawn, colour/grout sampled from photo).
+tw, th = 256, 128  # one tile = 150 x 75 mm
+H2, W2 = th * 4, tw * 2
+yy, xx = np.mgrid[0:H2, 0:W2]
+row = yy // th
+xs = (xx + (row % 2) * (tw // 2)) % tw
+ys = yy % th
+d = np.minimum(np.minimum(xs, tw - 1 - xs), np.minimum(ys, th - 1 - ys)).astype(np.float32)
+height = np.clip(d / 14.0, 0, 1)  # bevel ramps up over 14 px
+height = height ** 0.7
+tile_col = np.array([236, 236, 230], np.float32)
+grout = np.array([196, 196, 190], np.float32)
+tile = np.where((d < 2)[..., None], grout, tile_col * (0.94 + 0.06 * height[..., None]))
+save("subway_tile.png", tile)
+save("subway_tile_normal.png", normal_from_height(height + (d < 2) * -0.2, 3.0))
+
 with open(os.path.join(OUT, "palette.json"), "w") as f:
     json.dump(palette, f, indent=2)
 print("wrote palette.json")

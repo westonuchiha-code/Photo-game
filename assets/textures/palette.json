@@ -7,5 +7,14 @@
   "slat_wood": "#a8773e",
   "counter_wood": "#956b4f",
   "floor_wood": "#ac8d78",
-  "vinyl": "#2c3a38"
+  "vinyl": "#2c3a38",
+  "tile_light": "#f4e7df",
+  "tile_dark": "#474142",
+  "lime_wall": "#afa755",
+  "chair_pink": "#c08660",
+  "door_frame": "#75695b",
+  "terrazzo": "#b7b0b5",
+  "booth_vinyl": "#aeaa6e",
+  "booth_frame": "#868453",
+  "walnut_floor": "#a0816a"
 }
