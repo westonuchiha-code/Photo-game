@@ -63,7 +63,7 @@ export function makeLiquorSign(mats) {
   return g;
 }
 
-// TWO RIVERS: a white panel sign in a grey box frame on a single grey pole.
+// Rental sign (Two Rivers photo; text made up): a white panel sign in a grey box frame on a single grey pole.
 export function makeTwoRiversSign() {
   const g = new THREE.Group();
   g.name = 'two_rivers_pole_sign';
@@ -73,7 +73,7 @@ export function makeTwoRiversSign() {
   g.add(box(W + 0.1, 0.06, D, frameMat, 0, bottom - 0.03, 0));
   g.add(box(W + 0.1, 0.06, D, frameMat, 0, bottom + Hs + 0.03, 0));
   for (const s of [-1, 1]) g.add(box(0.05, Hs + 0.12, D, frameMat, s * (W / 2 + 0.025), y, 0));
-  const faceMat = new THREE.MeshStandardMaterial({ map: faceTex('two_rivers_face.png'), roughness: 0.7 });
+  const faceMat = new THREE.MeshStandardMaterial({ map: faceTex('rental_sign_face.png'), roughness: 0.7 });
   for (const s of [1, -1]) {
     const face = new THREE.Mesh(new THREE.PlaneGeometry(W, Hs), faceMat);
     face.position.set(0, y, s * (D / 2 - 0.005));
