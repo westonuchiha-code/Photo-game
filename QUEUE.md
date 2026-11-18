@@ -7,6 +7,7 @@ Rules (from you):
   sign's shape and material. Keep text that's already generic (LIQUOR).
 
 ## Approved
+- Elmwood Apartments (revisit later)
 - Wall art (canvases + mural)
 - Objects & locations (ramp, sign block, teal shop, news box, rabbit)
 - Phone colour fix + lighting
@@ -23,8 +24,8 @@ Rules (from you):
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- Apartment building (Elmwood Apartments): brick front, centred entry, rebuilt stoop with flared brick cheek walls, opening entry door, walkable
-  hallway with mailboxes/unit doors, stairs up to a 2nd-floor hall. Screenshots: `screenshots/apt-*.png`.
+- Alien rock formation: spires + boulders from the 5 alien textures, glowing teal crevices,
+  pulsing, hovering shard; in the dirt lot. Screenshot: `screenshots/alien.png`.
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
@@ -34,7 +35,6 @@ Rules (from you):
    Screenshot: `screenshots/burger-poster.png`.
 
 ## Up next (in order)
-13. Alien textures (5).
 14. Tree with a door carved and painted into the trunk (tree-door, tree-door-closeup).
 15. Pot of chili/curry/soup textures (soup-pot, soup-lentil-closeup, soup-smooth).
 16. Food inspiration (photos/food/, 17 photos): corn dog in a paper boat with sauce, spaghetti

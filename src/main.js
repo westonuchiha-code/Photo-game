@@ -25,6 +25,7 @@ import { makeRustyPole, makeWalkSignalPole } from './models/street.js';
 import { makeStreetBuilding } from './models/buildings.js';
 import { makePaverSidewalk, makeDrainCover, makePaverCrosswalk, makeTactilePlate, makeCracks, makeUtilityLid, makeTrafficIsland, makeDirtLot } from './models/streetground.js';
 import { makeSky } from './models/sky.js';
+import { makeAlienFormation } from './models/alien.js';
 import { makeApartment } from './models/apartment.js';
 import { makeNewsBox, makeParkingSignBlock, makeParkingRamp, makeTealStorefront, makeRabbitSculpture } from './models/locations.js';
 import { makeSpruce, makeCherry, makePaleTree, makeOak, makeTreePit, makeMulchBed } from './models/trees.js';
@@ -565,6 +566,14 @@ for (const [x0, x1, z0, z1, y0, y1] of apt.userData.colliders) {
   interactables.push({ name: 'front door', kind: 'door', setOpen: d.setOpen, x: AP.x - d.at[1] + 0.6, z: AP.z + d.at[0], t: 0, target: 0, col, speed: 2.2 });
 }
 
+// ------------------------------------------------------------------ alien formation (alien texture photos)
+// Hidden in the dirt lot behind the blue construction fence.
+const alien = makeAlienFormation();
+alien.position.set(44.5, 0, -3);
+alien.scale.setScalar(0.85);
+add(alien);
+for (const [x, z, cr] of alien.userData.colliders) circle(44.5 + x * 0.85, -3 + z * 0.85, cr * 0.85);
+
 // ------------------------------------------------------------------ controls
 const walk = new WalkControls(camera, renderer.domElement, {
   bounds: null,
@@ -621,6 +630,7 @@ const VIEWS = {
   mural: { pos: [5.2, 2.2, 10.2], target: [10, 3, 16.2] },
   apartment: { pos: [38.5, 3.5, 4.5], target: [52, 5, -1] },
   stoop: { pos: [47.6, 2.4, 3.4], target: [50.5, 1.0, -1] },
+  alien: { pos: [40.4, 2.4, 1.6], target: [44.5, 1.4, -3] },
   abandoned: { pos: [13.0, 2.0, 2.0], target: [19.5, 1.4, 0.2] },
 };
 let mode = 'walk';
@@ -734,6 +744,7 @@ function frame() {
   if (mode === 'walk') walk.update(dt);
   else orbit.update();
   sky.userData.update(camera, t);
+  alien.userData.update(t);
   if ((lightTimer += dt) > 0.4) { lightTimer = 0; updateLightBudget(); }
   walkPoles.forEach((p, i) => p.userData.update(t, i * 0.3));
   // Doors swing open when you walk up to them (inside or out).

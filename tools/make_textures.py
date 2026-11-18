@@ -964,6 +964,15 @@ for src, out, size in [("graffiti-painting", "canvas_graffiti", (576, 1024)), ("
     a = delight(a, 260) * 0.5 + a * 0.5      # soften the room lighting, keep the paint
     save(out + ".png", a)
 
+# Alien glow masks: the deepest crevices (much darker than their surroundings) glow.
+for i in range(1, 6):
+    a = np.asarray(Image.open(os.path.join(OUT, f"alien_{i}.png")).convert("RGB")).astype(np.float32)
+    L_ = lum(a)
+    crev = np.clip((blur(L_, 12) - L_ - 18) / 40, 0, 1)
+    crev = blur(crev * 255, 1.2) / 255
+    glow = crev[..., None] * np.array([90, 255, 220], np.float32)
+    save(f"alien_{i}_glow.png", glow)
+
 with open(os.path.join(OUT, "palette.json"), "w") as f:
     json.dump(palette, f, indent=2)
 print("wrote palette.json")
