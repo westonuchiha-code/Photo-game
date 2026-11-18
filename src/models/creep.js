@@ -110,7 +110,7 @@ export function makeCreep() {
   g.add(body);
 
   // hoodie torso: tapered, slightly boxy, longer at the front pocket
-  const torsoGeo = new THREE.CylinderGeometry(0.19, 0.165, 0.6, 20, 6);
+  const torsoGeo = new THREE.CylinderGeometry(0.19, 0.165, 0.6, 20, 6, true);   // open top: the neck sits in it
   const tp = torsoGeo.attributes.position;
   for (let i = 0; i < tp.count; i++) {
     const x = tp.getX(i), y = tp.getY(i), z = tp.getZ(i);
@@ -140,8 +140,49 @@ export function makeCreep() {
     arm.rotation.z = s * 0.12;
     body.add(arm);
   }
-  // drawstrings
-  for (const s of [-1, 1]) body.add(part(new THREE.CylinderGeometry(0.006, 0.006, 0.18, 6), std({ color: '#3a3a3e' }), s * 0.045, 0.53, 0.14));
+  // ---- neck area: dark cavity, thin bony neck, cowl where the hood meets the shoulders
+  const cavity = new THREE.Mesh(new THREE.CircleGeometry(0.19, 24), new THREE.MeshBasicMaterial({ color: '#050506' }));
+  cavity.rotation.x = -Math.PI / 2;
+  cavity.scale.set(1.08, 0.7, 1);
+  cavity.position.y = 0.58;
+  body.add(cavity);
+  const neckMat = clay({ color: '#5e584c', roughness: 0.7, normalScale: new THREE.Vector2(0.2, 0.2) });   // in shadow, darker than the face
+  const neck = part(new THREE.CylinderGeometry(0.032, 0.04, 0.16, 12), neckMat, 0, 0.66, 0.0);
+  neck.rotation.x = 0.25;
+  body.add(neck);
+  for (let i = 0; i < 3; i++) {                     // vertebra ridges down the back of the neck
+    const v = part(new THREE.SphereGeometry(0.018, 8, 6), neckMat, 0, 0.62 + i * 0.04, -0.03 - i * 0.008);
+    body.add(v);
+  }
+  // cowl: thick bunched hood fabric draped round the neck and onto the shoulders,
+  // open in a V at the front (lathe: angle 0 = front)
+  const prof = [[0.205, 0.555], [0.215, 0.6], [0.205, 0.655], [0.17, 0.7], [0.13, 0.725], [0.11, 0.715]].map(([r, y]) => new THREE.Vector2(r, y));
+  const cowlGeo = new THREE.LatheGeometry(prof, 48, 0.55, Math.PI * 2 - 1.1);
+  { const cp = cowlGeo.attributes.position;
+    for (let i = 0; i < cp.count; i++) {
+      const x = cp.getX(i), y = cp.getY(i), z = cp.getZ(i), a = Math.atan2(x, z);
+      const k = 1 + 0.06 * Math.sin(a * 9) * Math.sin((y - 0.55) * 30) + 0.03 * Math.sin(a * 23);   // bunched folds
+      cp.setXYZ(i, x * k * 1.08, y, z * k * 0.82 - 0.005);
+    }
+    cowlGeo.computeVertexNormals(); }
+  const cowl = new THREE.Mesh(cowlGeo, clay({ map: tx('creep_hood.png', 3, 1), roughness: 0.95, side: THREE.DoubleSide }));
+  cowl.castShadow = true;
+  body.add(cowl);
+  // inner shadow of the cowl
+  const cowlIn = new THREE.Mesh(cowlGeo, hoodieIn);
+  cowlIn.scale.set(0.93, 1, 0.93);
+  body.add(cowlIn);
+  // drawstrings: come out of the V at the front and hang down the chest, with metal aglets
+  const cord = std({ color: '#2e2e33', roughness: 0.8 });
+  const aglet = std({ color: '#b8bbbf', metalness: 0.5, roughness: 0.35 });
+  for (const sx of [-1, 1]) {
+    const path = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(sx * 0.06, 0.66, 0.135), new THREE.Vector3(sx * 0.055, 0.6, 0.15),
+      new THREE.Vector3(sx * (0.05 + 0.01 * sx), 0.5, 0.155), new THREE.Vector3(sx * 0.045, 0.42, 0.15),
+    ]);
+    body.add(part(new THREE.TubeGeometry(path, 16, 0.006, 6), cord));
+    body.add(part(new THREE.CylinderGeometry(0.008, 0.008, 0.025, 8), aglet, sx * 0.045, 0.405, 0.15));
+  }
 
   // ---- head: oversized skull deep in the hood
   const head = new THREE.Group();
