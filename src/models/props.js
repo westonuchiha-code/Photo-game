@@ -68,3 +68,50 @@ export function makeWallGlobe(mats) {
   g.add(cap, bulb);
   return g;
 }
+
+// Stretched canvas painting (gallery wrap: the image continues around the
+// edges). Faces +z, hangs with its centre at the origin.
+export function makeCanvas(file, w, h, depth = 0.04) {
+  const loader = new THREE.TextureLoader();
+  const t = loader.load(`assets/textures/${file}`);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 8;
+  const face = new THREE.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: new THREE.Color(0.35, 0.33, 0.3), roughness: 0.75 }); // gallery-lit
+  const edge = new THREE.MeshStandardMaterial({ map: t, roughness: 0.85, color: '#9a9a9a' });
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, depth), [edge, edge, edge, edge, face, edge]);
+  m.position.z = depth / 2;
+  m.castShadow = true;
+  const g = new THREE.Group();
+  g.name = `canvas_${file.replace('.png', '')}`;
+  g.add(m);
+  return g;
+}
+
+// Painted mural on an outside wall, with a small brass plaque (generic text).
+export function makeMural(file, w, h) {
+  const loader = new THREE.TextureLoader();
+  const t = loader.load(`assets/textures/${file}`);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 8;
+  const g = new THREE.Group();
+  g.name = 'mural';
+  const p = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: new THREE.Color(0.55, 0.5, 0.45), roughness: 0.9, polygonOffset: true, polygonOffsetFactor: -2 }));
+  p.position.z = 0.01;
+  g.add(p);
+  const plaque = canvasTexture(256, 96, (c, cw, ch) => {
+    c.fillStyle = '#b08a3e'; c.fillRect(0, 0, cw, ch);
+    c.fillStyle = '#2a2014'; c.font = 'bold 26px Georgia'; c.textAlign = 'center';
+    c.fillText('"NIGHT FACES"', cw / 2, 42); c.font = '20px Georgia'; c.fillText('community mural', cw / 2, 74);
+  });
+  const pl = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.15), new THREE.MeshStandardMaterial({ map: plaque, roughness: 0.3, metalness: 0.6 }));
+  pl.position.set(w / 2 - 0.3, -h / 2 + 0.3, 0.02);
+  g.add(pl);
+  // wall-washer fixture above (the glow is in the material, so no extra light on phones)
+  const fx = new THREE.Mesh(new THREE.BoxGeometry(w * 0.8, 0.08, 0.18), new THREE.MeshStandardMaterial({ color: '#1b1c1e', metalness: 0.6, roughness: 0.4 }));
+  fx.position.set(0, h / 2 + 0.25, 0.12);
+  const lens = new THREE.Mesh(new THREE.PlaneGeometry(w * 0.78, 0.06), new THREE.MeshBasicMaterial({ color: new THREE.Color(1.8, 1.7, 1.5), toneMapped: false }));
+  lens.rotation.x = Math.PI / 2;
+  lens.position.set(0, h / 2 + 0.205, 0.12);
+  g.add(fx, lens);
+  return g;
+}

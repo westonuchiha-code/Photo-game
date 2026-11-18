@@ -16,7 +16,7 @@ import { makeCounter } from './models/counter.js';
 import { makeBooth, makeTerrazzoTable } from './models/booth.js';
 import { makeInfinityBox } from './models/neon.js';
 import { makeDoubleDoor, makeWindowBay, makeDoorMat } from './models/entrance.js';
-import { makeNapkinDispenser, makePoster, makeOpenPlaque, makeWallGlobe } from './models/props.js';
+import { makeNapkinDispenser, makePoster, makeOpenPlaque, makeWallGlobe, makeCanvas, makeMural } from './models/props.js';
 import { makeLiquorSign, makeTwoRiversSign } from './models/signs.js';
 import { makeAbandonedBuilding, makeStreetLamp, makeFireHydrant, makePlasticBottle } from './models/abandoned.js';
 import { plane } from './world/util.js';
@@ -531,6 +531,21 @@ rabbit.rotation.y = Math.PI + 0.4;
 add(rabbit);
 rect(15.5, 16.5, 9.8, 10.8);
 
+// ------------------------------------------------------------------ wall art (painting photos)
+// Four canvases above the two-tops on the lime wall in the restaurant.
+[['canvas_impasto.png', -4.2, 0.62, 1.1], ['canvas_drip.png', -2.0, 0.62, 1.1], ['canvas_sunset.png', 0.2, 1.3, 0.73], ['canvas_splatter.png', 2.4, 0.62, 1.1]]
+  .forEach(([file, x, w, h]) => {
+    const c = makeCanvas(file, w, h);
+    c.position.set(x, 1.85, Z1 - 0.005);
+    c.rotation.y = Math.PI;
+    add(c);
+  });
+// The graffiti painting as a lit mural on the end wall of the street row, facing the lot.
+const mural = makeMural('canvas_graffiti.png', 2.9, 5.1);
+mural.position.set(9.99, 3.0, 16.2);
+mural.rotation.y = -Math.PI / 2;
+add(mural);
+
 // ------------------------------------------------------------------ controls
 const walk = new WalkControls(camera, renderer.domElement, {
   bounds: null,
@@ -580,6 +595,8 @@ const VIEWS = {
   tealshop: { pos: [44, 1.8, -10.5], target: [45, 1.8, -16] },
   rabbit: { pos: [17.4, 1.5, 7.6], target: [16, 1.6, 10.3] },
   newsbox: { pos: [10.2, 1.3, -1.6], target: [8.55, 0.5, -3.1] },
+  canvases: { pos: [-1, 1.7, 1.2], target: [-1, 1.8, 5] },
+  mural: { pos: [5.2, 2.2, 10.2], target: [10, 3, 16.2] },
   abandoned: { pos: [13.0, 2.0, 2.0], target: [19.5, 1.4, 0.2] },
 };
 let mode = 'walk';

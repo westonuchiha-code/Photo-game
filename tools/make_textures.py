@@ -955,6 +955,15 @@ a = blur(_lab.astype(np.float32) * 255, 0.8)
 Image.fromarray(np.concatenate([rgb, a[..., None]], -1).astype(np.uint8), "RGBA").save(os.path.join(OUT, "rabbit_cut.png"))
 print("wrote rabbit_cut.png", _lab.shape)
 
+# ---------------------------------------------------------------- paintings as whole canvases
+for src, out, size in [("graffiti-painting", "canvas_graffiti", (576, 1024)), ("painted-wall-impasto", "canvas_impasto", (576, 1024)),
+                       ("grime/art-black-white-drip", "canvas_drip", (576, 1024)), ("grime/art-blurred-sunset", "canvas_sunset", (1024, 576)),
+                       ("grime/art-mustard-black-splatter", "canvas_splatter", (576, 1024))]:
+    im = ImageOps.exif_transpose(Image.open(f"photos/{src}.jpg")).convert("RGB").resize(size, Image.LANCZOS)
+    a = np.asarray(im).astype(np.float32)
+    a = delight(a, 260) * 0.5 + a * 0.5      # soften the room lighting, keep the paint
+    save(out + ".png", a)
+
 with open(os.path.join(OUT, "palette.json"), "w") as f:
     json.dump(palette, f, indent=2)
 print("wrote palette.json")

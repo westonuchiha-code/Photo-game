@@ -7,6 +7,7 @@ Rules (from you):
   sign's shape and material. Keep text that's already generic (LIQUOR).
 
 ## Approved
+- Objects & locations (ramp, sign block, teal shop, news box, rabbit)
 - Phone colour fix + lighting
 - Trees
 - Walk signal poles
@@ -21,9 +22,8 @@ Rules (from you):
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- Objects & locations: underground parking ramp + lit tunnel + roll-up door + clearance sign,
-  no-trespassing sign block, teal storefront (714), red news box, white rabbit sculpture.
-  Screenshots: `screenshots/loc-*.png`.
+- Wall art: 4 gallery canvases (impasto, drip, sunset, splatter) above the lime-wall two-tops;
+  graffiti painting as a lit mural on the street-row end wall. Screenshots: `screenshots/art-*.png`.
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
@@ -33,7 +33,6 @@ Rules (from you):
    Screenshot: `screenshots/burger-poster.png`.
 
 ## Up next (in order)
-11. Graffiti painting and painted wall as wall art.
 12. Apartment building inside and out (made-up name instead of "Airlie"): brick front with
     curved stair walls, mailboxes, hallway, stairs, landing, unit doors.
 13. Alien textures (5).
