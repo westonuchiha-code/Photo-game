@@ -275,3 +275,5 @@ export function makeCat(kind = 'tabby', pose = 'sit', scale = 1) {
   g.scale.setScalar(scale);
   return g;
 }
+
+export { ellipsoid, cone, smin, surfaceNets, v3 };

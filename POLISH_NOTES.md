@@ -81,3 +81,10 @@ This is a running list, added to as models get built. Nothing here is urgent.
 - Warehouse brick reads dark at night; needs a wash light. The inscription repeats.
 - Oval building: windows are flat; could add depth and interior lights at night.
 - No buildings yet on the south/east edges of the plaza; city items 28b+ can fill those.
+
+## Old-town street (28b)
+- Shops all share one template; vary heights, add second-floor balconies, and use a different roof for some.
+- The shop signs use generic Japanese words (tea, sweets, soba, etc.); swap to English if preferred.
+- The road texture is fairly busy/contrasty; could be calmer. No manhole or arrow markings yet.
+- The monkey statue is decent but smooth; could add carved fur grooves and a rounder belly.
+- The clock tower sits past the end of the street on blank ground; the street needs an end (a building or turn).

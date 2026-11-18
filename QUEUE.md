@@ -7,6 +7,7 @@ Rules (from you):
   sign's shape and material. Keep text that's already generic (LIQUOR).
 
 ## Approved
+- 28a City plaza (approved for now)
 - 27e Small misc props (misc batch 27 complete)
 - 27d Dump truck + dirt site
 - 27c Boarded blue house + cats (cats can stay generic: one cat model + a kitten)
@@ -43,7 +44,7 @@ Rules (from you):
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- 28a City plaza (city photos): paved square west of the restaurant with tan/coloured pavers + grey bands, red brick warehouse gable (brick from the photo, arched windows, inscribed coping with made-up text), white spiral sculptures, white oval-window building with arched entrance + porthole, pebble benches, ornate black lamps, planters. Remaining city items (28b onward) next.
+- 28b Old-town shopping street running south from the plaza: granite-slab road (texture from the photo) with lane lines, eleven two-storey shop houses (tiled roofs, white plaster, lattice, diamond-tile skirting, noren, lanterns, generic-word signs), lit lamp posts with banners, stone bollards, nobori flags, two sculpted stone monkey statues, green sign pillar, clock tower.
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
@@ -237,6 +238,14 @@ Rules (from you):
     cabinet with ribbed-glass doors + pod coffee maker, framed forest photo, cough-etiquette
     poster (redrawn generic), thermostat, fake bamboo, smiling tooth figurine, drop ceiling with
     recessed lights, square diffusers and speaker grilles.
+
+58. Dentist treatment room (photos/dentist/operatory*, 9 photos): taupe leather dental chair with
+    white base, articulating headrest in a plastic sleeve, armrests, foot control, floor power
+    box and coiled cable; light-wood plank floor; white wall unit with monitors (made-up
+    screens), keyboard, water flosser; delivery hoses; white rolling tool chest with a butcher-
+    block top (made-up brand), blood-pressure monitor, wipes tub, spray bottle, glove box,
+    safety glasses, bib clips, papers, desk fan; mayo tray stand with cassette of colourful
+    instruments, suction tip, gauze; black saddle stool; tan bucket stool; steel bin.
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"

@@ -1233,6 +1233,20 @@ def _level(im, box_, thumb):
 save("cy_brick.png", seamless(delight(np.asarray(_level(_wh, (600, 430, 880, 590), 900).resize((512, 292), Image.LANCZOS)).astype(np.float32), 80)))
 save("cy_brickband.png", seamless(delight(np.asarray(_level(_wh, (320, 650, 600, 750), 900).resize((640, 228), Image.LANCZOS)).astype(np.float32), 80)))
 
+# ---------------------------------------------------------------- old-town street (city photos, 28b)
+_od = _cl("old-town-street-day")
+_ok = _od.size[0] / 563
+_os = np.asarray(_od.crop(tuple(int(v * _ok) for v in (30, 900, 330, 1000))).resize((900, 300), Image.LANCZOS)).astype(np.float32)
+ot = quilt(delight(_os, 60), (512, 512), patch=80, contrast=1.0)
+# granite slab joints: 4 rows x 2 columns of 0.6 x 0.3 m slabs per 1.2 m repeat, staggered
+for r in range(4):
+    y = r * 128
+    ot[y:y + 3, :] *= 0.55
+    off = 0 if r % 2 == 0 else 128
+    for x in (off, off + 256):
+        ot[y:y + 128, x % 512:(x % 512) + 3] *= 0.55
+save("ot_stone.png", ot)
+
 with open(os.path.join(OUT, "palette.json"), "w") as f:
     json.dump(palette, f, indent=2)
 print("wrote palette.json")

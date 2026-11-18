@@ -40,6 +40,7 @@ import { makeStatueShrine, makeStoneShrine } from './models/shrines.js';
 import { makeTireWheel } from './models/wheel.js';
 import { makeHouse } from './models/houses.js';
 import { makeBlueHouse } from './models/bluehouse.js';
+import { makeShopHouse, makeStreetLamp as makeOldTownLamp, makeBollard, makeMonkey, makeBanner, makeClockTower, makeGreenPillar } from './models/oldtown.js';
 import { makeBrickGable, makeSpiral, makeOvalBuilding, makePebbleBench, makeOrnateLamp, makePlanter, makePaverTexture, makeGreyBandTexture } from './models/cityplaza.js';
 import { makePlywoodSheet, makeGlassShards, makePasteWall, makePickupZone } from './models/misc27e.js';
 import { makeDumpTruck, makePipeBarrier, makeSiteSign, makeWeeds } from './models/dumpsite.js';
@@ -925,6 +926,46 @@ const blueHouse = makeBlueHouse();
   });
 }
 
+// ------------------------------------------------------------------ old-town shopping street (city photos, 28b)
+// Runs south from the plaza: granite-slab road with white lane markings, shops either side.
+{
+  const SX = -26.5, Z0 = 11.8, Z1 = 52;
+  const st = new THREE.TextureLoader().load('assets/textures/ot_stone.png');
+  st.colorSpace = THREE.SRGBColorSpace; st.wrapS = st.wrapT = THREE.RepeatWrapping;
+  const stoneMat = new THREE.MeshStandardMaterial({ map: st, roughness: 0.85 });
+  add(plane(stoneMat, SX - 7, SX + 7, Z0, Z1, 0.006, 1.2));
+  const line = new THREE.MeshStandardMaterial({ color: '#e8e8e2', roughness: 0.8 });
+  for (let z = Z0 + 2; z < Z1 - 1; z += 3.2) add(plane(line, SX - 0.08, SX + 0.08, z, z + 1.6, 0.01));
+  for (const dx of [-4.6, 4.6]) add(plane(line, SX + dx - 0.07, SX + dx + 0.07, Z0, Z1, 0.01));
+  const placeR = (o, gx, gz, rot) => {
+    o.position.set(gx, 0, gz); o.rotation.y = rot; add(o);
+    const c = o.userData.collider; if (!c) return o;
+    const cs = Math.cos(rot), sn = Math.sin(rot);
+    const pts = [[c[0], c[2]], [c[1], c[2]], [c[0], c[3]], [c[1], c[3]]].map(([x, z]) => [gx + x * cs + z * sn, gz - x * sn + z * cs]);
+    rect(Math.min(...pts.map((p) => p[0])), Math.max(...pts.map((p) => p[0])), Math.min(...pts.map((p) => p[1])), Math.max(...pts.map((p) => p[1])));
+    return o;
+  };
+  // shops: west side face +x, east side face -x
+  const norens = ['#2a3a6a', '#7a1f24', '#2f5a3a', '#4a2a5a', '#8a5a1a'];
+  let z = Z0 + 1.5, k = 0;
+  for (const w of [6, 5.5, 7, 6, 5, 6.5]) { placeR(makeShopHouse({ w, d: 8, seed: k + 3, front: k % 3 === 2 ? 'lattice' : 'glass', sign: k, noren: norens[k % 5] }), SX - 7, z + w / 2, Math.PI / 2); z += w + 0.3; k++; }
+  z = Z0 + 3.5;
+  for (const w of [5.5, 6.5, 5, 7, 6]) { placeR(makeShopHouse({ w, d: 8, seed: k + 9, front: k % 3 === 1 ? 'lattice' : 'glass', sign: k, noren: norens[k % 5] }), SX + 7, z + w / 2, -Math.PI / 2); z += w + 0.3; k++; }
+  placeR(makeClockTower(), SX + 9.5, Z1 + 2.5, Math.PI);
+  // lamps (lit) + stone bollards + banners along both edges
+  for (let zz = Z0 + 4; zz < Z1; zz += 7) for (const s of [-1, 1]) {
+    const l = makeOldTownLamp(); l.position.set(SX + s * 6.0, 0, zz); l.rotation.y = s > 0 ? Math.PI : 0; add(l); circle(SX + s * 6.0, zz, 0.2);
+    const pl = new THREE.PointLight('#ffd9a8', 6, 11, 1.5); pl.position.set(SX + s * 5.4, 3.3, zz); add(pl);
+  }
+  let bs = 1;
+  for (let zz = Z0 + 2.5; zz < Z1; zz += 2.2) for (const s of [-1, 1]) { if ((zz | 0) % 7 === 0) continue; const b = makeBollard(bs++); b.position.set(SX + s * 5.1, 0, zz); add(b); circle(SX + s * 5.1, zz, 0.25); }
+  [[SX - 6.3, Z0 + 9, '#2a4aa8'], [SX - 6.3, Z0 + 23, '#c8202a'], [SX + 6.3, Z0 + 15, '#2a4aa8'], [SX + 6.3, Z0 + 30, '#2a8a4a']].forEach(([x, zz, c], i) => { const b = makeBanner(c, i); b.position.set(x, 0, zz); b.rotation.y = x < SX ? 0 : Math.PI; add(b); });
+  // stone monkey statues by a shop door, and the green sign pillar
+  const m1 = makeMonkey(); m1.position.set(SX - 5.7, 0, Z0 + 5.5); m1.rotation.y = 0.2; add(m1); circle(SX - 5.7, Z0 + 5.5, 0.4);
+  const m2 = makeMonkey(); m2.position.set(SX + 5.7, 0, Z0 + 19); m2.rotation.y = Math.PI - 0.3; add(m2); circle(SX + 5.7, Z0 + 19, 0.4);
+  placeR(makeGreenPillar(), SX + 6.4, Z0 + 26, -Math.PI / 2);
+}
+
 // delivery props elsewhere: drinks + bag outside an Elmwood unit door, a delivery tote by the scooter
 {
   const c = makeCupCarrier(); c.position.set(-0.6, 1.4, -2.8); apt.add(c);
@@ -941,6 +982,7 @@ const walk = new WalkControls(camera, renderer.domElement, {
     { minX: GS.x + 0.3, maxX: GS.x + 8.7, minZ: GS.z - 13.7, maxZ: GS.z - 5.5 }, // grocery stockroom
     { minX: 34.0, maxX: 62.5, minZ: -63.5, maxZ: -47.0 }, // dirt site
     { minX: -43.6, maxX: -9.0, minZ: -13.6, maxZ: 11.7 }, // city plaza
+    { minX: -33.3, maxX: -19.7, minZ: 11.0, maxZ: 51.8 }, // old-town street
     { minX: -9.5, maxX: 9.0, minZ: 5.4, maxZ: 11.7 }, // strip along the restaurant's south wall
   ],
   colliders,
@@ -1031,6 +1073,9 @@ const VIEWS = {
   plaza: { pos: [-12.0, 4.5, 10.5], target: [-28.0, 1.5, -2.0] },
   warehouse: { pos: [-33.0, 2.4, -1.0], target: [-44.0, 4.5, -3.0] },
   ovalbuilding: { pos: [-25.5, 2.4, 1.5], target: [-25.5, 4.5, -14.0] },
+  oldtown: { pos: [-26.5, 2.0, 14.0], target: [-26.5, 2.4, 40.0] },
+  oldtownshops: { pos: [-23.5, 1.7, 20.0], target: [-31.0, 1.8, 24.0] },
+  monkey: { pos: [-29.8, 1.0, 19.0], target: [-32.2, 0.5, 17.3] },
   walkinshelf: { pos: [17.6, 1.6, -44.0], target: [21.4, 1.0, -45.6] },
   van: { pos: [25.5, 1.9, -22.4], target: [21.5, 0.9, -26.5] },
   vanside: { pos: [24.6, 1.3, -29.2], target: [21.5, 0.7, -26.3] },
