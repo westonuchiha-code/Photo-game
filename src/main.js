@@ -39,6 +39,7 @@ import { makeRockBed, makeGrassTufts, makeCurbWithLeaves, makeLooseLeaves, makeB
 import { makeStatueShrine, makeStoneShrine } from './models/shrines.js';
 import { makeTireWheel } from './models/wheel.js';
 import { makeHouse } from './models/houses.js';
+import { makeBlueHouse } from './models/bluehouse.js';
 import { makeDeliveryBag, makeCupCarrier, makePaperBag } from './models/delivery.js';
 import { WalkControls } from './walk.js';
 
@@ -816,6 +817,19 @@ const houseLights = [];
   }
 }
 
+// ------------------------------------------------------------------ boarded blue house + cats (misc photos)
+// West side of the house lane, facing east (+x).
+const blueHouse = makeBlueHouse();
+{
+  const gx = 38.4, gz = -34.6, rot = Math.PI / 2;
+  blueHouse.position.set(gx, 0, gz); blueHouse.rotation.y = rot; add(blueHouse);
+  const c = Math.cos(rot), s = Math.sin(rot);
+  for (const [x0, x1, z0, z1] of blueHouse.userData.colliders) {
+    const pts = [[x0, z0], [x1, z0], [x0, z1], [x1, z1]].map(([x, z]) => [gx + x * c + z * s, gz - x * s + z * c]);
+    rect(Math.min(...pts.map((p) => p[0])), Math.max(...pts.map((p) => p[0])), Math.min(...pts.map((p) => p[1])), Math.max(...pts.map((p) => p[1])));
+  }
+}
+
 // delivery props elsewhere: drinks + bag outside an Elmwood unit door, a delivery tote by the scooter
 {
   const c = makeCupCarrier(); c.position.set(-0.6, 1.4, -2.8); apt.add(c);
@@ -907,6 +921,9 @@ const VIEWS = {
   porchhouse: { pos: [40.8, 1.9, -27.8], target: [46.0, 1.5, -31.2] },
   deliveries: { pos: [43.3, 1.4, -40.0], target: [45.6, 0.35, -40.0] },
   deliveries2: { pos: [42.4, 1.7, -31.6], target: [45.3, 0.55, -29.8] },
+  bluehouse: { pos: [44.0, 2.0, -33.0], target: [38.4, 1.4, -34.8] },
+  cats: { pos: [41.0, 0.95, -34.4], target: [38.9, 0.25, -35.6] },
+  kitten: { pos: [39.7, 1.0, -32.3], target: [38.4, 0.8, -32.6] },
   walkinshelf: { pos: [17.6, 1.6, -44.0], target: [21.4, 1.0, -45.6] },
   van: { pos: [25.5, 1.9, -22.4], target: [21.5, 0.9, -26.5] },
   vanside: { pos: [24.6, 1.3, -29.2], target: [21.5, 0.7, -26.3] },
@@ -1040,6 +1057,7 @@ function frame() {
   {
     const near = mode === 'walk' && Math.abs(walk.position.x - GS.x) < 2.2 && Math.abs(walk.position.z - (GS.z + 6)) < 2.6;
     grocery.userData.update(dt, near);
+    blueHouse.userData.update(dt);
     groceryDoor.active = !grocery.userData.doorsOpen();
   }
   if ((lightTimer += dt) > 0.4) { lightTimer = 0; updateLightBudget(); }

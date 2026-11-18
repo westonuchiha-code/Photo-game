@@ -1161,6 +1161,17 @@ for name, f, b, size, r in [
 ]:
     save(name + ".png", seamless(delight(_mc(f, b, size), r)))
 
+# ---------------------------------------------------------------- boarded blue house + cats (misc photos)
+def _mt(n, b, size, thumb):
+    im = ImageOps.exif_transpose(Image.open(f"photos/misc/{n}.jpg")).convert("RGB")
+    k = im.size[0] / thumb
+    return np.asarray(im.crop(tuple(int(v * k) for v in b)).resize(size, Image.LANCZOS)).astype(np.float32)
+save("ab_bluesiding.png", seamless(delight(_mt("cats-blue-house-vent", (0, 2, 505, 98), (1024, 196), 507), 80)))
+save("ab_stucco.png", seamless(delight(_mt("cats-blue-house-vent", (345, 200, 505, 370), (384, 384), 507), 80)))
+save("ab_osb.png", seamless(delight(_mt("kittens-boarded-wall", (0, 0, 800, 200), (1024, 256), 900), 120)))
+Image.fromarray(_mt("kittens-boarded-wall", (300, 215, 810, 650), (768, 656), 900).astype(np.uint8)).save(os.path.join(OUT, "ab_panel.png"))
+Image.fromarray(_mt("kittens-boarded-wall", (0, 632, 900, 795), (1024, 186), 900).astype(np.uint8)).save(os.path.join(OUT, "ab_navybase.png"))
+
 with open(os.path.join(OUT, "palette.json"), "w") as f:
     json.dump(palette, f, indent=2)
 print("wrote palette.json")

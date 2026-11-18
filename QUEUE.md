@@ -7,6 +7,7 @@ Rules (from you):
   sign's shape and material. Keep text that's already generic (LIQUOR).
 
 ## Approved
+- 27b Delivery props
 - 27a House fronts
 - Living room (Elmwood unit)
 - Car tire + alloy wheel
@@ -39,7 +40,7 @@ Rules (from you):
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- 27b Delivery props (src/models/delivery.js, made-up brands): QUICKDROP red delivery tote by the scooter, WING BARN plastic bag + ZING soda, TACO NOVA paper bags with receipts, cup carrier with iced drinks (Elmwood hallway), BUN KING fountain cup, smoothie with red band, black tumbler, QUIK 24 tote, black trash bag, deli box with soup tubs, GREEN ACRE top soil bag. Placed at the house doors like the photos.
+- 27c Boarded blue house + cats: west side of the house lane. Boarded half (peeling navy base, cracked white panel with a broken hole and a peeking kitten, OSB over the window) and blue lap siding over blue stucco with an open basement window. Kibble pile, tortie lying down, tabby kitten sitting. Textures from the two photos.
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
