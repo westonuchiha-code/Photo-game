@@ -11,6 +11,7 @@
 //             a flag on a bracket, wide concrete steps
 //   'tan'     tan siding, white storm door with a glass panel, wall-mounted hose reel, big numbers
 import * as THREE from 'three';
+import { makePlasticBag, makePaperBag, makeCup, makeTote, makeTrashBag, makeDeliBox, makeSoilBag, makeSodaBottle } from './delivery.js';
 
 const _L = new THREE.TextureLoader();
 const texCache = {};
@@ -347,6 +348,14 @@ export function makeHouse(kind, W = 4.2) {
     const mat = doorMat(0.85, 0.5, null); mat.position.set(-0.4, FL, 0.5); g.add(mat);
     colliders.push([-1.1, 0.5, 0, 1.3]);
   }
+  // deliveries left at the door (27b, from the same photos)
+  const put = (o, x, y, z, ry = 0) => { o.position.set(x, y, z); o.rotation.y = ry; g.add(o); };
+  if (kind === 'brick') { put(makePlasticBag({ logo: 'wings', seed: 3 }), 0.2, FL, 0.45, -0.2); put(makeSodaBottle(), 0.55, FL, 0.4); }
+  if (kind === 'yellow') { put(makePaperBag({ seed: 4 }), -0.35, FL, 0.3, 0.1); put(makeCup('tumbler'), 0.2, FL, 0.25); }
+  if (kind === 'gray') put(makePlasticBag({ withPaper: true, seed: 5 }), -0.25, FL + 0.015, 0.45, 0.3);
+  if (kind === 'stone') { put(makePaperBag({ pattern: null, seed: 6 }), -1.05, FL, 0.5, 0.2); put(makeCup('fountain'), -0.72, FL, 0.6); put(makeSoilBag(), 0.25, 0, 1.75, 0.5); }
+  if (kind === 'tan') { put(makeTote(), -0.95, FL, 0.42, 0.15); put(makePaperBag({ pattern: null, seed: 7 }), 0.1, FL, 0.35, -0.2); }
+  if (kind === 'porch') { put(makeTrashBag(), -0.55, FL, 0.4); put(makeCup('smoothie'), -0.25, FL, 0.75); put(makeDeliBox(), 1.0, FL, 0.6, 0.1); }
   // put the real lights in
   for (const [x, y, z] of lights) { const l = new THREE.PointLight('#ffd9a8', 3.2, 6, 1.5); l.position.set(x, y, z); g.add(l); }
   g.userData.colliders = colliders;

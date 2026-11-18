@@ -39,6 +39,7 @@ import { makeRockBed, makeGrassTufts, makeCurbWithLeaves, makeLooseLeaves, makeB
 import { makeStatueShrine, makeStoneShrine } from './models/shrines.js';
 import { makeTireWheel } from './models/wheel.js';
 import { makeHouse } from './models/houses.js';
+import { makeDeliveryBag, makeCupCarrier, makePaperBag } from './models/delivery.js';
 import { WalkControls } from './walk.js';
 
 // ------------------------------------------------------------------ renderer
@@ -815,6 +816,13 @@ const houseLights = [];
   }
 }
 
+// delivery props elsewhere: drinks + bag outside an Elmwood unit door, a delivery tote by the scooter
+{
+  const c = makeCupCarrier(); c.position.set(-0.6, 1.4, -2.8); apt.add(c);
+  const b = makePaperBag({ seed: 9 }); b.position.set(-0.6, 1.4, -3.65); b.rotation.y = 0.3; apt.add(b);
+  const d = makeDeliveryBag(); d.position.set(49.6, 0, 6.0); d.rotation.y = -0.8; add(d);
+}
+
 const walk = new WalkControls(camera, renderer.domElement, {
   bounds: null,
   areas: [
@@ -897,6 +905,8 @@ const VIEWS = {
   houses: { pos: [38.5, 2.6, -33.0], target: [46.0, 1.6, -38.5] },
   housesouth: { pos: [40.0, 1.8, -36.5], target: [40.0, 1.4, -44.0] },
   porchhouse: { pos: [40.8, 1.9, -27.8], target: [46.0, 1.5, -31.2] },
+  deliveries: { pos: [43.3, 1.4, -40.0], target: [45.6, 0.35, -40.0] },
+  deliveries2: { pos: [42.4, 1.7, -31.6], target: [45.3, 0.55, -29.8] },
   walkinshelf: { pos: [17.6, 1.6, -44.0], target: [21.4, 1.0, -45.6] },
   van: { pos: [25.5, 1.9, -22.4], target: [21.5, 0.9, -26.5] },
   vanside: { pos: [24.6, 1.3, -29.2], target: [21.5, 0.7, -26.3] },
