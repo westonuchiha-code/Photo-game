@@ -25,7 +25,7 @@ import { makeRustyPole, makeWalkSignalPole } from './models/street.js';
 import { makeStreetBuilding } from './models/buildings.js';
 import { makePaverSidewalk, makeDrainCover, makePaverCrosswalk, makeTactilePlate, makeCracks, makeUtilityLid, makeTrafficIsland, makeDirtLot } from './models/streetground.js';
 import { makeSky } from './models/sky.js';
-import { makePizza, makeRamenTray, makeSpaghettiTray, makeCurryPlate, makeCornDog, makePorkBun } from './models/food.js';
+import { makePizza, makeRamenTray, makeSpaghettiTray, makeCurryPlate } from './models/food.js';
 import { makeAlienFormation } from './models/alien.js';
 import { makeApartment } from './models/apartment.js';
 import { makeNewsBox, makeParkingSignBlock, makeParkingRamp, makeTealStorefront, makeRabbitSculpture } from './models/locations.js';
@@ -584,8 +584,6 @@ onTable(makePizza('mushroom'), -3.45, -1.45, 0.3);
 onTable(makeRamenTray(), -0.6, -1.4, 0.2);
 onTable(makeSpaghettiTray(), 2.2, -1.4, -0.3);
 onTable(makeCurryPlate(), -3.4, 1.4, 0.8);
-onTable(makeCornDog(), -0.75, 1.3, 0.5);
-onTable(makePorkBun(), -0.4, 1.55, -0.4);
 onTable(makePizza('corn'), 2.2, 1.4, 1.1);
 
 // ------------------------------------------------------------------ tree with a door (tree-door photos)
@@ -626,7 +624,7 @@ walk.pitch = -0.1;
 const orbit = new OrbitControls(camera, renderer.domElement);
 orbit.enableDamping = true;
 orbit.maxPolarAngle = Math.PI * 0.49;
-orbit.minDistance = 0.4;
+orbit.minDistance = 0.1;
 orbit.maxDistance = 12;
 orbit.enabled = false;
 
@@ -668,7 +666,6 @@ const VIEWS = {
   food2: { pos: [-0.35, 1.4, -0.95], target: [-0.62, 0.8, -1.4] },
   food3: { pos: [1.95, 1.4, -0.95], target: [2.2, 0.8, -1.4] },
   food4: { pos: [-3.1, 1.4, 1.95], target: [-3.4, 0.78, 1.4] },
-  food5: { pos: [-0.25, 1.35, 1.95], target: [-0.6, 0.78, 1.4] },
   food6: { pos: [2.5, 1.4, 1.95], target: [2.2, 0.78, 1.4] },
   abandoned: { pos: [13.0, 2.0, 2.0], target: [19.5, 1.4, 0.2] },
 };

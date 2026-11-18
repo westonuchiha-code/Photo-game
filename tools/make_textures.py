@@ -1022,6 +1022,22 @@ food_crop("pork-bun-bitten", (700, 1100, 2200, 2250), "food_porkbun_bite", (512,
 food_crop("pork-bun-bitten", (1500, 1100, 2150, 1500), "food_bun_crust", (256, 160))
 food_crop("katsu-curry-desk", (1650, 1220, 2600, 1650), "food_katsu", (512, 232))
 
+# Food v2: tileable crumb coating (corn-dog crust) and flaky pastry (bun crust),
+# quilted from the evenly lit middle of each photo so they wrap without streaks.
+CDi, _ = load("food/corndog")
+crumb = np.asarray(CDi.crop((900, 1300, 1200, 1600)).resize((256, 256), Image.LANCZOS)).astype(np.float32)
+crumb = seamless(delight(crumb, 50))
+crumb = match_stats(crumb, np.array([214, 160, 82], np.float32), 1.2)
+save("food_crumb.png", crumb)
+save("food_crumb_normal.png", normal_from_height(blur(lum(crumb) / 255.0, 0.6), 6.0))
+PBi, _ = load("food/pork-bun-bitten")
+pastry = np.asarray(PBi.crop((1780, 1250, 2020, 1490)).resize((256, 256), Image.LANCZOS)).astype(np.float32)
+pastry = seamless(delight(pastry, 50))
+pastry = match_stats(pastry, np.array([204, 128, 60], np.float32), 1.1)
+save("food_pastry.png", pastry)
+save("food_pastry_normal.png", normal_from_height(blur(lum(pastry) / 255.0, 0.8), 4.0))
+food_crop("pork-bun-bitten", (1090, 1180, 1880, 1830), "food_porkbun_filling", (384, 320))
+
 with open(os.path.join(OUT, "palette.json"), "w") as f:
     json.dump(palette, f, indent=2)
 print("wrote palette.json")

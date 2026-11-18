@@ -136,70 +136,158 @@ export function makeCurryPlate() {
   return g;
 }
 
+// Korean-style corn dog in a white paper boat (corndog photo): a thick log
+// coated in coarse golden crumbs, a skewer out of the top, a short exposed
+// sausage end, and a puddle of pink sauce beside it in the boat.
 export function makeCornDog() {
   const g = new THREE.Group();
   g.name = 'corn_dog';
-  // paper boat
+  // paper boat: flat base + four outward-sloping walls (a real trapezoid boat)
+  const paper = std({ color: '#f6f5f0', roughness: 0.85, side: THREE.DoubleSide });
+  const L = 0.2, W = 0.1, Hb = 0.035, flare = 0.02;
   const boat = new THREE.Group();
-  const paper = std({ color: '#f1efe8', roughness: 0.9, side: THREE.DoubleSide });
-  const base = new THREE.Mesh(new THREE.PlaneGeometry(0.11, 0.24), paper);
+  const base = new THREE.Mesh(new THREE.PlaneGeometry(W, L), paper);
   base.rotation.x = -Math.PI / 2;
   base.position.y = 0.002;
   boat.add(base);
-  for (const s of [-1, 1]) {
-    const side = new THREE.Mesh(new THREE.PlaneGeometry(0.24, 0.045), paper);
-    side.rotation.set(0, Math.PI / 2, s * 0.4);
-    side.position.set(s * 0.062, 0.02, 0);
-    boat.add(side);
-    const end = new THREE.Mesh(new THREE.PlaneGeometry(0.12, 0.045), paper);
-    end.rotation.x = s * 0.4;
-    end.position.set(0, 0.02, s * 0.122);
-    boat.add(end);
-  }
+  const wall = (x0, z0, x1, z1, ox, oz) => {
+    const geo = new THREE.BufferGeometry();
+    const v = [x0, 0.002, z0, x1, 0.002, z1, x1 + ox, Hb, z1 + oz, x0 + ox, Hb, z0 + oz];
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(v, 3));
+    geo.setIndex([0, 1, 2, 0, 2, 3]);
+    geo.computeVertexNormals();
+    boat.add(new THREE.Mesh(geo, paper));
+  };
+  wall(-W / 2, -L / 2, -W / 2, L / 2, -flare, 0);
+  wall(W / 2, -L / 2, W / 2, L / 2, flare, 0);
+  wall(-W / 2, -L / 2, W / 2, -L / 2, 0, -flare);
+  wall(-W / 2, L / 2, W / 2, L / 2, 0, flare);
   g.add(boat);
-  // breaded dog: capsule with the photo crust wrapped around it
-  const t = tex('food_corndog');
-  const dog = new THREE.Mesh(new THREE.CapsuleGeometry(0.022, 0.13, 6, 16), std({ map: t, roughness: 0.85 }));
-  dog.rotation.x = Math.PI / 2;
-  dog.position.set(0.012, 0.026, -0.01);
+  // the corn dog: lumpy capsule, crumb texture tiled around it, crumb bump map
+  const crumb = loader.load('assets/textures/food_crumb.png');
+  crumb.colorSpace = THREE.SRGBColorSpace;
+  crumb.wrapS = crumb.wrapT = THREE.RepeatWrapping;
+  crumb.repeat.set(4, 5);   // ~3.7 cm of crumb per tile, like the photo
+  const crumbN = loader.load('assets/textures/food_crumb_normal.png');
+  crumbN.wrapS = crumbN.wrapT = THREE.RepeatWrapping;
+  crumbN.repeat.set(4, 5);
+  let geo = new THREE.CapsuleGeometry(0.026, 0.14, 24, 48);
+  geo.deleteAttribute('normal');
+  const uvKeep = geo.attributes.uv;
+  const p = geo.attributes.position;
+  const v = new THREE.Vector3();
+  for (let i = 0; i < p.count; i++) {   // coarse crumbs: random push per vertex + gentle waviness
+    v.fromBufferAttribute(p, i);
+    const r = Math.hypot(v.x, v.z) || 1;
+    const h = Math.sin(v.x * 900 + v.y * 1300) * Math.sin(v.z * 1100 - v.y * 700);
+    const k = 1 + 0.055 * h * h * Math.sign(h) + 0.05 * Math.sin(v.y * 60);
+    p.setXYZ(i, v.x * k, v.y, v.z * k);
+  }
+  geo.computeVertexNormals();
+  const dog = new THREE.Mesh(geo, std({ map: crumb, normalMap: crumbN, normalScale: new THREE.Vector2(2.5, 2.5), roughness: 0.95, color: '#ffd9a0' }));
+  dog.rotation.x = Math.PI / 2 - 0.12;  // resting on the boat floor, top end on the rim
+  dog.rotation.z = 0.12;
+  dog.position.set(0.012, 0.03, 0.0);
   dog.castShadow = true;
   g.add(dog);
-  const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.0025, 0.0025, 0.16, 6), std({ color: '#d9c49a' }));
-  stick.rotation.x = Math.PI / 2;
-  stick.position.set(0.012, 0.026, -0.15);
+  // sausage end peeking out at the bottom of the dog
+  const end = new THREE.Mesh(new THREE.CircleGeometry(0.014, 16), std({ color: '#9b3a2c', roughness: 0.5 }));
+  end.position.set(0.021, 0.02, 0.098);
+  end.rotation.x = -0.12;
+  g.add(end);
+  // skewer out the top end, over the boat edge
+  const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.0022, 0.0022, 0.17, 6), std({ color: '#d8c193' }));
+  stick.rotation.x = Math.PI / 2 - 0.15;
+  stick.rotation.z = 0.12;
+  stick.position.set(0.001, 0.05, -0.165);
   g.add(stick);
-  // dip sauce puddle
-  const dip = new THREE.Mesh(new THREE.CircleGeometry(0.03, 24), std({ map: tex('food_dip_sauce'), roughness: 0.2 }));
+  // pink sauce puddle (photo texture), slightly raised
+  const dipGeo = new THREE.CircleGeometry(0.028, 24);
+  dipGeo.scale(1, 1.5, 1);
+  const dip = new THREE.Mesh(dipGeo, std({ map: tex('food_dip_sauce'), roughness: 0.15 }));
   dip.rotation.x = -Math.PI / 2;
-  dip.position.set(-0.025, 0.005, 0.07);
+  dip.position.set(-0.026, 0.006, 0.04);
   g.add(dip);
   return g;
 }
 
+// Baked pork bun (pork-bun photo): a golden, flaky half-moon pastry, sesame on
+// top, torn open at one end with the meat filling showing; on crinkled paper.
 export function makePorkBun() {
   const g = new THREE.Group();
   g.name = 'pork_bun';
-  // flattened golden pastry dome with a bitten-open front showing the filling
-  const crust = std({ color: '#d79a52', roughness: 0.7 });
-  const geo = new THREE.SphereGeometry(0.06, 24, 16);
-  geo.scale(1.25, 0.6, 1);
+  // baked crust: golden with browned patches and darker flake edges
+  const cc = document.createElement('canvas'); cc.width = cc.height = 256;
+  const cx = cc.getContext('2d');
+  cx.fillStyle = '#d9974a'; cx.fillRect(0, 0, 256, 256);
+  for (let i = 0; i < 120; i++) {
+    cx.fillStyle = `rgba(${120 + Math.random() * 40},${60 + Math.random() * 30},${20},${0.15 + Math.random() * 0.25})`;
+    cx.beginPath(); cx.ellipse(Math.random() * 256, Math.random() * 256, 4 + Math.random() * 18, 2 + Math.random() * 8, Math.random() * 3, 0, 7); cx.fill();
+  }
+  for (let i = 0; i < 60; i++) {
+    cx.strokeStyle = 'rgba(245,205,140,0.5)'; cx.lineWidth = 1.5;
+    cx.beginPath(); const x0 = Math.random() * 256, y0 = Math.random() * 256; cx.arc(x0, y0, 6 + Math.random() * 14, 0, 2); cx.stroke();
+  }
+  const crustTex = new THREE.CanvasTexture(cc);
+  crustTex.colorSpace = THREE.SRGBColorSpace;
+  crustTex.wrapS = crustTex.wrapT = THREE.RepeatWrapping;
+  crustTex.repeat.set(3, 2);
+  const crust = std({ map: crustTex, roughness: 0.5 });
+  // half-moon: a squashed sphere stretched long, with a flat bottom
+  const geo = new THREE.SphereGeometry(0.06, 128, 80);
+  const p = geo.attributes.position;
+  for (let i = 0; i < p.count; i++) {
+    let x = p.getX(i), y = p.getY(i), z = p.getZ(i);
+    x *= 1.55; y = Math.max(y, -0.012) * 0.75; z *= 0.95;
+    // layered, flaky bumps on the surface
+    const r0 = Math.hypot(x / 1.55, z / 0.95);
+    const k = 1 + 0.05 * Math.abs(Math.sin(r0 * 260)) + 0.03 * Math.sin(x * 210 + z * 90) * Math.sin(z * 230);  // flaky rings + crackle
+    p.setXYZ(i, x * k, y * k, z * k);
+  }
+  geo.computeVertexNormals();
+  // cut the front end open: drop the triangles past x = 0.07
+  const idx = [];
+  const ia = geo.index.array;
+  for (let t = 0; t < ia.length; t += 3) {
+    const xs = [ia[t], ia[t + 1], ia[t + 2]].map((v) => p.getX(v));
+    if (Math.max(...xs) < 0.072) idx.push(ia[t], ia[t + 1], ia[t + 2]);
+  }
+  geo.setIndex(idx);
   const bun = new THREE.Mesh(geo, crust);
-  bun.position.y = 0.035;
+  bun.position.y = 0.01;
   bun.castShadow = true;
   g.add(bun);
-  // sesame seeds
-  const seed = new THREE.Mesh(new THREE.SphereGeometry(0.0025, 6, 4), std({ color: '#f4e7c8' }));
-  for (let i = 0; i < 18; i++) {
-    const a = Math.random() * Math.PI * 2, rr = Math.random() * 0.055;
-    const s2 = seed.clone();
-    s2.position.set(Math.cos(a) * rr * 1.25, 0.035 + 0.036 * Math.sqrt(1 - (rr / 0.06) ** 2), Math.sin(a) * rr);
+  // the bitten face: photo of the filling, set into the open end
+  const face = new THREE.Mesh(new THREE.CircleGeometry(0.045, 24), std({ map: tex('food_porkbun_filling'), roughness: 0.6 }));
+  face.scale.set(1, 0.75, 1);
+  face.rotation.y = Math.PI / 2;
+  face.position.set(0.071, 0.028, 0);
+  g.add(face);
+  // a ring of pale inner dough around the bite
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.044, 0.006, 6, 24), std({ color: '#f1d5a6', roughness: 0.8 }));
+  ring.scale.set(1, 0.75, 1);
+  ring.rotation.y = Math.PI / 2;
+  ring.position.copy(face.position);
+  g.add(ring);
+  // sesame seeds across the top
+  const seed = new THREE.SphereGeometry(0.0026, 6, 4);
+  seed.scale(1.6, 0.6, 1);
+  const seedMat = std({ color: '#e8d2a2', roughness: 0.6 });
+  for (let i = 0; i < 40; i++) {
+    const a = Math.random() * Math.PI * 2, rr = Math.sqrt(Math.random()) * 0.85;
+    const x = Math.cos(a) * rr * 0.06 * 1.55, z = Math.sin(a) * rr * 0.06 * 0.95;
+    if (x > 0.06) continue;
+    const s2 = new THREE.Mesh(seed, seedMat);
+    s2.position.set(x, 0.01 + 0.06 * 0.75 * Math.sqrt(Math.max(0, 1 - rr * rr)) * 1.04 + 0.002, z);
+    s2.rotation.y = Math.random() * 3;
     g.add(s2);
   }
-  const bite = new THREE.Mesh(new THREE.CircleGeometry(0.035, 24), std({ map: tex('food_porkbun_bite'), roughness: 0.6 }));
-  bite.position.set(0, 0.034, 0.061);
-  g.add(bite);
-  // paper wrapper underneath
-  const wrap = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 0.18), std({ color: '#f3f1ea', roughness: 0.9, side: THREE.DoubleSide }));
+  // crinkled paper underneath
+  const pg = new THREE.PlaneGeometry(0.22, 0.2, 10, 10);
+  const pp = pg.attributes.position;
+  for (let i = 0; i < pp.count; i++) pp.setZ(i, Math.random() * 0.006);
+  pg.computeVertexNormals();
+  const wrap = new THREE.Mesh(pg, std({ color: '#f3f1ea', roughness: 0.9, side: THREE.DoubleSide }));
   wrap.rotation.x = -Math.PI / 2;
   wrap.position.y = 0.002;
   g.add(wrap);

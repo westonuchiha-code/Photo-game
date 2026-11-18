@@ -28,8 +28,8 @@ Rules (from you):
 
 ## In review
 - Food set 1 (from item 16): mushroom pizza on a board, corn pizza in a takeout tray, ramen on a
-  tray with cup + chopsticks, spaghetti on an oval plate on a tray, curry rice, corn dog in a paper
-  boat with dip, bitten pork bun. On the restaurant tables. Screenshots: `screenshots/food1-6.png`.
+  tray with cup + chopsticks, spaghetti on an oval plate on a tray, curry rice. On the restaurant
+  tables. (Corn dog + pork bun dropped at your request.) Screenshots: `screenshots/food1-6.png`.
   Still to do from item 16: katsu curry, steamed bun, melon bread, cheese snack, cans, dashi bottles,
   noodle-shop menu board (later pass).
 
