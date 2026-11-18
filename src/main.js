@@ -22,6 +22,7 @@ import { makeAbandonedBuilding, makeStreetLamp, makeFireHydrant, makePlasticBott
 import { plane } from './world/util.js';
 import { makeTireShop, TIRE_SHOP } from './models/tireshop.js';
 import { makeRustyPole } from './models/street.js';
+import { makeStreetBuilding } from './models/buildings.js';
 import { WalkControls } from './walk.js';
 
 // ------------------------------------------------------------------ renderer
@@ -387,13 +388,30 @@ for (const [x, z] of [[10.4, -7.2], [10.4, 7.6]]) {
   circle(x, z, 0.22);
 }
 
+// ------------------------------------------------------------------ street row (wall-texture photos)
+// Facing the lot from the south, one building per wall texture.
+add(plane(mats.sidewalk, X1 + 0.2, 48, 9, 12, 0.003, 1.5));
+const streetRow = [];
+const ROW_Z = 12;
+let rx = 10;
+for (const [wall, w, floors] of [['red_brick', 7, 2], ['olive_stucco', 5.6, 1], ['red_sandstone', 7.6, 3], ['teal_stucco', 5.6, 2], ['gray_tile', 4.6, 1], ['gray_brick', 6, 2]]) {
+  const d = 10;
+  const b = makeStreetBuilding({ wall, w, d, floors, seed: streetRow.length + 3 });
+  b.position.set(rx + w / 2, 0, ROW_Z + d / 2);
+  b.rotation.y = Math.PI;
+  add(b);
+  streetRow.push(b);
+  rect(rx, rx + w, ROW_Z, ROW_Z + d);
+  rx += w + 0.25;
+}
+
 // ------------------------------------------------------------------ controls
 const walk = new WalkControls(camera, renderer.domElement, {
   bounds: null,
   areas: [
     { minX: X0 + 0.3, maxX: X1 - 0.3, minZ: Z0 + 0.3, maxZ: Z1 - 0.3 }, // restaurant
     { minX: X1 - 0.5, maxX: X1 + 0.6, minZ: DOOR_Z - 0.9, maxZ: DOOR_Z + 0.9 }, // doorway
-    { minX: X1 + 0.3, maxX: 46, minZ: -40, maxZ: 9 }, // outside
+    { minX: X1 + 0.3, maxX: 46, minZ: -40, maxZ: 11.7 }, // outside
   ],
   colliders,
 });
@@ -418,6 +436,7 @@ const VIEWS = {
   signs: { pos: [9.4, 1.8, 1.4], target: [13.2, 2.6, -0.8] },
   tireshop: { pos: [36, 2.6, -2], target: [24, 2.2, -14] },
   pole: { pos: [12.2, 1.6, -5.6], target: [10.4, 1.8, -7.2] },
+  streetrow: { pos: [24, 3.2, -1], target: [26, 3.5, 12] },
   abandoned: { pos: [13.0, 2.0, 2.0], target: [19.5, 1.4, 0.2] },
 };
 let mode = 'walk';
@@ -478,6 +497,7 @@ const ASSETS = {
   rental_pole_sign: () => twoRivers,
   tire_shop: () => tireShop,
   rusty_pole: () => rustyPoles[0],
+  ...Object.fromEntries(streetRow.map((b) => [b.name, () => b])),
   abandoned_storefront: () => abandoned,
   street_lamp: () => lamp,
   fire_hydrant: () => hydrant,

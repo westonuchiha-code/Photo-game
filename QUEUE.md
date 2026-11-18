@@ -7,13 +7,14 @@ Rules (from you):
   sign's shape and material. Keep text that's already generic (LIQUOR).
 
 ## Approved
+- Rusty pole
 - Tire shop
 - Rental pole sign (Maple Creek Properties)
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- Rusty pole: light-blue steel pole with paint flaking to rust, two on the sidewalk.
-  Screenshots: `screenshots/rusty-pole-*.png`.
+- Wall textures + blinds: street row of six buildings across from the restaurant, one per wall photo.
+  Screenshots: `screenshots/walls-*.png`.
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
@@ -23,7 +24,6 @@ Rules (from you):
    Screenshot: `screenshots/burger-poster.png`.
 
 ## Up next (in order)
-4. Wall textures on buildings (wall-* photos), window blinds.
 5. Rocks, grass tufts, leaf litter on curbs.
 6. More ground / sidewalk: pavers, crosswalk, curbs, cracks, utility box, dirt lot.
 7. Sky, clouds and moon.
@@ -36,6 +36,7 @@ Rules (from you):
     curved stair walls, mailboxes, hallway, stairs, landing, unit doors.
 13. Alien textures (5).
 14. Tree with a door carved and painted into the trunk (tree-door, tree-door-closeup).
+15. Pot of chili/curry/soup textures (soup-pot, soup-lentil-closeup, soup-smooth).
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"

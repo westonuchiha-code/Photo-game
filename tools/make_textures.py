@@ -484,12 +484,43 @@ def wall_tex(name, out, box_frac, size, contrast=1.1, radius=120, normal=3.0):
     return crop
 
 
-wall_tex("wall-red-sandstone", "wall_red_sandstone", (0.0, 0.0, 1.0, 0.72), (512, 640))
+_ss = wall_tex("wall-red-sandstone", "wall_red_sandstone", (0.0, 0.0, 1.0, 0.72), (512, 640))
+_g = lum(_ss)[..., None]
+save("wall_red_sandstone.png", _g + (_ss - _g) * 1.6)  # restore the reddish tone
 wall_tex("wall-gray-tile", "wall_gray_tile", (0.0, 0.0, 1.0, 0.6), (512, 600))
 wall_tex("wall-gray-brick", "wall_gray_brick", (0.0, 0.0, 1.0, 0.9), (512, 920))
 wall_tex("wall-olive-stucco", "wall_olive_stucco", (0.0, 0.0, 1.0, 0.56), (512, 512), contrast=1.3)
 wall_tex("wall-teal-stucco", "wall_teal_stucco", (0.3, 0.05, 0.62, 0.42), (512, 512), contrast=1.2)
-wall_tex("wall-red-brick", "wall_red_brick", (0.03, 0.16, 0.5, 0.8), (640, 512), contrast=1.1)
+# Red brick (also the apartment stair wall): the photo is at a steep angle, so
+# straighten the near part, split brick face from mortar by colour, and lay a
+# clean running bond: each brick gets its own patch of real face + tint.
+_rb = np.asarray(load("wall-red-brick")[0].transform((1600, 640), Image.QUAD, [140, 380, 300, 1800, 2800, 1240, 2800, 620], Image.BICUBIC)).astype(np.float32)[:, :900]
+_rb = delight(_rb, 120)
+_face = (_rb[..., 0] - _rb[..., 2]) > 18
+face_src = quilt(np.where(_face[..., None], _rb, np.median(_rb[_face], 0)), (1024, 1024), patch=72, contrast=1.15)
+mortar_c = np.median(_rb[~_face], 0)
+BW, CH, J = 240, 80, 14          # brick pitch, course pitch, joint (px); 4 x 8 bricks per tile
+out = np.zeros((CH * 8, BW * 4, 3), np.float32)
+mortar = quilt(np.where((~_face)[..., None], _rb, mortar_c), (CH * 8, BW * 4), patch=48, contrast=1.0)
+out[:] = mortar
+hgt = np.zeros(out.shape[:2], np.float32)
+for r in range(8):
+    off = (BW // 2) * (r % 2)
+    for c in range(-1, 5):
+        x0 = c * BW + off + J // 2
+        y0 = r * CH + J // 2
+        bw, bh = BW - J, CH - J
+        sy, sx = rng.integers(0, 1024 - bh), rng.integers(0, 1024 - bw)
+        brick = face_src[sy:sy + bh, sx:sx + bw] * rng.uniform(0.85, 1.12) * np.array([1.0, rng.uniform(0.93, 1.03), rng.uniform(0.92, 1.05)])
+        e = np.minimum(np.minimum(np.arange(bw)[None], bw - 1 - np.arange(bw)[None]), np.minimum(np.arange(bh)[:, None], bh - 1 - np.arange(bh)[:, None]))
+        brick *= (0.82 + 0.18 * np.clip(e / 5, 0, 1))[..., None]  # rounded arrises
+        xs = (np.arange(x0, x0 + bw)) % out.shape[1]
+        out[np.ix_(np.arange(y0, y0 + bh), xs)] = brick
+        hgt[np.ix_(np.arange(y0, y0 + bh), xs)] = np.clip(e / 4, 0, 1)
+_g = lum(out)[..., None]
+out = np.where(hgt[..., None] > 0, _g + (out - _g) * 1.7 + np.array([10, -2, -8], np.float32), out)  # brick faces: back to red-brown
+save("wall_red_brick.png", out)
+save("wall_red_brick_normal.png", normal_from_height(blur(hgt + lum(out) / 255 * 0.15, 1.0), 4.0))
 # Rusty pole, built in layers. Colours and grain come from the close-up photo:
 # the cleanest all-paint and all-rust windows are found automatically and quilted.
 # Flake shapes are a wrapping, domain-warped noise mask (crisp, jagged edges,
@@ -548,7 +579,8 @@ height = (1 - m) * 0.6 + rim * 0.4 + lum(out) / 255 * 0.1
 save("rusty_paint_normal.png", normal_from_height(blur(height, 1.0), 5.0))
 save("rusty_paint_rough.png", np.repeat((0.45 + 0.5 * blur(m * 255, 1) / 255)[..., None] * 255, 3, -1))
 print("rust coverage", round(float(m.mean()), 2))
-wall_tex("window-blinds", "blinds", (0.0, 0.3, 1.0, 0.95), (512, 512), contrast=1.0, radius=200, normal=4.0)
+_bl = wall_tex("window-blinds", "blinds", (0.0, 0.3, 1.0, 0.95), (512, 512), contrast=1.0, radius=200, normal=4.0)
+save("blinds.png", lum(_bl)[..., None] / max(lum(_bl).mean(), 1) * np.array([214, 210, 200], np.float32))  # off-white, streetlight cast removed
 
 # ---------------------------------------------------------------- rocks, grass, leaves, ground photos
 wall_tex("river-rock", "river_rock", (0.03, 0.03, 0.97, 0.6), (512, 512), contrast=1.15, radius=150, normal=6.0)
