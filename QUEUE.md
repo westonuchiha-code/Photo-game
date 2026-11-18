@@ -7,6 +7,7 @@ Rules (from you):
   sign's shape and material. Keep text that's already generic (LIQUOR).
 
 ## Approved
+- Roadside shrines
 - Warehouse stockroom (grocery back room)
 - Grocery store (you'll send more photos later to update it)
 - Police vehicles
@@ -35,7 +36,7 @@ Rules (from you):
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- Roadside shrines: wooded grove east of the grocery lot. Statue shrine (red plank-roof shelter, concrete platform + steps, rounded pickets, stone figures with the flowered bib from the photo, two stone lanterns, cups, relief tablet on a pedestal) and standing-stone shrine (red gabled roof, pointed pickets, granite stone, bell + striped streamer, flowers, made-up signboard + carved PEACE marker).
+- Car tire + alloy wheel (src/models/wheel.js, reusable for vehicles): made-up ROADMARK / TRAILGRIP HP tire with tread grooves, sipes, raised triangle fields + lettering; black wheel with 5 hexagonal windows rimmed in machined silver, lug nuts, made-up cap badge, rotor + caliper. Display outside the tire shop office with a wall light.
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text

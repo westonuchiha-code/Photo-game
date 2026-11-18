@@ -37,6 +37,7 @@ import { makeNewsBox, makeParkingSignBlock, makeParkingRamp, makeTealStorefront,
 import { makeSpruce, makeCherry, makePaleTree, makeOak, makeTreePit, makeMulchBed, makeDoorTree } from './models/trees.js';
 import { makeRockBed, makeGrassTufts, makeCurbWithLeaves, makeLooseLeaves, makeBikeRack } from './models/ground.js';
 import { makeStatueShrine, makeStoneShrine } from './models/shrines.js';
+import { makeTireWheel } from './models/wheel.js';
 import { WalkControls } from './walk.js';
 
 // ------------------------------------------------------------------ renderer
@@ -654,6 +655,44 @@ interactables.push({ name: 'scooter seat', kind: 'door', setOpen: scooter.userDa
   rect(TS.x + 5.8, TS.x + 7.2, TS.z - 3.3, TS.z - 2.7);
 }
 
+// ------------------------------------------------------------------ tire + alloy wheel display (car-tire-wheel photo)
+// Outside the tire shop office: two wheels leaning on the front wall, one lying flat with a bare tire on it.
+{
+  const zf = TS.z + 3.75;
+  const shadowTex = (() => {
+    const c = document.createElement('canvas'); c.width = c.height = 64;
+    const x = c.getContext('2d'); const gr = x.createRadialGradient(32, 32, 2, 32, 32, 32);
+    gr.addColorStop(0, 'rgba(0,0,0,0.75)'); gr.addColorStop(0.5, 'rgba(0,0,0,0.35)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+    x.fillStyle = gr; x.fillRect(0, 0, 64, 64);
+    return new THREE.CanvasTexture(c);
+  })();
+  const contact = (x, z, sx, sz) => {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(sx, sz), new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, depthWrite: false }));
+    m.rotation.x = -Math.PI / 2; m.position.set(x, 0.008, z); add(m);
+  };
+  contact(TS.x + 2.55, zf + 0.22, 0.75, 0.45); contact(TS.x + 4.45, zf + 0.22, 0.75, 0.45); contact(TS.x - 0.6, zf + 0.75, 1.0, 1.0);
+  for (const [dx, ry] of [[2.55, 0.06], [4.45, -0.05]]) {
+    const w = makeTireWheel();
+    w.position.set(TS.x + dx, 0.364, zf + 0.15);
+    w.rotation.set(-0.16, ry, dx * 0.7);
+    add(w);
+    rect(TS.x + dx - 0.4, TS.x + dx + 0.4, zf, zf + 0.35);
+  }
+  const flat = makeTireWheel();
+  flat.rotation.x = -Math.PI / 2; flat.position.set(TS.x - 0.6, 0.118, zf + 0.75); add(flat);
+  const bare = makeTireWheel({ withWheel: false });
+  bare.rotation.x = -Math.PI / 2; bare.rotation.z = 0.5; bare.position.set(TS.x - 0.58, 0.118 + 0.236, zf + 0.74); add(bare);
+  circle(TS.x - 0.6, zf + 0.75, 0.4);
+  // gooseneck wall light over the display
+  const arm = new THREE.Mesh(new THREE.TorusGeometry(0.25, 0.02, 6, 16, Math.PI / 2), new THREE.MeshStandardMaterial({ color: '#2c2e30', roughness: 0.5 }));
+  arm.rotation.y = Math.PI / 2; arm.position.set(TS.x + 2.2, 2.85, zf + 0.02); add(arm);
+  const shade = new THREE.Mesh(new THREE.ConeGeometry(0.17, 0.14, 16, 1, true), new THREE.MeshStandardMaterial({ color: '#2c2e30', roughness: 0.5, side: THREE.DoubleSide }));
+  shade.position.set(TS.x + 2.2, 2.82, zf + 0.29); add(shade);
+  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.05, 10, 8), new THREE.MeshBasicMaterial({ color: new THREE.Color(2.2, 2.0, 1.6), toneMapped: false }));
+  bulb.position.set(TS.x + 2.2, 2.76, zf + 0.29); add(bulb);
+  const wl = new THREE.PointLight('#ffe7c4', 7, 7, 1.3); wl.position.set(TS.x + 2.2, 2.6, zf + 0.5); add(wl);
+}
+
 // ------------------------------------------------------------------ the creepy hoodie figure (character photos)
 // Slowly paces the street-row sidewalk, turning at each end.
 const creep = makeCreep();
@@ -809,6 +848,8 @@ const VIEWS = {
   shrines: { pos: [57.0, 2.2, -27.6], target: [57.0, 1.0, -37.0] },
   shrineA: { pos: [53.4, 1.4, -32.6], target: [53.6, 0.8, -37.4] },
   shrineB: { pos: [60.6, 1.4, -32.4], target: [60.1, 1.0, -37.4] },
+  tirewheel: { pos: [29.6, 0.75, -11.75], target: [28.6, 0.4, -13.1] },
+  tiredisplay: { pos: [27.6, 1.6, -10.4], target: [27.6, 0.4, -13.2] },
   walkinshelf: { pos: [17.6, 1.6, -44.0], target: [21.4, 1.0, -45.6] },
   van: { pos: [25.5, 1.9, -22.4], target: [21.5, 0.9, -26.5] },
   vanside: { pos: [24.6, 1.3, -29.2], target: [21.5, 0.7, -26.3] },
