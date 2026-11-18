@@ -129,6 +129,9 @@ Rules (from you):
     lantern + white lanterns, string bulbs criss-crossing overhead, ornate lamp posts, tangled
     power lines, beer crates and stools by the doors, roll shutters, pink stucco wall. All sign
     text made up (generic bar/grill/karaoke names, 555 phone numbers).
+39. Peeling sticker (grime/peeling-sticker-blue-crate): torn neon-pink "DISCONTINUED" label
+    with white paper backing showing, on a glossy blue plastic crate. Make a reusable torn-sticker
+    decal (generic text is fine: DISCONTINUED / CLEARANCE / SALE) + blue crate plastic.
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"
