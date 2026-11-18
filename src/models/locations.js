@@ -171,16 +171,19 @@ export function makeTealStorefront({ w = 8, d = 10, h = 4.4, number = '714' } = 
   const g = new THREE.Group();
   g.name = 'teal_storefront';
   const zf = d / 2;
-  const teal = std({ map: tex('wall_teal_stucco.png'), normalMap: tex('wall_teal_stucco_normal.png', false), roughness: 0.9 });
+  // brighter stucco than the street row: this shop sits alone in a dark lot
+  const tealWall = std({ map: tex('wall_teal_stucco.png'), normalMap: tex('wall_teal_stucco_normal.png', false), color: '#c6fff6', emissive: '#16302c', roughness: 0.9 });
+  const wallPlane2 = (w2, h2) => wallPlane('teal_stucco', w2, h2, tealWall);
+  const teal = std({ map: tex('wall_teal_stucco.png'), normalMap: tex('wall_teal_stucco_normal.png', false), color: '#9fe0d8', roughness: 0.9 });
   const white = std({ color: '#f2f1ec', roughness: 0.5 });
   // side/back walls
-  const back = wallPlane('teal_stucco', w, h); back.position.set(0, h / 2, -zf); back.rotation.y = Math.PI; g.add(back);
-  for (const s of [-1, 1]) { const p = wallPlane('teal_stucco', d, h); p.position.set(s * w / 2, h / 2, 0); p.rotation.y = s * Math.PI / 2; g.add(p); }
+  const back = wallPlane2(w, h); back.position.set(0, h / 2, -zf); back.rotation.y = Math.PI; g.add(back);
+  for (const s of [-1, 1]) { const p = wallPlane2(d, h); p.position.set(s * w / 2, h / 2, 0); p.rotation.y = s * Math.PI / 2; g.add(p); }
   // front face built around a recess (x 0.6..3.0, 1.2 deep) and a window (x -3.2..-0.4)
   const R = { a: 0.6, b: 3.0, depth: 1.2, top: 3.0 };
   const W = { a: -3.2, b: -0.4, y0: 0.7, y1: 2.6 };
   const part = (x0, x1, y0, y1) => {
-    const p = wallPlane('teal_stucco', x1 - x0, y1 - y0);
+    const p = wallPlane2(x1 - x0, y1 - y0);
     p.position.set((x0 + x1) / 2, (y0 + y1) / 2, zf);
     g.add(p);
   };
@@ -188,7 +191,7 @@ export function makeTealStorefront({ w = 8, d = 10, h = 4.4, number = '714' } = 
   part(W.b, R.a, 0, h); part(R.a, R.b, R.top, h); part(R.b, w / 2, 0, h);
   // recess: side walls, ceiling with downlight, back wall with french doors
   for (const x of [R.a, R.b]) {
-    const p = wallPlane('teal_stucco', R.depth, R.top);
+    const p = wallPlane2(R.depth, R.top);
     p.position.set(x, R.top / 2, zf - R.depth / 2);
     p.rotation.y = x === R.a ? Math.PI / 2 : -Math.PI / 2;
     g.add(p);

@@ -7,6 +7,7 @@ Rules (from you):
   sign's shape and material. Keep text that's already generic (LIQUOR).
 
 ## Approved
+- Phone colour fix + lighting
 - Trees
 - Walk signal poles
 - Moon behind clouds
@@ -20,8 +21,9 @@ Rules (from you):
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- Trees: lit spruce + cherry in red mulch bed, pale-bark and oak street trees in leaf pits.
-  Screenshots: `screenshots/trees-*.png`.
+- Objects & locations: underground parking ramp + lit tunnel + roll-up door + clearance sign,
+  no-trespassing sign block, teal storefront (714), red news box, white rabbit sculpture.
+  Screenshots: `screenshots/loc-*.png`.
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
@@ -31,8 +33,6 @@ Rules (from you):
    Screenshot: `screenshots/burger-poster.png`.
 
 ## Up next (in order)
-10. Objects and locations: news box (made-up magazine name), parking sign block,
-    parking garage ramp and tunnel, garage door, teal storefront "908", rabbit sculpture.
 11. Graffiti painting and painted wall as wall art.
 12. Apartment building inside and out (made-up name instead of "Airlie"): brick front with
     curved stair walls, mailboxes, hallway, stairs, landing, unit doors.
@@ -144,6 +144,39 @@ Rules (from you):
     Possible "trail / hillside park" area: textures (leaf litter, red clay, moss, cobbles,
     pebbles, cedar bark) + models (ferns, cedars, cobble steps, rope fence, statues, shrines,
     junk pile). Sign text made generic.
+41. Pawn/sport shop counter (photos/shop/): long lit glass display case with handguns on
+    tagged price cards, worn bolt-action rifle with leather sling lying on top; stack of
+    weathered cardboard ammo boxes with printed label panels next to blue boxes. Generic
+    made-up labels; checker-tile floor. Props only (no gameplay weapons unless you ask).
+42. Gig posters (photos/posters/): pinned behind glass on a blue venue wall: cartoon punk
+    festival poster (hot pink, teal lettering), metal poster (skull + flames), masked anime
+    tour poster. Redraw as original posters with made-up band/venue names, dates, prices.
+43. Snacks (food/snack-pile..., shelf-clearance-tag): crinkly chip bags, curry roux box, wafer
+    bars, chocolate pouch, soda can, on a chevron woven blanket; store shelf edge with blue
+    label strip, yellow clearance tag (unit price / was / now / barcode), snack box above,
+    hanging snack bags below; tall slim coconut-jelly drink can with spoon art, red fruit-candy
+    pouch with cartoon fruit band (food/coconut-drink-can-candy). Made-up brands on everything.
+44. Short yellow school bus (vehicles/short-school-bus-rear1..3): rounded rear with three
+    windows, black rub rails, round red tail lights, mud flaps, side mirror; front and far
+    side made up to match. Window writing + banners replaced with made-up generic text (no
+    real names or campaign). Also from these photos: daytime blue sky with puffy clouds, multi-
+    lane asphalt with dashed lines, concrete curbs, median with autumn-orange trees and wood
+    mulch, river-rock and ornamental grass beds, tall dark-green street lights, traffic signals,
+    roadside pole signs (made-up brands), sidewalk + lawn strip.
+45. Street graffiti (photos/grime/): galvanized steel utility box with a large peeling
+    cartoon-mouse sticker (half yellow, half torn to white), torn round stickers, small square
+    and word stickers, flex conduit + pipes; a mildew-speckled plastic notice sign with a
+    marker-drawn cartoon character over it. Make original sticker/doodle decals (no copied
+    characters or text) + galvanized metal + mildew-speckle textures.
+46. Burl walnut veneer (photos/grime/burl-veneer1..9): swirling dark-line burl figure with
+    eyes, ripples and blotches; great for luxury panels, furniture, the "strange" interiors, or
+    a trippy/alien variant. Make seamless burl texture + normal map.
+47. Decor / shelf clutter (photos/decor/): yellow vintage vertical pinball (pachinko-style)
+    machine with chrome frame, pins, ball tray; galaxy-airbrushed PC tower with glass window,
+    red fan glow, liquid-cooler tubes; rows of retro game cartridges and boxed game cases on
+    wood shelves; black bookcase with retro consoles, handhelds and small figurines/plush.
+    All game titles, logos, console brands and characters replaced with original made-up
+    ones (no real IP).
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"

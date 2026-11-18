@@ -923,7 +923,13 @@ print("wrote spruce_spray.png")
 # Largest bright region of the rabbit photo only (drops street-light specks),
 # eye hole kept, painted white with the photo's soft shading.
 from collections import deque as _dq
-_r = np.asarray(Image.open(os.path.join(OUT, "rabbit.png"))).astype(np.float32)
+# the earlier crop clipped the ears, so cut from the full photo again
+_RB_im, _RB = load("rabbit-sculpture")
+_h, _w = _RB.shape[:2]
+_crop = _RB[int(0.08 * _h):int(0.66 * _h), int(0.25 * _w):int(0.66 * _w)]
+_a = np.clip((blur(lum(_crop), 1.5) - 95) / 25, 0, 1)  # ear tips are greyer than the body
+_r = np.concatenate([_crop, _a[..., None] * 255], -1)
+
 _m = _r[..., 3] > 128
 _lab = np.zeros(_m.shape, bool)
 _sy, _sx = np.unravel_index(np.argmax(blur(_m.astype(np.float32) * 255, 30)), _m.shape)
@@ -934,6 +940,12 @@ while _q:
         ny, nx = y + dy, x + dx
         if 0 <= ny < _m.shape[0] and 0 <= nx < _m.shape[1] and _m[ny, nx] and not _lab[ny, nx]:
             _lab[ny, nx] = True; _q.append((ny, nx))
+# trim lit ground at the feet: below 60% height keep only the body's column span
+_ys, _xs = np.where(_lab)
+_y60 = int(_ys.min() + 0.6 * (_ys.max() - _ys.min()))
+_row = np.where(_lab[_y60])[0]
+_lab[_y60:, :max(0, _row.min() - 15)] = False
+_lab[_y60:, _row.max() + 15:] = False
 ys, xs = np.where(_lab)
 _lab = _lab[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
 shade = lum(_r[ys.min():ys.max() + 1, xs.min():xs.max() + 1, :3])

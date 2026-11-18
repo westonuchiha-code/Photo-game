@@ -38,12 +38,12 @@ function wallMat(kind) {
 }
 
 // A wall plane w x h whose UVs give the texture its real size.
-export function wallPlane(kind, w, h) {
+export function wallPlane(kind, w, h, mat = null) {
   const g = new THREE.PlaneGeometry(w, h);
   const [sw, sh] = WALLS[kind].size;
   const uv = g.attributes.uv;
   for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * w / sw, uv.getY(i) * h / sh);
-  const m = new THREE.Mesh(g, wallMat(kind));
+  const m = new THREE.Mesh(g, mat || wallMat(kind));
   m.receiveShadow = true;
   return m;
 }

@@ -25,6 +25,7 @@ import { makeRustyPole, makeWalkSignalPole } from './models/street.js';
 import { makeStreetBuilding } from './models/buildings.js';
 import { makePaverSidewalk, makeDrainCover, makePaverCrosswalk, makeTactilePlate, makeCracks, makeUtilityLid, makeTrafficIsland, makeDirtLot } from './models/streetground.js';
 import { makeSky } from './models/sky.js';
+import { makeNewsBox, makeParkingSignBlock, makeParkingRamp, makeTealStorefront, makeRabbitSculpture } from './models/locations.js';
 import { makeSpruce, makeCherry, makePaleTree, makeOak, makeTreePit, makeMulchBed } from './models/trees.js';
 import { makeRockBed, makeGrassTufts, makeCurbWithLeaves, makeLooseLeaves, makeBikeRack } from './models/ground.js';
 import { WalkControls } from './walk.js';
@@ -131,9 +132,18 @@ add(plaque);
 
 // ------------------------------------------------------------------ outside (night)
 const outside = new THREE.Group();
-const pavement = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.MeshStandardMaterial({ color: '#2a2c30', roughness: 0.9 }));
+// Ground plane in 4 pieces around the parking-ramp opening (x 13..17, z -23..-9).
+const pavementMat = new THREE.MeshStandardMaterial({ color: '#2a2c30', roughness: 0.9 });
+const pavement = new THREE.Group();
+for (const [a, b, c, d] of [[-80, 13, -120, 80], [17, 120, -120, 80], [13, 17, -120, -23], [13, 17, -9, 80]]) {
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(b - a, d - c), pavementMat);
+  m.rotation.x = -Math.PI / 2;
+  m.position.set((a + b) / 2, 0, (c + d) / 2);
+  m.receiveShadow = true;
+  pavement.add(m);
+}
 pavement.rotation.x = -Math.PI / 2;
-pavement.position.set(20, -0.01, -20);
+pavement.position.set(0, -0.01, 0);
 outside.add(pavement);
 // Night sky with the photographed clouds and the half moon (sky + moon photos).
 const sky = makeSky();
@@ -366,7 +376,9 @@ circle(hydrant.position.x, hydrant.position.z, 0.25);
 // ------------------------------------------------------------------ tire shop (two tire-shop photos)
 // Faces south (+z) onto a big cracked concrete lot, north-east of the restaurant.
 const TS = { x: 26, z: -17 };
-add(plane(mats.lotConcrete, 12, 42, -32, -8, 0.003, 4));
+add(plane(mats.lotConcrete, 12, 13, -32, -8, 0.003, 4));
+add(plane(mats.lotConcrete, 17, 42, -32, -8, 0.003, 4));
+add(plane(mats.lotConcrete, 13, 17, -32, -23, 0.003, 4));
 const tireShop = makeTireShop();
 tireShop.position.set(TS.x, 0, TS.z);
 add(tireShop);
@@ -491,16 +503,45 @@ const streetTrees = [];
   circle(x, 10.4, 0.35);
 });
 
+// ------------------------------------------------------------------ objects & locations (objects/locations photos)
+// Underground parking ramp down from the tire-shop lot, with a lit tunnel and roll-up door.
+const ramp = makeParkingRamp({ x0: 13, x1: 17, z0: -9, z1: -17, zDoor: -23, depth: 2.8 });
+add(ramp);
+rect(12.75, 13.0, -23.2, -9);   // side walls / parapets (you enter from the open end)
+rect(17.0, 17.25, -23.2, -9);
+rect(13, 17, -23.4, -23.0);    // garage door
+const parkSign = makeParkingSignBlock();
+parkSign.position.set(18.2, 0, -8.4);
+add(parkSign);
+circle(18.2, -8.4, 0.5);
+// Teal storefront at the east end of the lot.
+const tealShop = makeTealStorefront({ number: '714' });
+tealShop.position.set(45, 0, -21);
+add(tealShop);
+rect(41, 49, -26, -16);
+// Red news box by the restaurant door; rabbit sculpture on the paver sidewalk.
+const newsBox = makeNewsBox();
+newsBox.position.set(8.55, 0, -3.1);
+newsBox.rotation.y = Math.PI / 2;
+add(newsBox);
+circle(8.55, -3.1, 0.3);
+const rabbit = makeRabbitSculpture();
+rabbit.position.set(16.0, 0, 10.3);
+rabbit.rotation.y = Math.PI + 0.4;
+add(rabbit);
+rect(15.5, 16.5, 9.8, 10.8);
+
 // ------------------------------------------------------------------ controls
 const walk = new WalkControls(camera, renderer.domElement, {
   bounds: null,
   areas: [
     { minX: X0 + 0.3, maxX: X1 - 0.3, minZ: Z0 + 0.3, maxZ: Z1 - 0.3 }, // restaurant
     { minX: X1 - 0.5, maxX: X1 + 0.6, minZ: DOOR_Z - 0.9, maxZ: DOOR_Z + 0.9 }, // doorway
-    { minX: X1 + 0.3, maxX: 46, minZ: -40, maxZ: 11.7 }, // outside
+    { minX: X1 + 0.3, maxX: 50, minZ: -40, maxZ: 11.7 }, // outside
   ],
   colliders,
 });
+walk.ground = (x, z) => ramp.userData.floorY(x, z);
 walk.position.set(6.6, 0, 0.2);
 walk.yaw = 1.25;
 walk.pitch = -0.1;
@@ -535,6 +576,10 @@ const VIEWS = {
   spruce: { pos: [33.5, 2.2, -5.5], target: [39, 4, -12] },
   streettrees: { pos: [23.5, 1.9, 4.6], target: [19, 2.6, 10.4] },
   trunks: { pos: [37.3, 0.9, -8.4], target: [39.6, 0.9, -11.3] },
+  ramp: { pos: [15, 2.6, -4.5], target: [15, -1.5, -17] },
+  tealshop: { pos: [44, 1.8, -10.5], target: [45, 1.8, -16] },
+  rabbit: { pos: [17.4, 1.5, 7.6], target: [16, 1.6, 10.3] },
+  newsbox: { pos: [10.2, 1.3, -1.6], target: [8.55, 0.5, -3.1] },
   abandoned: { pos: [13.0, 2.0, 2.0], target: [19.5, 1.4, 0.2] },
 };
 let mode = 'walk';

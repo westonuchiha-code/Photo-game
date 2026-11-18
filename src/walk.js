@@ -144,7 +144,8 @@ export class WalkControls {
   }
 
   apply() {
-    this.camera.position.set(this.position.x, EYE, this.position.z);
+    const gy = this.ground ? this.ground(this.position.x, this.position.z) : 0;  // ramps, steps
+    this.camera.position.set(this.position.x, EYE + gy, this.position.z);
     this.camera.rotation.set(this.pitch, this.yaw, 0, 'YXZ');
   }
 }
