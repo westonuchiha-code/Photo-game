@@ -215,6 +215,10 @@ Rules (from you):
     black handle loop, red stop button, blue light strip, cute cartoon eyes on the front, green
     and yellow beginner-driver chevron sticker; made-up brand. Could roam an arcade / store floor
     on a path. Also: arcade carpet in red and checkered grey.
+55. Striding creature (character/striding-moss-creature): egg-shaped body covered in crusty
+    moss/bark with a single big round tube-mouth opening at the front, four long thin wiry
+    bent metal legs, one curly antenna with a white tip; stands on a mossy mound. Animated
+    stilt-walk, clay/moss texture.
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"

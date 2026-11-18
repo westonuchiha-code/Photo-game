@@ -1041,6 +1041,25 @@ food_crop("pork-bun-bitten", (1090, 1180, 1880, 1830), "food_porkbun_filling", (
 # cup noodles top (food/cup-noodles): no brand in frame, use the photo directly
 food_disc("cup-noodles", (128, 25, 618, 515), "food_cupnoodle_top", size=384)
 
+# ---------------------------------------------------------------- sculpted clay surface (creepy figurine)
+# Multi-scale lumps + small thumb-press dents + fine scratches, wrapping; used
+# as a normal map so every part of the figure reads as hand-sculpted clay.
+H_ = 512
+yy, xx = np.mgrid[0:H_, 0:H_]
+clay = np.zeros((H_, H_), np.float32)
+for sigma, amp in ((24, 1.0), (9, 0.6), (3, 0.35), (1.2, 0.2)):
+    n = rng.random((H_, H_)).astype(np.float32)
+    n = np.tile(n, (3, 3))
+    n = blur(n * 255, sigma)[H_:2 * H_, H_:2 * H_] / 255
+    clay += (n - n.mean()) / max(n.std(), 1e-6) * amp
+for _ in range(260):   # thumb / tool presses
+    cy, cx = rng.integers(0, H_, 2)
+    r = rng.uniform(6, 18)
+    d = np.hypot(((yy - cy + H_ // 2) % H_) - H_ // 2, ((xx - cx + H_ // 2) % H_) - H_ // 2)
+    clay -= np.exp(-(d / r) ** 2) * rng.uniform(0.4, 1.0)
+save("clay_normal.png", normal_from_height(clay / 10.0, 6.0))
+save("clay_rough.png", np.repeat(np.clip(0.75 + clay[..., None] * 0.04, 0, 1) * 255, 3, -1))
+
 with open(os.path.join(OUT, "palette.json"), "w") as f:
     json.dump(palette, f, indent=2)
 print("wrote palette.json")
