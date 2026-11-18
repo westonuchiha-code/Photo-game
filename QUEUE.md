@@ -7,6 +7,7 @@ Rules (from you):
   sign's shape and material. Keep text that's already generic (LIQUOR).
 
 ## Approved
+- 27c Boarded blue house + cats (cats can stay generic: one cat model + a kitten)
 - 27b Delivery props
 - 27a House fronts
 - Living room (Elmwood unit)
@@ -40,7 +41,7 @@ Rules (from you):
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- 27c Boarded blue house + cats: west side of the house lane. Boarded half (peeling navy base, cracked white panel with a broken hole and a peeking kitten, OSB over the window) and blue lap siding over blue stucco with an open basement window. Kibble pile, tortie lying down, tabby kitten sitting (cats rebuilt as sculpted models after your notes). Textures from the two photos.
+- 27d Dirt construction site north of the house lane: yellow articulated dump truck (made-up TERRAMAX HX40) with big lugged tyres, rusty pipe barrier with braces, blue site sign (generic text), dry weeds, dirt berms, tyre ruts, floodlight, two rock cairns + loose stones. Dirt texture from the cairn photo.
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text

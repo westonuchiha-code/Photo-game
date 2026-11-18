@@ -40,6 +40,7 @@ import { makeStatueShrine, makeStoneShrine } from './models/shrines.js';
 import { makeTireWheel } from './models/wheel.js';
 import { makeHouse } from './models/houses.js';
 import { makeBlueHouse } from './models/bluehouse.js';
+import { makeDumpTruck, makePipeBarrier, makeSiteSign, makeCairn, makeWeeds } from './models/dumpsite.js';
 import { makeDeliveryBag, makeCupCarrier, makePaperBag } from './models/delivery.js';
 import { WalkControls } from './walk.js';
 
@@ -830,6 +831,45 @@ const blueHouse = makeBlueHouse();
   }
 }
 
+// ------------------------------------------------------------------ dirt construction site (dump-truck + cairn photos)
+// North of the house lane, behind a rusty pipe barrier with a gap to walk through.
+{
+  const dt = new THREE.TextureLoader().load('assets/textures/ds_dirt.png');
+  dt.colorSpace = THREE.SRGBColorSpace; dt.wrapS = dt.wrapT = THREE.RepeatWrapping;
+  const dirtMat = new THREE.MeshStandardMaterial({ map: dt, roughness: 1 });
+  add(plane(dirtMat, 33, 63, -64, -47.7, 0.006, 2.5));
+  // tyre ruts
+  const rut = new THREE.MeshStandardMaterial({ color: '#4a3a2c', roughness: 1, transparent: true, opacity: 0.45, depthWrite: false });
+  for (const z of [-55.6, -58.4]) { const m = new THREE.Mesh(new THREE.PlaneGeometry(26, 0.7), rut); m.rotation.x = -Math.PI / 2; m.rotation.z = 0.12; m.position.set(48, 0.009, z); add(m); }
+  // dirt berms
+  for (const [x, z, sx, sy, sz] of [[37.5, -60.5, 3.2, 1.3, 2.4], [58.5, -61.0, 3.8, 1.7, 2.2], [55.0, -50.8, 1.6, 0.6, 1.1]]) {
+    const m = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), dirtMat);
+    m.scale.set(sx, sy, sz); m.position.set(x, 0, z); m.receiveShadow = true; add(m);
+    rect(x - sx * 0.8, x + sx * 0.8, z - sz * 0.8, z + sz * 0.8);
+  }
+  const truck = makeDumpTruck(); truck.position.set(47.5, 0, -57.2); truck.rotation.y = 0.25; add(truck);
+  { const [x0, x1, z0, z1] = truck.userData.collider, c = Math.cos(0.25), s = Math.sin(0.25);
+    const pts = [[x0, z0], [x1, z0], [x0, z1], [x1, z1]].map(([x, z]) => [47.5 + x * c + z * s, -57.2 - x * s + z * c]);
+    rect(Math.min(...pts.map((p) => p[0])), Math.max(...pts.map((p) => p[0])), Math.min(...pts.map((p) => p[1])), Math.max(...pts.map((p) => p[1]))); }
+  for (const [x0, x1] of [[34.5, 44.5], [49.0, 61.5]]) {
+    const b = makePipeBarrier(x1 - x0); b.position.set((x0 + x1) / 2, 0, -48.6); add(b);
+    rect(x0, x1, -48.75, -48.45);
+    const w = makeWeeds(Math.round((x1 - x0) * 1.2), x1 - x0, 0.9, Math.round(x0)); w.position.set((x0 + x1) / 2, 0, -48.3); add(w);
+  }
+  const sign = makeSiteSign(); sign.position.set(50.2, 0, -48.9); sign.rotation.y = -0.15; add(sign); rect(49.5, 50.9, -49.05, -48.75);
+  for (const [x, z, sd] of [[41.0, -52.2, 4], [41.42, -52.3, 9]]) { const c = makeCairn(sd); c.position.set(x, 0, z); add(c); }
+  // a few loose stones round the cairns
+  const stoneMat = new THREE.MeshStandardMaterial({ color: '#b9a090', roughness: 1, flatShading: true });
+  { let s = 21; const r = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+    for (let i = 0; i < 26; i++) { const m = new THREE.Mesh(new THREE.DodecahedronGeometry(0.012 + r() * 0.025, 0), stoneMat); m.position.set(39.8 + r() * 3.0, 0.01, -53.4 + r() * 2.4); m.scale.y = 0.55; m.rotation.set(r() * 3, r() * 3, 0); add(m); } }
+  // site floodlight
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 6, 10), new THREE.MeshStandardMaterial({ color: '#77797c', metalness: 0.5, roughness: 0.5 }));
+  pole.position.set(39.0, 3, -57.5); add(pole); circle(39.0, -57.5, 0.2);
+  const head = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.3, 0.2), new THREE.MeshBasicMaterial({ color: new THREE.Color(2.2, 2.1, 1.8), toneMapped: false }));
+  head.position.set(39.25, 5.9, -57.4); head.rotation.x = 0.5; add(head);
+  const fl = new THREE.PointLight('#fff2d8', 22, 22, 1.2); fl.position.set(40.0, 5.5, -57.0); add(fl);
+}
+
 // delivery props elsewhere: drinks + bag outside an Elmwood unit door, a delivery tote by the scooter
 {
   const c = makeCupCarrier(); c.position.set(-0.6, 1.4, -2.8); apt.add(c);
@@ -844,6 +884,7 @@ const walk = new WalkControls(camera, renderer.domElement, {
     { minX: X1 - 0.5, maxX: X1 + 0.6, minZ: DOOR_Z - 0.9, maxZ: DOOR_Z + 0.9 }, // doorway
     { minX: X1 + 0.3, maxX: 66, minZ: -47.5, maxZ: 11.7 }, // outside (incl. the grocery)
     { minX: GS.x + 0.3, maxX: GS.x + 8.7, minZ: GS.z - 13.7, maxZ: GS.z - 5.5 }, // grocery stockroom
+    { minX: 34.0, maxX: 62.5, minZ: -63.5, maxZ: -47.0 }, // dirt site
   ],
   colliders,
 });
@@ -924,6 +965,9 @@ const VIEWS = {
   bluehouse: { pos: [44.0, 2.0, -33.0], target: [38.4, 1.4, -34.8] },
   cats: { pos: [40.1, 0.55, -35.05], target: [39.2, 0.18, -35.4] },
   kitten: { pos: [39.7, 1.0, -32.3], target: [38.4, 0.8, -32.6] },
+  dumpsite: { pos: [44.5, 2.6, -48.2], target: [48.0, 1.6, -57.0] },
+  dumptruck: { pos: [54.6, 2.4, -53.0], target: [48.0, 1.8, -57.0] },
+  cairns: { pos: [41.9, 0.55, -51.5], target: [41.2, 0.1, -52.3] },
   walkinshelf: { pos: [17.6, 1.6, -44.0], target: [21.4, 1.0, -45.6] },
   van: { pos: [25.5, 1.9, -22.4], target: [21.5, 0.9, -26.5] },
   vanside: { pos: [24.6, 1.3, -29.2], target: [21.5, 0.7, -26.3] },

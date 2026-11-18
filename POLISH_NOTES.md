@@ -53,3 +53,12 @@ This is a running list, added to as models get built. Nothing here is urgent.
 - The OSB and stucco textures have tree shadows baked in from the photo.
 - The roof is plain; it could sag and have missing shingles. Sides and back are blank siding.
 - The basement window sash is a flat frame; the photo shows glass and a broken pane.
+
+## Dirt site (27d)
+- Light cross-shaped patches show through the dirt near the cairns and the truck. Probably ground
+  planes overlapping (house lane / walkways). Find and fix in the overlap pass.
+- Truck: built from boxes, so the cab and hood are blocky. Could use rounded edges, a proper sloped
+  hood, mud splatter, a raised dump bed variant, and a working beacon flash.
+- Cairn stones are lumpy; the photo shows flatter slabs.
+- The berms are plain half-spheres; they need a lumpier shape and tyre tracks running up them.
+- The pipe barrier gap lines up with the house lane but there's no path to it.
