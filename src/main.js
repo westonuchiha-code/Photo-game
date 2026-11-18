@@ -26,6 +26,7 @@ import { makeStreetBuilding } from './models/buildings.js';
 import { makePaverSidewalk, makeDrainCover, makePaverCrosswalk, makeTactilePlate, makeCracks, makeUtilityLid, makeTrafficIsland, makeDirtLot } from './models/streetground.js';
 import { makeSky } from './models/sky.js';
 import { makeOldVan } from './models/van.js';
+import { makeScooter, makeBattery } from './models/scooter.js';
 import { makePizza, makeRamenTray, makeSpaghettiTray, makeCurryPlate } from './models/food.js';
 import { makeAlienFormation } from './models/alien.js';
 import { makeApartment } from './models/apartment.js';
@@ -611,6 +612,36 @@ alien.scale.setScalar(0.85);
 add(alien);
 for (const [x, z, cr] of alien.userData.colliders) circle(44.5 + x * 0.85, -3 + z * 0.85, cr * 0.85);
 
+// ------------------------------------------------------------------ scooter + batteries (scooter photos)
+// Parked on the sidewalk by the apartment building; press E to lift the seat.
+const scooter = makeScooter();
+scooter.position.set(50.4, 0, 5.3);
+scooter.rotation.y = Math.PI * 0.85;
+add(scooter);
+circle(50.4, 5.3, 0.55);
+interactables.push({ name: 'scooter seat', kind: 'door', setOpen: scooter.userData.setOpen, x: 50.4, z: 5.3, t: 0, target: 0, col: { active: false }, speed: 1.8 });
+// Red-topped workbench in the tire-shop office with the old and new batteries.
+{
+  const bench = new THREE.Group();
+  const top = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.05, 0.6), new THREE.MeshStandardMaterial({ color: '#c7322b', roughness: 0.6 }));
+  top.position.y = 0.9;
+  bench.add(top);
+  const steel = new THREE.MeshStandardMaterial({ color: '#8e9296', roughness: 0.5, metalness: 0.3 });
+  for (const [x, z] of [[-0.65, -0.25], [0.65, -0.25], [-0.65, 0.25], [0.65, 0.25]]) {
+    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.88, 0.04), steel);
+    leg.position.set(x, 0.44, z);
+    bench.add(leg);
+  }
+  const shelf = new THREE.Mesh(new THREE.BoxGeometry(1.36, 0.02, 0.56), steel);
+  shelf.position.y = 0.2;
+  bench.add(shelf);
+  const b1 = makeBattery('old'); b1.position.set(-0.12, 0.925, 0); bench.add(b1);
+  const b2 = makeBattery('new'); b2.position.set(0.06, 0.925, 0.02); b2.rotation.y = -0.1; bench.add(b2);
+  bench.position.set(TS.x + 6.5, 0, TS.z - 3.0);
+  add(bench);
+  rect(TS.x + 5.8, TS.x + 7.2, TS.z - 3.3, TS.z - 2.7);
+}
+
 // ------------------------------------------------------------------ controls
 const walk = new WalkControls(camera, renderer.domElement, {
   bounds: null,
@@ -669,6 +700,9 @@ const VIEWS = {
   stoop: { pos: [47.6, 2.4, 3.4], target: [50.5, 1.0, -1] },
   alien: { pos: [40.4, 2.4, 1.6], target: [44.5, 1.4, -3] },
   doortree: { pos: [10.4, 1.3, 5.7], target: [12.8, 0.9, 5.2] },
+  scooter: { pos: [48.9, 1.0, 4.0], target: [50.4, 0.55, 5.3] },
+  scooterseat: { pos: [50.75, 1.75, 6.15], target: [50.45, 0.7, 5.5] },
+  batteries: { pos: [32.5, 1.12, -19.6], target: [32.5, 0.96, -20.0] },
   van: { pos: [25.5, 1.9, -22.4], target: [21.5, 0.9, -26.5] },
   vanside: { pos: [24.6, 1.3, -29.2], target: [21.5, 0.7, -26.3] },
   soup: { pos: [-2.85, 1.62, -4.0], target: [-3.1, 1.2, -4.7] },
