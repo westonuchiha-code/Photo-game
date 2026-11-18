@@ -103,6 +103,8 @@ Rules (from you):
 32. Ketchup squeeze bottle (food/ketchup-front, -back, -side): red PET bottle with neck band,
     white flip cap with dried ketchup, front label with tomatoes, back nutrition label. Model +
     made-up store brand and label text (no real brand or barcode).
+33. Green circuit board (traces, pads, labels, star screws) and braided elastic cords in black,
+    purple, blue, green, yellow, white (photos/grime/). Labels on the board made generic.
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"
