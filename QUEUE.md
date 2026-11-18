@@ -7,6 +7,8 @@ Rules (from you):
   sign's shape and material. Keep text that's already generic (LIQUOR).
 
 ## Approved
+- Walk signal poles
+- Moon behind clouds
 - Sky, clouds, moon
 - Ground & sidewalks
 - Rocks, grass tufts, leaf litter, bike rack
@@ -17,8 +19,8 @@ Rules (from you):
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- Walk signal poles: push-button sign, chrome button, signal head cycling walk / flashing hand /
-  hand, at both crosswalk ends. Screenshots: `screenshots/walk-signal-*.png`.
+- Trees: lit spruce + cherry in red mulch bed, pale-bark and oak street trees in leaf pits.
+  Screenshots: `screenshots/trees-*.png`.
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
@@ -28,7 +30,6 @@ Rules (from you):
    Screenshot: `screenshots/burger-poster.png`.
 
 ## Up next (in order)
-9. Trees: spruce with knots and roots, cherry, pale flaky bark, oak, mulch beds.
 10. Objects and locations: news box (made-up magazine name), parking sign block,
     parking garage ramp and tunnel, garage door, teal storefront "908", rabbit sculpture.
 11. Graffiti painting and painted wall as wall art.
@@ -110,6 +111,18 @@ Rules (from you):
 35. Claw hammer (photos/tools/): worn steel head with curved claw and paint-chipped striking
     face, wooden handle with grime, dark grip spots and a peeling red label. Model + made-up
     brand on the label (weight stamp can stay generic, e.g. "16 OZ").
+36. Vehicles (photos/vehicles/): white kei mini-truck loaded with bundled paper + roof rack;
+    futuristic silver river cruise boats with glass domes (x4 views); red + gold long-distance
+    coach (front + rear); dusty olive army scout truck with brush guard; white kei work van with
+    orange stripe; red + silver commuter train car; orange vintage scooter next to a rusted-out
+    scooter frame; silver kei hatchback with racing stripes. All names, liveries, logos, plates
+    and route signs made up.
+37. Retro electronics (photos/electronics/): portable TV/radio/cassette unit with dials,
+    sliders and round screen; expansion sound card PCB with DIP chips and switches; retro
+    handheld consoles (black, red, white/orange, gold) with glowing screens and cartridges in
+    glass shop cases; cartridge reader board in acrylic; nixie-tube CPU meter; steam locomotive
+    cab: brass valves, copper pipes, pressure gauges, firebox door (x2 views). Brand names,
+    game titles and screen art made up.
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"

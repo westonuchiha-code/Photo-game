@@ -887,6 +887,38 @@ sky = np.clip(0.5 + flat * 0.24, 0, 1) * 255
 sky = np.asarray(to_img(np.repeat(sky[..., None], 3, -1)).resize((1024, 1180), Image.LANCZOS)).astype(np.float32)
 save("sky_clouds_pano.png", sky)
 
+# ---------------------------------------------------------------- spruce needle spray (RGBA card)
+# A drooping spruce branchlet drawn as a cut-out: a twig with side shoots, each
+# densely covered in short needles. Colours sampled from the dark spruce in the
+# tree photo (deep blue-green; the photo's purple lights are left out).
+from PIL import ImageDraw as _ID
+W_, H_ = 512, 256
+spr = Image.new("RGBA", (W_, H_), (0, 0, 0, 0))
+dd = _ID.Draw(spr)
+needle_cols = [(28, 52, 40), (36, 64, 48), (44, 74, 56), (24, 44, 36), (52, 84, 62)]
+
+
+def shoot(x0, y0, x1, y1, n):
+    dd.line([(x0, y0), (x1, y1)], fill=(70, 52, 38, 255), width=3)
+    for k in range(n):
+        t = k / n
+        x, y = x0 + (x1 - x0) * t, y0 + (y1 - y0) * t
+        for side in (-1, 1):
+            ang = np.arctan2(y1 - y0, x1 - x0) + side * rng.uniform(0.7, 1.2)
+            L = rng.uniform(9, 15) * (1 - 0.4 * t)
+            c = needle_cols[rng.integers(0, len(needle_cols))]
+            dd.line([(x, y), (x + np.cos(ang) * L, y + np.sin(ang) * L)], fill=c + (255,), width=2)
+
+
+shoot(10, 128, 500, 150, 120)                     # main twig (droops a little)
+for t in np.linspace(0.12, 0.85, 7):
+    bx, by = 10 + 490 * t, 128 + 22 * t
+    for side in (-1, 1):
+        L = 150 * (1 - t) + 40
+        shoot(bx, by, bx + L * 0.75, by + side * L * 0.45 + 20, int(L / 4))
+spr.save(os.path.join(OUT, "spruce_spray.png"))
+print("wrote spruce_spray.png")
+
 with open(os.path.join(OUT, "palette.json"), "w") as f:
     json.dump(palette, f, indent=2)
 print("wrote palette.json")

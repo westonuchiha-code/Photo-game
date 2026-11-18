@@ -25,6 +25,7 @@ import { makeRustyPole, makeWalkSignalPole } from './models/street.js';
 import { makeStreetBuilding } from './models/buildings.js';
 import { makePaverSidewalk, makeDrainCover, makePaverCrosswalk, makeTactilePlate, makeCracks, makeUtilityLid, makeTrafficIsland, makeDirtLot } from './models/streetground.js';
 import { makeSky } from './models/sky.js';
+import { makeSpruce, makeCherry, makePaleTree, makeOak, makeTreePit, makeMulchBed } from './models/trees.js';
 import { makeRockBed, makeGrassTufts, makeCurbWithLeaves, makeLooseLeaves, makeBikeRack } from './models/ground.js';
 import { WalkControls } from './walk.js';
 
@@ -463,6 +464,33 @@ rack.position.set(22.5, 0, 10.3);
 add(rack);
 rect(22.4, 25.6, 10.0, 10.6);
 
+// ------------------------------------------------------------------ trees (bark / tree photos)
+// Spruce with holiday lights + cherry in a red mulch bed east of the tire shop.
+const bed = makeMulchBed(3.4);
+bed.position.set(38.8, 0.012, -12.2);
+add(bed);
+const spruce = makeSpruce({ seed: 4, height: 10 });
+spruce.position.set(38.6, 0, -12.6);
+add(spruce);
+circle(38.6, -12.6, 0.6);
+const cherry = makeCherry({ seed: 11 });
+cherry.position.set(41.2, 0, -9.8);
+add(cherry);
+circle(41.2, -9.8, 0.35);
+// Street trees in leaf-filled pits along the paver sidewalk: pale bark and oak alternating.
+const streetTrees = [];
+[[12.2, makePaleTree, 5], [19.0, makeOak, 7], [27.6, makePaleTree, 9], [35.0, makeOak, 13], [42.0, makePaleTree, 17]].forEach(([x, make, seed]) => {
+  const pit = makeTreePit(1.3, 1.3);
+  pit.position.set(x, 0, 10.4);
+  add(pit);
+  const t = make({ seed });
+  t.position.set(x, 0, 10.4);
+  t.rotation.y = seed;
+  add(t);
+  streetTrees.push(t);
+  circle(x, 10.4, 0.35);
+});
+
 // ------------------------------------------------------------------ controls
 const walk = new WalkControls(camera, renderer.domElement, {
   bounds: null,
@@ -504,6 +532,9 @@ const VIEWS = {
   dirtlot: { pos: [39.0, 2.4, -6.5], target: [44.5, 0.4, -1] },
   sky: { pos: [20, 1.7, 2], target: [14.5, 6.6, -5.5] },
   walksignal: { pos: [33.6, 1.6, 7.2], target: [32.7, 1.9, 9.9] },
+  spruce: { pos: [33.5, 2.2, -5.5], target: [39, 4, -12] },
+  streettrees: { pos: [23.5, 1.9, 4.6], target: [19, 2.6, 10.4] },
+  trunks: { pos: [37.3, 0.9, -8.4], target: [39.6, 0.9, -11.3] },
   abandoned: { pos: [13.0, 2.0, 2.0], target: [19.5, 1.4, 0.2] },
 };
 let mode = 'walk';
