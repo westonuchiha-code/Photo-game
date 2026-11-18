@@ -11,15 +11,15 @@ function box(w, h, d, mat, x, y, z) {
 }
 
 // Aluminium storefront window: frame + glass, optional transom bar.
-export function makeWindowBay(mats, { w = 2, h = 2.6, sill = 0, transom = null } = {}) {
+export function makeWindowBay(mats, { w = 2, h = 2.6, sill = 0, transom = null, frame = mats.doorFrame } = {}) {
   const g = new THREE.Group();
   g.name = 'window_bay';
   const t = 0.06, d = 0.1;
-  g.add(box(w, t, d, mats.doorFrame, 0, sill + t / 2, 0));
-  g.add(box(w, t, d, mats.doorFrame, 0, sill + h - t / 2, 0));
-  g.add(box(t, h, d, mats.doorFrame, -w / 2 + t / 2, sill + h / 2, 0));
-  g.add(box(t, h, d, mats.doorFrame, w / 2 - t / 2, sill + h / 2, 0));
-  if (transom) g.add(box(w, t, d, mats.doorFrame, 0, sill + transom, 0));
+  g.add(box(w, t, d, frame, 0, sill + t / 2, 0));
+  g.add(box(w, t, d, frame, 0, sill + h - t / 2, 0));
+  g.add(box(t, h, d, frame, -w / 2 + t / 2, sill + h / 2, 0));
+  g.add(box(t, h, d, frame, w / 2 - t / 2, sill + h / 2, 0));
+  if (transom) g.add(box(w, t, d, frame, 0, sill + transom, 0));
   const glass = new THREE.Mesh(new THREE.PlaneGeometry(w - 2 * t, h - 2 * t), mats.window);
   glass.position.set(0, sill + h / 2, 0);
   glass.renderOrder = 2;

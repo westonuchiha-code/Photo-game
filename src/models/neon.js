@@ -1,41 +1,37 @@
 // Neon "OPEN" sign hanging inside an infinity-mirror LED light box, from the
-// window photo. The word runs top-to-bottom (rotated 90°) on a clear acrylic
+// window photo. Upright letters stacked top to bottom on a clear acrylic
 // panel framed by a white and a pale-cyan neon border.
-// Local axes: +y up, the light box faces +z (into the room); the sign inside
-// it faces the street. Units: metres.
+// Local axes: +y up, the light box and sign face +z (into the room), so OPEN
+// reads correctly from inside. Units: metres.
 import * as THREE from 'three';
 import { roundedPath } from './stool.js';
 
 const glow = (r, g, b) => new THREE.MeshBasicMaterial({ color: new THREE.Color(r, g, b), toneMapped: false });
 
-// Stroke paths for O P E N in a 1-unit-high em box (x right, y up).
+// Stroke paths for O P E N, each in a unit box (x right, y up). Upright
+// letters stacked top to bottom, as in the photo.
 function letterPaths(ch) {
-  const arc = (cx, cy, r, a0, a1, n = 16) =>
+  const arc = (cx, cy, r, a0, a1, n = 18) =>
     Array.from({ length: n + 1 }, (_, i) => {
       const a = a0 + ((a1 - a0) * i) / n;
       return [cx + Math.cos(a) * r, cy + Math.sin(a) * r];
     });
   switch (ch) {
-    case 'O': {
-      const pts = Array.from({ length: 49 }, (_, i) => {
-        const a = (i / 48) * Math.PI * 2;
-        return [0.34 + Math.cos(a) * 0.32, 0.5 + Math.sin(a) * 0.5];
-      });
-      return [{ pts, smooth: true }];
-    }
-    case 'P':
-      return [{ pts: [[0, 0], [0, 1], [0.32, 1], ...arc(0.32, 0.75, 0.25, Math.PI / 2, -Math.PI / 2).slice(1), [0, 0.5]], smooth: false }];
-    case 'E':
-      return [{ pts: [[0.55, 1], [0, 1], [0, 0], [0.55, 0]] }, { pts: [[0, 0.5], [0.45, 0.5]] }];
+    case 'O': // a wide oval
+      return [{ pts: arc(0.5, 0.5, 0.5, 0, Math.PI * 2, 48).map(([x, y]) => [x, 0.5 + (y - 0.5)]), closed: true }];
+    case 'P': // full-height stem on the left, bowl over the top half
+      return [{ pts: [[0, 0], [0, 1], [0.72, 1], ...arc(0.72, 0.76, 0.24, Math.PI / 2, -Math.PI / 2).slice(1, -1), [0.72, 0.52], [0, 0.52]] }];
+    case 'E': // stem on the left, three full-width bars
+      return [{ pts: [[1, 1], [0, 1], [0, 0], [1, 0]] }, { pts: [[0, 0.5], [0.96, 0.5]] }];
     case 'N':
-      return [{ pts: [[0, 0], [0, 1], [0.6, 0], [0.6, 1]] }];
+      return [{ pts: [[0, 0], [0, 1], [1, 0], [1, 1]] }];
     default:
       return [];
   }
 }
 
-function neonTube(pts2d, mat, { scale, radius = 0.007, corner = 0.02, closed = false, smooth = false, z = 0 }) {
-  const pts = pts2d.map(([x, y]) => new THREE.Vector3(x * scale, y * scale, z));
+function neonTube(pts2d, mat, { scale, sy = scale, radius = 0.007, corner = 0.02, closed = false, smooth = false, z = 0 }) {
+  const pts = pts2d.map(([x, y]) => new THREE.Vector3(x * scale, y * sy, z));
   const path = smooth || closed
     ? new THREE.CatmullRomCurve3(pts, closed)
     : roundedPath(pts.map((p) => p.toArray()), corner);
@@ -72,22 +68,27 @@ export function makeNeonSign() {
   g.add(neonTube(roundedRectPts(W - 0.04, H - 0.04, 0.03), white, { scale: 1, closed: true, z: 0.012 }));
   g.add(neonTube(roundedRectPts(W - 0.09, H - 0.09, 0.025), cyan, { scale: 1, closed: true, z: 0.02, radius: 0.005 }));
 
-  // Letters: "OPEN" laid out horizontally, then turned to read top-to-bottom.
-  const word = new THREE.Group();
-  const s = 0.19; // letter height
-  let x = 0;
+  // Letters: upright, stacked top to bottom, sizes measured off the photo
+  // (letter width ~39% of the panel; O is a short wide oval, N the tallest).
+  const LW = 0.155, gap = 0.024;
+  const heights = { O: 0.12, P: 0.14, E: 0.135, N: 0.15 };
+  const total = Object.values(heights).reduce((a, b) => a + b, 0) + gap * 3;
+  const amberGhost = new THREE.MeshBasicMaterial({ color: new THREE.Color(1.0, 0.25, 0.0), toneMapped: false, transparent: true, opacity: 0.35, depthWrite: false });
+  let y = total / 2;
   for (const ch of 'OPEN') {
-    const lg = new THREE.Group();
-    for (const p of letterPaths(ch)) lg.add(neonTube(p.pts, amber, { scale: s, smooth: p.smooth, closed: ch === 'O', corner: 0.012, radius: 0.0095 }));
-    lg.position.x = x;
-    word.add(lg);
-    x += (ch === 'O' ? 0.82 : 0.8) * s;
+    const h = heights[ch];
+    y -= h;
+    for (const [mat, dz, dy] of [[amber, 0.022, 0], [amberGhost, -0.03, -0.03]]) {
+      // the faint copy behind is the reflection seen behind the letters in the photo
+      const lg = new THREE.Group();
+      for (const p of letterPaths(ch)) {
+        lg.add(neonTube(p.pts, mat, { scale: LW, sy: h, closed: !!p.closed, smooth: !!p.closed, corner: 0.014, radius: mat === amber ? 0.0085 : 0.007 }));
+      }
+      lg.position.set(-LW / 2, y + dy, dz);
+      g.add(lg);
+    }
+    y -= gap;
   }
-  word.position.set(-x / 2 + 0.03, -s / 2, 0.028);
-  const turn = new THREE.Group();
-  turn.add(word);
-  turn.rotation.z = -Math.PI / 2;
-  g.add(turn);
 
   // Hanging wires up to the light box ceiling.
   const wireMat = new THREE.MeshBasicMaterial({ color: '#cfcfcf' });
@@ -100,7 +101,7 @@ export function makeNeonSign() {
   }
 
   const light = new THREE.PointLight('#ffa030', 1.4, 3.5, 2);
-  light.position.set(0, 0, -0.6);
+  light.position.set(0, 0, 0.5);
   g.add(light);
   return g;
 }
@@ -163,7 +164,6 @@ export function makeInfinityBox(mats, { w = 0.82, h = 1.5, depth = 0.1, layers =
 
   const sign = makeNeonSign();
   sign.position.set(0, 0.22, -depth * 0.45);
-  sign.rotation.y = Math.PI; // the sign faces the street, so from inside it reads mirrored (as in the photo)
   g.add(sign);
   return g;
 }

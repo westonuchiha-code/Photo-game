@@ -13,7 +13,7 @@ export const palette = {
   post: '#1d1d1f',
   glass_tint: '#9fb8b4',
   wall: '#ece9e2',
-  lime_wall: '#a9b545',
+  lime_wall: '#b3bf55',
   booth_frame: '#b9bdb8',
   door_frame: '#75695b',
 };
@@ -96,5 +96,11 @@ export function makeMaterials() {
     wall: new THREE.MeshStandardMaterial({ color: palette.wall, roughness: 0.9 }),
     limeWall: new THREE.MeshStandardMaterial({ color: palette.lime_wall, roughness: 0.85 }),
     ceiling: new THREE.MeshStandardMaterial({ color: '#f4f3ef', emissive: '#5a5855', roughness: 1 }),
+    // Teal window trim (sampled from the frame beside the tile wall in the bar photo).
+    teal: new THREE.MeshStandardMaterial({ color: '#2f7273', roughness: 0.45, metalness: 0.3 }),
+    black: new THREE.MeshStandardMaterial({ color: '#151516', roughness: 0.45 }),
+    chrome: new THREE.MeshStandardMaterial({ color: '#c8cbcf', roughness: 0.25, metalness: 0.9 }),
+    // Framed poster, straightened from the bar photo.
+    poster: new THREE.MeshStandardMaterial({ map: tex('poster.png'), roughness: 0.35 }),
   };
 }

@@ -363,6 +363,11 @@ tile = np.where((d < 2)[..., None], grout, tile_col * (0.94 + 0.06 * height[...,
 save("subway_tile.png", tile)
 save("subway_tile_normal.png", normal_from_height(height + (d < 2) * -0.2, 3.0))
 
+# Framed poster on the tile wall (bar photo): straighten it in two passes.
+_poster = photo.transform((300, 600), Image.QUAD, [1927, 474, 1921, 825, 2075, 838, 2091, 509], Image.BICUBIC)
+_poster.transform((256, 640), Image.QUAD, [72, 22, 36, 578, 252, 580, 284, 22], Image.BICUBIC).save(os.path.join(OUT, "poster.png"))
+print("wrote poster.png")
+
 with open(os.path.join(OUT, "palette.json"), "w") as f:
     json.dump(palette, f, indent=2)
 print("wrote palette.json")
