@@ -61,3 +61,15 @@ This is a running list, added to as models get built. Nothing here is urgent.
   hood, mud splatter, a raised dump bed variant, and a working beacon flash.
 - The berms are plain half-spheres; they need a lumpier shape and tyre tracks running up them.
 - The pipe barrier gap lines up with the house lane but there's no path to it.
+
+## Misc small props (27e)
+- Pickup zone: the gantry sign faces only one way, and the pillar numbers show on several faces.
+  It sits close to the blue house; could move it or give it its own lane.
+- The plywood stamp runs sideways because the photo was landscape; that's fine for a stamp.
+- Paste-up wall: the handwriting font falls back to a serif on some machines. Could swap in a
+  drawn handwriting texture.
+- Glass shards could use sparkle under the lot lights.
+
+## Texture tool
+- Fixed: quilted textures had flat holes (blank bricks in the red brick, flat spots in dirt and
+  terrazzo). Those are filled now. The earlier "light cross patches" in the dirt site were this.

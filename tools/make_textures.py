@@ -247,6 +247,17 @@ def quilt(src, size, patch=96, n=None, contrast=1.0):
         yy, xx = (np.arange(patch) + ty) % H, (np.arange(patch) + tx) % W
         canvas[np.ix_(yy, xx)] += src[sy:sy + patch, sx:sx + patch] * win
         weight[np.ix_(yy, xx)] += win
+    # fill any spots the random scatter missed (own rng so the main scatter is unchanged)
+    frng = np.random.default_rng(H * 7919 + W)
+    for _ in range(400):
+        holes = np.argwhere(weight[..., 0] < 0.02)
+        if len(holes) == 0:
+            break
+        cy, cx = holes[frng.integers(0, len(holes))]
+        sy, sx = frng.integers(0, src.shape[0] - patch), frng.integers(0, src.shape[1] - patch)
+        yy, xx = (np.arange(patch) + cy - patch // 2) % H, (np.arange(patch) + cx - patch // 2) % W
+        canvas[np.ix_(yy, xx)] += src[sy:sy + patch, sx:sx + patch] * win
+        weight[np.ix_(yy, xx)] += win
     out = canvas / weight
     return match_stats(out, src.reshape(-1, 3).mean(0), contrast)
 
@@ -1176,6 +1187,20 @@ save("ab_stucco.png", seamless(delight(_mt("cats-blue-house-vent", (345, 200, 50
 save("ab_osb.png", seamless(delight(_mt("kittens-boarded-wall", (0, 0, 800, 200), (1024, 256), 900), 120)))
 Image.fromarray(_mt("kittens-boarded-wall", (300, 215, 810, 650), (768, 656), 900).astype(np.uint8)).save(os.path.join(OUT, "ab_panel.png"))
 Image.fromarray(_mt("kittens-boarded-wall", (0, 632, 900, 795), (1024, 186), 900).astype(np.uint8)).save(os.path.join(OUT, "ab_navybase.png"))
+
+# ---------------------------------------------------------------- misc small textures (27e)
+def _m8(n, b, size, thumb):
+    im = ImageOps.exif_transpose(Image.open(f"photos/misc/{n}.jpg")).convert("RGB")
+    k = im.size[0] / thumb
+    return im.crop(tuple(int(v * k) for v in b)).resize(size, Image.LANCZOS)
+# plywood sheet with its ink stamp (text is already generic)
+save("pw_stamp.png", delight(np.asarray(_m8("plywood-stamp", (120, 40, 680, 420), (1024, 696), 800)).astype(np.float32), 220))
+# chip-seal asphalt, sampled clear of the spider
+cs = delight(np.asarray(_m8("asphalt-spider", (190, 340, 450, 640), (416, 480), 450)).astype(np.float32), 80)
+save("as_chipseal.png", quilt(cs, (512, 512), patch=96, contrast=1.05))
+# teal concrete wall + the skeleton paste-up (artwork only; the handwritten notes are redrawn)
+save("wp_teal.png", seamless(delight(np.asarray(_m8("wheatpaste-street-art", (20, 560, 430, 790), (768, 432), 450)).astype(np.float32), 120)))
+_m8("wheatpaste-street-art", (176, 178, 304, 452), (256, 548), 450).save(os.path.join(OUT, "wp_skeleton.png"))
 
 with open(os.path.join(OUT, "palette.json"), "w") as f:
     json.dump(palette, f, indent=2)

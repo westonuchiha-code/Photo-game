@@ -7,6 +7,7 @@ Rules (from you):
   sign's shape and material. Keep text that's already generic (LIQUOR).
 
 ## Approved
+- 27d Dump truck + dirt site
 - 27c Boarded blue house + cats (cats can stay generic: one cat model + a kitten)
 - 27b Delivery props
 - 27a House fronts
@@ -41,7 +42,7 @@ Rules (from you):
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- 27d Dirt construction site north of the house lane: yellow articulated dump truck (made-up TERRAMAX HX40) with big lugged tyres, rusty pipe barrier with braces, blue site sign (generic text), dry weeds, dirt berms, tyre ruts, floodlight. Uses the existing dirt texture (cairns + rocky ground dropped at your request).
+- 27e Small misc props: night pickup crosswalk in the grocery lot (chip-seal from the photo, zebra bars, yellow hatched bays, cones, red Pickup 1 gantry + numbered pillars, generic text); teal paste-up wall at the dirt site (skeleton print from the photo + redrawn notes with made-up words); plywood sheet with the ink stamp leaning on the blue house; broken car glass by the van.
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text

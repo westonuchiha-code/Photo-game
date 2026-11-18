@@ -40,6 +40,7 @@ import { makeStatueShrine, makeStoneShrine } from './models/shrines.js';
 import { makeTireWheel } from './models/wheel.js';
 import { makeHouse } from './models/houses.js';
 import { makeBlueHouse } from './models/bluehouse.js';
+import { makePlywoodSheet, makeGlassShards, makePasteWall, makePickupZone } from './models/misc27e.js';
 import { makeDumpTruck, makePipeBarrier, makeSiteSign, makeWeeds } from './models/dumpsite.js';
 import { makeDeliveryBag, makeCupCarrier, makePaperBag } from './models/delivery.js';
 import { WalkControls } from './walk.js';
@@ -863,6 +864,25 @@ const blueHouse = makeBlueHouse();
   const fl = new THREE.PointLight('#fff2d8', 22, 22, 1.2); fl.position.set(40.0, 5.5, -57.0); add(fl);
 }
 
+// ------------------------------------------------------------------ small misc props (27e)
+{
+  // night pickup crosswalk in the grocery lot, lane running north-south
+  const pz = makePickupZone(); const gx = 30.0, gz = -27.6, rot = Math.PI / 2;
+  pz.position.set(gx, 0, gz); pz.rotation.y = rot; add(pz);
+  for (const [x0, x1, z0, z1] of pz.userData.colliders) {
+    const pts = [[x0, z0], [x1, z0], [x0, z1], [x1, z1]].map(([x, z]) => [gx + z, gz - x]);
+    rect(Math.min(...pts.map((p) => p[0])), Math.max(...pts.map((p) => p[0])), Math.min(...pts.map((p) => p[1])), Math.max(...pts.map((p) => p[1])));
+  }
+  // teal concrete wall with wheat-paste art on the west edge of the dirt site
+  const pw = makePasteWall(7, 2.6); pw.position.set(34.25, 0, -54.5); pw.rotation.y = Math.PI / 2; add(pw);
+  rect(33.95, 34.3, -58.0, -51.0);
+  // plywood sheet leaning on the side of the boarded blue house
+  const ply = makePlywoodSheet(); ply.position.set(36.6, 0, -31.42); ply.rotation.x = -0.14; add(ply);
+  rect(35.95, 37.25, -31.75, -31.3);
+  // broken car-window glass on the lot beside the old van
+  const gl = makeGlassShards(1.4, 0.9, 420, 7); gl.position.set(23.3, 0, -25.6); add(gl);
+}
+
 // delivery props elsewhere: drinks + bag outside an Elmwood unit door, a delivery tote by the scooter
 {
   const c = makeCupCarrier(); c.position.set(-0.6, 1.4, -2.8); apt.add(c);
@@ -960,6 +980,10 @@ const VIEWS = {
   kitten: { pos: [39.7, 1.0, -32.3], target: [38.4, 0.8, -32.6] },
   dumpsite: { pos: [44.5, 2.6, -48.2], target: [48.0, 1.6, -57.0] },
   dumptruck: { pos: [54.6, 2.4, -53.0], target: [48.0, 1.8, -57.0] },
+  pickup: { pos: [37.0, 2.4, -23.0], target: [30.0, 1.8, -28.4] },
+  pastewall: { pos: [36.4, 1.6, -54.2], target: [34.25, 1.4, -54.4] },
+  plywood: { pos: [37.4, 1.7, -28.9], target: [36.6, 1.25, -31.5] },
+  glass: { pos: [23.6, 1.1, -24.4], target: [23.3, 0.0, -25.6] },
   walkinshelf: { pos: [17.6, 1.6, -44.0], target: [21.4, 1.0, -45.6] },
   van: { pos: [25.5, 1.9, -22.4], target: [21.5, 0.9, -26.5] },
   vanside: { pos: [24.6, 1.3, -29.2], target: [21.5, 0.7, -26.3] },
