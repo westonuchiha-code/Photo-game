@@ -455,6 +455,155 @@ save("sidewalk_leaves_normal.png", normal_from_height(blur(lum(leafwalk) / 255.0
 palette["gray_patch"] = hexc(med(AFA, (2840, 760, 3220, 960)))
 palette["teal_steps"] = hexc(med(ATA, (100, 2500, 2000, 3100), lambda p: (p[:, 2] > p[:, 0] + 10) & (p[:, 1] > p[:, 0])) * 1.1)
 
+# ---------------------------------------------------------------- tire shop photos
+TF, TFA = load("tire-shop-front")
+TC, TCA = load("tire-shop-corner")
+rect_(TF, (805, 415, 805, 700, 1320, 655, 1320, 470), (1600, 560), "tire_front.png")
+rect_(TF, (635, 445, 635, 690, 805, 700, 805, 415), (700, 560), "tire_left.png")
+rect_(TC, (1030, 362, 1062, 770, 1475, 742, 1468, 437), (1400, 560), "tire_side.png")
+lot_src = delight(TFA[1500:2200, 1200:3000], 120)
+lot = quilt(lot_src, (512, 512), patch=128, contrast=1.3)
+save("lot_concrete.png", lot)
+save("lot_concrete_normal.png", normal_from_height(blur(lum(lot) / 255.0, 1.0), 2.0))
+
+
+# ---------------------------------------------------------------- wall, pole and blinds photos
+def wall_tex(name, out, box_frac, size, contrast=1.1, radius=120, normal=3.0):
+    _, A = load(name)
+    h, w = A.shape[:2]
+    x0, y0, x1, y1 = box_frac
+    crop = A[int(y0 * h):int(y1 * h), int(x0 * w):int(x1 * w)]
+    crop = delight(crop, radius)
+    crop = np.asarray(to_img(crop).resize(size, Image.BICUBIC)).astype(np.float32)
+    crop = seamless(crop)
+    crop = match_stats(crop, crop.reshape(-1, 3).mean(0), contrast)
+    save(out + ".png", crop)
+    save(out + "_normal.png", normal_from_height(blur(lum(crop) / 255.0, 1.0), normal))
+    return crop
+
+
+wall_tex("wall-red-sandstone", "wall_red_sandstone", (0.0, 0.0, 1.0, 0.72), (512, 640))
+wall_tex("wall-gray-tile", "wall_gray_tile", (0.0, 0.0, 1.0, 0.6), (512, 600))
+wall_tex("wall-gray-brick", "wall_gray_brick", (0.0, 0.0, 1.0, 0.9), (512, 920))
+wall_tex("wall-olive-stucco", "wall_olive_stucco", (0.0, 0.0, 1.0, 0.56), (512, 512), contrast=1.3)
+wall_tex("wall-teal-stucco", "wall_teal_stucco", (0.3, 0.05, 0.62, 0.42), (512, 512), contrast=1.2)
+wall_tex("wall-red-brick", "wall_red_brick", (0.03, 0.16, 0.5, 0.8), (640, 512), contrast=1.1)
+wall_tex("rusty-pole-closeup", "rusty_paint", (0.2, 0.0, 0.9, 1.0), (512, 1024), contrast=1.05, radius=200, normal=5.0)
+wall_tex("window-blinds", "blinds", (0.0, 0.3, 1.0, 0.95), (512, 512), contrast=1.0, radius=200, normal=4.0)
+
+# ---------------------------------------------------------------- rocks, grass, leaves, ground photos
+wall_tex("river-rock", "river_rock", (0.03, 0.03, 0.97, 0.6), (512, 512), contrast=1.15, radius=150, normal=6.0)
+wall_tex("dirt-lot", "dirt_lot", (0.15, 0.3, 0.95, 0.72), (512, 512), contrast=1.2, radius=150, normal=5.0)
+wall_tex("pavers-herringbone-cover", "pavers_herringbone", (0.0, 0.0, 1.0, 0.36), (512, 640), contrast=1.1, radius=150)
+wall_tex("crack2", "concrete_cracked", (0.0, 0.0, 1.0, 1.0), (1024, 576), contrast=1.1, radius=200, normal=4.0)
+rect_(load("rusty-tactile-plate")[0], (362, 585, 425, 1295, 768, 1235, 668, 612), (300, 600), "tactile_plate.png")
+
+# Leaf litter: quilted from the gutter pile, plus a ragged-edged strip version
+# (RGBA) for laying along curbs.
+_, LV = load("leaves-curb")
+h, w = LV.shape[:2]
+leaf_src = delight(LV[int(0.22 * h):int(0.48 * h), int(0.03 * w):int(0.5 * w)], 100)
+litter = quilt(leaf_src, (512, 512), patch=112, contrast=1.15)
+save("leaf_litter.png", litter)
+yy, xx = np.mgrid[0:512, 0:1024]
+edge = 0.5 + 0.18 * np.sin(xx / 1024 * np.pi * 6) + 0.12 * np.sin(xx / 1024 * np.pi * 22 + 1.3)
+dist = np.abs(yy / 512 - 0.5) * 2
+noise = blur(rng.random((512, 1024)).astype(np.float32) * 255, 3) / 255
+alpha = np.clip((edge + (noise - 0.5) * 0.6 - dist) * 6, 0, 1)
+strip = np.concatenate([np.tile(litter, (1, 2, 1)), alpha[..., None] * 255], -1)
+Image.fromarray(np.clip(strip, 0, 255).astype(np.uint8), "RGBA").save(os.path.join(OUT, "leaf_strip.png"))
+print("wrote leaf_strip.png")
+
+# Single oak leaf cut out from the concrete (bright leaf vs dark ground).
+_, OK = load("oak-leaf")
+h, w = OK.shape[:2]
+leaf = OK[int(0.15 * h):int(0.72 * h), int(0.03 * w):int(0.92 * w)]
+L_ = blur(lum(leaf), 2)
+mask = np.clip((L_ - 95) / 25, 0, 1)
+leaf_rgba = np.concatenate([leaf, mask[..., None] * 255], -1)
+Image.fromarray(np.clip(leaf_rgba, 0, 255).astype(np.uint8), "RGBA").resize((256, 296)).save(os.path.join(OUT, "oak_leaf.png"))
+print("wrote oak_leaf.png")
+
+# Dry grass colours (tuft photo) and rock colours (river rock photo).
+_, GT = load("rocks-grass-tuft")
+h, w = GT.shape[:2]
+gpx = GT[int(0.15 * h):int(0.5 * h), int(0.3 * w):int(0.8 * w)].reshape(-1, 3)
+gpx = gpx[(gpx[:, 0] > gpx[:, 2] + 25)]
+palette["grass"] = [hexc(np.percentile(gpx, q, axis=0)) for q in (20, 50, 80, 95)]
+_, RR = load("river-rock")
+rpx = RR[::8, ::8].reshape(-1, 3)
+palette["rocks"] = [hexc(c) for c in rpx[rng.choice(len(rpx), 12)]]
+
+# ---------------------------------------------------------------- sky, moon, walk signals
+_, SK = load("sky-clouds-moon")
+h, w = SK.shape[:2]
+sky = SK[0:int(0.62 * h)]  # clouds above the buildings (moon is in here too)
+sky = np.asarray(to_img(sky).resize((1024, 1280), Image.BICUBIC)).astype(np.float32)
+sky = seamless(sky, axes=(1,))
+save("sky_clouds.png", sky)
+
+# Half moon cut out of black: alpha follows brightness.
+_, MO = load("moon2")
+h, w = MO.shape[:2]
+moon = MO[int(0.18 * h):int(0.82 * h), int(0.1 * w):int(1.0 * w)]
+a = np.clip((lum(moon) - 18) / 50, 0, 1)
+Image.fromarray(np.clip(np.concatenate([moon, a[..., None] * 255], -1), 0, 255).astype(np.uint8), "RGBA").resize((512, 640)).save(os.path.join(OUT, "moon.png"))
+print("wrote moon.png")
+
+rect_(load("walk-button3")[0], (352, 232, 342, 838, 746, 836, 735, 232), (300, 450), "walk_button_sign.png")
+_, PH = load("ped-signal-hand")
+save("ped_hand.png", PH[1300:1930, 710:1490])
+_, PW = load("ped-signal-walk")
+save("ped_walk.png", PW[1500:2500, 760:1500])
+
+# ---------------------------------------------------------------- bark, art, street objects
+# Purple holiday lighting removed from the spruce bark by matching to a neutral brown.
+for name, out, box, tint in [
+    ("spruce-bark-knots3", "bark_spruce", (0.0, 0.0, 1.0, 1.0), (118, 98, 86)),
+    ("cherry-bark1", "bark_cherry", (0.0, 0.05, 1.0, 0.95), None),
+    ("pale-bark-closeup", "bark_pale", (0.38, 0.05, 0.9, 0.95), None),
+    ("oak-bark-trunk1", "bark_oak", (0.3, 0.1, 0.72, 0.9), None),
+]:
+    t = wall_tex(name, out, box, (512, 1024), contrast=1.1, radius=150, normal=6.0)
+    if tint is not None:
+        g = lum(t)[..., None] / max(lum(t).mean(), 1)
+        save(out + ".png", g * np.array(tint, np.float32))
+_, MU = load("spruce-tree-lights")
+h, w = MU.shape[:2]
+mulch = delight(MU[int(0.78 * h):int(0.98 * h), :], 120)
+mulch = quilt(mulch, (512, 512), patch=112, contrast=1.2)
+g = lum(mulch)[..., None] / max(lum(mulch).mean(), 1)
+save("mulch.png", g * np.array([104, 70, 52], np.float32))
+
+wall_tex("graffiti-painting", "art_graffiti", (0.0, 0.0, 1.0, 1.0), (512, 1024), contrast=1.0, radius=400, normal=1.5)
+wall_tex("painted-wall-impasto", "art_impasto", (0.0, 0.0, 1.0, 1.0), (512, 1024), contrast=1.0, radius=400, normal=5.0)
+
+rect_(load("newspaper-box")[0], (432, 730, 432, 930, 525, 932, 525, 735), (200, 420), "news_box_logo.png")
+rect_(load("parking-sign-block")[0], (318, 686, 318, 1006, 748, 1006, 748, 686), (430, 320), "parking_sign.png")
+rect_(load("parking-sign-block")[0], (395, 606, 395, 668, 665, 668, 665, 606), (270, 62), "no_trespassing.png")
+
+# Rabbit sculpture silhouette: cut the bright cut-out from the night sky.
+_, RB = load("rabbit-sculpture")
+h, w = RB.shape[:2]
+rb = RB[int(0.2 * h):int(0.62 * h), int(0.3 * w):int(0.62 * w)]
+a = np.clip((blur(lum(rb), 1.5) - 150) / 30, 0, 1)
+Image.fromarray(np.clip(np.concatenate([rb, a[..., None] * 255], -1), 0, 255).astype(np.uint8), "RGBA").save(os.path.join(OUT, "rabbit.png"))
+print("wrote rabbit.png")
+
+# ---------------------------------------------------------------- apartment building
+wall_tex("apartment-stair-wall", "brick_scratched", (0.03, 0.15, 0.7, 0.75), (1024, 512), contrast=1.1, radius=150, normal=5.0)
+wall_tex("apartment-laminate-closeup", "laminate_oak", (0.0, 0.0, 1.0, 1.0), (512, 1024), contrast=1.05, radius=300, normal=1.5)
+wall_tex("apartment-stair-treads", "stair_tread", (0.1, 0.3, 0.92, 0.42), (512, 160), contrast=1.0, radius=300, normal=2.0)
+rect_(load("apartment-front")[0], (437, 780, 437, 840, 590, 840, 590, 780), (400, 160), "airlie_sign.png")
+rect_(load("apartment-mailboxes")[0], (520, 330, 545, 720, 1440, 715, 1460, 370), (1000, 420), "mailboxes.png")
+_, AF2 = load("apartment-front")
+palette["apartment_brick"] = hexc(med(AF2, (100, 1000, 700, 1500)))
+palette["hall_trim"] = "#c9b48c"
+
+# ---------------------------------------------------------------- alien textures (painted impasto)
+for i in range(1, 6):
+    wall_tex(f"alien-texture{i}", f"alien_{i}", (0.0, 0.0, 1.0, 1.0), (512, 1024), contrast=1.0, radius=400, normal=7.0)
+
 with open(os.path.join(OUT, "palette.json"), "w") as f:
     json.dump(palette, f, indent=2)
 print("wrote palette.json")
