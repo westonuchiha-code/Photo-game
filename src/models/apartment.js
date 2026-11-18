@@ -38,8 +38,8 @@ export const APT = {
   F1: 1.4,      // raised first floor (stoop height)
   F2: 4.4,      // second floor
   FH: 3.0,
-  hall: { x0: -1.9, x1: 0.0 },       // hallway strip
-  stair: { x0: 0.1, x1: 1.1, z0: -2.6, z1: 2.4 }, // climbs toward -z
+  hall: { x0: -0.95, x1: 0.95 },     // hallway strip, centred on the building
+  stair: { x0: 1.05, x1: 2.05, z0: -2.6, z1: 2.4 }, // climbs toward -z
 };
 
 function sixPanelDoor(M, w = 0.86, h = 2.03) {
@@ -122,7 +122,7 @@ export function makeApartment() {
   }
 
   // windows: 3 columns each side of the entry bay; top floor arched
-  const cols = [-5.4, -3.5, 3.3, 5.2];
+  const cols = [-5.3, -3.4, 3.4, 5.3];  // symmetric about the centred entry
   for (let f = 0; f < 3; f++) {
     for (const x of cols) {
       const y = F1 + f * FH + 1.5;
@@ -141,7 +141,7 @@ export function makeApartment() {
     }
   }
   // garden-level windows with AC units
-  for (const x of [-4.4, 4.2]) {
+  for (const x of [-4.35, 4.35]) {
     const w = makeWindow(1.6, 0.7, false);
     w.position.set(x, 0.55, zf + 0.01);
     g.add(w);
@@ -164,31 +164,56 @@ export function makeApartment() {
   el.position.set((dx0 + dx1) / 2, F1 + 2.4, zf + 1.4);
   g.add(el);
 
-  // ------------------------------------------------ brick stoop with flared cheek walls
-  const steps = 8, rise = F1 / steps, run = 0.3;
-  const sw = 2.0, scx = (dx0 + dx1) / 2;
-  const landD = 1.0;
-  g.add(box(sw, F1, landD, M.concrete, scx, F1 / 2, zf + landD / 2));
+  // ------------------------------------------------ brick stoop (front photos)
+  // Grey concrete steps between thick brick cheek walls; each wall slopes down with
+  // the stair and ends in a short wing that flares outward, with a stone cap.
+  const steps = 8, rise = F1 / steps, run = 0.32;
+  const sw = 1.9, scx = (dx0 + dx1) / 2;
+  const landD = 1.1;
+  const stepMat = std({ map: tex('sidewalk.png'), color: '#a7a49e', roughness: 0.95 });
+  g.add(box(sw, F1, landD, stepMat, scx, F1 / 2, zf + landD / 2));
   for (let i = 0; i < steps; i++) {
-    const zz = zf + landD + (steps - 1 - i) * run + run / 2;
-    g.add(box(sw, rise * (i + 1), run, M.concrete, scx, rise * (i + 1) / 2, zz));
+    const h = rise * (steps - i);                    // i = 0 is the top step next to the landing
+    const zz = zf + landD + i * run + run / 2;
+    g.add(box(sw, h, run, stepMat, scx, h / 2, zz));
+    g.add(box(sw + 0.02, 0.025, 0.04, std({ color: '#7d7b77' }), scx, h - 0.012, zz + run / 2 - 0.02, { shadow: false })); // nosing
   }
   const stoopEnd = zf + landD + steps * run;
+  const T = 0.42;                                    // wall thickness
+  const brickSide = (len, hgt) => plane(M.brick, len, hgt, 0.86, 0.61);
   for (const s of [-1, 1]) {
-    // cheek wall: a brick slab whose top follows the stairs, flaring out at the bottom
-    const pts = [[zf, 0], [stoopEnd + 0.4, 0], [stoopEnd + 0.4, 0.55], [zf + landD, F1 + 0.95], [zf, F1 + 0.95]];
+    const xc = scx + s * (sw / 2 + T / 2);
+    // profile in (z, y): level beside the landing, then sloping down with the steps
+    const top = (z) => (z <= zf + landD ? F1 + 0.9 : Math.max(0.55, F1 + 0.9 - (z - zf - landD) * (rise / run)));
+    const pts = [[zf, 0], [stoopEnd, 0], [stoopEnd, top(stoopEnd)], [zf + landD, F1 + 0.9], [zf, F1 + 0.9]];
     const shape = new THREE.Shape(pts.map(([z, y]) => new THREE.Vector2(z, y)));
-    const geo = new THREE.ExtrudeGeometry(shape, { depth: 0.35, bevelEnabled: false });
-    geo.rotateY(-Math.PI / 2);
+    const geo = new THREE.ExtrudeGeometry(shape, { depth: T, bevelEnabled: false });
+    geo.rotateY(-Math.PI / 2);                       // shape x -> world z, extrusion -> world -x
     const uv = geo.attributes.uv;
     for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) / 0.86, uv.getY(i) / 0.61);
     const wall = new THREE.Mesh(geo, M.brick);
-    wall.position.x = scx + s * (sw / 2 + 0.175) + 0.175;
+    wall.position.x = xc + T / 2;
     wall.castShadow = wall.receiveShadow = true;
     g.add(wall);
-    const cap = box(0.4, 0.06, landD, M.stone, scx + s * (sw / 2 + 0.175), F1 + 0.98, zf + landD / 2);
+    // stone cap following the top: level part + sloped part
+    g.add(box(T + 0.08, 0.07, landD, M.stone, xc, F1 + 0.935, zf + landD / 2));
+    const slopeLen = Math.hypot(stoopEnd - zf - landD, F1 + 0.9 - top(stoopEnd));
+    const cap = box(T + 0.08, 0.07, slopeLen, M.stone, xc, (F1 + 0.9 + top(stoopEnd)) / 2 + 0.035, (zf + landD + stoopEnd) / 2);
+    cap.rotation.x = Math.atan2(F1 + 0.9 - top(stoopEnd), stoopEnd - zf - landD);
     g.add(cap);
-    solid(scx + s * (sw / 2 + 0.175) - 0.2, scx + s * (sw / 2 + 0.175) + 0.2, zf, stoopEnd + 0.4);
+    // flared wing at the bottom: a low brick block angled 35 degrees outward, with a square pier
+    const wingL = 0.9;
+    const wing = new THREE.Group();
+    wing.add(box(T, 0.55, wingL, M.brick, 0, 0.275, wingL / 2));
+    wing.add(box(T + 0.08, 0.07, wingL, M.stone, 0, 0.585, wingL / 2));
+    wing.position.set(xc, 0, stoopEnd);
+    wing.rotation.y = s * 0.6;
+    g.add(wing);
+    const pier = box(0.55, 0.7, 0.55, M.brick, xc + s * Math.sin(0.6) * wingL, 0.35, stoopEnd + Math.cos(0.6) * wingL);
+    g.add(pier);
+    g.add(box(0.62, 0.07, 0.62, M.stone, pier.position.x, 0.735, pier.position.z));
+    solid(xc - T / 2, xc + T / 2, zf, stoopEnd);
+    solid(pier.position.x - 0.3, pier.position.x + 0.3, pier.position.z - 0.3, pier.position.z + 0.3);
   }
 
   // ------------------------------------------------ interior
@@ -307,7 +332,7 @@ export function makeApartment() {
     // outdoor stoop
     if (x > sx0 && x < sx1 && z > zf && z < stoopEnd + 0.2) {
       if (z < zf + landD) return F1;
-      return Math.max(0, F1 - Math.ceil((z - zf - landD) / run) * rise);
+      return Math.max(0, rise * (steps - Math.floor((z - zf - landD) / run)));
     }
     if (x < I.x0 - 0.1 || x > I.x1 + 0.1 || z < I.z0 - 0.1 || z > zf + 0.1) return null; // not inside
     const inStair = x > stair.x0 && x < stair.x1 && z > stair.z0 - 0.05 && z < stair.z1 + 0.05;

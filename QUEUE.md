@@ -23,7 +23,7 @@ Rules (from you):
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- Apartment building (Elmwood Apartments): brick front, stoop, opening entry door, walkable
+- Apartment building (Elmwood Apartments): brick front, centred entry, rebuilt stoop with flared brick cheek walls, opening entry door, walkable
   hallway with mailboxes/unit doors, stairs up to a 2nd-floor hall. Screenshots: `screenshots/apt-*.png`.
 
 ## Old review notes
@@ -201,6 +201,18 @@ Rules (from you):
     crushed/bent sideways, faded red handle grip, black flip-up child-seat panel, small casters,
     jammed against a galvanized cart-corral rail; orange delineator post with a rubber base,
     aggregate parking-lot asphalt with white lines. Also a normal undamaged cart variant.
+52. Apartment listing posters (photos/listings/): lit window-display flyers in a steel frame -
+    blue water-photo header with big yellow title, white body with address line, pink/blue
+    feature lines, yellow amenity tags, big rent + deposit lines, room photos, floor plan, map
+    snippet. Redraw as original English-language rental flyers for the made-up buildings
+    (Elmwood Apartments, Maple Creek Properties), fake 555 numbers. Hang them in the teal
+    shop window / a realty office window, lit from behind.
+53. Robot vending machine (photos/vending/): yellow drink vending machine dressed as a boxy robot
+    - big head with one round black speaker "eye", shoulder pods, chunky arms with blocky
+    hands, foot plates; faded/peeling paint, taped patch, graffiti tags and stickers; drinks
+    behind glass with price tags, gears behind the products, coin/bill slots, pickup flap.
+    Made-up name on the front (not FABOT), made-up drink labels; next to ordinary blue and red
+    vending machines.
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"

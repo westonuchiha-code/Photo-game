@@ -143,7 +143,6 @@ for (const [a, b, c, d] of [[-80, 13, -120, 80], [17, 120, -120, 80], [13, 17, -
   m.receiveShadow = true;
   pavement.add(m);
 }
-pavement.rotation.x = -Math.PI / 2;
 pavement.position.set(0, -0.01, 0);
 outside.add(pavement);
 // Night sky with the photographed clouds and the half moon (sky + moon photos).
@@ -621,6 +620,7 @@ const VIEWS = {
   canvases: { pos: [-1, 1.7, 1.2], target: [-1, 1.8, 5] },
   mural: { pos: [5.2, 2.2, 10.2], target: [10, 3, 16.2] },
   apartment: { pos: [38.5, 3.5, 4.5], target: [52, 5, -1] },
+  stoop: { pos: [47.6, 2.4, 3.4], target: [50.5, 1.0, -1] },
   abandoned: { pos: [13.0, 2.0, 2.0], target: [19.5, 1.4, 0.2] },
 };
 let mode = 'walk';
