@@ -37,6 +37,12 @@ Rules (from you):
 13. Alien textures (5).
 14. Tree with a door carved and painted into the trunk (tree-door, tree-door-closeup).
 15. Pot of chili/curry/soup textures (soup-pot, soup-lentil-closeup, soup-smooth).
+16. Food inspiration (photos/food/, 17 photos): corn dog in a paper boat with sauce, spaghetti
+    on an oval plate with tray + condiments, ramen bowl on a tray, katsu curry, black curry with
+    rice, pork bun (whole + bitten), steamed bun, melon bread, smoked cheese sticks, pizzas
+    (mushroom-egg, corn-shrimp, packaged display), canned drinks, dashi bottles in a vending
+    machine, noodle-shop menu board with lanterns. Food models + textures; all packaging,
+    can and menu text made up.
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"
