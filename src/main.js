@@ -40,6 +40,7 @@ import { makeStatueShrine, makeStoneShrine } from './models/shrines.js';
 import { makeTireWheel } from './models/wheel.js';
 import { makeHouse } from './models/houses.js';
 import { makeBlueHouse } from './models/bluehouse.js';
+import { makeShutterShop, makeVendingMachine, makeJunkShop } from './models/shops28c.js';
 import { makeShopHouse, makeStreetLamp as makeOldTownLamp, makeBollard, makeMonkey, makeBanner, makeClockTower, makeGreenPillar } from './models/oldtown.js';
 import { makeBrickGable, makeSpiral, makeOvalBuilding, makePebbleBench, makeOrnateLamp, makePlanter, makePaverTexture, makeGreyBandTexture } from './models/cityplaza.js';
 import { makePlywoodSheet, makeGlassShards, makePasteWall, makePickupZone } from './models/misc27e.js';
@@ -966,6 +967,21 @@ const blueHouse = makeBlueHouse();
   placeR(makeGreenPillar(), SX + 6.4, Z0 + 26, -Math.PI / 2);
 }
 
+// ------------------------------------------------------------------ shops off the restaurant strip (city photos, 28c)
+// South of the strip that links the plaza to the restaurant, both facing north (-z).
+const junkArea = {};
+{
+  const rotPI = (o, gx, gz, list) => {
+    o.position.set(gx, 0, gz); o.rotation.y = Math.PI; add(o);
+    for (const [x0, x1, z0, z1] of list) rect(gx - x1, gx - x0, gz - z1, gz - z0);
+  };
+  const shut = makeShutterShop(10); rotPI(shut, -6.4, 12.2, [shut.userData.collider]);
+  const junk = makeJunkShop(9, 12); rotPI(junk, 3.5, 12.2, junk.userData.colliders);
+  const a2 = junk.userData.area;
+  Object.assign(junkArea, { minX: 3.5 - a2.x1, maxX: 3.5 - a2.x0, minZ: 12.2 - a2.z1, maxZ: 12.2 - a2.z0 });
+  const vm = makeVendingMachine(); vm.position.set(-1.0, 0, 11.75); vm.rotation.y = Math.PI; add(vm); rect(-1.42, -0.58, 11.7, 12.5);
+}
+
 // delivery props elsewhere: drinks + bag outside an Elmwood unit door, a delivery tote by the scooter
 {
   const c = makeCupCarrier(); c.position.set(-0.6, 1.4, -2.8); apt.add(c);
@@ -984,6 +1000,7 @@ const walk = new WalkControls(camera, renderer.domElement, {
     { minX: -43.6, maxX: -9.0, minZ: -13.6, maxZ: 11.7 }, // city plaza
     { minX: -33.3, maxX: -19.7, minZ: 11.0, maxZ: 51.8 }, // old-town street
     { minX: -9.5, maxX: 9.0, minZ: 5.4, maxZ: 11.7 }, // strip along the restaurant's south wall
+    junkArea, // junk shop interior
   ],
   colliders,
 });
@@ -1076,6 +1093,10 @@ const VIEWS = {
   oldtown: { pos: [-26.5, 2.0, 14.0], target: [-26.5, 2.4, 40.0] },
   oldtownshops: { pos: [-23.5, 1.7, 20.0], target: [-31.0, 1.8, 24.0] },
   monkey: { pos: [-29.8, 1.0, 19.0], target: [-32.2, 0.5, 17.3] },
+  shutters: { pos: [-5.0, 1.8, 6.4], target: [-6.4, 1.7, 12.2] },
+  vending: { pos: [-1.3, 1.5, 9.6], target: [-1.0, 1.1, 11.8] },
+  junkshop: { pos: [6.8, 1.8, 13.2], target: [1.5, 1.0, 20.5] },
+  junkfront: { pos: [3.5, 2.2, 5.8], target: [3.5, 2.0, 12.2] },
   walkinshelf: { pos: [17.6, 1.6, -44.0], target: [21.4, 1.0, -45.6] },
   van: { pos: [25.5, 1.9, -22.4], target: [21.5, 0.9, -26.5] },
   vanside: { pos: [24.6, 1.3, -29.2], target: [21.5, 0.7, -26.3] },

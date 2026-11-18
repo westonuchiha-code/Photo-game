@@ -7,6 +7,7 @@ Rules (from you):
   sign's shape and material. Keep text that's already generic (LIQUOR).
 
 ## Approved
+- 28b Old-town shopping street
 - 28a City plaza (approved for now)
 - 27e Small misc props (misc batch 27 complete)
 - 27d Dump truck + dirt site
@@ -44,7 +45,7 @@ Rules (from you):
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- 28b Old-town shopping street running south from the plaza: granite-slab road (texture from the photo) with lane lines, eleven two-storey shop houses (tiled roofs, white plaster, lattice, diamond-tile skirting, noren, lanterns, generic-word signs), lit lamp posts with banners, stone bollards, nobori flags, two sculpted stone monkey statues, green sign pillar, clock tower.
+- 28c Shops south of the restaurant strip: closed-up HIKARI RADIO & TV with yellow shutters and an original radio-robot mascot (sign/phone made up), NOODLE TIME cup-noodle vending machine (made up), walk-in JUNK & RETRO shop full of CRT TVs, beige retro computers, keyboards, blue crates of records/CDs.
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
