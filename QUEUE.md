@@ -7,6 +7,7 @@ Rules (from you):
   sign's shape and material. Keep text that's already generic (LIQUOR).
 
 ## Approved
+- Creepy hoodie figure
 - Food set 2 (snacks)
 - Scooter + batteries
 - Old van
@@ -31,9 +32,8 @@ Rules (from you):
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- Creepy hoodie figure: oversized skull with huge hollow eyes in a black hood, hands in pocket,
-  faded jeans, white-toed high-tops; slowly paces the street-row sidewalk with a slouched walk.
-  Screenshot: `screenshots/creep.png`.
+- Police vehicles (made-up Maple Creek Police / MCPD): three-wheel patrol cart with flashing roof
+  lights, two white patrol scooters; on the tire-shop lot. Screenshots: `screenshots/police*.png`.
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
@@ -49,8 +49,6 @@ Rules (from you):
     (mushroom-egg, corn-shrimp, packaged display), canned drinks, dashi bottles in a vending
     machine, noodle-shop menu board with lanterns. Food models + textures; all packaging,
     can and menu text made up.
-21. Police vehicles (photos/police/): three-wheel mini patrol cart and white patrol scooter.
-    Generic made-up department name and badge (no real agency markings).
 22. Grocery store inside + walk-in dairy cooler (photos/store/): glass-door milk cooler with
     gallon jugs and cartons, egg/butter case under a green canopy, walk-in cooler with
     insulated panel walls, evaporator fans, stacked blue/black milk crates on pallets, green

@@ -26,6 +26,7 @@ import { makeStreetBuilding } from './models/buildings.js';
 import { makePaverSidewalk, makeDrainCover, makePaverCrosswalk, makeTactilePlate, makeCracks, makeUtilityLid, makeTrafficIsland, makeDirtLot } from './models/streetground.js';
 import { makeSky } from './models/sky.js';
 import { makeOldVan } from './models/van.js';
+import { makePatrolCart, makePatrolScooter } from './models/police.js';
 import { makeCreep } from './models/creep.js';
 import { makeScooter, makeBattery } from './models/scooter.js';
 import { makePizza, makeRamenTray, makeSpaghettiTray, makeCurryPlate, makeWaffleSandwich, makeCerealPuffCup, makeClearSoda, makeDarkSodaCan, makeCupNoodles } from './models/food.js';
@@ -666,6 +667,24 @@ creep.userData.update = (t) => {
   creep.userData.pose(t * CREEP.speed * 4.2);
 };
 
+// ------------------------------------------------------------------ police vehicles (police photos, made-up MCPD)
+// Parked on the lot by the rental sign, lights flashing on the cart.
+const cart = makePatrolCart();
+cart.position.set(35.5, 0, -9.6);
+cart.rotation.y = 0.2;
+add(cart);
+rect(34.7, 36.3, -10.9, -8.3);
+const pScooters = [];
+for (const [x, z] of [[32.6, -9.9], [33.6, -9.8]]) {
+  const sc = makePatrolScooter();
+  sc.position.set(x, 0, z);
+  sc.rotation.y = 0.35;
+  sc.rotation.z = 0.04;
+  add(sc);
+  pScooters.push(sc);
+  circle(x, z, 0.5);
+}
+
 // ------------------------------------------------------------------ controls
 const walk = new WalkControls(camera, renderer.domElement, {
   bounds: null,
@@ -729,6 +748,8 @@ const VIEWS = {
   batteries: { pos: [32.5, 1.12, -19.6], target: [32.5, 0.96, -20.0] },
   creep: { pos: [21.6, 1.35, 9.4], target: [19.5, 1.05, 11.55] },
   creepface: { pos: [20.05, 1.72, 11.0], target: [19.5, 1.66, 11.55] },
+  police: { pos: [34.0, 1.9, -5.4], target: [36.8, 0.8, -9.7] },
+  policefront: { pos: [31.0, 1.3, -7.8], target: [33.1, 0.8, -9.8] },
   van: { pos: [25.5, 1.9, -22.4], target: [21.5, 0.9, -26.5] },
   vanside: { pos: [24.6, 1.3, -29.2], target: [21.5, 0.7, -26.3] },
   soup: { pos: [-2.85, 1.62, -4.0], target: [-3.1, 1.2, -4.7] },
@@ -857,6 +878,7 @@ function frame() {
   soupPots.forEach((p) => p.userData.update(t));
   puffCup.userData.update(t);
   creep.userData.update(t);
+  cart.userData.update(t);
   if ((lightTimer += dt) > 0.4) { lightTimer = 0; updateLightBudget(); }
   walkPoles.forEach((p, i) => p.userData.update(t, i * 0.3));
   // Doors swing open when you walk up to them (inside or out).
