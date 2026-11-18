@@ -123,6 +123,11 @@ Rules (from you):
     glass shop cases; cartridge reader board in acrylic; nixie-tube CPU meter; steam locomotive
     cab: brass valves, copper pipes, pressure gauges, firebox door (x2 views). Brand names,
     game titles and screen art made up.
+38. Bar alley signage (city/izakaya-alley-signs): narrow brick-paved alley; stacked vertical
+    lightbox signs projecting from both walls, standing sidewalk sign boards, giant red paper
+    lantern + white lanterns, string bulbs criss-crossing overhead, ornate lamp posts, tangled
+    power lines, beer crates and stools by the doors, roll shutters, pink stucco wall. All sign
+    text made up (generic bar/grill/karaoke names, 555 phone numbers).
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"
