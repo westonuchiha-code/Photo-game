@@ -286,6 +286,11 @@ Rules (from you):
     a black-and-white police sedan with a red light bar (generic POLICE text only, made-up plate),
     and an old aircraft nose section mounted on a steel frame over a carport with a brick wall and
     a sliding steel gate (made-up number).
+65. Signage batch (photos/signage/, 5 photos): a big red/orange/white price board in a steel frame
+    (rate table, headline banner, yellow lettering), an A-frame night-campaign sign with a blue
+    skyline poster on a weighted base, a blue course-price board, a ramen ticket-machine menu panel
+    (food photo tiles with gold frames + buttons), a lit A-frame theatre poster. Make-up all names,
+    prices and phone numbers; no real people's photos (draw generic figures/illustrations instead).
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"
