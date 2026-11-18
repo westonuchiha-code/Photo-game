@@ -203,9 +203,11 @@ export function makeApartment() {
     g.add(cap);
     // the wall ends in a square brick pier with a stone cap (front photos)
     const P = 0.56;
-    const pier = box(P, 0.8, P, M.brick, xc, 0.4, stoopEnd + P / 2 - 0.05);
+    // pier rises above the end of the sloped wall, so the slope dies into its side
+    const PH = top(stoopEnd) + 0.35;
+    const pier = box(P, PH, P, M.brick, xc, PH / 2, stoopEnd + P / 2 - 0.08);
     g.add(pier);
-    g.add(box(P + 0.08, 0.08, P + 0.08, M.stone, xc, 0.84, pier.position.z));
+    g.add(box(P + 0.08, 0.08, P + 0.08, M.stone, xc, PH + 0.04, pier.position.z));
     solid(xc - T / 2, xc + T / 2, zf, stoopEnd);
     solid(xc - P / 2, xc + P / 2, pier.position.z - P / 2, pier.position.z + P / 2);
   }
