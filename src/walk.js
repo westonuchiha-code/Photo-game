@@ -14,6 +14,7 @@ export class WalkControls {
     // walkable rectangles {minX,maxX,minZ,maxZ}; if set, you can only stand inside one of them
     this.areas = areas;
     this.position = new THREE.Vector3();
+    this.gy = 0;
     this.yaw = 0;
     this.pitch = 0;
     this.enabled = true;
@@ -120,6 +121,7 @@ export class WalkControls {
     const p = this.position, R = 0.25, b = this.bounds;
     for (const c of this.colliders) {
       if (c.active === false) continue; // e.g. an open door
+      if (c.y0 !== undefined && (this.gy < c.y0 - 0.3 || this.gy > c.y1 + 0.3)) continue; // other floor
       if (c.type === 'circle') {
         const dx = p.x - c.x, dz = p.z - c.z, d = Math.hypot(dx, dz), m = c.r + R;
         if (d < m && d > 1e-6) { p.x = c.x + (dx / d) * m; p.z = c.z + (dz / d) * m; }
@@ -144,7 +146,9 @@ export class WalkControls {
   }
 
   apply() {
-    const gy = this.ground ? this.ground(this.position.x, this.position.z) : 0;  // ramps, steps
+    // ramps, stairs, upper floors: ground() gets the current height so it can pick the right floor
+    const gy = this.ground ? this.ground(this.position.x, this.position.z, this.gy || 0) : 0;
+    this.gy = gy;
     this.camera.position.set(this.position.x, EYE + gy, this.position.z);
     this.camera.rotation.set(this.pitch, this.yaw, 0, 'YXZ');
   }

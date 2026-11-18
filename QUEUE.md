@@ -7,6 +7,7 @@ Rules (from you):
   sign's shape and material. Keep text that's already generic (LIQUOR).
 
 ## Approved
+- Wall art (canvases + mural)
 - Objects & locations (ramp, sign block, teal shop, news box, rabbit)
 - Phone colour fix + lighting
 - Trees
@@ -22,8 +23,8 @@ Rules (from you):
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- Wall art: 4 gallery canvases (impasto, drip, sunset, splatter) above the lime-wall two-tops;
-  graffiti painting as a lit mural on the street-row end wall. Screenshots: `screenshots/art-*.png`.
+- Apartment building (Elmwood Apartments): brick front, stoop, opening entry door, walkable
+  hallway with mailboxes/unit doors, stairs up to a 2nd-floor hall. Screenshots: `screenshots/apt-*.png`.
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
@@ -33,8 +34,6 @@ Rules (from you):
    Screenshot: `screenshots/burger-poster.png`.
 
 ## Up next (in order)
-12. Apartment building inside and out (made-up name instead of "Airlie"): brick front with
-    curved stair walls, mailboxes, hallway, stairs, landing, unit doors.
 13. Alien textures (5).
 14. Tree with a door carved and painted into the trunk (tree-door, tree-door-closeup).
 15. Pot of chili/curry/soup textures (soup-pot, soup-lentil-closeup, soup-smooth).
@@ -183,6 +182,15 @@ Rules (from you):
     wrapped in twine (decor/rusty-prop-pistol-rope, prop only); dried dark-red rose with baby's
     breath; white perforated PC case glowing blue; bright sun with lens flare + wispy cirrus
     (daytime sky option).
+49. Misc batch 2 (photos/misc2/, 15): black folding e-bike at a wave rack; pet aisle with
+    shelf boxes + taped shipper cases; walk-in dairy cooler (gallon jugs, crates on a U-boat
+    cart, open shelving); loading dock with dock leveler plate, trailer full of shrink-wrapped
+    pallets, yellow bollard; dusty blue vintage kei car with finger-drawn doodles in the dust;
+    shrink-wrapped iced-tea 12-packs; breakfast sub (egg, bacon, ketchup); bread aisle; stock
+    room with wrapped beverage pallets + racking + roll-up door; two paintings (blue/yellow pour,
+    confetti watercolor - good canvases); dairy tub cart; pizza slice on checker paper with a
+    soda can, gumball machines; cardboard bale + plastic bag on a pallet at a dock door. All
+    brands, characters and labels made up.
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"

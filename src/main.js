@@ -25,6 +25,7 @@ import { makeRustyPole, makeWalkSignalPole } from './models/street.js';
 import { makeStreetBuilding } from './models/buildings.js';
 import { makePaverSidewalk, makeDrainCover, makePaverCrosswalk, makeTactilePlate, makeCracks, makeUtilityLid, makeTrafficIsland, makeDirtLot } from './models/streetground.js';
 import { makeSky } from './models/sky.js';
+import { makeApartment } from './models/apartment.js';
 import { makeNewsBox, makeParkingSignBlock, makeParkingRamp, makeTealStorefront, makeRabbitSculpture } from './models/locations.js';
 import { makeSpruce, makeCherry, makePaleTree, makeOak, makeTreePit, makeMulchBed } from './models/trees.js';
 import { makeRockBed, makeGrassTufts, makeCurbWithLeaves, makeLooseLeaves, makeBikeRack } from './models/ground.js';
@@ -546,17 +547,39 @@ mural.position.set(9.99, 3.0, 16.2);
 mural.rotation.y = -Math.PI / 2;
 add(mural);
 
+// ------------------------------------------------------------------ apartment building (apartment photos)
+// Faces west across a sidewalk toward the dirt lot. local (x, z) -> world (AP.x - z, AP.z + x)
+const AP = { x: 57, z: -1 };
+add(plane(mats.sidewalk, 46.8, 52.2, -10, 8, 0.003, 1.5));
+const apt = makeApartment();
+apt.position.set(AP.x, 0, AP.z);
+apt.rotation.y = -Math.PI / 2;
+add(apt);
+for (const [x0, x1, z0, z1, y0, y1] of apt.userData.colliders) {
+  colliders.push({ type: 'box', minX: AP.x - z1, maxX: AP.x - z0, minZ: AP.z + x0, maxZ: AP.z + x1, ...(y0 !== undefined ? { y0, y1 } : {}) });
+}
+{
+  const d = apt.userData.door;
+  const [a, b, c, e] = d.gap;
+  const col = { type: 'box', minX: AP.x - e, maxX: AP.x - c, minZ: AP.z + a, maxZ: AP.z + b };
+  colliders.push(col);
+  interactables.push({ name: 'front door', kind: 'door', setOpen: d.setOpen, x: AP.x - d.at[1] + 0.6, z: AP.z + d.at[0], t: 0, target: 0, col, speed: 2.2 });
+}
+
 // ------------------------------------------------------------------ controls
 const walk = new WalkControls(camera, renderer.domElement, {
   bounds: null,
   areas: [
     { minX: X0 + 0.3, maxX: X1 - 0.3, minZ: Z0 + 0.3, maxZ: Z1 - 0.3 }, // restaurant
     { minX: X1 - 0.5, maxX: X1 + 0.6, minZ: DOOR_Z - 0.9, maxZ: DOOR_Z + 0.9 }, // doorway
-    { minX: X1 + 0.3, maxX: 50, minZ: -40, maxZ: 11.7 }, // outside
+    { minX: X1 + 0.3, maxX: 66, minZ: -40, maxZ: 11.7 }, // outside
   ],
   colliders,
 });
-walk.ground = (x, z) => ramp.userData.floorY(x, z);
+walk.ground = (x, z, prevY) => {
+  const ay = apt.userData.floorY(z - AP.z, AP.x - x, prevY);
+  return ay !== null ? ay : ramp.userData.floorY(x, z);
+};
 walk.position.set(6.6, 0, 0.2);
 walk.yaw = 1.25;
 walk.pitch = -0.1;
@@ -597,6 +620,7 @@ const VIEWS = {
   newsbox: { pos: [10.2, 1.3, -1.6], target: [8.55, 0.5, -3.1] },
   canvases: { pos: [-1, 1.7, 1.2], target: [-1, 1.8, 5] },
   mural: { pos: [5.2, 2.2, 10.2], target: [10, 3, 16.2] },
+  apartment: { pos: [38.5, 3.5, 4.5], target: [52, 5, -1] },
   abandoned: { pos: [13.0, 2.0, 2.0], target: [19.5, 1.4, 0.2] },
 };
 let mode = 'walk';

@@ -278,3 +278,25 @@ def hand(dd):
 lens(hand, "ped_hand_face.png")
 lens(lambda dd: walker(dd, 128, 26, 210, 255), "ped_walk_face.png")
 print("wrote walk_button_sign, ped_hand_face, ped_walk_face")
+
+
+# ---- Apartment: white beadboard wall (hallway photos) + stone name plaque (made-up name)
+bb = Image.new("RGB", (256, 256), (236, 235, 229))
+d = ImageDraw.Draw(bb)
+for x in range(0, 256, 32):          # 32 px = 0.1 m board
+    d.rectangle((x, 0, x + 2, 256), fill=(205, 203, 196))
+    d.rectangle((x + 3, 0, x + 4, 256), fill=(246, 245, 240))
+a = np.asarray(bb).astype(np.float32) + rng.normal(0, 2.5, (256, 256, 3))
+Image.fromarray(np.clip(a, 0, 255).astype(np.uint8)).save(os.path.join(OUT, "beadboard.png"))
+stone = Image.new("RGB", (512, 128), (196, 188, 172))
+a = np.asarray(stone).astype(np.float32) + rng.normal(0, 9, (128, 512, 3))
+stone = Image.fromarray(np.clip(a, 0, 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(0.8))
+ds = ImageDraw.Draw(stone)
+f = ImageFont.truetype(SERIF_B, 46)
+for txt, y in (("ELMWOOD", 10), ("APARTMENTS", 66)):
+    b = ds.textbbox((0, 0), txt, font=f)
+    x = (512 - (b[2] - b[0])) / 2 - b[0]
+    ds.text((x + 2, y + 2), txt, font=f, fill=(150, 142, 128))   # carved shadow
+    ds.text((x, y), txt, font=f, fill=(92, 86, 76))
+stone.save(os.path.join(OUT, "apt_name_stone.png"))
+print("wrote beadboard, apt_name_stone")
