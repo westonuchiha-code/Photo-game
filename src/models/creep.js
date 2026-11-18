@@ -79,7 +79,13 @@ export function makeCreep() {
     for (let i = 0; i < 900; i++) { x.fillStyle = `rgba(${Math.random() < 0.5 ? '60,60,66' : '8,8,10'},0.35)`; x.fillRect(Math.random() * w, Math.random() * h, 2, 1); }
   });
   fabric.repeat.set(3, 3);
-  const hoodie = clay({ map: fabric, roughness: 0.95 });
+  const L = new THREE.TextureLoader();
+  const tx = (n, rx = 1, ry = 1, ox = 0) => { const t = L.load(`assets/textures/${n}`); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx, ry); t.offset.x = ox; t.anisotropy = 8; return t; };
+  // PS2-style painted textures (tools/make_creep_textures.py), knit + denim grain from your fabric photos
+  const hoodie = clay({ map: tx('creep_hoodie.png', 1, 1, 0.5), roughness: 0.95 });   // torso: pocket centred on the front
+  const sleeve = clay({ map: tx('creep_sleeve.png'), roughness: 0.95 });
+  const hoodMat = clay({ map: tx('creep_hood.png', 1, 1), roughness: 0.95, side: THREE.DoubleSide });
+  const plainFabric = clay({ map: fabric, roughness: 0.95 });
   const hoodieIn = std({ color: '#0b0b0c', roughness: 1, side: THREE.BackSide });
   const bone = clay({ vertexColors: true, roughness: 0.6, color: '#fff4dc', normalScale: new THREE.Vector2(0.18, 0.18) });
   const socket = new THREE.MeshBasicMaterial({ color: '#050505' });
@@ -93,8 +99,8 @@ export function makeCreep() {
     x.strokeStyle = '#efeadb'; x.lineWidth = 2;
     for (let i = 0; i < 6; i++) { x.beginPath(); x.moveTo(w * 0.45 - 20, h * 0.45 - 8 + i * 3); x.lineTo(w * 0.45 + 20, h * 0.45 - 8 + i * 3); x.stroke(); }
   });
-  const jeans = clay({ map: denim, roughness: 0.9 });
-  const shoe = clay({ color: '#18181b', roughness: 0.7 });
+  const jeans = clay({ map: tx('creep_jeans.png', 1, 1, 0.5), roughness: 0.9 });
+  const shoe = clay({ map: tx('creep_shoe.png'), roughness: 0.7 });
   const rubber = clay({ color: '#e6e3d8', roughness: 0.6 });
   const lace = std({ color: '#d9d9d2' });
 
@@ -113,21 +119,21 @@ export function makeCreep() {
     tp.setXYZ(i, x * 1.08 * fold, y, (z * 0.68 + (z > 0 ? 0.02 : 0)) * fold);
   }
   torsoGeo.computeVertexNormals();
-  body.add(part(torsoGeo, hoodie, 0, 0.32, 0));
+  body.add(part(torsoGeo, [hoodie, plainFabric, plainFabric], 0, 0.32, 0));
   // kangaroo pocket bulge + hands inside, waistband
   const pocket = new THREE.SphereGeometry(0.15, 18, 10);
   pocket.scale(1.05, 0.55, 0.45);
-  body.add(part(pocket, hoodie, 0, 0.17, 0.09));
-  const band = part(new THREE.CylinderGeometry(0.17, 0.17, 0.06, 20), hoodie, 0, 0.02, 0);
+  body.add(part(pocket, plainFabric, 0, 0.17, 0.09));
+  const band = part(new THREE.CylinderGeometry(0.17, 0.17, 0.06, 20), plainFabric, 0, 0.02, 0);
   band.scale.set(1.08, 1, 0.72);
   body.add(band);
   // arms: from the shoulders down and forward into the pocket
   for (const s of [-1, 1]) {
     const arm = new THREE.Group();
     arm.position.set(s * 0.2, 0.56, 0);
-    const upper = part(new THREE.CapsuleGeometry(0.055, 0.26, 4, 10), hoodie, 0, -0.16, 0);
+    const upper = part(new THREE.CapsuleGeometry(0.055, 0.26, 4, 10), sleeve, 0, -0.16, 0);
     arm.add(upper);
-    const fore = part(new THREE.CapsuleGeometry(0.05, 0.22, 4, 10), hoodie, -s * 0.08, -0.36, 0.1);
+    const fore = part(new THREE.CapsuleGeometry(0.05, 0.22, 4, 10), sleeve, -s * 0.08, -0.36, 0.1);
     fore.rotation.z = -s * 0.75;   // forearm angles inward to the pocket
     fore.rotation.x = -0.5;
     arm.add(fore);
@@ -154,20 +160,66 @@ export function makeCreep() {
     m.position.set(sx * 0.055, 0.05, 0.065);
     head.add(m);
   }
-  // hood: a deep shell open at the front, with the dark inside
-  const hoodGeo = new THREE.SphereGeometry(0.235, 40, 28, Math.PI / 2 + 0.8, Math.PI * 2 - 1.6, 0, Math.PI * 0.78);
+  // hood: a full shell with a face opening cut out that starts low over the
+  // forehead; the edge of the opening is ragged and sags, with frayed threads.
+  const R0 = 0.235;
+  const hoodGeo = new THREE.SphereGeometry(R0, 56, 40, 0, Math.PI * 2, 0, Math.PI * 0.8);
   hoodGeo.scale(1, 1.18, 1.05);
-  { const hp = hoodGeo.attributes.position;   // fabric wrinkles on the hood
-    for (let i = 0; i < hp.count; i++) { const x = hp.getX(i), y = hp.getY(i), z = hp.getZ(i); const k = 1 + 0.04 * Math.sin(y * 40 + x * 12) * Math.sin(z * 25); hp.setXYZ(i, x * k, y, z * k); }
-    hoodGeo.computeVertexNormals(); }
-  const hood = new THREE.Mesh(hoodGeo, hoodie);
-  hood.position.set(0, 0.02, -0.02);
+  const opening = (dx, dy, dz) => {          // <1 inside the face window (direction space)
+    const ax = Math.atan2(dx, dz), ay = Math.asin(Math.max(-1, Math.min(1, dy)));
+    if (dz < 0) return 99;
+    const top = 0.6, bottom = -1.2, half = 0.62 - 0.12 * Math.max(0, ay);   // narrows toward the top
+    return (ax / half) ** 2 + (ay > 0 ? (ay / top) ** 2 : (ay / bottom) ** 2);
+  };
+  {
+    const hp = hoodGeo.attributes.position, v = new THREE.Vector3();
+    for (let i = 0; i < hp.count; i++) {
+      v.fromBufferAttribute(hp, i);
+      const d = v.clone().normalize();
+      const e = opening(d.x, d.y, d.z);
+      let k = 1 + 0.035 * Math.sin(v.y * 40 + v.x * 12) * Math.sin(v.z * 25);          // wrinkles
+      if (e < 1.5 && e >= 1) {                                                       // ragged, sagging rim
+        k *= 1 + 0.04 * Math.sin(i * 12.9898) ;
+        v.y -= (1.5 - e) * 0.03 * (0.5 + 0.5 * Math.sin(i * 78.233));
+      }
+      hp.setXYZ(i, v.x * k, v.y, v.z * k);
+    }
+    // drop the faces inside the opening, plus a few random bites along the edge (wisps)
+    const idx = hoodGeo.index.array, keep = [];
+    for (let t = 0; t < idx.length; t += 3) {
+      const c = new THREE.Vector3();
+      for (let j = 0; j < 3; j++) c.add(v.fromBufferAttribute(hp, idx[t + j]));
+      c.normalize();
+      const e = opening(c.x, c.y, c.z);
+      const ragged = e < 1.25 && Math.sin(t * 0.731) > 0.35;
+      if (e >= 1 && !ragged) keep.push(idx[t], idx[t + 1], idx[t + 2]);
+    }
+    hoodGeo.setIndex(keep);
+    hoodGeo.computeVertexNormals();
+  }
+  const hood = new THREE.Mesh(hoodGeo, hoodMat);
+  hood.position.set(0, 0.0, -0.01);
   hood.castShadow = true;
   head.add(hood);
   const hoodInside = new THREE.Mesh(hoodGeo, hoodieIn);
   hoodInside.position.copy(hood.position);
-  hoodInside.scale.setScalar(0.985);
+  hoodInside.scale.setScalar(0.97);
   head.add(hoodInside);
+  // frayed thread fringe hanging from the brim over the forehead
+  const fringeTex = tx('creep_fringe.png');
+  fringeTex.wrapS = THREE.RepeatWrapping;
+  const fringeMat = new THREE.MeshStandardMaterial({ map: fringeTex, alphaTest: 0.3, side: THREE.DoubleSide, roughness: 1 });
+  for (let i = 0; i < 9; i++) {
+    const ax = -0.42 + i * 0.105;
+    const ay = 0.53 - 0.06 * Math.abs(i - 4) / 4;
+    const dir = new THREE.Vector3(Math.sin(ax) * Math.cos(ay), Math.sin(ay), Math.cos(ax) * Math.cos(ay));
+    const card = new THREE.Mesh(new THREE.PlaneGeometry(0.06, 0.028), fringeMat);
+    card.position.set(dir.x * R0 * 0.98, dir.y * R0 * 1.18 - 0.02, dir.z * R0 * 1.05 * 0.98);
+    card.rotation.y = ax;
+    card.rotation.x = 0.25;
+    fringeTex.offset.x = i * 0.27;
+    head.add(card);
+  }
 
   head.rotation.x = 0.18;          // head pushed forward and down
 

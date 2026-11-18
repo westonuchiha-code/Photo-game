@@ -220,6 +220,10 @@ Rules (from you):
     bent metal legs, one curly antenna with a white tip; stands on a mossy mound. Animated
     stilt-walk, clay/moss texture.
 
+56. Fabric photos (photos/fabric/): dark knit (hoodie grain), dark denim + cargo pocket (jeans twill),
+    black fleece, black velour, faded grey speckled cotton, black/grey/white/red plaid flannel,
+    navy/tan plaid flannel (for a flannel shirt, blanket or curtains later).
+
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"
   transom and the "OPEN!" plaque (both generic, so low priority).
