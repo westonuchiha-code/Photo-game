@@ -1060,6 +1060,34 @@ for _ in range(260):   # thumb / tool presses
 save("clay_normal.png", normal_from_height(clay / 10.0, 6.0))
 save("clay_rough.png", np.repeat(np.clip(0.75 + clay[..., None] * 0.04, 0, 1) * 255, 3, -1))
 
+# ---------------------------------------------------------------- grocery detail (store photos)
+def _store(k):
+    return ImageOps.exif_transpose(Image.open(f"photos/store/{k}.jpg")).convert("RGB")
+_cr, _ca, _eg = _store("dairy-cooler-crates"), _store("dairy-cooler-carts"), _store("egg-butter-cases")
+def _crop(im, box_, size, ref=1400):
+    k = im.size[0] / ref
+    return im.crop(tuple(int(v * k) for v in box_)).resize(size, Image.LANCZOS)
+_crop(_cr, (182, 187, 298, 262), (256, 168)).save(os.path.join(OUT, "store_crate_blue.png"))
+_crop(_cr, (192, 274, 298, 343), (256, 168)).save(os.path.join(OUT, "store_crate_black.png"))
+_crop(_ca, (868, 332, 925, 364), (256, 144)).save(os.path.join(OUT, "store_cardboard.png"))
+_crop(_eg, (0, 0, 1400, 80), (2048, 116)).save(os.path.join(OUT, "store_swirl.png"))
+_crop(_eg, (200, 425, 480, 535), (512, 200)).save(os.path.join(OUT, "store_eggs.png"))
+_crop(_cr, (880, 470, 1200, 560), (512, 144)).save(os.path.join(OUT, "store_curb.png"))
+# walk-in wall panel (white insulated) - flat-lit, tiled, with panel seams
+wp = np.asarray(_crop(_ca, (430, 240, 570, 375), (256, 256))).astype(np.float32)
+wp = delight(wp, 60)
+wp = seamless(wp)
+wp[:, :3] *= 0.8
+save("store_panel.png", wp)
+# walk-in floor (worn concrete with scuffs)
+fl = delight(np.asarray(_crop(_cr, (700, 470, 1100, 620), (800, 300))).astype(np.float32), 80)
+fq = quilt(fl, (512, 512), patch=96, contrast=1.0)
+g_ = fq[..., :3].mean(-1, keepdims=True)                       # sealed concrete: mostly gray, soft scuffs
+fq[..., :3] = (g_ + (fq[..., :3] - g_) * 0.25 - 128) * 0.55 + 140
+save("store_floor.png", fq)
+cb = np.asarray(Image.open(os.path.join(OUT, "store_cardboard.png")).convert("RGB")).astype(np.float32)
+Image.fromarray(np.clip(cb * 1.35 + 10, 0, 255).astype(np.uint8)).save(os.path.join(OUT, "store_cardboard.png"))
+
 with open(os.path.join(OUT, "palette.json"), "w") as f:
     json.dump(palette, f, indent=2)
 print("wrote palette.json")

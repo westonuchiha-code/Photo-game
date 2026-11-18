@@ -35,6 +35,13 @@ function plane(w, h, mat, x, y, z, ry = 0, rx = 0) {
 }
 function rng(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
 
+const _L = new THREE.TextureLoader();
+function ptex(name, rx = 1, ry = 1) {
+  const t = _L.load(`assets/textures/${name}`);
+  t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx, ry); t.anisotropy = 8;
+  return t;
+}
+
 // ---------------------------------------------------------------- shared props
 const M = {};
 function mats() {
@@ -60,9 +67,17 @@ function mats() {
   M.cardboard = std({ color: '#b9935f', roughness: 0.9 });
   M.glass = new THREE.MeshPhysicalMaterial({ color: '#cfe2e6', roughness: 0.05, transparent: true, opacity: 0.18, side: THREE.DoubleSide, depthWrite: false });
   M.jug = std({ color: '#f4f4ef', roughness: 0.35, emissive: '#2a2a28' });
-  M.crateBlue = std({ map: crateTex('#2f67d6'), alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.5 });
-  M.crateBlack = std({ map: crateTex('#1b1c1f'), alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.5 });
-  M.wave = std({ map: canvasTex(1024, 128, (x, w, h) => {          // the blue swirl band over the dairy case
+  // crate faces cut straight from the walk-in photo (jugs visible through the lattice)
+  M.crateBlue = std({ map: ptex('store_crate_blue.png'), roughness: 0.55 });
+  M.crateBlack = std({ map: ptex('store_crate_black.png'), roughness: 0.55 });
+  M.crateTopBlue = std({ map: crateTop('#3466d0'), roughness: 0.55 });
+  M.crateTopBlack = std({ map: crateTop('#1c1d20'), roughness: 0.55 });
+  M.cardboard = std({ map: ptex('store_cardboard.png'), roughness: 0.9 });
+  M.wpanel = std({ map: ptex('store_panel.png', 4, 2), roughness: 0.5, side: THREE.DoubleSide, emissive: '#1c1d1e' });
+  M.wfloor = std({ map: ptex('store_floor.png', 6, 4), roughness: 0.85 });
+  M.curb = std({ color: '#2f5fae', map: ptex('store_floor.png', 4, 0.3), roughness: 0.75 });   // blue-painted curb, scuffed
+  M.wave = std({ map: ptex('store_swirl.png', 1, 1), roughness: 0.6 });
+  M.waveOld = std({ map: canvasTex(1024, 128, (x, w, h) => {          // the blue swirl band over the dairy case
     x.fillStyle = '#5f8fc9'; x.fillRect(0, 0, w, h);
     x.strokeStyle = 'rgba(235,242,250,0.85)'; x.lineWidth = 5;
     for (let k = 0; k < 4; k++) {
@@ -73,6 +88,16 @@ function mats() {
     for (let i = 0; i < 18; i++) { const cx = i * 60 + 20; x.beginPath(); x.arc(cx, 60 + Math.sin(i) * 20, 14, 0, Math.PI * 1.6); x.stroke(); }
   }, [3, 1]), roughness: 0.6 });
   return M;
+}
+function crateTop(col) {     // looking down into a crate full of jugs: white caps in a grid
+  return canvasTex(128, 128, (x, w, h) => {
+    x.fillStyle = col; x.fillRect(0, 0, w, h);
+    x.fillStyle = '#e9e8e2'; x.fillRect(8, 8, w - 16, h - 16);
+    for (let i = 0; i < 2; i++) for (let j = 0; j < 2; j++) {
+      x.fillStyle = '#d5d4cd'; x.fillRect(12 + i * 56, 12 + j * 56, 48, 48);
+      x.fillStyle = ['#d42a2a', '#2f5fd0'][(i + j) % 2]; x.beginPath(); x.arc(36 + i * 56, 36 + j * 56, 9, 0, 7); x.fill();
+    }
+  });
 }
 function crateTex(col) {
   return canvasTex(128, 128, (x, w, h) => {
@@ -90,10 +115,36 @@ function crateTex(col) {
 let jugGeo, cartonGeo;
 function jugGeometry() {
   if (jugGeo) return jugGeo;
-  const pts = [[0, 0], [0.075, 0], [0.08, 0.02], [0.08, 0.18], [0.06, 0.23], [0.02, 0.255], [0.02, 0.27], [0, 0.27]].map(([a, b]) => new THREE.Vector2(a, b));
-  jugGeo = new THREE.LatheGeometry(pts, 4, Math.PI / 4);    // 4 sides: square-ish milk jug
-  jugGeo.scale(1, 1, 1);
+  // rounded-square gallon jug: lathe with 16 segments pushed toward a square, plus a hollow handle bulge
+  const pts = [[0, 0], [0.07, 0], [0.078, 0.012], [0.078, 0.17], [0.07, 0.2], [0.045, 0.235], [0.02, 0.25], [0.02, 0.268], [0, 0.268]].map(([a, b]) => new THREE.Vector2(a, b));
+  const g = new THREE.LatheGeometry(pts, 24);
+  const p = g.attributes.position;
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i), z = p.getZ(i), r = Math.hypot(x, z);
+    if (r < 1e-5) continue;
+    const a = Math.atan2(z, x);
+    const sq = 1 / Math.max(Math.abs(Math.cos(a)), Math.abs(Math.sin(a)));     // square-ify
+    const k = 1 + (Math.min(sq, 1.25) - 1) * 0.85;
+    let nx = x * k, nz = z * k;
+    const y = p.getY(i);
+    if (x < -0.04 && z > 0.02 && y > 0.12 && y < 0.24) nx -= 0.012;             // handle side bulge
+    p.setXYZ(i, nx * 0.95, y, nz * 0.95);
+  }
+  g.computeVertexNormals();
+  jugGeo = g;
   return jugGeo;
+}
+// made-up label wrapped on the front of each jug
+const jugLabels = {};
+function jugLabel(capCol) {
+  if (jugLabels[capCol]) return jugLabels[capCol];
+  jugLabels[capCol] = new THREE.MeshStandardMaterial({ roughness: 0.5, map: canvasTex(128, 96, (x, w, h) => {
+    x.fillStyle = '#fbfaf5'; x.fillRect(0, 0, w, h);
+    x.fillStyle = capCol; x.fillRect(0, h * 0.62, w, h * 0.38);
+    x.fillStyle = '#1d4a2a'; x.font = 'bold 20px Georgia'; x.textAlign = 'center'; x.fillText('MEADOW', w / 2, 30); x.fillText('DAIRY', w / 2, 52);
+    x.fillStyle = '#fff'; x.font = 'bold 18px Arial'; x.fillText('MILK', w / 2, 86);
+  }) });
+  return jugLabels[capCol];
 }
 
 // ---------------------------------------------------------------- glass-door milk cooler bay (1 m wide), faces +z
@@ -133,6 +184,22 @@ function coolerDoor(capCol, kind, seed) {
   }
   jug.count = cap.count = n;
   g.add(jug, cap);
+  // labels (front of each jug) + yellow price tags on the shelf strips
+  const lab = new THREE.InstancedMesh(new THREE.PlaneGeometry(0.11, 0.085), jugLabel(capCol), 30);
+  const q = new THREE.Matrix4(), tmp = new THREE.Vector3();
+  for (let i = 0; i < n; i++) {
+    jug.getMatrixAt(i, q); tmp.setFromMatrixPosition(q);
+    q.makeTranslation(tmp.x, tmp.y + 0.11, tmp.z + 0.075);
+    lab.setMatrixAt(i, q);
+  }
+  lab.count = n;
+  g.add(lab);
+  const tag = new THREE.MeshBasicMaterial({ map: canvasTex(96, 48, (x, w, h) => { x.fillStyle = '#f6d43a'; x.fillRect(0, 0, w, h); x.fillStyle = '#111'; x.font = 'bold 26px Arial'; x.fillText(['3.49', '2.99', '4.19'][seed % 3], 10, 34); }) });
+  for (let shelf = 0; shelf < 5; shelf++) {
+    const t2 = new THREE.Mesh(new THREE.PlaneGeometry(0.08, 0.04), tag);
+    t2.position.set(-0.3 + (shelf % 2) * 0.35, 0.17 + shelf * 0.38, -0.088);
+    g.add(t2);
+  }
   // door: steel frame + glass + handle
   g.add(box(1.0, 0.06, 0.06, m.steel, 0, 2.1, 0));
   g.add(box(1.0, 0.06, 0.06, m.steel, 0, 0.06, 0));
@@ -146,11 +213,15 @@ function coolerDoor(capCol, kind, seed) {
 function eggCase(len) {
   const m = mats();
   const g = new THREE.Group();
-  g.add(box(len, 0.85, 0.9, m.steel, 0, 0.425, 0));
-  g.add(box(len, 1.3, 0.12, m.dark, 0, 1.5, -0.4));
+  g.add(box(len, 0.3, 0.9, m.green, 0, 0.15, 0));
+  g.add(box(len, 0.05, 0.9, m.steel, 0, 0.32, 0));
+  g.add(box(len, 1.3, 0.12, std({ color: '#d8dbd6', emissive: '#55585a' }), 0, 1.5, -0.4));   // lit white back like the photo
   const r = rng(9);
   const egg = std({ color: '#f1ece0', roughness: 0.8 });
   const butter = ['#f3d34a', '#e85b3a', '#3a6fc4', '#f1efe6'];
+  // lower shelves show the photographed egg flats
+  const eggPhoto = std({ map: ptex('store_eggs.png', len / 1.4, 1), roughness: 0.7, emissive: '#2a2620' });
+  g.add(plane(len - 0.1, 0.55, eggPhoto, 0, 0.6, 0.2));
   for (let shelf = 0; shelf < 3; shelf++) {
     const y = 0.88 + shelf * 0.38;
     g.add(box(len, 0.02, 0.5 - shelf * 0.06, m.steel, 0, y, -0.12 - shelf * 0.03));
@@ -221,7 +292,7 @@ function uboat(seed) {
   let y = 0.22;
   for (let k = 0; k < 4; k++) {
     const h = 0.18 + r() * 0.2;
-    g.add(box(0.38, h, 0.5, m.cardboard, 0, y + h / 2, -0.25 + (r() - 0.5) * 0.05));
+    g.add(box(0.38, h, 0.5, mats().cardboard, 0, y + h / 2, -0.25 + (r() - 0.5) * 0.05));
     g.add(box(0.38, h * 0.9, 0.45, m.cardboard, 0, y + h * 0.45, 0.28));
     y += h;
   }
@@ -234,7 +305,9 @@ function crateStack(n, black, x, z, ry = 0) {
   const g = new THREE.Group();
   const geo = new THREE.BoxGeometry(0.33, 0.28, 0.33);
   for (let i = 0; i < n; i++) {
-    const c = new THREE.Mesh(geo, (black ? i % 3 !== 1 : i % 4 === 3) ? m.crateBlack : m.crateBlue);
+    const blk = black ? i % 3 !== 1 : i % 4 === 3;
+    const face = blk ? m.crateBlack : m.crateBlue, top = blk ? m.crateTopBlack : m.crateTopBlue;
+    const c = new THREE.Mesh(geo, [face, face, top, face, face, face]);
     c.position.set(0, 0.14 + i * 0.285, 0);
     c.rotation.y = (i % 2) * 0.03;
     g.add(c);
@@ -333,11 +406,33 @@ export function makeGrocery() {
   const wx0 = x0, wx1 = -2.6, wz1 = -1.4;
   g.add(plane(wx1 - wx0, 3.4, m.panel, (wx0 + wx1) / 2, 1.7, wz1, 0));          // front wall (with doorway gap below)
   g.children[g.children.length - 1].visible = false;
-  const front = (a, b) => g.add(plane(b - a, 3.4, m.panel, (a + b) / 2, 1.7, wz1, 0));
+  const front = (a, b) => g.add(plane(b - a, 3.4, m.wpanel, (a + b) / 2, 1.7, wz1, 0));
   front(wx0, -5.4); front(-4.1, wx1);
-  g.add(plane(1.3, 1.0, m.panel, -4.75, 2.9, wz1, 0));
-  g.add(plane(Math.abs(wz1 - zb), 3.4, m.panel, wx1, 1.7, (zb + wz1) / 2, -Math.PI / 2));
-  g.add(plane(wx1 - wx0, Math.abs(wz1 - zb), m.panel, (wx0 + wx1) / 2, 3.39, (zb + wz1) / 2, 0, Math.PI / 2));
+  g.add(plane(1.3, 1.0, m.wpanel, -4.75, 2.9, wz1, 0));
+  g.add(plane(Math.abs(wz1 - zb), 3.4, m.wpanel, wx1, 1.7, (zb + wz1) / 2, -Math.PI / 2));
+  g.add(plane(wx1 - wx0, Math.abs(wz1 - zb), m.wpanel, (wx0 + wx1) / 2, 3.39, (zb + wz1) / 2, 0, Math.PI / 2));
+  // inside faces of the outer walls + worn concrete floor + blue-painted curb along the walls (photo)
+  g.add(plane(wx1 - wx0, 3.4, m.wpanel, (wx0 + wx1) / 2, 1.7, zb + 0.02, 0));
+  g.add(plane(Math.abs(wz1 - zb), 3.4, m.wpanel, wx0 + 0.02, 1.7, (zb + wz1) / 2, Math.PI / 2));
+  g.add(plane(wx1 - wx0, Math.abs(wz1 - zb), m.wfloor, (wx0 + wx1) / 2, 0.015, (zb + wz1) / 2, 0, -Math.PI / 2));
+  const curbN = box(Math.abs(wz1 - zb), 0.18, 0.25, m.curb, wx1 - 0.13, 0.09, (zb + wz1) / 2);
+  curbN.rotation.y = Math.PI / 2;
+  g.add(curbN);
+  // white wire shelving with green tag strips along the inner wall (carts photo), stocked with small cartons
+  for (let k = 0; k < 2; k++) {
+    const sh = new THREE.Group();
+    const white = std({ color: '#f2f3f0', roughness: 0.4 });
+    for (const sx of [-0.55, 0.55]) for (const sz of [-0.22, 0.22]) sh.add(box(0.03, 2.0, 0.03, white, sx, 1.0, sz));
+    for (let lv = 0; lv < 5; lv++) {
+      const y = 0.25 + lv * 0.42;
+      sh.add(box(1.14, 0.02, 0.46, white, 0, y, 0));
+      sh.add(box(1.14, 0.05, 0.01, std({ color: '#6cc04a' }), 0, y - 0.02, 0.235));
+      for (let i = 0; i < 6; i++) sh.add(box(0.13, 0.22, 0.13, std({ color: ['#dbe8f5', '#5b8fd6', '#f2f2ef', '#a9c9ec'][(i + lv + k) % 4] }), -0.45 + i * 0.18, y + 0.12, 0.05));
+    }
+    sh.position.set(wx1 - 0.35, 0, -5.0 + k * 1.25);
+    sh.rotation.y = -Math.PI / 2;
+    g.add(sh);
+  }
   for (const [a, b] of [[wx0, -5.4], [-4.1, wx1]]) solid(a, b, wz1 - 0.1, wz1 + 0.1);
   solid(wx1 - 0.1, wx1 + 0.1, zb, wz1);
   // strip curtain
@@ -360,6 +455,13 @@ export function makeGrocery() {
   for (const [x, z, s] of [[-5.6, -4.2, 4], [-4.6, -4.3, 7]]) {
     const u = uboat(s);
     u.position.set(x, 0, z);
+    // clipboard sheet hanging on the cart end (photo: order sheets on every cart)
+    const sheet = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.42), std({ map: canvasTex(128, 180, (c, w, h) => {
+      c.fillStyle = '#f7f6f1'; c.fillRect(0, 0, w, h); c.fillStyle = '#222'; c.font = 'bold 16px Arial'; c.fillText('DAIRY:', 10, 24);
+      c.strokeStyle = '#9aa'; for (let i = 0; i < 8; i++) { c.beginPath(); c.moveTo(10, 44 + i * 16); c.lineTo(w - 10, 44 + i * 16); c.stroke(); }
+    }), side: THREE.DoubleSide }));
+    sheet.position.set(0, 0.95, 0.63);
+    u.add(sheet);
     g.add(u);
     solid(x - 0.25, x + 0.25, z - 0.65, z + 0.65);
   }
