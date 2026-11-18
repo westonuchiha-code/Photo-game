@@ -36,7 +36,6 @@ function sculptSkull() {
     { c: new THREE.Vector3(0.44, 0.2, 0.88).normalize(), R: 0.47, depth: 0.62, rim: 0.07 },
     { c: new THREE.Vector3(-0.06, -0.2, 0.98).normalize(), R: 0.07, depth: 0.2, rim: 0 },      // nose
     { c: new THREE.Vector3(0.06, -0.2, 0.98).normalize(), R: 0.07, depth: 0.2, rim: 0 },
-    { c: new THREE.Vector3(0, -0.52, 0.86).normalize(), R: 0.2, depth: 0.25, rim: 0.02 },      // mouth
   ];
   const n3 = (x, y, z) => Math.sin(x * 23 + y * 7) * Math.sin(y * 19 - z * 11) * Math.sin(z * 17 + x * 5);
   for (let i = 0; i < p.count; i++) {
@@ -47,18 +46,18 @@ function sculptSkull() {
       if (d < h.R) {
         const k = 1 - (d / h.R) ** 2;
         r -= h.depth * k;
-        dark = Math.max(dark, Math.min(1, k * 1.8));
+        dark = Math.max(dark, Math.min(1, k * (h.R > 0.3 ? 6 : 1.8)));
       } else if (d < h.R * 1.35 && h.rim) {
         r += h.rim * Math.sin(((d - h.R) / (h.R * 0.35)) * Math.PI);   // raised round rim
       }
     }
-    r += 0.012 * n3(v.x, v.y, v.z);                    // clay unevenness
+    r += 0.004 * n3(v.x, v.y, v.z);                    // slight clay unevenness
     // shape: tall cranium, cheekbones, narrow jaw
     let x = v.x * 0.15, y = v.y * 0.21, z = v.z * 0.15;
     if (v.y < 0) { const t = -v.y; x *= 1 - 0.38 * t; z *= 1 - 0.15 * t; }
     if (v.y < 0.05 && v.y > -0.35) x *= 1 + 0.06 * Math.exp(-(((v.y + 0.15) / 0.1) ** 2));   // cheekbones
     p.setXYZ(i, x * r, y * r, z * r);
-    const b = 1 - 0.97 * dark;
+    const b = 1 - dark;
     col[i * 3] = 1.0 * b; col[i * 3 + 1] = 0.93 * b; col[i * 3 + 2] = 0.8 * b;
   }
   geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
@@ -82,7 +81,7 @@ export function makeCreep() {
   fabric.repeat.set(3, 3);
   const hoodie = clay({ map: fabric, roughness: 0.95 });
   const hoodieIn = std({ color: '#0b0b0c', roughness: 1, side: THREE.BackSide });
-  const bone = clay({ vertexColors: true, roughness: 0.65, color: '#fff4dc', emissive: '#2a2416', normalScale: new THREE.Vector2(0.8, 0.8) });
+  const bone = clay({ vertexColors: true, roughness: 0.6, color: '#fff4dc', normalScale: new THREE.Vector2(0.18, 0.18) });
   const socket = new THREE.MeshBasicMaterial({ color: '#050505' });
   const denim = canvasTex(256, 512, (x, w, h) => {
     x.fillStyle = '#6189bb'; x.fillRect(0, 0, w, h);
@@ -143,6 +142,18 @@ export function makeCreep() {
   head.position.set(0, 0.8, 0.02);
   body.add(head);
   head.add(part(sculptSkull(), bone, 0, 0.0, 0.0));
+  // mouth: just a thin dark line across the lower face
+  const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.004, 0.004), new THREE.MeshBasicMaterial({ color: '#2a2018' }));
+  mouth.position.set(0, -0.125, 0.122);
+  head.add(mouth);
+  // pitch-black backs of the eye sockets (like the figurine's hollow eyes)
+  for (const sx of [-1, 1]) {
+    const back = new THREE.SphereGeometry(0.058, 16, 12);
+    back.scale(1, 1.15, 0.5);
+    const m = new THREE.Mesh(back, new THREE.MeshBasicMaterial({ color: '#000000' }));
+    m.position.set(sx * 0.055, 0.05, 0.065);
+    head.add(m);
+  }
   // hood: a deep shell open at the front, with the dark inside
   const hoodGeo = new THREE.SphereGeometry(0.235, 40, 28, Math.PI / 2 + 0.8, Math.PI * 2 - 1.6, 0, Math.PI * 0.78);
   hoodGeo.scale(1, 1.18, 1.05);
