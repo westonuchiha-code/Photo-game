@@ -132,6 +132,18 @@ Rules (from you):
 39. Peeling sticker (grime/peeling-sticker-blue-crate): torn neon-pink "DISCONTINUED" label
     with white paper backing showing, on a glossy blue plastic crate. Make a reusable torn-sticker
     decal (generic text is fine: DISCONTINUED / CLEARANCE / SALE) + blue crate plastic.
+40. Nature trail (photos/trail/, 15 photos): leaf-litter dirt trails between ferns and thin
+    trees; overlook with pine branches + wire fence; pebbly dirt with leaves; moss carpet;
+    cobblestone path + rounded cobble steps with stone retaining walls; DANGER sign on a rope
+    fence with wooden post; mossy trunks with exposed roots on red clay; concrete stair climb
+    with drain grate + cartoon warning sign; weathered stone relief statue with pink paint
+    traces, teal ceramic offering cups, coin; giant cedar with sacred rope + paper streamers;
+    mossy rock shrine with flowers and stream; junk pile on a gravel forest path (crates, cones,
+    old appliances, wheel rims); narrow cracked mountain road through tall cedars with cone and
+    grate; granite gate pillars, rusty gate, fern and grass tufts, stone steps.
+    Possible "trail / hillside park" area: textures (leaf litter, red clay, moss, cobbles,
+    pebbles, cedar bark) + models (ferns, cedars, cobble steps, rope fence, statues, shrines,
+    junk pile). Sign text made generic.
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"
