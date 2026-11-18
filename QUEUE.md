@@ -7,6 +7,7 @@ Rules (from you):
   sign's shape and material. Keep text that's already generic (LIQUOR).
 
 ## Approved
+- Car tire + alloy wheel
 - Roadside shrines
 - Warehouse stockroom (grocery back room)
 - Grocery store (you'll send more photos later to update it)
@@ -36,7 +37,7 @@ Rules (from you):
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- Car tire + alloy wheel (src/models/wheel.js, reusable for vehicles): made-up ROADMARK / TRAILGRIP HP tire with tread grooves, sipes, raised triangle fields + lettering; black wheel with 5 hexagonal windows rimmed in machined silver, lug nuts, made-up cap badge, rotor + caliper. Display outside the tire shop office with a wall light.
+- Living room (interior photos): ground-floor unit of Elmwood Apartments through a working door in the first-floor hallway. Yellow walls, crown molding, dark wood floor, wide corner bookshelf + narrow one between the windows (made-up book titles, figurines, bowl, floral box), window seat with striped cushion + cabinet doors, floral roman shades, side table with the painted ceramic lamp + photo frames (generic pictures), framed painting, blue-and-white vase, night city view.
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text

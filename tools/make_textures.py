@@ -1127,6 +1127,24 @@ save("shr_concrete.png", seamless(cp))
 _sc(_SA, (284, 402, 306, 446), (128, 256)).save(os.path.join(OUT, "shr_bib.png"))
 _sc(_SA, (544, 474, 588, 532), (192, 256)).save(os.path.join(OUT, "shr_tablet.png"))
 
+# ---------------------------------------------------------------- apartment living room (interior photos)
+_I1, _I2, _I3 = [ImageOps.exif_transpose(Image.open(f"photos/interior/{n}.jpg")).convert("RGB") for n in ("bookshelf-closeup1", "bookshelf-closeup2", "bookshelf-room")]
+def _ic(im, b, size):
+    k = im.size[0] / 500
+    return im.crop(tuple(int(v * k) for v in b)).resize(size, Image.LANCZOS)
+lw = delight(np.asarray(_ic(_I1, (345, 160, 470, 440), (256, 512))).astype(np.float32), 120)
+save("liv_wall.png", seamless(lw))
+ls_ = delight(np.asarray(_ic(_I3, (385, 75, 492, 235), (384, 512))).astype(np.float32), 120)
+save("liv_shade.png", seamless(ls_))
+lf = delight(np.asarray(_ic(_I3, (195, 612, 298, 662), (512, 256))).astype(np.float32), 80)
+save("liv_floor.png", seamless(lf))
+lt_ = delight(np.asarray(_ic(_I3, (45, 595, 165, 660), (512, 256))).astype(np.float32), 80)
+save("liv_wood.png", seamless(lt_))
+_ic(_I3, (4, 211, 88, 286), (512, 456)).save(os.path.join(OUT, "liv_painting.png"))
+_ic(_I3, (28, 432, 100, 530), (256, 352)).save(os.path.join(OUT, "liv_lamp.png"))
+_ic(_I3, (171, 533, 214, 634), (160, 352)).save(os.path.join(OUT, "liv_vase.png"))
+_ic(_I2, (52, 586, 222, 628), (512, 128)).save(os.path.join(OUT, "liv_floralbox.png"))
+
 with open(os.path.join(OUT, "palette.json"), "w") as f:
     json.dump(palette, f, indent=2)
 print("wrote palette.json")

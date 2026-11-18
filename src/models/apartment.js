@@ -11,6 +11,7 @@
 import * as THREE from 'three';
 import { box, canvasTexture } from '../world/util.js';
 import { makeWindow } from './buildings.js';
+import { makeLivingRoom } from './livingroom.js';
 
 const loader = new THREE.TextureLoader();
 function tex(name, rx = 1, ry = 1, color = true) {
@@ -214,6 +215,8 @@ export function makeApartment() {
 
   // ------------------------------------------------ interior
   const I = { x0: hall.x0, x1: stair.x1 + 0.02, z0: zb + 0.2, z1: zf - 0.25 };
+  const UZ = 0.8, UW = 0.9;            // living-room unit door
+  const unitPivot = new THREE.Group();
   const innerW = I.x1 - I.x0, innerD = I.z1 - I.z0;
   for (const [fy, isTop] of [[F1, false], [F2, true]]) {
     // floor (upstairs has the stair opening)
@@ -237,6 +240,19 @@ export function makeApartment() {
     for (const z of [-3, 0.5, 3.5]) g.add(box(0.55, 0.02, 1.1, M.light, (hall.x0 + hall.x1) / 2, fy + FH - 0.035, z, { shadow: false }));
     // beadboard walls (left = west side, right = east side)
     for (const [x, ry] of [[I.x0, Math.PI / 2], [I.x1, -Math.PI / 2]]) {
+      if (!isTop && x === I.x0) {
+        // west wall on the first floor has the living-room unit doorway (z UZ +- UW/2)
+        const za = UZ - UW / 2, zb2 = UZ + UW / 2;
+        for (const [a2, b2] of [[I.z0, za], [zb2, I.z1]]) {
+          const w = plane(M.bead, b2 - a2, FH, 0.8, FH); w.position.set(x, fy + FH / 2, (a2 + b2) / 2); w.rotation.y = ry; g.add(w);
+        }
+        const hd = plane(M.bead, UW, FH - 2.06, 0.8, FH); hd.position.set(x, fy + 2.06 + (FH - 2.06) / 2, UZ); hd.rotation.y = ry; g.add(hd);
+        for (const z of [za - 0.04, zb2 + 0.04]) g.add(box(0.03, 2.1, 0.08, M.trim, x + 0.015, fy + 1.05, z));
+        g.add(box(0.03, 0.08, UW + 0.16, M.trim, x + 0.015, fy + 2.1, UZ));
+        g.add(box(0.02, 0.1, za - I.z0, M.trim, x + 0.01, fy + 0.05, (I.z0 + za) / 2));
+        g.add(box(0.02, 0.1, I.z1 - zb2, M.trim, x + 0.01, fy + 0.05, (zb2 + I.z1) / 2));
+        continue;
+      }
       const w = plane(M.bead, innerD, FH, 0.8, FH);
       w.position.set(x, fy + FH / 2, (I.z0 + I.z1) / 2);
       w.rotation.y = ry;
@@ -248,6 +264,16 @@ export function makeApartment() {
     g.add(bw);
     // unit doors on the west wall, with mats
     for (const z of [-3.2, 0.8]) {
+      if (!isTop && z === UZ) {      // this one opens into the living room
+        unitPivot.position.set(I.x0 + 0.02, fy, UZ + UW / 2 - 0.02);
+        const leaf = sixPanelDoor(M, UW - 0.04);
+        leaf.rotation.y = Math.PI / 2;
+        leaf.position.z = -(UW - 0.04) / 2;
+        unitPivot.add(leaf);
+        g.add(unitPivot);
+        g.add(box(0.5, 0.012, 0.8, M.mat, I.x0 + 0.35, fy + 0.006, z, { shadow: false }));
+        continue;
+      }
       const d = sixPanelDoor(M);
       d.position.set(I.x0 + 0.01, fy, z);
       d.rotation.y = Math.PI / 2;
@@ -259,7 +285,15 @@ export function makeApartment() {
     ed.position.set((hall.x0 + hall.x1) / 2, fy, I.z0 + 0.01);
     g.add(ed);
   }
-  colliders.push([I.x0 - 0.2, I.x0, I.z0, I.z1, F1, F2]);
+  colliders.push([I.x0 - 0.2, I.x0, I.z0, UZ - UW / 2, F1, F2]);
+  colliders.push([I.x0 - 0.2, I.x0, UZ + UW / 2, I.z1, F1, F2]);
+  colliders.push([I.x0 - 0.2, I.x0, I.z0, I.z1, F2, F2 + FH]);
+  // ------------------------------------------------ living room behind the unit door (interior photos)
+  const LR = { x0: -W / 2 + 0.2, x1: I.x0 - 0.02, z0: -0.6, z1: I.z1 };
+  const living = makeLivingRoom({ F1, FH, x0: LR.x0, x1: LR.x1, z0: LR.z0, z1: LR.z1, doorZ: UZ, doorW: UW });
+  g.add(living);
+  colliders.push(...living.userData.colliders);
+  colliders.push([LR.x0, LR.x1, LR.z0 - 0.2, LR.z0, F1, F2]);
   colliders.push([I.x1, I.x1 + 0.2, I.z0, I.z1, F1, F2]);
   colliders.push([I.x0, I.x1, I.z0 - 0.2, I.z0, F1, F2]);
   colliders.push([stair.x0, stair.x1, stair.z0 - 0.25, stair.z0, F1, F1]); // can't walk into the top of the stair from below
@@ -330,6 +364,7 @@ export function makeApartment() {
       if (z < zf + landD) return F1;
       return Math.max(0, rise * (steps - Math.floor((z - zf - landD) / run)));
     }
+    if (x > LR.x0 - 0.1 && x < I.x0 && z > LR.z0 - 0.1 && z < LR.z1 + 0.1 && prevY > F1 - 0.7) return F1;   // living room
     if (x < I.x0 - 0.1 || x > I.x1 + 0.1 || z < I.z0 - 0.1 || z > zf + 0.1) return null; // not inside
     const inStair = x > stair.x0 && x < stair.x1 && z > stair.z0 - 0.05 && z < stair.z1 + 0.05;
     if (inStair) {
@@ -341,6 +376,10 @@ export function makeApartment() {
     return Math.abs(prevY - F2) < Math.abs(prevY - F1) ? F2 : F1;
   };
   g.userData.colliders = colliders;
+  g.userData.unitDoor = {
+    setOpen: (t) => { unitPivot.rotation.y = t * 1.45; },
+    at: [I.x0, UZ], gap: [I.x0 - 0.12, I.x0 + 0.06, UZ - UW / 2, UZ + UW / 2], y: F1,
+  };
   g.userData.door = {
     setOpen: (t) => { pivot.rotation.y = t * 1.5; },
     at: [(dx0 + dx1) / 2, zf], gap: [dx0, dx1, zf - 0.25, zf + 0.05], y: F1,

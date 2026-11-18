@@ -573,6 +573,13 @@ for (const [x0, x1, z0, z1, y0, y1] of apt.userData.colliders) {
   colliders.push(col);
   interactables.push({ name: 'front door', kind: 'door', setOpen: d.setOpen, x: AP.x - d.at[1] + 0.6, z: AP.z + d.at[0], t: 0, target: 0, col, speed: 2.2 });
 }
+{
+  const d = apt.userData.unitDoor;
+  const [a, b, c, e] = d.gap;      // local x range a..b, z range c..e
+  const col = { type: 'box', minX: AP.x - e, maxX: AP.x - c, minZ: AP.z + a, maxZ: AP.z + b, y0: d.y, y1: d.y + 3 };
+  colliders.push(col);
+  interactables.push({ name: 'apartment door', kind: 'door', setOpen: d.setOpen, x: AP.x - d.at[1], z: AP.z + d.at[0], t: 0, target: 0, col, speed: 2.2 });
+}
 
 // ------------------------------------------------------------------ soup pots on the bar (soup photos)
 const soupPots = [];
@@ -850,6 +857,9 @@ const VIEWS = {
   shrineB: { pos: [60.6, 1.4, -32.4], target: [60.1, 1.0, -37.4] },
   tirewheel: { pos: [29.6, 0.75, -11.75], target: [28.6, 0.4, -13.1] },
   tiredisplay: { pos: [27.6, 1.6, -10.4], target: [27.6, 0.4, -13.2] },
+  livingroom: { pos: [56.6, 3.0, -2.2], target: [52.6, 2.4, -6.6] },
+  bookshelves: { pos: [55.2, 2.6, -4.6], target: [52.4, 2.5, -6.9] },
+  lamptable: { pos: [54.6, 2.7, -4.4], target: [54.6, 2.3, -7.6] },
   walkinshelf: { pos: [17.6, 1.6, -44.0], target: [21.4, 1.0, -45.6] },
   van: { pos: [25.5, 1.9, -22.4], target: [21.5, 0.9, -26.5] },
   vanside: { pos: [24.6, 1.3, -29.2], target: [21.5, 0.7, -26.3] },
