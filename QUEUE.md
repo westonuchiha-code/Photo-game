@@ -296,6 +296,12 @@ Rules (from you):
     an open refrigerated sushi case (vented steel base, black shelves) full of nigiri trays (red/gold
     patterned trays, clear lids, labels, ginger + soy packets), round wood-grain glasses on a
     croc-embossed wallet, a small drink carton with a straw. Made-up labels and prices only.
+67. Misc 3 (photos/misc3/, 5 photos): a park story-sign (purple wood-grain panel between two speckled
+    stone posts, steel title plate, an illustration under acrylic with standoff bolts, an engraved
+    steel text plate; draw an original illustration + made-up text), a dry canal walkway (red brick
+    edging, mossy gravel path, wet channel, small wooden plank bridge, concrete flood walls, an
+    elevated road overhead), two receipts as paper props (made-up store, items, prices; no real
+    addresses or phone numbers), a frozen grilled rice-ball pack (made-up name).
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"

@@ -22,6 +22,7 @@
 // Faces +z, origin at ground level in the middle of the entrance; the stair rises toward -z.
 // userData: colliders [[x0,x1,z0,z1]], floorY(x, z) (null outside the stair), area (stair rect)
 import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { F, fitText } from '../fonts.js';
 
 const _L = new THREE.TextureLoader();
@@ -109,89 +110,131 @@ function lightboxTex() {
     for (let i = 0; i < 400; i++) { c.fillStyle = `rgba(60,50,40,${r() * 0.06})`; c.fillRect(r() * w, r() * h, 2 + r() * 10, 2 + r() * 10); }
   });
 }
-// A proper 19 x 19 Go board drawn in perspective: kaya-wood top with grain, 19 lines each way
-// (heavier border line), the nine star points, the board's front edge, and stones sitting exactly
-// on intersections in a believable opening (no overlaps). elev = how steeply we look down
-// (90 = straight down). Returns a function mapping (col,row) -> screen point, for hands etc.
-const GO_POSITION = {
-  // [col, row], col 0..18 left->right, row 0..18 far->near. A standard opening with a fight
-  // starting in the lower right.
-  black: [[15, 3], [16, 15], [9, 15], [3, 15], [14, 13], [13, 16], [2, 9], [15, 9]],
-  white: [[3, 3], [3, 16], [14, 16], [15, 13], [12, 14], [16, 6], [5, 2]],
+// ------------------------------------------------------------------ Go board (rendered from a 3D model)
+// A real table goban, built to the standard proportions and rendered once into an image for the
+// signs: kaya-coloured block with straight grain, playing surface 424 x 455 mm with a 19 x 19 grid
+// (22 mm across x 23.7 mm along, so the cells are slightly taller than wide), 1 mm lines, a slightly
+// heavier border, nine star points, carved legs, biconvex (lens-shaped) stones that sit a hair off
+// centre like real ones, and two chestnut stone bowls with lids. The position is a plausible game
+// (opening + a corner fight), every group with liberties.
+// Position: an early-middle-game, written as SGF points (column a-s left to right, row a-s far to
+// near). Top-right: black 4-4 with the standard 3-3 invasion played out (white lives in the corner,
+// black gets the outside wall). Top-left: white 4-4, black approaches from the top, white
+// strengthens on the left side. Bottom: black 4-4 right and white 4-4 left, each approached, with a
+// white pincer and a black pincer. Side extensions on the right and left. 11 black, 10 white
+// (black moved first). Every group has liberties; nothing overlaps.
+const sgf = (pts) => pts.split(' ').map((p) => [p.charCodeAt(0) - 97, p.charCodeAt(1) - 97]);
+const GO_POS = {
+  black: sgf('pd pc qe re ob pp lq fq jd qj fc'),
+  white: sgf('qc qd rd rb dp nq hq dd cj cg'),
 };
-function goBoard(c, x, y, w, h, { elev = 45, edge = true } = {}) {
-  const el = elev * Math.PI / 180, dist = 3.2;
-  const C = [0, Math.sin(el) * dist, Math.cos(el) * dist];          // camera, looking at the board centre
-  const fl = Math.hypot(C[1], C[2]), f = [0, -C[1] / fl, -C[2] / fl];
-  const up = [0, -f[2], f[1]];
-  const proj = (X, Y, Z) => {
-    const d = [X - C[0], Y - C[1], Z - C[2]];
-    const fd = d[0] * f[0] + d[1] * f[1] + d[2] * f[2];
-    return [d[0] / fd, -(d[1] * up[1] + d[2] * up[2]) / fd, fd];
+const BW = 0.424, BL = 0.455, BT = 0.09, DX = 0.022, DZ = 0.0237;
+function grainCanvas(w, h, base, seed, lines) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const x = c.getContext('2d'), r = rng(seed);
+  x.fillStyle = base; x.fillRect(0, 0, w, h);
+  for (let i = 0; i < 220; i++) {                       // straight grain (masame) running along the board
+    const px = r() * w, a = 0.025 + r() * 0.06;
+    x.strokeStyle = r() < 0.5 ? `rgba(150,95,35,${a})` : `rgba(255,235,190,${a})`;
+    x.lineWidth = 0.6 + r() * 2.4;
+    x.beginPath(); x.moveTo(px, 0);
+    for (let y = 0; y <= h; y += 32) x.lineTo(px + Math.sin(y * 0.004 + i) * 1.6, y);
+    x.stroke();
+  }
+  if (lines) lines(x, w, h);
+  return c;
+}
+let _goR = null;
+function goRenderer() {
+  if (_goR) return _goR;
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  const scene = new THREE.Scene();
+  const top = grainCanvas(1024, 1100, '#dcae63', 7, (x, w, h) => {
+    const px = w / BW, pz = h / BL, x0 = (BW - 18 * DX) / 2, z0 = (BL - 18 * DZ) / 2;
+    x.strokeStyle = '#1d140b'; x.lineCap = 'butt';
+    for (let i = 0; i < 19; i++) {
+      x.lineWidth = (i === 0 || i === 18 ? 1.6 : 1.0) * px / 1000;
+      x.beginPath(); x.moveTo((x0 + i * DX) * px, z0 * pz); x.lineTo((x0 + i * DX) * px, (z0 + 18 * DZ) * pz); x.stroke();
+      x.beginPath(); x.moveTo(x0 * px, (z0 + i * DZ) * pz); x.lineTo((x0 + 18 * DX) * px, (z0 + i * DZ) * pz); x.stroke();
+    }
+    x.fillStyle = '#1d140b';
+    for (const a of [3, 9, 15]) for (const b of [3, 9, 15]) { x.beginPath(); x.arc((x0 + a * DX) * px, (z0 + b * DZ) * pz, 0.0021 * px, 0, 7); x.fill(); }
+  });
+  const side = grainCanvas(512, 128, '#c99550', 9);
+  const tex = (cv) => { const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; };
+  const sideM = new THREE.MeshStandardMaterial({ map: tex(side), roughness: 0.55 });
+  const topM = new THREE.MeshStandardMaterial({ map: tex(top), roughness: 0.5 });
+  const board = new THREE.Mesh(new RoundedBoxGeometry(BW, BT, BL, 3, 0.003), [sideM, sideM, topM, sideM, sideM, sideM]);
+  board.position.y = BT / 2 + 0.07; board.castShadow = board.receiveShadow = true; scene.add(board);
+  // fix the top face UVs to span the whole texture (RoundedBox maps each face 0..1 already)
+  const legM = new THREE.MeshStandardMaterial({ color: '#b98642', roughness: 0.5 });
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+    const leg = new THREE.Mesh(new THREE.LatheGeometry([[0.0, 0], [0.03, 0], [0.034, 0.012], [0.024, 0.03], [0.03, 0.05], [0.026, 0.07], [0, 0.07]].map(([r, y]) => new THREE.Vector2(r, y)), 20), legM);
+    leg.position.set(sx * 0.14, 0, sz * 0.15); leg.castShadow = true; scene.add(leg);
+  }
+  const stoneG = new THREE.SphereGeometry(1, 40, 20);
+  const blackM = new THREE.MeshStandardMaterial({ color: '#141414', roughness: 0.42 });
+  const whiteM = new THREE.MeshStandardMaterial({ color: '#f1efe8', roughness: 0.28 });
+  const surf = 0.07 + BT, r = rng(44);
+  const place = (col, row, white) => {
+    const s = new THREE.Mesh(stoneG, white ? whiteM : blackM);
+    const R = white ? 0.0109 : 0.0111;
+    s.scale.set(R, 0.0046, R);
+    s.position.set(-9 * DX + col * DX + (r() - 0.5) * 0.0018, surf + 0.0045, -9 * DZ + row * DZ + (r() - 0.5) * 0.0018);
+    s.castShadow = s.receiveShadow = true; scene.add(s);
   };
-  const S = 0.5, T = 0.09;                                            // half size, board thickness
-  const corners = [[-S, 0, -S], [S, 0, -S], [S, 0, S], [-S, 0, S], [-S, -T, S], [S, -T, S]].map((p) => proj(...p));
-  const minX = Math.min(...corners.map((p) => p[0])), maxX = Math.max(...corners.map((p) => p[0]));
-  const minY = Math.min(...corners.map((p) => p[1])), maxY = Math.max(...corners.map((p) => p[1]));
-  const k = Math.min(w / (maxX - minX), h / (maxY - minY));
-  const ox = x + (w - (maxX - minX) * k) / 2 - minX * k, oy = y + (h - (maxY - minY) * k) / 2 - minY * k;
-  const P = (X, Y, Z) => { const q = proj(X, Y, Z); return [ox + q[0] * k, oy + q[1] * k, q[2]]; };
-  const M = 0.045, step = (2 * S - 2 * M) / 18;                       // margin outside the outer lines
-  const at = (col, row, Y = 0) => P(-S + M + col * step, Y, -S + M + row * step);
-  const poly = (pts) => { c.beginPath(); pts.forEach((p, i) => (i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1]))); c.closePath(); };
-  c.save();
-  // front edge of the block, then the top with wood grain
-  if (edge) { poly([P(-S, 0, S), P(S, 0, S), P(S, -T, S), P(-S, -T, S)]); c.fillStyle = '#b8873e'; c.fill(); }
-  poly([P(-S, 0, -S), P(S, 0, -S), P(S, 0, S), P(-S, 0, S)]);
-  c.fillStyle = '#e0b866'; c.fill();
-  c.save(); c.clip();
-  for (let i = 0; i < 40; i++) {
-    const X = -S + (i / 40) * 2 * S;
-    const a = P(X, 0, -S), b = P(X + 0.02 * Math.sin(i * 1.7), 0, S);
-    c.strokeStyle = `rgba(150,100,40,${0.08 + 0.08 * Math.abs(Math.sin(i * 2.3))})`; c.lineWidth = 1 + (i % 3);
-    c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); c.stroke();
+  GO_POS.black.forEach(([a, b]) => place(a, b, false));
+  GO_POS.white.forEach(([a, b]) => place(a, b, true));
+  // chestnut bowls with lids, beside the board; a few stones heaped in each
+  const bowlM = new THREE.MeshStandardMaterial({ color: '#7a4a24', roughness: 0.32 });
+  // hollow go-ke: foot, round belly, rim, then the inside surface curving back down
+  const bowlProfile = [[0.0, 0], [0.05, 0], [0.052, 0.006], [0.075, 0.02], [0.086, 0.045], [0.08, 0.07], [0.064, 0.082], [0.06, 0.084], [0.057, 0.08], [0.066, 0.06], [0.06, 0.035], [0.035, 0.024], [0.0, 0.022]].map(([a, b]) => new THREE.Vector2(a, b));
+  for (const [x, z, white] of [[0.31, -0.06, false], [-0.31, 0.08, true]]) {
+    const bowl = new THREE.Mesh(new THREE.LatheGeometry(bowlProfile, 48), new THREE.MeshStandardMaterial({ color: '#7a4a24', roughness: 0.32, side: THREE.DoubleSide })); bowl.position.set(x, 0, z); bowl.castShadow = true; bowl.userData.bowl = true; scene.add(bowl);
+    // (lids omitted: they read as stray discs at sign size)
+    for (let i = 0; i < 40; i++) {                       // a heap of stones filling the bowl
+      const st = new THREE.Mesh(stoneG, white ? whiteM : blackM);
+      const a = r() * 7, d = Math.sqrt(r()) * 0.05;
+      st.scale.set(0.011, 0.0046, 0.011); st.position.set(x + Math.cos(a) * d, 0.062 - d * 0.35 + r() * 0.006, z + Math.sin(a) * d);
+      st.rotation.set((r() - 0.5) * 0.5, 0, (r() - 0.5) * 0.5); st.userData.bowl = true; scene.add(st);
+    }
   }
-  c.restore();
-  // 19 x 19 lines
-  c.strokeStyle = '#2b1d0e';
-  for (let i = 0; i < 19; i++) {
-    c.lineWidth = i === 0 || i === 18 ? Math.max(1.2, k * 0.004) : Math.max(0.6, k * 0.0022);
-    let a = at(i, 0), b = at(i, 18); c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); c.stroke();
-    a = at(0, i); b = at(18, i); c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); c.stroke();
-  }
-  c.fillStyle = '#2b1d0e';
-  for (const cc of [3, 9, 15]) for (const rr of [3, 9, 15]) {
-    const p = at(cc, rr), r = Math.max(1.0, step * 0.11 * k / p[2]);
-    c.beginPath(); c.ellipse(p[0], p[1], r, r * Math.sin(el), 0, 0, 7); c.fill();
-  }
-  // stones: radius just under half the spacing, squashed by the view angle, drawn far-to-near
-  const stones = [...GO_POSITION.black.map((s2) => [...s2, 'b']), ...GO_POSITION.white.map((s2) => [...s2, 'w'])].sort((a, b) => a[1] - b[1]);
-  for (const [cc, rr, col] of stones) {
-    const p = at(cc, rr, 0.008);
-    const rx = step * 0.48 * k / p[2], ry = rx * (0.35 + 0.65 * Math.sin(el));
-    c.fillStyle = 'rgba(40,25,10,0.35)'; c.beginPath(); c.ellipse(p[0] + rx * 0.12, p[1] + ry * 0.35, rx, ry, 0, 0, 7); c.fill();
-    const g = c.createRadialGradient(p[0] - rx * 0.35, p[1] - ry * 0.45, rx * 0.05, p[0], p[1], rx);
-    if (col === 'b') { g.addColorStop(0, '#6a6a6a'); g.addColorStop(0.35, '#202020'); g.addColorStop(1, '#0a0a0a'); }
-    else { g.addColorStop(0, '#ffffff'); g.addColorStop(0.6, '#eceae4'); g.addColorStop(1, '#bdb9b0'); }
-    c.fillStyle = g; c.beginPath(); c.ellipse(p[0], p[1], rx, ry, 0, 0, 7); c.fill();
-  }
-  c.restore();
-  return { at, step: step * k };
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(3, 3), new THREE.ShadowMaterial({ opacity: 0.28 }));
+  floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
+  scene.add(new THREE.HemisphereLight('#fff8ee', '#8a7a66', 1.4));
+  const sun = new THREE.DirectionalLight('#fff4e0', 2.6);
+  sun.position.set(-0.6, 1.4, 0.5); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
+  Object.assign(sun.shadow.camera, { left: -0.6, right: 0.6, top: 0.6, bottom: -0.6, near: 0.1, far: 4 }); sun.shadow.bias = -0.0004;
+  scene.add(sun);
+  _goR = { renderer, scene };
+  return _goR;
 }
-// a hand from the upper right holding a black stone between index and middle finger
-function goHand(c, px, py, s) {
-  c.save(); c.translate(px, py); c.scale(s, s);
-  c.fillStyle = '#e8bf9c'; c.strokeStyle = 'rgba(120,70,40,0.6)'; c.lineWidth = 2;
-  c.beginPath(); c.moveTo(150, -120); c.quadraticCurveTo(70, -70, 40, -30); c.quadraticCurveTo(20, -8, 6, -6); c.quadraticCurveTo(-6, 4, 4, 12);
-  c.quadraticCurveTo(30, 16, 60, 4); c.quadraticCurveTo(110, -10, 190, -40); c.lineTo(190, -120); c.closePath(); c.fill(); c.stroke();
-  // index finger below the stone, middle finger on top
-  c.beginPath(); c.moveTo(60, 4); c.quadraticCurveTo(28, 26, 2, 22); c.quadraticCurveTo(-10, 16, 0, 10); c.quadraticCurveTo(26, 8, 52, -4); c.fill(); c.stroke();
-  c.fillStyle = '#f2d4bc'; c.beginPath(); c.ellipse(4, 16, 7, 4, -0.2, 0, 7); c.fill();          // nail
-  c.fillStyle = '#121212'; c.beginPath(); c.ellipse(-6, 6, 15, 8, -0.15, 0, 7); c.fill();
-  c.fillStyle = 'rgba(255,255,255,0.35)'; c.beginPath(); c.ellipse(-10, 3, 5, 2.5, -0.2, 0, 7); c.fill();
-  c.fillStyle = '#e8bf9c'; c.beginPath(); c.moveTo(40, -30); c.quadraticCurveTo(14, -10, -4, -2); c.quadraticCurveTo(-12, -8, -2, -14); c.quadraticCurveTo(18, -26, 34, -40); c.fill(); c.stroke();
-  c.restore();
+// Render the goban into an image: elev = degrees above the board, azim = turn around it,
+// span = how much of the scene (metres) to fit across.
+const _goCache = new Map();
+function goImage(w, h, { elev = 40, azim = 20, span = 0.62, bowls = true } = {}) {
+  const key = [w, h, elev, azim, span, bowls].join();
+  if (_goCache.has(key)) return _goCache.get(key);
+  const { renderer, scene } = goRenderer();
+  scene.children.forEach((o) => { if (o.userData.bowl) o.visible = bowls; });
+  renderer.setPixelRatio(1); renderer.setSize(w, h, false);
+  const cam = new THREE.PerspectiveCamera(24, w / h, 0.05, 20);
+  const el = elev * Math.PI / 180, az = azim * Math.PI / 180;
+  const dist = span / 2 / Math.tan(12 * Math.PI / 180) / Math.min(1, w / h);
+  cam.position.set(Math.sin(az) * Math.cos(el) * dist, 0.12 + Math.sin(el) * dist, Math.cos(az) * Math.cos(el) * dist);
+  cam.lookAt(0, 0.12, 0);
+  renderer.render(scene, cam);
+  const out = document.createElement('canvas'); out.width = w; out.height = h;
+  out.getContext('2d').drawImage(renderer.domElement, 0, 0);
+  _goCache.set(key, out);
+  return out;
 }
+function goBoard(c, x, y, w, h, opts) {
+  c.drawImage(goImage(Math.round(w * 2), Math.round(h * 2), opts), x, y, w, h);
+}
+export function goDebugImage(w, h, o) { return goImage(w, h, o); }
+function goRelease() { if (_goR) { _goR.renderer.dispose(); _goR.renderer.forceContextLoss(); _goR = null; _goCache.clear(); } }
 function verticalSignTex() {
   return canvasTex(400, 800, (c, w, h) => {
     const g = c.createLinearGradient(0, 0, 0, h);
@@ -199,15 +242,13 @@ function verticalSignTex() {
     c.fillStyle = g; c.fillRect(0, 0, w, h);
     // board + a hand placing a stone (top), like the photo's picture
     c.fillStyle = '#9ec6e2'; c.fillRect(0, 0, w, 210);
-    const bd = goBoard(c, 16, 22, w - 32, 184, { elev: 38 });
-    const tp = bd.at(10, 12);                                          // the empty point being played
-    goHand(c, tp[0] + 6, tp[1] - 8, 0.9);
+    goBoard(c, 6, 6, w - 12, 198, { elev: 36, azim: 16, span: 0.43 });
     c.fillStyle = '#1e3f9a'; fitText(c, 'GO CLUB', w / 2, 262, w - 60, 72, F.heavy, { spacing: 4 });
     c.fillStyle = '#e1262f';
     fitText(c, 'BA', w / 2, 400, w - 80, 170, F.heavy);
     fitText(c, 'DUK', w / 2, 560, w - 60, 150, F.heavy);
     c.fillStyle = '#1e3f9a'; fitText(c, 'UPSTAIRS · 2F', w / 2, 655, w - 70, 40, F.label, { spacing: 3 });
-    goBoard(c, 60, 688, w - 120, 100, { elev: 30 });
+    goBoard(c, 40, 682, w - 80, 112, { elev: 30, azim: -20, span: 0.36, bowls: false });
   });
 }
 function stickerTex(seed) { // layered torn flyers on the pole (generic text only)
@@ -569,7 +610,7 @@ export function makeStairEntrance() {
       for (const s of [-1, 1]) d.add(box(0.06, 2.12, 0.08, std({ color: '#3a3a38' }), s * 0.48, 1.06, 0));
       d.add(box(1.02, 0.06, 0.08, std({ color: '#3a3a38' }), 0, 2.1, 0));
       d.add(box(0.03, 0.18, 0.05, steel, 0.35, 1.0, 0.05));
-      const pl = canvasTex(256, 256, (c, w, h) => { c.fillStyle = '#20201f'; c.fillRect(0, 0, w, h); goBoard(c, 40, 106, w - 80, 140, { elev: 55 }); c.fillStyle = '#f2e6c8'; fitText(c, 'GO CLUB', w / 2, 50, w - 40, 54, F.heavy, { spacing: 6 }); fitText(c, 'please knock', w / 2, 92, w - 60, 26, F.hand); });
+      const pl = canvasTex(256, 256, (c, w, h) => { c.fillStyle = '#20201f'; c.fillRect(0, 0, w, h); goBoard(c, 30, 104, w - 60, 146, { elev: 60, azim: 0, span: 0.36, bowls: false }); c.fillStyle = '#f2e6c8'; fitText(c, 'GO CLUB', w / 2, 50, w - 40, 54, F.heavy, { spacing: 6 }); fitText(c, 'please knock', w / 2, 92, w - 60, 26, F.hand); });
       d.add(face(0.32, 0.32, std({ map: pl, roughness: 0.4 }), 0, 0.85, 0.03));
       d.position.set(0, GH, ZL + 0.03); g.add(d);
       const end = face(OW, WH - GH, plaster(OW, WH - GH), 0, GH + (WH - GH) / 2, ZL); g.add(end);
@@ -605,6 +646,7 @@ export function makeStairEntrance() {
     colliders.push([-HW, -HW + 0.32, ZL + 0.42, ZL + 1.08]);   // slipper rack
   }
 
+  goRelease();
   g.traverse((o) => { if (o.isMesh && o.material && o.material.transparent) o.castShadow = false; });
   g.userData.colliders = colliders;
   g.userData.area = { minX: -HW + 0.22, maxX: HW - 0.22, minZ: ZL + 0.3, maxZ: 0.4 };
