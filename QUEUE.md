@@ -7,6 +7,7 @@ Rules (from you):
   sign's shape and material. Keep text that's already generic (LIQUOR).
 
 ## Approved
+- Food set 1 (pizzas, ramen, spaghetti, curry rice)
 - Soup pots + textures
 - Tree with a door
 - Alien rock formation
@@ -27,11 +28,9 @@ Rules (from you):
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- Food set 1 (from item 16): mushroom pizza on a board, corn pizza in a takeout tray, ramen on a
-  tray with cup + chopsticks, spaghetti on an oval plate on a tray, curry rice. On the restaurant
-  tables. (Corn dog + pork bun dropped at your request.) Screenshots: `screenshots/food1-6.png`.
-  Still to do from item 16: katsu curry, steamed bun, melon bread, cheese snack, cans, dashi bottles,
-  noodle-shop menu board (later pass).
+- Old van: dusty two-tone 80s minivan (made-up KAZEMA badge), rusty wheels, rear corner on a block
+  with the wheel lying beside it; junkyard spot behind the tire shop with a flood light.
+  Screenshots: `screenshots/van.png`, `vanside.png`.
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
@@ -47,7 +46,6 @@ Rules (from you):
     (mushroom-egg, corn-shrimp, packaged display), canned drinks, dashi bottles in a vending
     machine, noodle-shop menu board with lanterns. Food models + textures; all packaging,
     can and menu text made up.
-17. Old rusty two-tone van in a junkyard (old-van): model + textures, made-up badge.
 18. Red motor scooter (photos/scooter/): model with opening seat, under-seat storage +
     battery bay (oil/gas caps, wiring, fuse), top box; two scooter batteries as props.
     Made-up brand names on scooter and batteries.

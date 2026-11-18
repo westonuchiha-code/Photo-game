@@ -25,6 +25,7 @@ import { makeRustyPole, makeWalkSignalPole } from './models/street.js';
 import { makeStreetBuilding } from './models/buildings.js';
 import { makePaverSidewalk, makeDrainCover, makePaverCrosswalk, makeTactilePlate, makeCracks, makeUtilityLid, makeTrafficIsland, makeDirtLot } from './models/streetground.js';
 import { makeSky } from './models/sky.js';
+import { makeOldVan } from './models/van.js';
 import { makePizza, makeRamenTray, makeSpaghettiTray, makeCurryPlate } from './models/food.js';
 import { makeAlienFormation } from './models/alien.js';
 import { makeApartment } from './models/apartment.js';
@@ -586,6 +587,13 @@ onTable(makeSpaghettiTray(), 2.2, -1.4, -0.3);
 onTable(makeCurryPlate(), -3.4, 1.4, 0.8);
 onTable(makePizza('corn'), 2.2, 1.4, 1.1);
 
+// ------------------------------------------------------------------ junked van behind the tire shop (old-van photo)
+const van = makeOldVan();
+van.position.set(21.5, 0, -26.5);
+van.rotation.y = 0.35;
+add(van);
+rect(20.2, 22.8, -28.8, -24.2);
+
 // ------------------------------------------------------------------ tree with a door (tree-door photos)
 // In the gravel + leaf patch by the rental sign, door facing the sidewalk.
 const doorTree = makeDoorTree();
@@ -661,6 +669,8 @@ const VIEWS = {
   stoop: { pos: [47.6, 2.4, 3.4], target: [50.5, 1.0, -1] },
   alien: { pos: [40.4, 2.4, 1.6], target: [44.5, 1.4, -3] },
   doortree: { pos: [10.4, 1.3, 5.7], target: [12.8, 0.9, 5.2] },
+  van: { pos: [25.5, 1.9, -22.4], target: [21.5, 0.9, -26.5] },
+  vanside: { pos: [24.6, 1.3, -29.2], target: [21.5, 0.7, -26.3] },
   soup: { pos: [-2.85, 1.62, -4.0], target: [-3.1, 1.2, -4.7] },
   food1: { pos: [-3.1, 1.45, -0.9], target: [-3.42, 0.78, -1.45] },
   food2: { pos: [-0.35, 1.4, -0.95], target: [-0.62, 0.8, -1.4] },
