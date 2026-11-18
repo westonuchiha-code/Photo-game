@@ -490,7 +490,64 @@ wall_tex("wall-gray-brick", "wall_gray_brick", (0.0, 0.0, 1.0, 0.9), (512, 920))
 wall_tex("wall-olive-stucco", "wall_olive_stucco", (0.0, 0.0, 1.0, 0.56), (512, 512), contrast=1.3)
 wall_tex("wall-teal-stucco", "wall_teal_stucco", (0.3, 0.05, 0.62, 0.42), (512, 512), contrast=1.2)
 wall_tex("wall-red-brick", "wall_red_brick", (0.03, 0.16, 0.5, 0.8), (640, 512), contrast=1.1)
-wall_tex("rusty-pole-closeup", "rusty_paint", (0.2, 0.0, 0.9, 1.0), (512, 1024), contrast=1.05, radius=200, normal=5.0)
+# Rusty pole, built in layers. Colours and grain come from the close-up photo:
+# the cleanest all-paint and all-rust windows are found automatically and quilted.
+# Flake shapes are a wrapping, domain-warped noise mask (crisp, jagged edges,
+# ~20% coverage like the full-pole photo), with a pale lifted-paint rim.
+_, RPA = load("rusty-pole-closeup")
+h, w = RPA.shape[:2]
+pole = delight(RPA[:, int(0.36 * w):int(0.82 * w)], 250)
+is_rust = (pole[..., 0] - pole[..., 2]) > 25
+
+
+def _best_window(want_rust, size=220):
+    best, bw = -1, None
+    for y in range(0, pole.shape[0] - size, 60):
+        for x in range(0, pole.shape[1] - size, 60):
+            f = is_rust[y:y + size, x:x + size].mean()
+            score = f if want_rust else 1 - f
+            if score > best:
+                best, bw = score, pole[y:y + size, x:x + size]
+    return bw
+
+
+def _wrap_noise(H, W, cells, octaves=4, seed=0):
+    r = np.random.default_rng(seed)
+    out = np.zeros((H, W), np.float32)
+    amp = tot = 0.0
+    amp = 1.0
+    for o in range(octaves):
+        gh, gw = cells[0] * 2 ** o, cells[1] * 2 ** o
+        g = np.tile(r.random((gh, gw)).astype(np.float32), (3, 3))
+        up = np.asarray(Image.fromarray(g).resize((W * 3, H * 3), Image.BICUBIC)).astype(np.float32)[H:2 * H, W:2 * W]
+        out += up * amp
+        tot += amp
+        amp *= 0.5
+    return out / tot
+
+
+H_, W_ = 1024, 512
+paint = quilt(_best_window(False), (H_, W_), patch=96, contrast=1.0)
+paint = lum(paint)[..., None] / max(lum(paint).mean(), 1) * np.array([166, 184, 196], np.float32)  # pale grey-blue in person
+rust = quilt(_best_window(True), (H_, W_), patch=96, contrast=1.3)
+rust = match_stats(rust, np.array([132, 72, 40], np.float32), 1.2)  # reddish-brown rust as in the photo
+base = _wrap_noise(H_, W_, (6, 3), 5, seed=4)
+wx = _wrap_noise(H_, W_, (8, 4), 3, seed=5) - 0.5
+wy = _wrap_noise(H_, W_, (8, 4), 3, seed=6) - 0.5
+yy, xx = np.mgrid[0:H_, 0:W_]
+warped = base[(yy + (wy * 90).astype(int)) % H_, (xx + (wx * 90).astype(int)) % W_]
+thr = np.percentile(warped, 80)
+m = np.clip((warped - thr) * 60, 0, 1)
+chips = _wrap_noise(H_, W_, (40, 20), 2, seed=7)  # small scattered chips
+m = np.maximum(m, np.clip((chips - np.percentile(chips, 97)) * 80, 0, 1))
+rim = np.clip(blur(m * 255, 2.0) / 255 * (1 - m) * 5, 0, 1)
+out = paint * (1 - m[..., None]) + rust * m[..., None]
+out = out * (1 - rim[..., None] * 0.55) + np.array([236, 226, 205], np.float32) * rim[..., None] * 0.55
+save("rusty_paint.png", out)
+height = (1 - m) * 0.6 + rim * 0.4 + lum(out) / 255 * 0.1
+save("rusty_paint_normal.png", normal_from_height(blur(height, 1.0), 5.0))
+save("rusty_paint_rough.png", np.repeat((0.45 + 0.5 * blur(m * 255, 1) / 255)[..., None] * 255, 3, -1))
+print("rust coverage", round(float(m.mean()), 2))
 wall_tex("window-blinds", "blinds", (0.0, 0.3, 1.0, 0.95), (512, 512), contrast=1.0, radius=200, normal=4.0)
 
 # ---------------------------------------------------------------- rocks, grass, leaves, ground photos
