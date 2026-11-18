@@ -197,6 +197,10 @@ Rules (from you):
     a yellow-painted light-pole base marked "8". Wall sign: "COMPACT CARS ONLY / NO TRUCKS
     PLEASE" (with the taped-over "NO"). Generic truck, no real brand badges; made-up plate
     (e.g. "BIG-RIG 1"). Wet parking-lot asphalt.
+51. Smashed shopping cart (misc2/smashed-shopping-cart): grey wire cart with the basket
+    crushed/bent sideways, faded red handle grip, black flip-up child-seat panel, small casters,
+    jammed against a galvanized cart-corral rail; orange delineator post with a rubber base,
+    aggregate parking-lot asphalt with white lines. Also a normal undamaged cart variant.
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"
