@@ -213,6 +213,10 @@ Rules (from you):
     behind glass with price tags, gears behind the products, coin/bill slots, pickup flap.
     Made-up name on the front (not FABOT), made-up drink labels; next to ordinary blue and red
     vending machines.
+54. Cleaning robot (vending/cleaning-robot): small white floor-scrubber robot on a black base,
+    black handle loop, red stop button, blue light strip, cute cartoon eyes on the front, green
+    and yellow beginner-driver chevron sticker; made-up brand. Could roam an arcade / store floor
+    on a path. Also: arcade carpet in red and checkered grey.
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"
