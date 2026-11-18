@@ -7,6 +7,7 @@ Rules (from you):
   sign's shape and material. Keep text that's already generic (LIQUOR).
 
 ## Approved
+- 28e Station gateway, lotus pond, rock bar door (polish later)
 - 28d Street props (after detail pass)
 - Elmwood Apartments v2 (good for now)
 - 28c Shops (noodle machine detail = the bar for everything from here on)
@@ -48,7 +49,7 @@ Rules (from you):
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- 28e Station gateway ending the old-town street (ivy pillars + lintel from the photo, ELMWOOD letters, canopy on green tree columns, vine curtain, made-up banner, glass hall with ticket gates), night lotus pond west of it (900 pads, reeds from the photo, temple hall, lamps, lit towers), GROTTO fake-rock bar door on the plaza's south edge (rock texture from the photo, stone arch, shutter, made-up notices + 717).
+- 28f Underground mall (underground-mall-shutters photo): granite floor + marble from the photo, six shuttered boutiques (one half open), chrome pillars with a captured reflection, lattice ceiling + LED strips, deli, café, staff door, fire shutter, granite stair up to a glass kiosk on a new forecourt east of the station plaza. Made-up names throughout.
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
@@ -58,6 +59,11 @@ Rules (from you):
    Screenshot: `screenshots/burger-poster.png`.
 
 ## Up next (in order)
+28g. Stairway entrance (stairway-sign-entrance): narrow stair up between mixed brick + tile walls, rusty lightbox sign, steel pole with an address plate (all made up).
+28h. Covered electronics market alley (electronics-market-arcade): concrete deck overhead, stalls with PCB / parts signs (made up), crates, stools, hand trucks, drain channel.
+28i. Bar alley (izakaya-alley-signs): brick paving, vertical lit signs, paper lanterns, string lights, wires, menu stands (made-up names).
+28j. Teahouse (teahouse-painted-ceiling): painted coffered ceiling, tea tins wall, carved white plaster, brick pillars, curtains, bar + tables.
+28k. Leftover city photos as textures/sky: rainy-plaza (wet concrete + puddles), sidewalk-tiles-backpack (grey pavers with moss joints), sun-flare-sky (day sky option).
 16. Food inspiration (photos/food/, 17 photos): corn dog in a paper boat with sauce, spaghetti
     on an oval plate with tray + condiments, ramen bowl on a tray, katsu curry, black curry with
     rice, pork bun (whole + bitten), steamed bun, melon bread, smoked cheese sticks, pizzas

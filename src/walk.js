@@ -142,7 +142,8 @@ export class WalkControls {
   }
 
   _inArea(x, z) {
-    return this.areas.some((a) => x >= a.minX && x <= a.maxX && z >= a.minZ && z <= a.maxZ);
+    const gy = this.gy || 0; // an area with y0/y1 only counts on that level (e.g. a mall under the street)
+    return this.areas.some((a) => x >= a.minX && x <= a.maxX && z >= a.minZ && z <= a.maxZ && (a.y0 === undefined || (gy >= a.y0 - 0.3 && gy <= a.y1 + 0.3)));
   }
 
   apply() {

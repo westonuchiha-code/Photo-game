@@ -125,3 +125,10 @@ This is a running list, added to as models get built. Nothing here is urgent.
 - Pond: water reflections are painted streaks, not real reflections. Skyline towers sit inside the world
   (west of the plaza) rather than on the horizon.
 - Rock door: rebuilt as a relief-sculpted surface from the photo. The bottom edge of the shutter shows a smear where the photo had debris.
+
+## 28f underground mall
+- Shop signs over the shutters are small from the corridor; could be bigger or lit brighter.
+- The reflection map is captured once from the middle of the hall; pillars near the ends reflect the centre. Could capture two probes.
+- Ceiling plenum is a flat colour; could add a faint photo texture and more ducts.
+- No people / mannequins; the half-open shop could get a few displays on stands and a rack.
+- Forecourt paving is the station-plaza pattern; could get its own stone.

@@ -10,6 +10,7 @@ LATIN = [  # (family, weight, file)
     ("Caveat", 700, "caveat-bold"), ("VT323", 400, "vt323"), ("Oswald", 600, "oswald-semibold"),
     ("Roboto Condensed", 400, "roboto-condensed"), ("Cinzel", 700, "cinzel-bold"), ("Pacifico", 400, "pacifico"),
     ("Alfa Slab One", 400, "alfa-slab-one"), ("Fredoka", 600, "fredoka-semibold"), ("Black Ops One", 400, "black-ops-one"),
+    ("Cormorant Garamond", 600, "cormorant-semibold"), ("Marcellus", 400, "marcellus"), ("Josefin Sans", 600, "josefin-semibold"),
 ]
 JP_TEXT = "茶菓子そば甘味和紙漬物団子酒祭大売出信用金庫本舗"
 JP = [("Yuji Syuku", 400, "yuji-syuku"), ("Zen Antique", 400, "zen-antique")]

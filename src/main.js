@@ -48,6 +48,7 @@ import { makeBrickGable, makeSpiral, makeOvalBuilding, makePebbleBench, makeOrna
 import { makePlywoodSheet, makeGlassShards, makePasteWall, makePickupZone } from './models/misc27e.js';
 import { makeDumpTruck, makePipeBarrier, makeSiteSign, makeWeeds } from './models/dumpsite.js';
 import { makeDeliveryBag, makeCupCarrier, makePaperBag } from './models/delivery.js';
+import { makeUndergroundMall } from './models/mall28f.js';
 import { WalkControls } from './walk.js';
 import { fontsReady } from './fonts.js';
 await fontsReady;   // sign fonts must be loaded before any canvas sign is drawn
@@ -158,7 +159,8 @@ const outside = new THREE.Group();
 const pavementMat = new THREE.MeshStandardMaterial({ color: '#2a2c30', roughness: 0.9 });
 const pavement = new THREE.Group();
 // (the Elmwood footprint, world x 52..62 z -8..6, is left open so its garden-level floor isn't capped)
-for (const [a, b, c, d] of [[-80, 13, -120, 80], [17, 52, -120, 80], [62, 120, -120, 80], [52, 62, -120, -8], [52, 62, 6, 80], [13, 17, -120, -23], [13, 17, -9, 80]]) {
+// (and the underground-mall stair well, world x 0.2..3.8 z 50.9..58.7)
+for (const [a, b, c, d] of [[-80, 0.2, -120, 80], [3.8, 13, -120, 80], [0.2, 3.8, -120, 50.9], [0.2, 3.8, 58.7, 80], [17, 52, -120, 80], [62, 120, -120, 80], [52, 62, -120, -8], [52, 62, 6, 80], [13, 17, -120, -23], [13, 17, -9, 80]]) {
   const m = new THREE.Mesh(new THREE.PlaneGeometry(b - a, d - c), pavementMat);
   m.rotation.x = -Math.PI / 2;
   m.position.set((a + b) / 2, 0, (c + d) / 2);
@@ -1032,6 +1034,24 @@ const junkArea = {};
   const rd = makeRockDoor(); put(rd, -38.5, 12.15, Math.PI, rd.userData.colliders);
 }
 
+// ------------------------------------------------------------------ underground mall (city photo, 28f)
+// The hall lies under the empty block east of the station plaza (world x -5..9, z 23..51); its glass
+// stair kiosk stands on a paved forecourt that joins the station plaza.
+const MALL = { x: 2, z: 37 };
+const mall = makeUndergroundMall();
+mall.position.set(MALL.x, 0, MALL.z);
+add(mall);
+for (const [x0, x1, z0, z1, y0, y1] of mall.userData.colliders) colliders.push({ type: 'box', minX: MALL.x + x0, maxX: MALL.x + x1, minZ: MALL.z + z0, maxZ: MALL.z + z1, y0, y1 });
+const mallAreas = mall.userData.areas.map((a) => ({ ...a, minX: a.minX + MALL.x, maxX: a.maxX + MALL.x, minZ: a.minZ + MALL.z, maxZ: a.maxZ + MALL.z }));
+{
+  // forecourt paving like the station plaza, cut around the stair well
+  const fp = new THREE.CanvasTexture((() => { const c = document.createElement('canvas'); c.width = c.height = 512; const x = c.getContext('2d'); let s = 5; const r = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+    for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) { x.fillStyle = r() < 0.15 ? '#e8e2d4' : ['#a8a49c', '#b8b2a6', '#9a968e', '#c4bdb0'][Math.floor(r() * 4)]; x.fillRect(i * 64 + 2, j * 64 + 2, 60, 60); } return c; })());
+  fp.colorSpace = THREE.SRGBColorSpace; fp.wrapS = fp.wrapT = THREE.RepeatWrapping;
+  const fm = new THREE.MeshStandardMaterial({ map: fp, roughness: 0.85 });
+  for (const [a, b, c, d] of [[-9, 0.2, 49, 72], [3.8, 14, 49, 72], [0.2, 3.8, 49, 50.9], [0.2, 3.8, 58.7, 72]]) add(plane(fm, a, b, c, d, 0.007, 4));
+}
+
 // delivery props elsewhere: drinks + bag outside an Elmwood unit door, a delivery tote by the scooter
 {
   const c = makeCupCarrier(); c.position.set(-0.6, 1.4, -2.8); apt.add(c);
@@ -1053,10 +1073,14 @@ const walk = new WalkControls(camera, renderer.domElement, {
     { minX: -73.6, maxX: -43.0, minZ: 50.6, maxZ: 54.0 }, // pond-side path
     { minX: -9.5, maxX: 9.0, minZ: 5.4, maxZ: 11.7 }, // strip along the restaurant's south wall
     junkArea, // junk shop interior
+    { minX: -9.2, maxX: 13.7, minZ: 49.5, maxZ: 69.7, y0: -0.5, y1: 0.6 }, // underground-mall forecourt (street level)
+    ...mallAreas, // the mall hall + its stair (below the street)
   ],
   colliders,
 });
 walk.ground = (x, z, prevY) => {
+  const my = mall.userData.floorY(x - MALL.x, z - MALL.z, prevY);
+  if (my !== null) return my;
   const ay = apt.userData.floorY(z - AP.z, AP.x - x, prevY);
   return ay !== null ? ay : rampFloorY(x, z);
 };
@@ -1167,6 +1191,12 @@ const VIEWS = {
   stationunder: { pos: [-24.5, 1.7, 53.2], target: [-26.5, 3.4, 62.0] },
   pond: { pos: [-56.0, 1.7, 52.6], target: [-58.0, 1.2, 30.0] },
   rockdoor: { pos: [-37.6, 1.8, 7.9], target: [-38.5, 2.3, 12.2] },
+  mall: { pos: [-1.5, -2.6, 49.0], target: [2.5, -3.0, 38] },
+  mallwest: { pos: [0.5, -2.5, 34], target: [-5, -2.6, 30] },
+  mallpillars: { pos: [7.0, -2.8, 45.5], target: [4.0, -3.0, 34] },
+  malleast: { pos: [3.0, -2.6, 36], target: [9, -2.8, 42] },
+  mallstair: { pos: [2.0, 1.2, 60.5], target: [2.0, -3.2, 48] },
+  mallkiosk: { pos: [6.5, 1.8, 66], target: [2.0, 1.0, 57] },
   rockdoorside: { pos: [-36.4, 1.6, 10.6], target: [-38.5, 2.0, 12.0] },
   walkinshelf: { pos: [17.6, 1.6, -44.0], target: [21.4, 1.0, -45.6] },
   van: { pos: [25.5, 1.9, -22.4], target: [21.5, 0.9, -26.5] },
@@ -1275,6 +1305,29 @@ function updateLightBudget() {
   sorted.forEach((l, i) => { l.visible = i < MAX_LIGHTS; });
 }
 updateLightBudget();
+
+// The mall's chrome pillars, polished floor and steel need something to reflect: render the hall once
+// into a cube map from its middle (pillars hidden) and hand it to those materials. Done again once
+// every texture has loaded, so the reflection isn't of black, unloaded surfaces.
+function captureMallEnv() {
+  const saved = camera.position.clone();
+  const probe = mall.userData.envProbe.clone().add(mall.position);
+  camera.position.copy(probe); updateLightBudget();
+  const rt = new THREE.WebGLCubeRenderTarget(256, { type: THREE.HalfFloatType });
+  const cc = new THREE.CubeCamera(0.05, 60, rt); cc.position.copy(probe); scene.add(cc);
+  mall.userData.hideForCapture.forEach((o) => { o.visible = false; });
+  cc.update(renderer, scene);
+  mall.userData.hideForCapture.forEach((o) => { o.visible = true; });
+  const pm = new THREE.PMREMGenerator(renderer);
+  const env = pm.fromCubemap(rt.texture).texture;
+  const old = mall.userData.envMats[0].envMap;
+  mall.userData.envMats.forEach((m) => { m.envMap = env; m.needsUpdate = true; });
+  if (old) old.dispose();
+  pm.dispose(); rt.dispose(); scene.remove(cc);
+  camera.position.copy(saved); updateLightBudget();
+}
+captureMallEnv();
+THREE.DefaultLoadingManager.onLoad = () => captureMallEnv();
 
 // ------------------------------------------------------------------ loop
 const clock = new THREE.Clock();

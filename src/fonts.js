@@ -9,6 +9,7 @@ const FILES = [
   ['Roboto Condensed', 'roboto-condensed.woff2'], ['Cinzel', 'cinzel-bold.woff2', '700'], ['Pacifico', 'pacifico.woff2'],
   ['Alfa Slab One', 'alfa-slab-one.woff2'], ['Fredoka', 'fredoka-semibold.woff2', '600'], ['Black Ops One', 'black-ops-one.woff2'],
   ['Yuji Syuku', 'yuji-syuku.woff2'], ['Zen Antique', 'zen-antique.woff2'],
+  ['Cormorant Garamond', 'cormorant-semibold.woff2', '600'], ['Marcellus', 'marcellus.woff2'], ['Josefin Sans', 'josefin-semibold.woff2', '600'],
 ];
 export const F = {
   condensed: '"Bebas Neue", "Oswald", sans-serif',       // tall shop / transit signage
@@ -28,6 +29,9 @@ export const F = {
   stencil: '"Black Ops One", sans-serif',                  // stencilled warnings
   brush: '"Yuji Syuku", serif',                            // Japanese brush lettering
   antique: '"Zen Antique", serif',                         // Japanese printed signs
+  couture: '"Cormorant Garamond", serif',                 // boutique / fashion names
+  roman: '"Marcellus", serif',                            // classic engraved shop names
+  wayfind: '"Josefin Sans", sans-serif',                  // modern mall / transit wayfinding
 };
 export const fontsReady = Promise.all(FILES.map(([fam, file, weight]) => {
   const f = new FontFace(fam, `url(assets/fonts/${file})`, { weight: weight || '400' });
