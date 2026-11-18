@@ -177,6 +177,13 @@ Rules (from you):
     wood shelves; black bookcase with retro consoles, handhelds and small figurines/plush.
     All game titles, logos, console brands and characters replaced with original made-up
     ones (no real IP).
+48. Misc batch: teahouse interior (hand-painted coffered ceiling in teal/red/gold, carved white
+    plaster walls, brick pilasters, sheer curtains, walls of black/gold tea tins, iron bar
+    stools, oil painting); rainy plaza (wet reflective concrete, raised planters, iron benches,
+    trash can, flagpoles, storefronts in red + teal); rusty-copper prop flintlock-style pistol
+    wrapped in twine (decor/rusty-prop-pistol-rope, prop only); dried dark-red rose with baby's
+    breath; white perforated PC case glowing blue; bright sun with lens flare + wispy cirrus
+    (daytime sky option).
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"
