@@ -70,6 +70,17 @@ Rules (from you):
     shelves, books (spines with made-up titles), figurines, bowl; window seat with striped
     cushion and cabinet doors, floral roman shade, yellow walls with crown molding, ceramic
     table lamp, framed painting, blue-and-white vase, wood side table, photo frames.
+27. Misc textures & objects (photos/misc/, 18 photos):
+    - Front doors / porches: six-panel doors (brown, white, red, black), storm doors, sidelights,
+      brick / stone-veneer / lap-siding surrounds, porch lights, doorbells, door mats, wreaths,
+      porch railing + flag, hose reel, steps. House numbers made up.
+    - Delivery props: take-out bags, drink cups, cup carrier, pizza box (made-up logos).
+    - Peeling white/blue paint on a boarded abandoned house + basement vent, stray cats/kittens.
+    - Articulated yellow dump truck at a dirt site with pipe barrier; rock cairns.
+    - Plywood with ink stamp (made-up text), broken car-window glass on a back seat.
+    - Wheat-paste street art on a teal concrete wall (made-up text).
+    - Night pickup-zone crosswalk with red overhead signs, cones, yellow curbs (generic text).
+    - Coarse chip-seal asphalt with a crack (and a small spider).
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"
