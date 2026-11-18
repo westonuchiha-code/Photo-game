@@ -36,6 +36,7 @@ import { makeApartment } from './models/apartment.js';
 import { makeNewsBox, makeParkingSignBlock, makeParkingRamp, makeTealStorefront, makeRabbitSculpture } from './models/locations.js';
 import { makeSpruce, makeCherry, makePaleTree, makeOak, makeTreePit, makeMulchBed, makeDoorTree } from './models/trees.js';
 import { makeRockBed, makeGrassTufts, makeCurbWithLeaves, makeLooseLeaves, makeBikeRack } from './models/ground.js';
+import { makeStatueShrine, makeStoneShrine } from './models/shrines.js';
 import { WalkControls } from './walk.js';
 
 // ------------------------------------------------------------------ renderer
@@ -702,6 +703,38 @@ for (const [x0, x1, z0, z1] of grocery.userData.colliders) {
 const groceryDoor = groceryCols[grocery.userData.colliders.indexOf(grocery.userData.doorCol)];
 
 // ------------------------------------------------------------------ controls
+// ------------------------------------------------------------------ roadside shrines (shrine photos)
+// A small wooded grove east of the grocery lot: leaf-litter ground, trees behind, the two shrines
+// side by side facing the lot (+z faces south toward the street).
+{
+  const lt = new THREE.TextureLoader().load('assets/textures/leaf_litter.png');
+  lt.colorSpace = THREE.SRGBColorSpace; lt.wrapS = lt.wrapT = THREE.RepeatWrapping;
+  const ln = new THREE.TextureLoader().load('assets/textures/leaf_litter_normal.png');
+  ln.wrapS = ln.wrapT = THREE.RepeatWrapping;
+  add(plane(new THREE.MeshStandardMaterial({ map: lt, normalMap: ln, color: '#a89c8c', roughness: 1 }), 50, 64.5, -46.5, -29, 0.006, 0.7));
+  for (const [x, z] of [[53.6, -34.0], [60.2, -34.2]]) {   // soft light on each shrine (night)
+    const l = new THREE.PointLight('#ffe2b8', 6, 9, 1.4); l.position.set(x, 3.4, z); add(l);
+  }
+  add(makeLooseLeaves(50, 64.5, -46, -29, 140, 61));
+  const shrA = makeStatueShrine(); shrA.position.set(53.6, 0, -36.2); add(shrA);
+  const shrB = makeStoneShrine(); shrB.position.set(60.2, 0, -36.4); shrB.rotation.y = -0.08; add(shrB);
+  for (const [sh, rot] of [[shrA, 0], [shrB, -0.08]]) {
+    for (const [x0, x1, z0, z1] of sh.userData.colliders) {
+      // rotate the box corners (small angles: take the bounding box)
+      const pts = [[x0, z0], [x1, z0], [x0, z1], [x1, z1]].map(([x, z]) => [x * Math.cos(rot) + z * Math.sin(rot), -x * Math.sin(rot) + z * Math.cos(rot)]);
+      rect(sh.position.x + Math.min(...pts.map((p) => p[0])), sh.position.x + Math.max(...pts.map((p) => p[0])),
+        sh.position.z + Math.min(...pts.map((p) => p[1])), sh.position.z + Math.max(...pts.map((p) => p[1])));
+    }
+  }
+  // trees behind and around the grove
+  [[51.2, -42.5, makeSpruce, { seed: 31, height: 11 }], [56.8, -44.5, makeOak, { seed: 33 }], [62.6, -42.8, makeSpruce, { seed: 35, height: 12 }],
+    [50.8, -32.0, makePaleTree, { seed: 37 }], [63.8, -31.5, makeOak, { seed: 39 }], [59.4, -45.6, makePaleTree, { seed: 41 }]].forEach(([x, z, make, o]) => {
+    const t = make(o); t.position.set(x, 0, z); add(t); circle(x, z, 0.45);
+  });
+  add(makeRockBed(51, 53, -40.5, -39.0, { density: 60, seed: 43 }));
+  add(makeGrassTufts([[52.2, -33.0], [57.0, -33.6], [62.8, -34.2], [55.2, -40.6], [58.2, -39.8], [63.4, -38.6]], 45));
+}
+
 const walk = new WalkControls(camera, renderer.domElement, {
   bounds: null,
   areas: [
@@ -773,6 +806,9 @@ const VIEWS = {
   eggs: { pos: [29.2, 1.7, -39.2], target: [32.5, 1.2, -41.0] },
   stockroom: { pos: [30.6, 1.7, -48.3], target: [27.0, 1.0, -53.5] },
   stockroom2: { pos: [31.6, 1.9, -53.2], target: [25.0, 0.9, -51.0] },
+  shrines: { pos: [57.0, 2.2, -27.6], target: [57.0, 1.0, -37.0] },
+  shrineA: { pos: [53.4, 1.4, -32.6], target: [53.6, 0.8, -37.4] },
+  shrineB: { pos: [60.6, 1.4, -32.4], target: [60.1, 1.0, -37.4] },
   walkinshelf: { pos: [17.6, 1.6, -44.0], target: [21.4, 1.0, -45.6] },
   van: { pos: [25.5, 1.9, -22.4], target: [21.5, 0.9, -26.5] },
   vanside: { pos: [24.6, 1.3, -29.2], target: [21.5, 0.7, -26.3] },

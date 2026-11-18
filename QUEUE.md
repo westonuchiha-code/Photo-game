@@ -7,6 +7,7 @@ Rules (from you):
   sign's shape and material. Keep text that's already generic (LIQUOR).
 
 ## Approved
+- Warehouse stockroom (grocery back room)
 - Grocery store (you'll send more photos later to update it)
 - Police vehicles
 - Creepy hoodie figure
@@ -34,7 +35,7 @@ Rules (from you):
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- Warehouse stockroom (pallet photos): back room of the grocery through an EMPLOYEES ONLY doorway. Plywood walls + concrete floor from the photos, teal/orange pallet racking, pallets of made-up cases (SUNNY BAKE, OLDE MILL flour, ORCHARD juice, ALOE CO., BUBBLY, ROAR), soda can trays + water packs from photos, crates, tote, yellow dolly.
+- Roadside shrines: wooded grove east of the grocery lot. Statue shrine (red plank-roof shelter, concrete platform + steps, rounded pickets, stone figures with the flowered bib from the photo, two stone lanterns, cups, relief tablet on a pedestal) and standing-stone shrine (red gabled roof, pointed pickets, granite stone, bell + striped streamer, flowers, made-up signboard + carved PEACE marker).
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text

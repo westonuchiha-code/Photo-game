@@ -1105,6 +1105,28 @@ save("wh_floor.png", quilt(wf, (512, 512), patch=96, contrast=1.05))
 _pc(_P3, (345, 255, 460, 352), (512, 432)).save(os.path.join(OUT, "wh_water.png"))
 _pc(_P3, (342, 492, 482, 578), (512, 314)).save(os.path.join(OUT, "wh_cans.png"))
 
+# ---------------------------------------------------------------- roadside shrines
+_SA = ImageOps.exif_transpose(Image.open("photos/shrines/shrine-statues.jpg")).convert("RGB")
+_SB = ImageOps.exif_transpose(Image.open("photos/shrines/shrine-stone.jpg")).convert("RGB")
+def _sc(im, b, size):
+    k = im.size[0] / 600
+    return im.crop(tuple(int(v * k) for v in b)).resize(size, Image.LANCZOS)
+# peeling red paint on wood (picket boards of the stone shrine), vertical grain
+rw = delight(np.asarray(_sc(_SB, (198, 448, 214, 545), (128, 512))).astype(np.float32), 60)
+save("shr_redwood.png", seamless(rw))
+# weathered roof planks (statue shrine)
+rp = delight(np.asarray(_sc(_SA, (110, 290, 460, 340), (1024, 160))).astype(np.float32), 50)
+save("shr_roof.png", seamless(rp))
+# speckled granite of the standing stone
+gs = delight(np.asarray(_sc(_SB, (282, 415, 300, 520), (192, 512))).astype(np.float32), 50)
+save("shr_stone.png", seamless(gs))
+# mossy concrete platform
+cp = delight(np.asarray(_sc(_SA, (150, 590, 430, 632), (1024, 160))).astype(np.float32), 60)
+save("shr_concrete.png", seamless(cp))
+# flowered bib, carved relief tablet
+_sc(_SA, (284, 402, 306, 446), (128, 256)).save(os.path.join(OUT, "shr_bib.png"))
+_sc(_SA, (544, 474, 588, 532), (192, 256)).save(os.path.join(OUT, "shr_tablet.png"))
+
 with open(os.path.join(OUT, "palette.json"), "w") as f:
     json.dump(palette, f, indent=2)
 print("wrote palette.json")

@@ -43,7 +43,7 @@ let M = null;
 function mats() {
   if (M) return M;
   M = {};
-  M.ply = std({ map: ptex('wh_ply.png'), roughness: 0.85, side: THREE.DoubleSide, emissive: '#5a2e10', emissiveIntensity: 0.55 });
+  M.ply = std({ map: ptex('wh_ply.png'), roughness: 0.85, emissive: '#5a2e10', emissiveIntensity: 0.55 });
   M.floor = std({ map: ptex('wh_floor.png', 4, 4), color: '#cfcfcf', roughness: 0.7, metalness: 0.05 });
   M.cardboard = std({ map: ptex('store_cardboard.png'), roughness: 0.9 });
   M.card2 = std({ color: '#b8915f', roughness: 0.9 });
@@ -372,6 +372,12 @@ export function makeStockroom() {
   wall(DX0 - X0, (X0 + DX0) / 2, Z1 - 0.02, Math.PI);
   wall(X1 - DX1, (DX1 + X1) / 2, Z1 - 0.02, Math.PI);
   g.add(box(DX1 - DX0, H - 2.4, 0.05, M.ply, (DX0 + DX1) / 2, 2.4 + (H - 2.4) / 2, Z1 - 0.08));
+  // outside skin (matches the store's exterior wall) + roof
+  const skin = std({ color: '#b9b2a6', roughness: 0.9 });
+  g.add(plane(X1 - X0 + 0.04, H, skin, (X0 + X1) / 2, H / 2, Z0 - 0.02, Math.PI));
+  g.add(plane(Z1 - Z0, H, skin, X0 - 0.02, H / 2, (Z0 + Z1) / 2, -Math.PI / 2));
+  g.add(plane(Z1 - Z0, H, skin, X1 + 0.02, H / 2, (Z0 + Z1) / 2, Math.PI / 2));
+  g.add(plane(X1 - X0 + 0.04, Z1 - Z0 + 0.04, std({ color: '#2f3033' }), (X0 + X1) / 2, H + 0.002, (Z0 + Z1) / 2, 0, -Math.PI / 2));
   // yellow safety stripe along the base of the walls (photo 6)
   g.add(box(X1 - X0, 0.08, 0.02, M.yellow, (X0 + X1) / 2, 0.04, Z0 + 0.03));
   g.add(plane(X1 - X0, Z1 - Z0, std({ color: '#6a6c6e', emissive: '#202224' }), (X0 + X1) / 2, H, (Z0 + Z1) / 2, 0, Math.PI / 2));
