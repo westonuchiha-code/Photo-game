@@ -7,6 +7,7 @@ Rules (from you):
   sign's shape and material. Keep text that's already generic (LIQUOR).
 
 ## Approved
+- Sky, clouds, moon
 - Ground & sidewalks
 - Rocks, grass tufts, leaf litter, bike rack
 - Wall textures + blinds (street row)
@@ -16,8 +17,8 @@ Rules (from you):
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- Sky, clouds, moon: cloud layer from the sky photo on a dome, half-moon cut-out, moonlit halo.
-  Screenshots: `screenshots/sky-*.png`.
+- Walk signal poles: push-button sign, chrome button, signal head cycling walk / flashing hand /
+  hand, at both crosswalk ends. Screenshots: `screenshots/walk-signal-*.png`.
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
@@ -27,7 +28,6 @@ Rules (from you):
    Screenshot: `screenshots/burger-poster.png`.
 
 ## Up next (in order)
-8. Walk signal pole: button sign plus hand and walking-man lights.
 9. Trees: spruce with knots and roots, cherry, pale flaky bark, oak, mulch beds.
 10. Objects and locations: news box (made-up magazine name), parking sign block,
     parking garage ramp and tunnel, garage door, teal storefront "908", rabbit sculpture.
@@ -98,6 +98,11 @@ Rules (from you):
     surface (x2), scratched stainless steel, warm-lit plaster scroll relief, gouged/worn stained
     wood planks (x4); paintings: white drips on black, blurred pink/yellow sunset, black
     splatter on mustard.
+31. Door hardware (photos/hardware/): worn brass deadbolt thumb-turn, brass privacy door knobs
+    (front + side), cream toggle light switch on textured wall. Small interior props for doors.
+32. Ketchup squeeze bottle (food/ketchup-front, -back, -side): red PET bottle with neck band,
+    white flip cap with dried ketchup, front label with tomatoes, back nutrition label. Model +
+    made-up store brand and label text (no real brand or barcode).
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"

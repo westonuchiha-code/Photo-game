@@ -233,3 +233,48 @@ for name, lines in ADS:
         y += size + 34
     img.save(os.path.join(OUT, name + ".png"))
 print("wrote tire shop signs")
+
+
+# ---- Pedestrian crossing: push-button sign + signal faces (walk-button / ped-signal photos)
+def walker(d, cx, top, s, fill):
+    """Walking-person pictogram like the photos: head, torso leaning forward, striding legs, arm."""
+    d.ellipse((cx - 0.09 * s, top, cx + 0.09 * s, top + 0.18 * s), fill=fill)
+    d.polygon([(cx - 0.1 * s, top + 0.22 * s), (cx + 0.08 * s, top + 0.21 * s), (cx + 0.1 * s, top + 0.55 * s), (cx - 0.08 * s, top + 0.56 * s)], fill=fill)
+    d.line([(cx + 0.02 * s, top + 0.26 * s), (cx + 0.22 * s, top + 0.48 * s)], fill=fill, width=int(0.07 * s))   # front arm
+    d.line([(cx - 0.06 * s, top + 0.28 * s), (cx - 0.24 * s, top + 0.44 * s)], fill=fill, width=int(0.07 * s))  # back arm
+    d.line([(cx + 0.02 * s, top + 0.54 * s), (cx + 0.2 * s, top + 0.98 * s)], fill=fill, width=int(0.09 * s))    # front leg
+    d.line([(cx - 0.04 * s, top + 0.54 * s), (cx - 0.12 * s, top + 0.76 * s), (cx - 0.3 * s, top + 0.98 * s)], fill=fill, width=int(0.09 * s), joint="curve")
+
+
+img = Image.new("RGB", (300, 450), (24, 24, 26))
+d = ImageDraw.Draw(img)
+d.rounded_rectangle((10, 10, 290, 440), 14, outline=(226, 224, 214), width=8)
+walker(d, 150, 50, 300, (232, 230, 220))
+d.line([(80, 390), (225, 390)], fill=(232, 230, 220), width=12)
+d.polygon([(60, 390), (100, 365), (100, 415)], fill=(232, 230, 220))
+for x, y in ((26, 26), (274, 26), (26, 424), (274, 424)):
+    d.ellipse((x - 7, y - 7, x + 7, y + 7), fill=(150, 150, 150))
+img.save(os.path.join(OUT, "walk_button_sign.png"))
+
+# Signal faces: dark lens, glowing symbol (glow is added again in the game by bloom).
+def lens(draw_symbol, name):
+    im = Image.new("RGB", (256, 256), (10, 10, 12))
+    m = Image.new("L", (256, 256), 0)
+    draw_symbol(ImageDraw.Draw(m))
+    glow = m.filter(ImageFilter.GaussianBlur(5))
+    im.paste((255, 255, 255), (0, 0), m)
+    g = (np.asarray(glow).astype(np.uint16)[..., None] // 3).astype(np.uint8)
+    Image.fromarray(np.maximum(np.asarray(im), np.repeat(g, 3, -1))).save(os.path.join(OUT, name))
+
+
+def hand(dd):
+    for i, (x, h) in enumerate([(78, 74), (104, 92), (130, 96), (156, 86)]):
+        dd.rounded_rectangle((x, 128 - h, x + 22, 150), 11, fill=255)
+    dd.rounded_rectangle((76, 120, 180, 220), 30, fill=255)
+    dd.polygon([(176, 160), (214, 110), (226, 124), (190, 190)], fill=255)  # thumb
+    dd.rectangle((92, 214, 160, 240), fill=255)
+
+
+lens(hand, "ped_hand_face.png")
+lens(lambda dd: walker(dd, 128, 26, 210, 255), "ped_walk_face.png")
+print("wrote walk_button_sign, ped_hand_face, ped_walk_face")

@@ -21,7 +21,7 @@ import { makeLiquorSign, makeTwoRiversSign } from './models/signs.js';
 import { makeAbandonedBuilding, makeStreetLamp, makeFireHydrant, makePlasticBottle } from './models/abandoned.js';
 import { plane } from './world/util.js';
 import { makeTireShop, TIRE_SHOP } from './models/tireshop.js';
-import { makeRustyPole } from './models/street.js';
+import { makeRustyPole, makeWalkSignalPole } from './models/street.js';
 import { makeStreetBuilding } from './models/buildings.js';
 import { makePaverSidewalk, makeDrainCover, makePaverCrosswalk, makeTactilePlate, makeCracks, makeUtilityLid, makeTrafficIsland, makeDirtLot } from './models/streetground.js';
 import { makeSky } from './models/sky.js';
@@ -434,6 +434,16 @@ rect(26.5, 29.6, -1.2, 0.8);
 rect(32.4, 35.5, -1.2, 0.8);
 add(makeTactilePlate(31.0, 9.45));
 add(makeTactilePlate(31.0, -8.45));
+// Walk signal poles at both ends of the crosswalk (walk-button / ped-signal photos).
+const walkPoles = [];
+for (const [x, z, ry] of [[32.7, 9.9, Math.PI], [29.3, -8.9, 0]]) {
+  const p = makeWalkSignalPole();
+  p.position.set(x, 0, z);
+  p.rotation.y = ry;
+  add(p);
+  walkPoles.push(p);
+  circle(x, z, 0.24);
+}
 // Cracked concrete slabs on the rest of the sidewalk, a utility lid with locate paint.
 add(makeCracks(32.6, 47.6, 9.3, 11.8, 9, 4));
 add(makeUtilityLid(38.5, 10.6, Math.PI / 2));
@@ -493,6 +503,7 @@ const VIEWS = {
   cracks: { pos: [37, 1.8, 7.6], target: [39.5, 0, 10.6] },
   dirtlot: { pos: [39.0, 2.4, -6.5], target: [44.5, 0.4, -1] },
   sky: { pos: [20, 1.7, 2], target: [14.5, 6.6, -5.5] },
+  walksignal: { pos: [33.6, 1.6, 7.2], target: [32.7, 1.9, 9.9] },
   abandoned: { pos: [13.0, 2.0, 2.0], target: [19.5, 1.4, 0.2] },
 };
 let mode = 'walk';
@@ -588,6 +599,7 @@ function frame() {
   if (mode === 'walk') walk.update(dt);
   else orbit.update();
   sky.userData.update(camera, t);
+  walkPoles.forEach((p, i) => p.userData.update(t, i * 0.3));
   // Doors swing open when you walk up to them (inside or out).
   const near = mode === 'walk' && Math.hypot(walk.position.x - X1, walk.position.z - DOOR_Z) < 2.3;
   doorOpen += ((near ? 1 : 0) - doorOpen) * Math.min(1, dt * 4);
@@ -618,4 +630,4 @@ window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
   composer.setSize(window.innerWidth, window.innerHeight);
 });
-window.__scene = { scene, camera, walk, setMode, interactables };
+window.__scene = { scene, camera, walk, setMode, interactables, walkPoles };
