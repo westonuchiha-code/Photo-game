@@ -863,6 +863,25 @@ for i in (1, 2, 3):
     Image.fromarray(np.clip(rgba, 0, 255).astype(np.uint8), "RGBA").save(os.path.join(OUT, f"crack_{i}.png"))
 print("wrote crack_1..3.png")
 
+# ---------------------------------------------------------------- sky v2: clouds without the moon
+# The real cloud layer from the sky photo (above the rooftops), with the moon
+# and its halo taken out so the game can put the moon anywhere. The sky shader
+# mirror-tiles this around the dome and adds the halo back around the 3D moon.
+_, SKA = load("sky-clouds-moon")
+h, w = SKA.shape[:2]
+cl = SKA[:int(0.72 * h)]
+L_ = lum(cl)
+glow = blur(L_, 220)                                  # moon halo + vignetting
+flat = L_ / np.maximum(glow, 1) * glow.mean()
+moon_mask = blur((L_ > np.percentile(L_, 99.7)).astype(np.float32) * 255, 40) / 255
+moon_mask = np.clip(moon_mask * 3, 0, 1)
+flat = flat * (1 - moon_mask) + blur(flat, 60) * moon_mask
+flat = blur(flat, 2.5)                                # sensor noise off
+flat = (flat - flat.mean()) / max(flat.std(), 1)
+sky = np.clip(0.5 + flat * 0.24, 0, 1) * 255
+sky = np.asarray(to_img(np.repeat(sky[..., None], 3, -1)).resize((1024, 1180), Image.LANCZOS)).astype(np.float32)
+save("sky_clouds_pano.png", sky)
+
 with open(os.path.join(OUT, "palette.json"), "w") as f:
     json.dump(palette, f, indent=2)
 print("wrote palette.json")

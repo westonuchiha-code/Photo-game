@@ -7,6 +7,7 @@ Rules (from you):
   sign's shape and material. Keep text that's already generic (LIQUOR).
 
 ## Approved
+- Ground & sidewalks
 - Rocks, grass tufts, leaf litter, bike rack
 - Wall textures + blinds (street row)
 - Rusty pole
@@ -81,6 +82,16 @@ Rules (from you):
     - Wheat-paste street art on a teal concrete wall (made-up text).
     - Night pickup-zone crosswalk with red overhead signs, cones, yellow curbs (generic text).
     - Coarse chip-seal asphalt with a crack (and a small spider).
+28. City street & shop photos (photos/city/, 20 photos): plaza with patterned pavers, ornate
+    lamp posts, planters and benches; red brick warehouse gable with arched windows + white
+    spiral sculptures; underground mall with white shutters and chrome pillars; junk shop with CRT
+    TVs and retro computers on shelves, blue CD bins; station entrance arch covered in ivy; white
+    building with oval windows + pebble benches; night pond with lotus leaves, reeds, skyline;
+    fake-rock cave doorway with roll shutter; cup-noodle vending machine; yellow painted shutters
+    with cartoon mascot; old-town shopping street (lanterns, stone bollards, monkey statues);
+    cargo trikes (parked + covered cab); stand-up arcade cabinet; narrow stairway entrance with
+    mixed brick; graffiti roll shutters + pallets; covered electronics market alley.
+    All shop names, mascots, logos, phone numbers and signage made up.
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"
