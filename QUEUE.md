@@ -46,7 +46,7 @@ Rules (from you):
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- Elmwood Apartments rework: ramp direction, wall blocking the entry, ceiling over the stairs, better doors, top-floor hallway window over the entry, every door opens into a unit, remove the untextured front AC, side windows with real metal AC units matching the unit interiors, windows line up with the rooms behind them.
+- Elmwood Apartments rework v2 (garden + entry + top floor, 6 apartments per floor = 18; 9 side windows per side; centre stairwell up and down; hall windows front/back): ramp direction, wall blocking the entry, ceiling over the stairs, better doors, top-floor hallway window over the entry, every door opens into a unit, remove the untextured front AC, side windows with real metal AC units matching the unit interiors, windows line up with the rooms behind them.
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text

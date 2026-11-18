@@ -7,6 +7,7 @@
 // above, a blue-and-white vase on the floor. Books get made-up titles; shelves hold small
 // figurines, a bowl and a floral box. All titles and pictures in frames are made up.
 import * as THREE from 'three';
+import { holeyWall } from './units.js';
 
 const _L = new THREE.TextureLoader();
 function ptex(name, rx = 1, ry = 1) {
@@ -182,7 +183,7 @@ function photoFrame(round, seed) {
 }
 
 // ---------------------------------------------------------------- the room
-export function makeLivingRoom({ F1, FH, x0, x1, z0, z1, doorZ, doorW }) {
+export function makeLivingRoom({ F1, FH, x0, x1, z0, z1, doorZ, doorW, sideWin = null }) {
   const g = new THREE.Group();
   const colliders = [];
   const solid = (a, b, c, d) => colliders.push([a, b, c, d, F1, F1 + FH]);
@@ -198,7 +199,18 @@ export function makeLivingRoom({ F1, FH, x0, x1, z0, z1, doorZ, doorW }) {
   // walls (yellow), with the unit door gap on the east wall
   const wall = (len, x, z, ry) => { const p = uvPlane(len, H, wallMat, 0.9, 1.8); p.position.set(x, F1 + H / 2, z); p.rotation.y = ry; g.add(p); };
   wall(W, cx, z0 + 0.005, 0);                          // back partition (faces +z)
-  wall(D, x0 + 0.005, cz, Math.PI / 2);                // west
+  if (!sideWin) wall(D, x0 + 0.005, cz, Math.PI / 2);   // west
+  else {
+    // west wall with the side window (matches the outside), white trim + stool + half-drawn blind
+    const u = -(sideWin.c - cz), y0 = sideWin.yc - F1 - sideWin.h / 2, y1 = sideWin.yc - F1 + sideWin.h / 2;
+    const ww = holeyWall(D, H, [{ u0: u - sideWin.w / 2, u1: u + sideWin.w / 2, y0, y1 }], wallMat, 0.9, 1.8);
+    const fr = new THREE.Group(); fr.position.set(x0 + 0.005, F1, cz); fr.rotation.y = Math.PI / 2; fr.add(ww); g.add(fr);
+    for (const sx of [-1, 1]) fr.add(box(0.07, y1 - y0 + 0.07, 0.02, white, u + sx * (sideWin.w / 2 + 0.035), (y0 + y1) / 2, 0.01));
+    fr.add(box(sideWin.w + 0.14, 0.07, 0.02, white, u, y1 + 0.035, 0.01), box(sideWin.w + 0.18, 0.035, 0.12, white, u, y0 - 0.017, 0.05));
+    const shade = std({ map: ptex('liv_shade.png', sideWin.w / 0.5, 1.2), color: '#fff4f0', side: THREE.DoubleSide, roughness: 0.95, emissive: '#2a2024' });
+    const sp = new THREE.Mesh(new THREE.PlaneGeometry(sideWin.w + 0.04, 0.55), shade); sp.position.set(u, y1 - 0.3, -0.06); fr.add(sp);
+    fr.add(box(sideWin.w + 0.08, 0.05, 0.06, std({ color: '#efe9dc' }), u, y1 + 0.02, -0.06));
+  }
   const dA = doorZ - doorW / 2, dB = doorZ + doorW / 2, DH = 2.06;
   wall(dA - z0, x1 - 0.005, (z0 + dA) / 2, -Math.PI / 2);
   wall(z1 - dB, x1 - 0.005, (dB + z1) / 2, -Math.PI / 2);
@@ -328,6 +340,11 @@ export function makeLivingRoom({ F1, FH, x0, x1, z0, z1, doorZ, doorW }) {
   // side table + ceramic lamp + photo frames, painting above, vase on the floor (room photo)
   const tz = z1 - 2.2;
   {
+    // built against the west wall, then turned onto the back (partition) wall so the side window stays clear
+    const gAll = g;
+    const tg = new THREE.Group();
+    const solidT = [];
+    { const g = tg; const solid = (a2, b2, c2, d2) => solidT.push([a2, b2, c2, d2]);
     const wood = std({ map: ptex('liv_wood.png'), color: '#a27058', roughness: 0.45 });
     const t = new THREE.Group();
     t.add(box(0.5, 0.03, 0.62, wood, 0, 0.66, 0));
@@ -365,6 +382,15 @@ export function makeLivingRoom({ F1, FH, x0, x1, z0, z1, doorZ, doorW }) {
     const vase = new THREE.Mesh(new THREE.LatheGeometry(vpts, 28), std({ map: ptex('liv_vase.png', 3, 1), roughness: 0.25, side: THREE.DoubleSide }));
     vase.position.set(x0 + 0.25, F1, tz + 0.55); vase.castShadow = true; g.add(vase);
     solid(x0, x0 + 0.42, tz + 0.38, tz + 0.72);
+    }
+    // local (x, z) -> world: rotate -90 deg so x0-wall -> z0-wall
+    tg.rotation.y = -Math.PI / 2;
+    tg.position.set(x0 + 1.5 + tz, 0, z0 - x0);
+    gAll.add(tg);
+    for (const [a2, b2, c2, d2] of solidT) {
+      const pts = [[a2, c2], [b2, c2], [a2, d2], [b2, d2]].map(([x, z]) => [-z + tg.position.x, x + tg.position.z]);
+      solid(Math.min(...pts.map((q) => q[0])), Math.max(...pts.map((q) => q[0])), Math.min(...pts.map((q) => q[1])), Math.max(...pts.map((q) => q[1])));
+    }
   }
 
   // soft ceiling light so the room reads at night

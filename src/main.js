@@ -155,7 +155,8 @@ const outside = new THREE.Group();
 // Ground plane in 4 pieces around the parking-ramp opening (x 13..17, z -23..-9).
 const pavementMat = new THREE.MeshStandardMaterial({ color: '#2a2c30', roughness: 0.9 });
 const pavement = new THREE.Group();
-for (const [a, b, c, d] of [[-80, 13, -120, 80], [17, 120, -120, 80], [13, 17, -120, -23], [13, 17, -9, 80]]) {
+// (the Elmwood footprint, world x 52..62 z -8..6, is left open so its garden-level floor isn't capped)
+for (const [a, b, c, d] of [[-80, 13, -120, 80], [17, 52, -120, 80], [62, 120, -120, 80], [52, 62, -120, -8], [52, 62, 6, 80], [13, 17, -120, -23], [13, 17, -9, 80]]) {
   const m = new THREE.Mesh(new THREE.PlaneGeometry(b - a, d - c), pavementMat);
   m.rotation.x = -Math.PI / 2;
   m.position.set((a + b) / 2, 0, (c + d) / 2);
@@ -1058,7 +1059,9 @@ const VIEWS = {
   apartment: { pos: [38.5, 3.5, 4.5], target: [52, 5, -1] },
   aptside: { pos: [62.5, 4.2, 12.5], target: [57, 4.0, 4.0] },
   aptback: { pos: [70.0, 4.5, -1.0], target: [62, 4.2, -1.0] },
-  apthall: { pos: [52.6, 3.0, -1.1], target: [60.0, 2.6, -0.6] },
+  apthall: { pos: [52.6, 3.0, 0.2], target: [60.0, 2.4, -0.4] },
+  aptgarden: { pos: [53.0, -0.1, 0.4], target: [60.0, -0.6, -0.6] },
+  aptgardenunit: { pos: [55.2, -0.05, 2.4], target: [52.3, -0.45, 4.2] },
   apthall2: { pos: [61.2, 6.1, -0.4], target: [52.5, 5.6, -0.8] },
   aptunit: { pos: [58.5, 3.0, -3.6], target: [63.0, 2.2, -6.0] },
   aptunit2: { pos: [55.0, 6.0, 1.9], target: [56.5, 5.2, 5.6] },
