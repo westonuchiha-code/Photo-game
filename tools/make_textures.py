@@ -1247,6 +1247,15 @@ for r in range(4):
         ot[y:y + 128, x % 512:(x % 512) + 3] *= 0.55
 save("ot_stone.png", ot)
 
+# ---------------------------------------------------------------- graffiti shutters (city photos, 28d)
+_gs = _cl("graffiti-shutters-pallets")
+_gk = _gs.size[0] / 507
+def _gc(b, size):
+    return _gs.crop(tuple(int(v * _gk) for v in b)).resize(size, Image.LANCZOS)
+_gc((133, 345, 247, 636), (384, 980)).save(os.path.join(OUT, "gf_shutter_a.png"))
+_gc((270, 345, 410, 472), (448, 406)).save(os.path.join(OUT, "gf_shutter_b.png"))
+save("gf_concrete.png", seamless(delight(np.asarray(_gc((62, 425, 118, 640), (192, 740))).astype(np.float32), 60)))
+
 with open(os.path.join(OUT, "palette.json"), "w") as f:
     json.dump(palette, f, indent=2)
 print("wrote palette.json")

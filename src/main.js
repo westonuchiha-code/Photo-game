@@ -40,6 +40,7 @@ import { makeStatueShrine, makeStoneShrine } from './models/shrines.js';
 import { makeTireWheel } from './models/wheel.js';
 import { makeHouse } from './models/houses.js';
 import { makeBlueHouse } from './models/bluehouse.js';
+import { makeCargoTrike, makeArcadeCabinet, makeGraffitiFront } from './models/street28d.js';
 import { makeShutterShop, makeVendingMachine, makeJunkShop } from './models/shops28c.js';
 import { makeShopHouse, makeStreetLamp as makeOldTownLamp, makeBollard, makeMonkey, makeBanner, makeClockTower, makeGreenPillar } from './models/oldtown.js';
 import { makeBrickGable, makeSpiral, makeOvalBuilding, makePebbleBench, makeOrnateLamp, makePlanter, makePaverTexture, makeGreyBandTexture } from './models/cityplaza.js';
@@ -990,6 +991,24 @@ const junkArea = {};
   const vm = makeVendingMachine(); vm.position.set(-0.85, 0, 11.7); vm.rotation.y = Math.PI; add(vm); rect(-1.25, -0.4, 11.65, 12.45);
 }
 
+// ------------------------------------------------------------------ street props (city photos, 28d)
+// South edge of the plaza by the old-town street: a closed graffiti shop with a pallet, an arcade
+// cabinet outside; two cargo trikes parked on the plaza and on the strip.
+{
+  const put = (o, gx, gz, rot) => {
+    o.position.set(gx, 0, gz); o.rotation.y = rot; add(o);
+    const c = o.userData.collider; if (!c) return;
+    const cs = Math.cos(rot), sn = Math.sin(rot);
+    const pts = [[c[0], c[2]], [c[1], c[2]], [c[0], c[3]], [c[1], c[3]]].map(([x, z]) => [gx + x * cs + z * sn, gz - x * sn + z * cs]);
+    rect(Math.min(...pts.map((p) => p[0])), Math.max(...pts.map((p) => p[0])), Math.min(...pts.map((p) => p[1])), Math.max(...pts.map((p) => p[1])));
+  };
+  put(makeGraffitiFront(4.4), -15.5, 12.1, Math.PI);
+  add(plane(new THREE.MeshStandardMaterial({ color: '#4a4c4e', roughness: 0.9 }), -18.4, -12.6, 12.1, 16, 2.0, 1));
+  put(makeArcadeCabinet(), -12.2, 11.55, Math.PI);
+  put(makeCargoTrike({ cab: false, seed: 2 }), -19.0, 8.6, 0.0);
+  put(makeCargoTrike({ cab: true, seed: 5 }), 0.6, 7.6, Math.PI + 0.15);
+}
+
 // delivery props elsewhere: drinks + bag outside an Elmwood unit door, a delivery tote by the scooter
 {
   const c = makeCupCarrier(); c.position.set(-0.6, 1.4, -2.8); apt.add(c);
@@ -1115,6 +1134,10 @@ const VIEWS = {
   vendinglow: { pos: [-0.8, 0.95, 10.75], target: [-0.85, 0.7, 11.7] },
   junkshop: { pos: [6.8, 1.8, 13.2], target: [1.5, 1.0, 20.5] },
   junkfront: { pos: [3.5, 2.2, 5.8], target: [3.5, 2.0, 12.2] },
+  graffiti: { pos: [-15.2, 1.9, 7.0], target: [-15.5, 1.9, 12.1] },
+  arcade: { pos: [-11.6, 1.6, 9.8], target: [-12.2, 1.3, 11.4] },
+  trike: { pos: [-16.4, 1.6, 6.2], target: [-19.4, 0.8, 8.6] },
+  trike2: { pos: [-2.6, 1.6, 6.2], target: [0.6, 1.0, 7.6] },
   walkinshelf: { pos: [17.6, 1.6, -44.0], target: [21.4, 1.0, -45.6] },
   van: { pos: [25.5, 1.9, -22.4], target: [21.5, 0.9, -26.5] },
   vanside: { pos: [24.6, 1.3, -29.2], target: [21.5, 0.7, -26.3] },

@@ -112,3 +112,9 @@ This is a running list, added to as models get built. Nothing here is urgent.
 - Possible next: furniture variety per unit (only 3 layouts), unit kitchens on the upper floor need
   backsplash tile, bathrooms aren't modelled, hallway ceiling could use the drop-ceiling tiles from the
   stairs photo.
+
+## 28d street props
+- Covered trike: clear cab panels barely read; could add frame edges and a reflection streak. No rider.
+- Sport trike fairing: the livery shows the logo twice; the engine is a box with fins.
+- Arcade cabinet: side art could carry the mascots; a red plastic stool beside it (photo) isn't modelled.
+- Graffiti shop: the pallet reads reddish under the lamp; the upper floor is just corrugated metal.

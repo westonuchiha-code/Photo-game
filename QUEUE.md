@@ -7,6 +7,7 @@ Rules (from you):
   sign's shape and material. Keep text that's already generic (LIQUOR).
 
 ## Approved
+- Elmwood Apartments v2 (good for now)
 - 28c Shops (noodle machine detail = the bar for everything from here on)
 - 28b Old-town shopping street
 - 28a City plaza (approved for now)
@@ -46,7 +47,7 @@ Rules (from you):
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- Elmwood Apartments rework v2 (garden + entry + top floor, 6 apartments per floor = 18; 9 side windows per side; centre stairwell up and down; hall windows front/back): ramp direction, wall blocking the entry, ceiling over the stairs, better doors, top-floor hallway window over the entry, every door opens into a unit, remove the untextured front AC, side windows with real metal AC units matching the unit interiors, windows line up with the rooms behind them.
+- 28d Street props on the plaza's south edge: KWANG ELECTRIC closed shop (shutters with the photo's graffiti, cracked concrete pier, made-up signs), wood pallet, BUBBLE BOUNCE arcade cabinet (original mascots + lit game screen), sport-bike cargo trike with tarp load (made-up DASHER 125), covered electric cargo trike with boxes.
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
