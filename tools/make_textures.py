@@ -464,6 +464,7 @@ rect_(TF, (635, 445, 635, 690, 805, 700, 805, 415), (700, 560), "tire_left.png")
 rect_(TC, (1030, 362, 1062, 770, 1475, 742, 1468, 437), (1400, 560), "tire_side.png")
 lot_src = delight(TFA[1500:2200, 1200:3000], 120)
 lot = quilt(lot_src, (512, 512), patch=128, contrast=1.3)
+lot = lum(lot)[..., None] / max(lum(lot).mean(), 1) * np.array([150, 148, 142], np.float32)  # grey concrete, sodium cast removed
 save("lot_concrete.png", lot)
 save("lot_concrete_normal.png", normal_from_height(blur(lum(lot) / 255.0, 1.0), 2.0))
 
@@ -604,6 +605,21 @@ palette["hall_trim"] = "#c9b48c"
 # ---------------------------------------------------------------- alien textures (painted impasto)
 for i in range(1, 6):
     wall_tex(f"alien-texture{i}", f"alien_{i}", (0.0, 0.0, 1.0, 1.0), (512, 1024), contrast=1.0, radius=400, normal=7.0)
+
+# Tire shop: white painted panels and the chipped blue base band (corner photo).
+_, TCA2 = load("tire-shop-corner")
+tw = delight(TCA2[1180:1440, 2700:2930], 60)
+tw = quilt(tw, (512, 512), patch=96, contrast=1.3)
+g_ = lum(tw)[..., None] / max(lum(tw).mean(), 1)
+tw = (g_ - 1) * 0.7 * 255 * 0.25 + np.array([226, 226, 220], np.float32)  # neutral off-white paint, sodium cast removed
+yy, xx = np.mgrid[0:512, 0:512]
+tw[(yy % 256) < 3] *= 0.86  # panel joints every 0.6 m
+tw[(xx % 256) < 3] *= 0.88
+save("tire_wall.png", tw)
+save("tire_wall_normal.png", normal_from_height(blur(np.where(((yy % 256) < 3) | ((xx % 256) < 3), 0.0, 1.0), 1.0), 2.0))
+band = TCA2[1455:1525, 1800:2440]
+band = np.asarray(to_img(band).resize((1024, 112), Image.BICUBIC)).astype(np.float32)
+save("tire_base.png", seamless(band, axes=(1,)))
 
 with open(os.path.join(OUT, "palette.json"), "w") as f:
     json.dump(palette, f, indent=2)

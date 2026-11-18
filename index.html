@@ -23,6 +23,7 @@
     @media (pointer: coarse) { .help-mouse { display: none; } .help-touch { display: inline; } }
     body[data-mode="orbit"] .walk-only { display: none; }
     body[data-mode="walk"] .orbit-only { display: none; }
+    #use { position: fixed; left: 50%; bottom: calc(28px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); font-weight: 600; padding: 12px 18px; }
     #stick { position: fixed; width: 100px; height: 100px; margin: -50px 0 0 -50px; border-radius: 50%; border: 2px solid rgba(255,255,255,.7); background: rgba(0,0,0,.15); display: none; pointer-events: none; }
     #stick.on { display: block; }
     #stick .knob { position: absolute; left: 30px; top: 30px; width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,.85); }
@@ -56,9 +57,11 @@
       <button data-view="entrance">Entrance</button>
       <button data-view="signs">Signs</button>
       <button data-view="abandoned">Boarded-up shop</button>
+      <button data-view="tireshop">Tire shop</button>
     </span>
     <button id="export" title="Download the stool and counter as .glb models">Download models</button>
   </div>
+  <button id="use" hidden>Open</button>
   <div id="stick"><div class="knob"></div></div>
   <script type="module" src="src/main.js"></script>
 </body>

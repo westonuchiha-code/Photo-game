@@ -104,6 +104,7 @@ export function makeMaterials() {
     sidewalk: surface('sidewalk', 1, 1, { normalScale: 0.5, roughness: 0.9, color: new THREE.Color(0.92, 0.94, 1.0) }),
     dirt: surface('dirt', 1, 1, { normalScale: 0.8, roughness: 1 }),
     gravel: surface('gravel', 1, 1, { normalScale: 1.0, roughness: 1 }),
+    lotConcrete: surface('lot_concrete', 1, 1, { normalScale: 0.5, roughness: 0.95 }),
     sidewalkLeaves: surface('sidewalk_leaves', 1, 1, { normalScale: 0.5, roughness: 0.9 }),
     // Framed poster, straightened from the bar photo.
     poster: new THREE.MeshStandardMaterial({ map: tex('poster.png'), roughness: 0.35 }),

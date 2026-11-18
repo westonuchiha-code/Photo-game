@@ -6,7 +6,15 @@ Rules (from you):
 - Signs and text: invent generic names and draw the text myself. The photo supplies the
   sign's shape and material. Keep text that's already generic (LIQUOR).
 
+## Approved
+- Rental pole sign (Maple Creek Properties)
+- Restaurant burger poster (BIG BUN BURGERS)
+
 ## In review
+- Tire shop ("Rudy's Auto Sales", made-up text), working doors, empty interior.
+  Screenshots: `screenshots/tireshop-*.png`.
+
+## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
    ("MAPLE CREEK PROPERTIES"). Screenshots in `screenshots/rental-sign-*.png`.
 
@@ -14,8 +22,6 @@ Rules (from you):
    Screenshot: `screenshots/burger-poster.png`.
 
 ## Up next (in order)
-2. Tire shop: full model with working doors and an interior (interior photos coming later).
-   Photos: tire-shop-front, tire-shop-corner.
 3. Rusty pole (rusty-pole, rusty-pole-closeup).
 4. Wall textures on buildings (wall-* photos), window blinds.
 5. Rocks, grass tufts, leaf litter on curbs.
@@ -29,6 +35,7 @@ Rules (from you):
 12. Apartment building inside and out (made-up name instead of "Airlie"): brick front with
     curved stair walls, mailboxes, hallway, stairs, landing, unit doors.
 13. Alien textures (5).
+14. Tree with a door carved and painted into the trunk (tree-door, tree-door-closeup).
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"

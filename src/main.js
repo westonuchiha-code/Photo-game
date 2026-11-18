@@ -20,6 +20,7 @@ import { makeNapkinDispenser, makePoster, makeOpenPlaque, makeWallGlobe } from '
 import { makeLiquorSign, makeTwoRiversSign } from './models/signs.js';
 import { makeAbandonedBuilding, makeStreetLamp, makeFireHydrant, makePlasticBottle } from './models/abandoned.js';
 import { plane } from './world/util.js';
+import { makeTireShop, TIRE_SHOP } from './models/tireshop.js';
 import { WalkControls } from './walk.js';
 
 // ------------------------------------------------------------------ renderer
@@ -358,6 +359,23 @@ hydrant.rotation.y = -Math.PI / 2;
 add(hydrant);
 circle(hydrant.position.x, hydrant.position.z, 0.25);
 
+// ------------------------------------------------------------------ tire shop (two tire-shop photos)
+// Faces south (+z) onto a big cracked concrete lot, north-east of the restaurant.
+const TS = { x: 26, z: -17 };
+add(plane(mats.lotConcrete, 12, 42, -32, -8, 0.003, 4));
+const tireShop = makeTireShop();
+tireShop.position.set(TS.x, 0, TS.z);
+add(tireShop);
+for (const [x0, x1, z0, z1] of tireShop.userData.colliders) rect(TS.x + x0, TS.x + x1, TS.z + z0, TS.z + z1);
+const interactables = [];
+for (const d of tireShop.userData.doors) {
+  const [a, b, c, e] = d.gap;
+  const col = { type: 'box', minX: TS.x + a, maxX: TS.x + b, minZ: TS.z + c, maxZ: TS.z + e };
+  colliders.push(col);
+  interactables.push({ ...d, x: TS.x + d.at[0], z: TS.z + d.at[1], t: 0, target: 0, col,
+    speed: d.kind === 'garage' ? 0.6 : 2.2 });
+}
+
 // ------------------------------------------------------------------ controls
 const walk = new WalkControls(camera, renderer.domElement, {
   bounds: null,
@@ -387,6 +405,7 @@ const VIEWS = {
   neon: { pos: [5.8, 1.5, -2.6], target: [7.9, 1.4, -3.65] },
   entrance: { pos: [4.4, 1.7, 2.2], target: [7.6, 0.6, -1.0] },
   signs: { pos: [9.4, 1.8, 1.4], target: [13.2, 2.6, -0.8] },
+  tireshop: { pos: [36, 2.6, -2], target: [24, 2.2, -14] },
   abandoned: { pos: [13.0, 2.0, 2.0], target: [19.5, 1.4, 0.2] },
 };
 let mode = 'walk';
@@ -444,7 +463,8 @@ const ASSETS = {
   neon_open_sign_lightbox: () => neon,
   glass_double_door: () => door,
   liquor_pole_sign: () => liquor,
-  two_rivers_pole_sign: () => twoRivers,
+  rental_pole_sign: () => twoRivers,
+  tire_shop: () => tireShop,
   abandoned_storefront: () => abandoned,
   street_lamp: () => lamp,
   fire_hydrant: () => hydrant,
@@ -466,6 +486,11 @@ document.getElementById('export')?.addEventListener('click', async () => {
 const clock = new THREE.Clock();
 let t = 0;
 let doorOpen = 0;
+let nearest = null;
+const useBtn = document.getElementById('use');
+const useNearest = () => { if (nearest) nearest.target = nearest.target ? 0 : 1; };
+useBtn.addEventListener('click', useNearest);
+addEventListener('keydown', (e) => { if (e.code === 'KeyE') useNearest(); });
 const amberMats = new Set();
 neon.traverse((o) => { if (o.isMesh && o.material.isMeshBasicMaterial && o.material.color.r > 1.9 && o.material.color.b === 0) amberMats.add(o.material); });
 function frame() {
@@ -476,6 +501,18 @@ function frame() {
   // Doors swing open when you walk up to them (inside or out).
   const near = mode === 'walk' && Math.hypot(walk.position.x - X1, walk.position.z - DOOR_Z) < 2.3;
   doorOpen += ((near ? 1 : 0) - doorOpen) * Math.min(1, dt * 4);
+  // Doors you open yourself (E key or the on-screen button).
+  let best = null, bestD = 3.2;
+  for (const it of interactables) {
+    it.t += Math.sign(it.target - it.t) * Math.min(Math.abs(it.target - it.t), dt * it.speed);
+    it.setOpen(it.t);
+    it.col.active = it.t < 0.6;
+    const dd = Math.hypot(walk.position.x - it.x, walk.position.z - it.z);
+    if (mode === 'walk' && dd < bestD) { best = it; bestD = dd; }
+  }
+  nearest = best;
+  useBtn.hidden = !best;
+  if (best) useBtn.textContent = `${best.target ? 'Close' : 'Open'} ${best.name} (E)`;
   door.userData.setOpen(doorOpen);
   doorCollider.active = doorOpen < 0.7;
   const f = 0.94 + 0.06 * Math.sin(t * 31) * Math.sin(t * 7.3); // subtle neon buzz
@@ -491,4 +528,4 @@ window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
   composer.setSize(window.innerWidth, window.innerHeight);
 });
-window.__scene = { scene, camera, walk, setMode };
+window.__scene = { scene, camera, walk, setMode, interactables };
