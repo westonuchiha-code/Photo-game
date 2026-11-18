@@ -851,7 +851,7 @@ function frame() {
   const dt = Math.min(clock.getDelta(), 0.05);
   t += dt;
   if (mode === 'walk') walk.update(dt);
-  else orbit.update();
+  else if (!window.__lock) orbit.update();
   sky.userData.update(camera, t);
   alien.userData.update(t);
   soupPots.forEach((p) => p.userData.update(t));

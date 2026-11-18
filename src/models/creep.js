@@ -203,13 +203,13 @@ export function makeCreep() {
   }
   // hood: a full shell with a face opening cut out that starts low over the
   // forehead; the edge of the opening is ragged and sags, with frayed threads.
-  const R0 = 0.235;
+  const R0 = 0.255;
   const hoodGeo = new THREE.SphereGeometry(R0, 56, 40, 0, Math.PI * 2, 0, Math.PI * 0.8);
   hoodGeo.scale(1, 1.18, 1.05);
   const opening = (dx, dy, dz) => {          // <1 inside the face window (direction space)
     const ax = Math.atan2(dx, dz), ay = Math.asin(Math.max(-1, Math.min(1, dy)));
     if (dz < 0) return 99;
-    const top = 0.6, bottom = -1.2, half = 0.62 - 0.12 * Math.max(0, ay);   // narrows toward the top
+    const top = 0.5, bottom = -1.2, half = 0.52 - 0.1 * Math.max(0, ay);   // narrows toward the top
     return (ax / half) ** 2 + (ay > 0 ? (ay / top) ** 2 : (ay / bottom) ** 2);
   };
   {
@@ -219,10 +219,7 @@ export function makeCreep() {
       const d = v.clone().normalize();
       const e = opening(d.x, d.y, d.z);
       let k = 1 + 0.035 * Math.sin(v.y * 40 + v.x * 12) * Math.sin(v.z * 25);          // wrinkles
-      if (e < 1.5 && e >= 1) {                                                       // ragged, sagging rim
-        k *= 1 + 0.04 * Math.sin(i * 12.9898) ;
-        v.y -= (1.5 - e) * 0.03 * (0.5 + 0.5 * Math.sin(i * 78.233));
-      }
+      if (e < 1.5 && e >= 1) k *= 1 + 0.025 * (1.5 - e) * (1 + Math.sin(i * 12.9898));   // uneven rim, pushed outward only
       hp.setXYZ(i, v.x * k, v.y, v.z * k);
     }
     // drop the faces inside the opening, plus a few random bites along the edge (wisps)
@@ -232,14 +229,13 @@ export function makeCreep() {
       for (let j = 0; j < 3; j++) c.add(v.fromBufferAttribute(hp, idx[t + j]));
       c.normalize();
       const e = opening(c.x, c.y, c.z);
-      const ragged = e < 1.25 && Math.sin(t * 0.731) > 0.35;
-      if (e >= 1 && !ragged) keep.push(idx[t], idx[t + 1], idx[t + 2]);
+      if (e >= 1) keep.push(idx[t], idx[t + 1], idx[t + 2]);
     }
     hoodGeo.setIndex(keep);
     hoodGeo.computeVertexNormals();
   }
   const hood = new THREE.Mesh(hoodGeo, hoodMat);
-  hood.position.set(0, 0.0, -0.01);
+  hood.position.set(0, 0.0, 0.0);
   hood.castShadow = true;
   head.add(hood);
   const hoodInside = new THREE.Mesh(hoodGeo, hoodieIn);
@@ -250,15 +246,16 @@ export function makeCreep() {
   const fringeTex = tx('creep_fringe.png');
   fringeTex.wrapS = THREE.RepeatWrapping;
   const fringeMat = new THREE.MeshStandardMaterial({ map: fringeTex, alphaTest: 0.3, side: THREE.DoubleSide, roughness: 1 });
-  for (let i = 0; i < 9; i++) {
-    const ax = -0.42 + i * 0.105;
-    const ay = 0.53 - 0.06 * Math.abs(i - 4) / 4;
-    const dir = new THREE.Vector3(Math.sin(ax) * Math.cos(ay), Math.sin(ay), Math.cos(ax) * Math.cos(ay));
-    const card = new THREE.Mesh(new THREE.PlaneGeometry(0.06, 0.028), fringeMat);
-    card.position.set(dir.x * R0 * 0.98, dir.y * R0 * 1.18 - 0.02, dir.z * R0 * 1.05 * 0.98);
+  for (let i = 0; i < 11; i++) {
+    const ax = -0.42 + i * 0.084;
+    // find the brim height for this angle: smallest ay above the face where the hood exists
+    let ay = 0;
+    for (; ay < 1.2; ay += 0.01) if (opening(Math.sin(ax) * Math.cos(ay), Math.sin(ay), Math.cos(ax) * Math.cos(ay)) >= 1) break;
+    const d = new THREE.Vector3(Math.sin(ax) * Math.cos(ay), Math.sin(ay), Math.cos(ax) * Math.cos(ay));
+    const card = new THREE.Mesh(new THREE.PlaneGeometry(0.05, 0.03), fringeMat);
+    card.position.set(d.x * R0 * 1.0, d.y * R0 * 1.18 - 0.012, d.z * R0 * 1.05 + 0.004);
     card.rotation.y = ax;
-    card.rotation.x = 0.25;
-    fringeTex.offset.x = i * 0.27;
+    card.rotation.x = 0.15;
     head.add(card);
   }
 
