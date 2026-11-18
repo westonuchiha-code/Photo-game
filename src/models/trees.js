@@ -271,3 +271,113 @@ export function makeMulchBed(radius = 3) {
   m.name = 'mulch_bed';
   return m;
 }
+
+// ---------------------------------------------------------------- tree with a door (tree-door photos)
+// A big street tree whose trunk has a tall, lumpy-topped "door" carved into the
+// base: white-painted wood with vertical grain, a small old knob plate, and a
+// raised bark lip all round. The door follows the trunk's curve.
+export function makeDoorTree({ seed = 21 } = {}) {
+  const R = 0.34, HT = 3.4;
+  const g = deciduous('oak', { seed, height: HT, radius: R, lean: { x: 0, z: 0 }, depth: 3, leaves: 260, leafTint: [0.08, 0.5, 0.4] });
+  g.name = 'door_tree';
+  // measure the real trunk surface: cast a ray in toward the axis at (angle, height)
+  const trunkMesh = g.children.find((o) => o.isMesh && o.material === barkMat('oak'));
+  const rc = new THREE.Raycaster();
+  const surfAt = (a, y) => {
+    const dir = new THREE.Vector3(-Math.sin(a), 0, -Math.cos(a));
+    rc.set(new THREE.Vector3(Math.sin(a) * 3, y, Math.cos(a) * 3), dir);
+    const h = rc.intersectObject(trunkMesh, false)[0];
+    return h ? 3 - h.distance : R;
+  };
+  const surf = (y) => surfAt(0, y);
+
+  // door outline in (u = angle across, v = height): narrow top with a shoulder bump, wider base
+  const H = 1.45, y0 = 0.04;
+  const halfW = (v) => {
+    const t = v / H;
+    const base = 0.55 - 0.15 * t;                                  // radians, narrows going up
+    const shoulder = 0.07 * Math.exp(-((t - 0.62) ** 2) / 0.006);  // the bump on the left in the photo
+    const top = t > 0.88 ? Math.sqrt(Math.max(0, 1 - ((t - 0.88) / 0.12) ** 2)) : 1;
+    return { l: (base + shoulder) * top, r: base * top };
+  };
+
+  // door texture: painted white wood with grain + knob plate (canvas)
+  const c = document.createElement('canvas');
+  c.width = 256; c.height = 512;
+  const x = c.getContext('2d');
+  x.fillStyle = '#e8ecef'; x.fillRect(0, 0, 256, 512);
+  for (let i = 0; i < 70; i++) {
+    const px = Math.random() * 256;
+    x.strokeStyle = `rgba(150,160,170,${0.15 + Math.random() * 0.3})`;
+    x.lineWidth = 0.5 + Math.random() * 2;
+    x.beginPath(); x.moveTo(px, 0);
+    for (let y = 0; y <= 512; y += 32) x.lineTo(px + Math.sin(y * 0.02 + i) * 3, y);
+    x.stroke();
+  }
+  for (let i = 0; i < 6; i++) { // knots / chips
+    x.fillStyle = 'rgba(120,125,130,0.35)';
+    x.beginPath(); x.ellipse(Math.random() * 256, Math.random() * 512, 3 + Math.random() * 5, 6 + Math.random() * 8, 0, 0, 7); x.fill();
+  }
+  const doorTex = new THREE.CanvasTexture(c);
+  doorTex.colorSpace = THREE.SRGBColorSpace;
+
+  // curved door surface on the trunk (front faces +z)
+  const UN = 16, VN = 24;
+  const pos = [], uvs = [], idx = [];
+  for (let j = 0; j <= VN; j++) {
+    const v = (j / VN) * H, y = y0 + v, { l, r } = halfW(v);
+    for (let i = 0; i <= UN; i++) {
+      const s = i / UN;
+      const a = -l + (l + r) * s;                 // angle from the +z axis
+      const rr = surfAt(a, y) + 0.015;
+      pos.push(Math.sin(a) * rr, y, Math.cos(a) * rr);
+      uvs.push(s, j / VN);
+    }
+  }
+  for (let j = 0; j < VN; j++) for (let i = 0; i < UN; i++) {
+    const a = j * (UN + 1) + i, b = a + UN + 1;
+    idx.push(a, b, a + 1, a + 1, b, b + 1);
+  }
+  const dg = new THREE.BufferGeometry();
+  dg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  dg.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  dg.setIndex(idx);
+  dg.computeVertexNormals();
+  const door = new THREE.Mesh(dg, new THREE.MeshStandardMaterial({ map: doorTex, roughness: 0.8, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2 }));
+  door.receiveShadow = true;
+  g.add(door);
+
+  // raised bark lip around the door
+  const lip = [];
+  const ring = (side) => {
+    for (let j = 0; j <= VN; j++) {
+      const v = (j / VN) * H, y = y0 + v, w = halfW(v);
+      const a = side < 0 ? -w.l : w.r;
+      const rr = surfAt(a, y) + 0.02;
+      lip.push(new THREE.Vector3(Math.sin(a) * rr, y, Math.cos(a) * rr));
+    }
+  };
+  ring(-1);
+  const right = []; { const save = lip.length; ring(1); right.push(...lip.splice(save)); }
+  const path = new THREE.CatmullRomCurve3([...lip, ...right.reverse()]);
+  const lipMesh = new THREE.Mesh(new THREE.TubeGeometry(path, 120, 0.045, 8, false), barkMat('oak'));
+  lipMesh.castShadow = true;
+  g.add(lipMesh);
+
+  // little antique knob plate on the right edge
+  const plateMat = new THREE.MeshStandardMaterial({ color: '#5b4632', roughness: 0.5, metalness: 0.6 });
+  const ka = halfW(0.55).r - 0.12, ky = y0 + 0.55, kr = surfAt(ka, ky) + 0.025;
+  const plate = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.13, 0.012), plateMat);
+  plate.position.set(Math.sin(ka) * kr, ky, Math.cos(ka) * kr);
+  plate.rotation.y = ka;
+  const knob = new THREE.Mesh(new THREE.SphereGeometry(0.02, 10, 8), plateMat);
+  knob.position.copy(plate.position).add(new THREE.Vector3(Math.sin(ka) * 0.025, -0.01, Math.cos(ka) * 0.025));
+  g.add(plate, knob);
+
+  // a bulging burl above the door (the big knot in the photo)
+  const burl = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 12), barkMat('oak'));
+  burl.scale.set(1.2, 0.9, 0.6);
+  burl.position.set(-0.08, 2.0, surf(2.0) - 0.04);
+  g.add(burl);
+  return g;
+}

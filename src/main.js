@@ -28,7 +28,7 @@ import { makeSky } from './models/sky.js';
 import { makeAlienFormation } from './models/alien.js';
 import { makeApartment } from './models/apartment.js';
 import { makeNewsBox, makeParkingSignBlock, makeParkingRamp, makeTealStorefront, makeRabbitSculpture } from './models/locations.js';
-import { makeSpruce, makeCherry, makePaleTree, makeOak, makeTreePit, makeMulchBed } from './models/trees.js';
+import { makeSpruce, makeCherry, makePaleTree, makeOak, makeTreePit, makeMulchBed, makeDoorTree } from './models/trees.js';
 import { makeRockBed, makeGrassTufts, makeCurbWithLeaves, makeLooseLeaves, makeBikeRack } from './models/ground.js';
 import { WalkControls } from './walk.js';
 
@@ -566,6 +566,15 @@ for (const [x0, x1, z0, z1, y0, y1] of apt.userData.colliders) {
   interactables.push({ name: 'front door', kind: 'door', setOpen: d.setOpen, x: AP.x - d.at[1] + 0.6, z: AP.z + d.at[0], t: 0, target: 0, col, speed: 2.2 });
 }
 
+// ------------------------------------------------------------------ tree with a door (tree-door photos)
+// In the gravel + leaf patch by the rental sign, door facing the sidewalk.
+const doorTree = makeDoorTree();
+doorTree.position.set(12.8, 0, 5.2);
+doorTree.rotation.y = -Math.PI / 2;
+add(doorTree);
+circle(12.8, 5.2, 0.55);
+add(makeLooseLeaves(11.4, 14.2, 4.0, 6.4, 50, 31));
+
 // ------------------------------------------------------------------ alien formation (alien texture photos)
 // Hidden in the dirt lot behind the blue construction fence.
 const alien = makeAlienFormation();
@@ -631,6 +640,7 @@ const VIEWS = {
   apartment: { pos: [38.5, 3.5, 4.5], target: [52, 5, -1] },
   stoop: { pos: [47.6, 2.4, 3.4], target: [50.5, 1.0, -1] },
   alien: { pos: [40.4, 2.4, 1.6], target: [44.5, 1.4, -3] },
+  doortree: { pos: [10.4, 1.3, 5.7], target: [12.8, 0.9, 5.2] },
   abandoned: { pos: [13.0, 2.0, 2.0], target: [19.5, 1.4, 0.2] },
 };
 let mode = 'walk';
