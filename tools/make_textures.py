@@ -364,9 +364,10 @@ save("subway_tile.png", tile)
 save("subway_tile_normal.png", normal_from_height(height + (d < 2) * -0.2, 3.0))
 
 # Framed poster on the tile wall (bar photo): straighten it in two passes.
-_poster = photo.transform((300, 600), Image.QUAD, [1927, 474, 1921, 825, 2075, 838, 2091, 509], Image.BICUBIC)
-_poster.transform((256, 640), Image.QUAD, [72, 22, 36, 578, 252, 580, 284, 22], Image.BICUBIC).save(os.path.join(OUT, "poster.png"))
-print("wrote poster.png")
+# poster.png is now a made-up cartoon ad drawn by tools/make_signs.py
+# _poster = photo.transform((300, 600), Image.QUAD, [1927, 474, 1921, 825, 2075, 838, 2091, 509], Image.BICUBIC)
+# _poster.transform((256, 640), Image.QUAD, [72, 22, 36, 578, 252, 580, 284, 22], Image.BICUBIC).save(os.path.join(OUT, "poster.png"))
+# print("wrote poster.png")
 
 # ---------------------------------------------------------------- street sign photos
 LQ, LA = load("liquor-sign")

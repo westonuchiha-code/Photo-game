@@ -10,6 +10,9 @@ Rules (from you):
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
    ("MAPLE CREEK PROPERTIES"). Screenshots in `screenshots/rental-sign-*.png`.
 
+2. Restaurant poster: made-up cartoon "BIG BUN BURGERS" ad in place of the real ad from the photo.
+   Screenshot: `screenshots/burger-poster.png`.
+
 ## Up next (in order)
 2. Tire shop: full model with working doors and an interior (interior photos coming later).
    Photos: tire-shop-front, tire-shop-corner.
