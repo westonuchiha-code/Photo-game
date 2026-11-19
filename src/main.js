@@ -1073,12 +1073,19 @@ const baArea = (() => { const a = barAlley.userData.area; return { minX: BA.x - 
 const teaAreas = barAlley.userData.areas.map((a) => ({ minX: BA.x - a.maxX, maxX: BA.x - a.minX, minZ: BA.z - a.maxZ, maxZ: BA.z - a.minZ, y0: -0.5, y1: 0.6 }));
 const mallAreas = mall.userData.areas.map((a) => ({ ...a, minX: a.minX + MALL.x, maxX: a.maxX + MALL.x, minZ: a.minZ + MALL.z, maxZ: a.maxZ + MALL.z }));
 {
-  // forecourt paving like the station plaza, cut around the stair well
-  const fp = new THREE.CanvasTexture((() => { const c = document.createElement('canvas'); c.width = c.height = 512; const x = c.getContext('2d'); let s = 5; const r = () => ((s = (s * 16807) % 2147483647) / 2147483647);
-    for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) { x.fillStyle = r() < 0.15 ? '#e8e2d4' : ['#a8a49c', '#b8b2a6', '#9a968e', '#c4bdb0'][Math.floor(r() * 4)]; x.fillRect(i * 64 + 2, j * 64 + 2, 60, 60); } return c; })());
-  fp.colorSpace = THREE.SRGBColorSpace; fp.wrapS = fp.wrapT = THREE.RepeatWrapping;
-  const fm = new THREE.MeshStandardMaterial({ map: fp, roughness: 0.85 });
-  for (const [a, b, c, d] of [[-9, 0.2, 49, 72], [3.8, 14, 49, 72], [0.2, 3.8, 49, 50.9], [0.2, 3.8, 58.7, 72]]) add(plane(fm, a, b, c, d, 0.007, 4));
+  // forecourt: rain-soaked concrete slabs with puddles (rainy-plaza photo, 28k), cut around the stair well
+  const tl = new THREE.TextureLoader();
+  const ld = (n, srgb) => { const t = tl.load('assets/textures/' + n); if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8; return t; };
+  const slabC = ld('rp_slab.png', true), slabR = ld('rp_slab_r.png', false);
+  const slabM = new THREE.MeshStandardMaterial({ map: slabC, roughnessMap: slabR, roughness: 1, metalness: 0.05 });
+  for (const [a, b, c, d] of [[-9, 0.2, 49, 72], [3.8, 14, 49, 72], [0.2, 3.8, 49, 50.9], [0.2, 3.8, 58.7, 72]]) add(plane(slabM, a, b, c, d, 0.007, 3));
+  // two paved walkways across it (sidewalk-tiles photo): dark pavers with light-grey edge bands, moss in the joints
+  const pvD = ld('mp_paver.png', true), pvL = ld('mp_paver_light.png', true);
+  const pvMats = new Map();
+  const pv = (tex, a, b, c, d, y) => { if (!pvMats.has(tex)) pvMats.set(tex, new THREE.MeshStandardMaterial({ map: tex, roughness: 0.85 })); add(plane(pvMats.get(tex), a, b, c, d, y, 0.9)); };
+  // north-south to the bar alley mouth (x -4.2..0.2), east-west from the mall kiosk to the Go-club stairs
+  pv(pvL, -4.4, -0.0, 59.4, 72, 0.009); pv(pvD, -3.5, -0.9, 59.4, 72, 0.010);
+  pv(pvL, -4.4, 14, 59.4, 63.0, 0.0095); pv(pvD, -3.5, 14, 60.3, 62.1, 0.0105);
 }
 
 // delivery props elsewhere: drinks + bag outside an Elmwood unit door, a delivery tote by the scooter
@@ -1231,6 +1238,8 @@ const VIEWS = {
   mallpillars: { pos: [7.0, -2.8, 45.5], target: [4.0, -3.0, 34] },
   malleast: { pos: [3.0, -2.6, 36], target: [9, -2.8, 42] },
   mallstair: { pos: [2.0, 1.2, 60.5], target: [2.0, -3.2, 48] },
+  forecourt: { pos: [10, 2.0, 66], target: [-1, 0, 58] },
+  puddles: { pos: [6.5, 1.6, 52.5], target: [3.5, 0, 56.5] },
   mallkiosk: { pos: [6.5, 1.8, 66], target: [2.0, 1.0, 57] },
   stairent: { pos: [7.6, 1.7, 63.2], target: [14, 2.3, 61] },
   stairsign: { pos: [10.9, 2.3, 60.1], target: [14, 2.5, 61.3] },

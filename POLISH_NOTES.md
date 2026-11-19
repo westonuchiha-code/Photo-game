@@ -147,3 +147,7 @@ This is a running list, added to as models get built. Nothing here is urgent.
 - Hairline striping on the plaster beside the tea-tin wall (likely a z-fight); check.
 - The street front reuses the carved plaster; a plainer outside render might read better.
 - Add steam / teapots on tables, a menu card, the order screen showing a made-up menu.
+
+## 28k leftover city textures
+- sky_day.png (sun-flare photo) is ready for a day mode; the town is lit for night, so a day mode needs its own lighting pass.
+- Puddles only reflect lights (no environment map outside); a captured street probe would make them mirror the signs.
