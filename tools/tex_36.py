@@ -37,3 +37,21 @@ crop(462, 588, 556, 640, (512, 284)).save(os.path.join(OUT, "kt_paper.png"), opt
 crop(464, 541, 539, 582, (512, 280)).save(os.path.join(OUT, "kt_box.png"), optimize=True)
 crop(156, 636, 192, 682, (128, 164)).save(os.path.join(OUT, "kt_lamp.png"), optimize=True)
 print("wrote kt_cab, kt_bed, kt_wheel, kt_paper, kt_box, kt_lamp")
+
+# ---- red coach (red-coach-bus-rear.jpg / -front.jpg; coordinates in the 1400-px thumbnail)
+import cv2
+def load_cv(n):
+    return cv2.cvtColor(np.asarray(load(n)), cv2.COLOR_RGB2BGR)
+im2 = load_cv("red-coach-bus-rear.jpg"); k = im2.shape[1] / 1400
+mask = np.zeros(im2.shape[:2], np.uint8)
+for x0, y0, x1, y1 in [(763, 524, 902, 582), (657, 762, 996, 796), (698, 875, 790, 928), (910, 864, 990, 895)]:
+    cv2.rectangle(mask, (int(x0 * k), int(y0 * k)), (int(x1 * k), int(y1 * k)), 255, -1)
+im2 = cv2.inpaint(im2, mask, 9, cv2.INPAINT_TELEA)
+src = np.float32([(615, 440), (1000, 445), (1022, 968), (618, 978)]) * k
+dst = np.float32([(0, 0), (1024, 0), (1024, 1360), (0, 1360)])
+rear = cv2.warpPerspective(im2, cv2.getPerspectiveTransform(src, dst), (1024, 1360))
+# soften the leftover smears of the painted-out lettering with a little paint noise
+cv2.imwrite(os.path.join(OUT, "cb_rear.png"), rear)
+im3 = load("red-coach-bus-front.jpg"); k3 = im3.size[0] / 1400
+im3.crop((int(228 * k3), int(1068 * k3), int(330 * k3), int(1136 * k3))).resize((256, 170), Image.LANCZOS).save(os.path.join(OUT, "cb_lamp.png"), optimize=True)
+print("wrote cb_rear, cb_lamp")

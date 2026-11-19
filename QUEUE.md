@@ -63,7 +63,7 @@ Rules (from you):
 
 ## In review
 - 35 Claw hammer (done, parked)
-- 36 Vehicles: kei truck (in review)
+- 36 Vehicles: kei truck (approved), river boat (skipped), coach bus (in review)
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
