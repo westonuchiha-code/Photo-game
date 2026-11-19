@@ -156,3 +156,7 @@ This is a running list, added to as models get built. Nothing here is urgent.
 - The bench table is plain wood boxes; could use the wood texture from the bar photos.
 - The pizza lids read a little silvery; a real clear-plastic look needs an environment map.
 - Noodle shop interior is not built (the lattice doors are lit panels).
+
+## 29 abandoned office
+- Box edges of the washroom partitions stretch the drywall texture; give them proper edge UVs.
+- Could add mould in the corners, a dripping leak under the missing tiles, dust motes in the light.

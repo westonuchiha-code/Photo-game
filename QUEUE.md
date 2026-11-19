@@ -7,6 +7,7 @@ Rules (from you):
   sign's shape and material. Keep text that's already generic (LIQUOR).
 
 ## Approved
+- 16 Food set 1 remainder (corn dog + bun rebuilt, noodle shop)
 - 28k Leftover city textures (rainy forecourt, moss pavers, day sky)
 - 28j Teahouse
 - 28i Bar alley
@@ -55,7 +56,7 @@ Rules (from you):
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- 16 Food set 1 remainder (in progress)
+- 29 Grime surfaces → abandoned office on the forecourt (in review)
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
