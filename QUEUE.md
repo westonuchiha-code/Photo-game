@@ -309,6 +309,15 @@ Rules (from you):
     of stacked chip bags (made-up brand and prices), a soot-splattered white plaster texture, and five
     original paintings to hang as wall art (purple face "NO!", yellow collage face, yellow/black splash,
     eye over mushrooms, blue-haired portrait). The paintings are the user's own art: use them as-is.
+69. Inspiration 4 (photos/inspo4/, 20 photos): blue soda in glass bottles with purple labels and caps,
+    a 6-donut window box with arcade-themed decorations, wall brochure holders ("TAKE ONE"), a game
+    console tower with a figure on top + handheld consoles, mini pies in foil tins, egg cartons in a box,
+    three big TV boxes (blue, red on a pallet, teal), a tortilla pepperoni pizza on foil, a 3-door
+    egg-nog cooler, a warehouse pallet bay (orange racking, plywood wall, cases of cans), a full moon
+    + a hazy moon halo (sky upgrades), a cup of noodle broth, a two-tone brick wall with a slatted bin
+    and downpipe, curry with rice. Two more of the user's paintings (black/white splatter, pink square
+    with turquoise loops) and a marker face drawn across bathroom tiles. All brands, characters,
+    logos and prices made up/replaced; paintings used as-is.
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"
