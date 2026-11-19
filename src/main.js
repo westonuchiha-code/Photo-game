@@ -1222,6 +1222,7 @@ const VIEWS = {
   stairent: { pos: [7.6, 1.7, 63.2], target: [14, 2.3, 61] },
   stairsign: { pos: [10.9, 2.3, 60.1], target: [14, 2.5, 61.3] },
   stairdown: { pos: [21.4, 5.6, 61], target: [14.6, 0.6, 61] },
+  alleyentrance: { pos: [9, 1.7, 56], target: [9, 2, 47] },
   alley: { pos: [9.6, 1.65, 50.6], target: [8.6, 1.5, 38] },
   alleysigns: { pos: [8.2, 1.7, 46.5], target: [11.6, 2.5, 43.5] },
   alleyleft: { pos: [9.8, 1.6, 44.4], target: [6.6, 0.8, 46.2] },

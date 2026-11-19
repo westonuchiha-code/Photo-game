@@ -82,7 +82,7 @@ off = (row % 2) * (cw // 2)
 tid = (((xx + off) // cw) % 4) * 7 + row
 G += rng.normal(0, 6, 64)[tid % 64][..., None]
 damp = fbm(N, N, 3, 4, 5)
-G *= (1 - np.clip((damp - 0.55) * 2.2, 0, 0.32))[..., None]               # darker damp patches
+G *= (1 - np.clip((damp - 0.6) * 1.2, 0, 0.1))[..., None]                 # faint damp (big stains are an overlay)
 rust = fbm(N, N, 6, 3, 9)
 ra = np.clip((rust - 0.8) * 2.2, 0, 0.3)[..., None]
 G = G * (1 - ra) + np.array([150, 95, 55]) * ra
@@ -114,10 +114,10 @@ for pts in paths:
         for t in np.linspace(0, 1, max(n, 1)):
             if rng.random() < 0.55:
                 cx, cy = x0 + (x1 - x0) * t + rng.normal(0, 4), y0 + (y1 - y0) * t + rng.normal(0, 4)
-                r = rng.uniform(1.5, 5) if rng.random() < 0.85 else rng.uniform(6, 10)
-                dr.ellipse((cx - r, cy - r, cx + r, cy + r), fill=(25, 27, 24, int(rng.uniform(140, 230))))
+                r = rng.uniform(1.0, 3.0) if rng.random() < 0.88 else rng.uniform(3.5, 5.5)
+                dr.ellipse((cx - r, cy - r, cx + r, cy + r), fill=(30, 33, 30, int(rng.uniform(110, 200))))
 for _ in range(260):                                           # stray spots
-    cx, cy, r = rng.uniform(0, 1024), rng.uniform(0, 1024), rng.uniform(1, 3.5)
+    cx, cy, r = rng.uniform(0, 1024), rng.uniform(0, 1024), rng.uniform(0.8, 2.2)
     dr.ellipse((cx - r, cy - r, cx + r, cy + r), fill=(30, 32, 30, int(rng.uniform(80, 200))))
 D = np.asarray(img.filter(ImageFilter.GaussianBlur(0.8))).astype(np.float32)
 save("em_deck.png", D)

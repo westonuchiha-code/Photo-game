@@ -199,11 +199,9 @@ function massageChair() {
     g.add(box(0.1, 0.03, 0.2, std({ color: '#888' }), s * 0.37, 0.88, 0.25));
   }
   const foot = rbox(0.5, 0.42, 0.18, 0.06, leather, 0, 0.26, 0.5); foot.rotation.x = 0.35; g.add(foot);
-  // a wire rack frame + a gutted cassette deck sitting on the seat, like the photo
-  const wire = std({ color: '#d0d0d0', metalness: 0.4, roughness: 0.4 });
-  for (const s of [-1, 1]) { g.add(tube(V(s * 0.26, 0.58, -0.1), V(s * 0.26, 0.98, -0.1), 0.005, wire, 5)); g.add(tube(V(s * 0.26, 0.58, 0.28), V(s * 0.26, 0.98, 0.28), 0.005, wire, 5)); }
-  g.add(tube(V(-0.26, 0.98, -0.1), V(0.26, 0.98, -0.1), 0.005, wire, 5)); g.add(tube(V(-0.26, 0.98, 0.28), V(0.26, 0.98, 0.28), 0.005, wire, 5));
+  // a gutted cassette deck left on the seat
   const deck = box(0.38, 0.1, 0.24, std({ color: '#b8a888' }), 0, 0.63, 0.12); g.add(deck);
+  const wire = null; void wire;
   g.add(box(0.12, 0.04, 0.1, std({ color: '#3a3a3a' }), -0.08, 0.7, 0.12));
   return g;
 }
@@ -256,27 +254,45 @@ function stool(col) {
   for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2; g.add(plane(0.12, 0.26, std({ color: '#0e2a1e' }), Math.sin(a) * 0.123, 0.22, Math.cos(a) * 0.123, a)); }
   return g;
 }
-function junkRobot() { // a sculpture made of old audio gear holding a boombox
+function junkRobot() { // a sculpture welded together from old audio + computer gear, holding a boombox
   const g = new THREE.Group();
   const black = std({ color: '#1a1a1b', roughness: 0.5 });
-  const metal = std({ color: '#9ea2a6', metalness: 0.6, roughness: 0.35 });
+  const beige = std({ color: '#cfc6b0', roughness: 0.55 });
+  const metal = std({ color: '#a6aaae', metalness: 0.5, roughness: 0.35 });
   const red = std({ color: '#b52a26', roughness: 0.45 });
-  // speaker cabinet base, red stool seat, body = tall speaker
-  g.add(box(0.5, 0.55, 0.4, black, 0, 0.275, 0));
-  const cone = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.02, 24), std({ color: '#2c2c2c', roughness: 0.8 })); cone.rotation.x = Math.PI / 2; cone.position.set(0, 0.3, 0.205); g.add(cone);
-  const seat = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.05, 24), red); seat.position.y = 0.58; g.add(seat);
-  g.add(box(0.3, 0.42, 0.22, std({ color: '#5e8fae', roughness: 0.5 }), 0, 0.82, 0));          // blue torso panel
-  g.add(box(0.2, 0.16, 0.18, metal, 0, 1.12, 0));                                                // head
-  for (const s of [-1, 1]) { const e = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.02, 16), std({ color: '#111' })); e.rotation.x = Math.PI / 2; e.position.set(s * 0.05, 1.13, 0.095); g.add(e); }
-  g.add(tube(V(0, 1.2, 0), V(0, 1.32, 0), 0.006, metal, 6));
-  for (const s of [-1, 1]) { g.add(tube(V(s * 0.15, 0.95, 0), V(s * 0.2, 0.8, 0.18), 0.022, metal, 8)); }
+  // legs: two short speaker cabinets as feet, conduit shins
+  for (const s of [-1, 1]) {
+    g.add(box(0.2, 0.16, 0.3, black, s * 0.13, 0.08, 0.03));
+    const cone = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 0.01, 20), std({ color: '#3a3a3a' })); cone.rotation.x = Math.PI / 2; cone.position.set(s * 0.13, 0.08, 0.185); g.add(cone);
+    for (let k = 0; k < 6; k++) { const r = new THREE.Mesh(new THREE.TorusGeometry(0.032, 0.012, 6, 12), metal); r.rotation.x = Math.PI / 2; r.position.set(s * 0.13, 0.18 + k * 0.05, 0); g.add(r); }
+  }
+  // hips: red stool seat; body: beige computer tower with a floppy slot + vents; chest: a VU meter
+  const seat = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.05, 24), red); seat.position.y = 0.5; g.add(seat);
+  g.add(box(0.36, 0.48, 0.24, beige, 0, 0.77, 0));
+  g.add(box(0.2, 0.012, 0.01, std({ color: '#222' }), 0.02, 0.92, 0.121));
+  for (let k = 0; k < 6; k++) g.add(box(0.26, 0.008, 0.01, std({ color: '#8f8774' }), 0, 0.6 + k * 0.03, 0.121));
+  const vu = canvasTex(128, 64, (c, w, h) => { c.fillStyle = '#f2e6b8'; c.fillRect(0, 0, w, h); c.strokeStyle = '#222'; c.lineWidth = 2; c.beginPath(); c.arc(w / 2, h + 10, 56, Math.PI * 1.15, Math.PI * 1.85); c.stroke(); c.strokeStyle = '#c22'; c.beginPath(); c.arc(w / 2, h + 10, 56, Math.PI * 1.7, Math.PI * 1.85); c.stroke(); c.strokeStyle = '#111'; c.beginPath(); c.moveTo(w / 2, h); c.lineTo(w / 2 + 30, 12); c.stroke(); });
+  g.add(plane(0.16, 0.08, lit(vu, 0.35), -0.06, 0.82, 0.122));
+  // shoulders: a stereo receiver lying across; arms: segmented conduit down to the boombox
+  g.add(box(0.52, 0.1, 0.26, std({ color: '#b8babb', metalness: 0.35, roughness: 0.4 }), 0, 1.06, 0));
+  for (let k = 0; k < 4; k++) { const kn = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.015, 12), black); kn.rotation.x = Math.PI / 2; kn.position.set(-0.12 + k * 0.08, 1.06, 0.135); g.add(kn); }
+  for (const s of [-1, 1]) {
+    const a = V(s * 0.27, 1.04, 0), b = V(s * 0.22, 0.8, 0.2);
+    for (let k = 0; k <= 8; k++) { const p = a.clone().lerp(b, k / 8); const r = new THREE.Mesh(new THREE.SphereGeometry(0.03, 10, 8), metal); r.position.copy(p); g.add(r); }
+  }
+  // head: a small CRT monitor with a glowing face drawn on the screen, antenna
+  g.add(box(0.26, 0.22, 0.22, beige, 0, 1.25, -0.01));
+  const face = canvasTex(128, 96, (c, w, h) => { c.fillStyle = '#0c1a12'; c.fillRect(0, 0, w, h); c.fillStyle = '#6dfca0'; c.fillRect(30, 30, 16, 16); c.fillRect(82, 30, 16, 16); c.fillRect(40, 66, 48, 6); for (let y = 0; y < h; y += 3) { c.fillStyle = 'rgba(0,0,0,0.25)'; c.fillRect(0, y, w, 1); } });
+  g.add(plane(0.2, 0.15, lit(face, 0.9), 0, 1.25, 0.101));
+  g.add(tube(V(0.08, 1.36, 0), V(0.14, 1.52, 0), 0.005, metal, 5));
+  const tip = new THREE.Mesh(new THREE.SphereGeometry(0.018, 10, 8), glow(2.2, 0.3, 0.2)); tip.position.set(0.14, 1.52, 0); g.add(tip);
   // boombox held in front
   const bb = new THREE.Group();
-  bb.add(rbox(0.38, 0.18, 0.1, 0.02, std({ color: '#2a2a2c', roughness: 0.4 })));
-  for (const s of [-1, 1]) { const sp = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 0.01, 20), std({ color: '#6a6a6a', metalness: 0.4 })); sp.rotation.x = Math.PI / 2; sp.position.set(s * 0.11, 0, 0.051); bb.add(sp); }
-  bb.add(box(0.1, 0.05, 0.01, std({ color: '#a9b0b5' }), 0, 0.03, 0.051));
-  bb.add(tube(V(-0.13, 0.09, 0), V(0.13, 0.09, 0), 0.008, metal, 6));
-  bb.position.set(0, 0.8, 0.22); g.add(bb);
+  bb.add(rbox(0.42, 0.2, 0.11, 0.02, std({ color: '#2a2a2c', roughness: 0.4 })));
+  for (const s of [-1, 1]) { const sp = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.012, 20), std({ color: '#6a6a6a', metalness: 0.4 })); sp.rotation.x = Math.PI / 2; sp.position.set(s * 0.12, -0.01, 0.056); bb.add(sp); }
+  bb.add(box(0.1, 0.05, 0.01, std({ color: '#a9b0b5' }), 0, 0.03, 0.056));
+  bb.add(tube(V(-0.15, 0.1, 0), V(0.15, 0.1, 0), 0.008, metal, 6));
+  bb.position.set(0, 0.8, 0.26); g.add(bb);
   return g;
 }
 function displayCase(w, h, d, seed) {
@@ -316,9 +332,25 @@ export function makeMarketAlley() {
     f.rotation.x = -Math.PI / 2; g.add(f);
     const dr = plane(0.16, L + 6, std({ map: (() => { const t = slotDrainTex(); t.repeat.set(1, (L + 6) / 1.0); return t; })(), metalness: 0.5, roughness: 0.45 }), 0.9, 0.01, -(L + 6) / 2);
     dr.rotation.x = -Math.PI / 2; g.add(dr);
-    // damp sheen streak along the drain
-    const wet = plane(0.9, L, new THREE.MeshStandardMaterial({ color: '#2a2622', transparent: true, opacity: 0.18, roughness: 0.15, depthWrite: false }), 0.5, 0.008, -L / 2);
-    wet.rotation.x = -Math.PI / 2; g.add(wet);
+    // one big non-repeating overlay: damp patches, a wet strip along the drain, worn paths, scuffs
+    const gt = canvasTex(512, 2048, (c, w, h) => {
+      const r = rng(77); c.clearRect(0, 0, w, h);
+      const ppm = h / (L + 6);
+      for (let i = 0; i < 60; i++) {
+        const x = r() * w, y = r() * h, rx = (0.3 + r() * 1.4) * ppm, ry2 = (0.3 + r() * 2.2) * ppm;
+        const gr = c.createRadialGradient(x, y, 0, x, y, Math.max(rx, ry2));
+        gr.addColorStop(0, `rgba(40,34,28,${0.12 + r() * 0.18})`); gr.addColorStop(1, 'rgba(40,34,28,0)');
+        c.fillStyle = gr; c.beginPath(); c.ellipse(x, y, rx, ry2, r() * 3, 0, 7); c.fill();
+      }
+      const dx = (0.9 + (HW + SD)) / (2 * (HW + SD)) * w;            // the drain line
+      const gw = c.createLinearGradient(dx - 0.7 * ppm, 0, dx + 0.3 * ppm, 0);
+      gw.addColorStop(0, 'rgba(35,30,26,0)'); gw.addColorStop(0.75, 'rgba(35,30,26,0.22)'); gw.addColorStop(1, 'rgba(35,30,26,0)');
+      c.fillStyle = gw; c.fillRect(dx - 0.7 * ppm, 0, 1.0 * ppm, h);
+      for (let i = 0; i < 25; i++) { c.fillStyle = `rgba(110,70,40,${0.08 + r() * 0.1})`; c.beginPath(); c.ellipse(r() * w, r() * h, (0.05 + r() * 0.2) * ppm, (0.05 + r() * 0.3) * ppm, r() * 3, 0, 7); c.fill(); }
+    });
+    gt.wrapS = gt.wrapT = THREE.ClampToEdgeWrapping;
+    const ov = plane(HW * 2 + 2 * SD, L + 6, new THREE.MeshStandardMaterial({ map: gt, transparent: true, roughness: 0.4, depthWrite: false }), 0, 0.008, -(L + 6) / 2);
+    ov.rotation.x = -Math.PI / 2; g.add(ov);
   }
 
   // ---------------------------------------------------------------- deck, beams, side walls
@@ -351,152 +383,228 @@ export function makeMarketAlley() {
     for (const z of [-3, -11, -17]) { const l = new THREE.PointLight('#eef4ff', 7, 11, 1.4); l.position.set(-0.6, DY - 0.5, z); g.add(l); }
   }
 
-  // ---------------------------------------------------------------- shop fronts
-  const PITCH = 4;
-  const fascia = (s, zc, tex, h = 0.42, w = PITCH - 0.5) => {
-    const m = plane(w, h, lit(tex, 0.55), s * (HW - 0.17), DY - 0.62, zc, s > 0 ? -Math.PI / 2 : Math.PI / 2);
-    g.add(m); g.add(box(0.12, h + 0.04, w + 0.04, std({ color: '#d8d8d4' }), s * (HW - 0.1), DY - 0.62, zc));
+  // ---------------------------------------------------------------- shop units
+  // Structural grid: the deck's cross beams sit every 4 m (z = 0, -4, ... -20). Each side is five 4 m
+  // units between concrete piers under those beams. Every unit has a header band under the edge beam
+  // carrying its sign, an opening 2.55 m high, and one front type:
+  //   shutter (closed) · half (shutter partly up, dim inside) · open (stall open to the alley, lit)
+  //   glass (aluminium storefront + door, lit) · tile (the tiled P.C.B office with a glass door)
+  const PITCH = 4, OH = 2.55, HB = DY - 0.4;           // opening height, header band top (beam bottom)
+  const facadeM = std({ color: '#d6d4cc', roughness: 0.85 });
+  const headerM = std({ color: '#e2e0d8', roughness: 0.8 });
+  const skirtM = std({ color: '#4a4844', roughness: 0.7 });
+  const ry = (s) => (s > 0 ? -Math.PI / 2 : Math.PI / 2);   // planes facing into the alley
+  const pegTex = canvasTex(256, 256, (c, w, h) => { c.fillStyle = '#c9b48e'; c.fillRect(0, 0, w, h); c.fillStyle = 'rgba(60,45,25,0.55)'; for (let y = 8; y < h; y += 16) for (let x = 8; x < w; x += 16) { c.beginPath(); c.arc(x, y, 2.2, 0, 7); c.fill(); } });
+  const reelTex = canvasTex(512, 512, (c, w, h) => {
+    const r = rng(14); c.fillStyle = '#d8d4ca'; c.fillRect(0, 0, w, h);
+    for (let j = 0; j < 4; j++) { c.fillStyle = '#8a8478'; c.fillRect(0, 118 + j * 128, w, 10);
+      for (let i = 0; i < 6; i++) { const x = 44 + i * 82, y = 70 + j * 128, col = ['#c82a2a', '#1d1d1d', '#2a5ab0', '#e8c020', '#2a8a4a', '#f2f2ee'][Math.floor(r() * 6)];
+        c.fillStyle = '#6a5a40'; c.beginPath(); c.arc(x, y, 40, 0, 7); c.fill(); c.fillStyle = col; c.beginPath(); c.arc(x, y, 33, 0, 7); c.fill();
+        c.strokeStyle = 'rgba(0,0,0,0.25)'; for (let k = 14; k < 33; k += 4) { c.beginPath(); c.arc(x, y, k, 0, 7); c.stroke(); }
+        c.fillStyle = '#3a3020'; c.beginPath(); c.arc(x, y, 9, 0, 7); c.fill(); } }
+  });
+  const backTex = [partsDrawersTex(), reelTex, partsDrawersTex()];
+  const unit = (s, i, type, o = {}) => {
+    const z0 = -i * PITCH, z1 = z0 - PITCH, zc = (z0 + z1) / 2, w = PITCH - 0.3;
+    const fx = s * HW, bx = s * (HW + SD);
+    // header band + its underside, skirting along the front line
+    g.add(box(0.3, HB - OH, PITCH, headerM, s * (HW + 0.15), (HB + OH) / 2, zc));
+    // the sign on the header
+    if (o.sign) {
+      const sh = HB - OH - 0.12;
+      g.add(box(0.1, sh + 0.04, w - 0.3, std({ color: '#cfcfca', metalness: 0.3, roughness: 0.4 }), s * (HW - 0.05), (HB + OH) / 2, zc));
+      g.add(plane(w - 0.36, sh, lit(o.sign, 0.55), s * (HW - 0.101), (HB + OH) / 2, zc, ry(s)));
+    }
+    // interior (everything but a fully closed shutter)
+    if (type !== 'shutter') {
+      const lightOn = type !== 'half';
+      const bt = o.back === 'peg' ? std({ map: pegTex, roughness: 0.8 }) : std({ map: backTex[(i + (s > 0 ? 0 : 1)) % 3], roughness: 0.6 });
+      if (o.back === 'peg') { bt.map = pegTex.clone(); bt.map.repeat.set(w / 0.5, OH / 0.5); bt.map.needsUpdate = true; }
+      g.add(plane(w, OH, bt, bx - s * 0.01, OH / 2, zc, ry(s)));
+      for (const k of [-1, 1]) g.add(plane(SD, OH, std({ color: k > 0 ? '#ddd8cc' : '#d3cdbf' }), (fx + bx) / 2, OH / 2, zc + k * w / 2, k > 0 ? Math.PI : 0));
+      const cl = plane(SD, w, lightOn ? glow(1.0, 1.0, 0.96) : std({ color: '#6a6a66' }), (fx + bx) / 2, OH - 0.005, zc); cl.rotation.x = Math.PI / 2; g.add(cl);
+      const fl = plane(SD, w, std({ color: '#bdb8ac', roughness: 0.6 }), (fx + bx) / 2, 0.009, zc); fl.rotation.x = -Math.PI / 2; g.add(fl);
+      // counter across the back with test gear, a stool behind it
+      g.add(box(0.55, 0.9, w * 0.7, std({ color: '#cfc8ba' }), bx - s * 0.75, 0.45, zc));
+      g.add(box(0.6, 0.03, w * 0.72, std({ color: '#8a7a62' }), bx - s * 0.75, 0.915, zc));
+      const a1 = gearBox(0.36, 0.14, 0.3, 0, 21 + i * 7 + s); a1.position.set(bx - s * 0.75, 0.93, zc - 0.45); a1.rotation.y = ry(s) + Math.PI; g.add(a1);
+      const a2 = gearBox(0.34, 0.2, 0.3, 1, 33 + i * 5 + s); a2.position.set(bx - s * 0.75, 0.93, zc + 0.35); a2.rotation.y = ry(s) + Math.PI; g.add(a2);
+      if (lightOn) { const pl = new THREE.PointLight('#fff2dc', 2.0, 4.5, 1.6); pl.position.set((fx + bx) / 2, OH - 0.4, zc); g.add(pl); }
+    }
+    // fronts
+    if (type === 'shutter' || type === 'half') {
+      const lift = type === 'half' ? (o.lift || 1.3) : 0;
+      const h = OH - lift;
+      const sm = std({ map: shutterTex(o.cols), roughness: 0.5, metalness: 0.15 });
+      sm.map.repeat.set(w / 1.2, h / 1.2);
+      g.add(plane(w, h, sm, s * (HW + 0.1), lift + h / 2, zc, ry(s)));
+      g.add(box(0.06, 0.05, w, steel, s * (HW + 0.08), lift + 0.025, zc));
+      g.add(box(0.03, 0.04, 0.14, std({ color: '#2a2a2a' }), s * (HW + 0.05), lift + 0.07, zc + 0.6));
+    }
+    if (type === 'glass') {
+      const glass = new THREE.MeshStandardMaterial({ color: '#cfe0e6', transparent: true, opacity: 0.2, roughness: 0.04, depthWrite: false });
+      const alu = std({ color: '#b5b9bc', metalness: 0.4, roughness: 0.35 });
+      g.add(plane(w, OH, glass, s * (HW + 0.08), OH / 2, zc, ry(s)));
+      for (const k of [-2, -1, 0, 1, 2]) g.add(box(0.06, OH, 0.05, alu, s * (HW + 0.08), OH / 2, zc + k * w / 4));
+      g.add(box(0.07, 0.06, w, alu, s * (HW + 0.08), 2.15, zc)); g.add(box(0.08, 0.12, w, alu, s * (HW + 0.08), 0.06, zc));
+      g.add(box(0.05, 0.42, 0.03, steel, s * (HW + 0.03), 1.05, zc + 0.12));
+      const dec = canvasTex(512, 128, (c, ww, hh) => { c.clearRect(0, 0, ww, hh); c.fillStyle = 'rgba(255,255,255,0.88)'; fitText(c, o.decal || 'OPEN', ww / 2, hh / 2, ww - 30, 54, F.label, { spacing: 5 }); });
+      g.add(plane(1.6, 0.4, new THREE.MeshBasicMaterial({ map: dec, transparent: true }), s * (HW + 0.06), 1.6, zc - 0.9, ry(s)));
+    }
+    if (type === 'open') {
+      // shutter rolled up into its housing; a low display table at the front line
+      g.add(box(0.28, 0.24, w, std({ color: '#c3c6c2', metalness: 0.2 }), s * (HW + 0.2), OH - 0.12, zc));
+      if (o.cases) {
+        for (const [dz, cw] of [[-0.9, 1.4], [0.9, 1.4]]) { const dc = displayCase(0.6, 1.25, cw, i * 13 + dz * 10); dc.position.set(s * (HW + 0.4), 0, zc + dz); dc.rotation.y = s > 0 ? -Math.PI / 2 : Math.PI / 2; g.add(dc); }
+      } else {
+        g.add(box(0.6, 0.75, w * 0.55, std({ color: '#6a6e72', metalness: 0.3 }), s * (HW + 0.45), 0.375, zc - 0.5));
+        const tr = rng(i * 31 + 7);
+        for (let k = 0; k < 6; k++) { const b2 = box(0.14 + tr() * 0.1, 0.05 + tr() * 0.06, 0.12 + tr() * 0.1, std({ color: ['#1c1c1c', '#c9a040', '#2a4a8a', '#b8b8b8', '#2a6a3a'][k % 5], roughness: 0.45 }), s * (HW + 0.3 + tr() * 0.3), 0.78, zc - 0.5 + (tr() - 0.5) * w * 0.45); g.add(b2); }
+      }
+    }
+    if (type === 'tile') {
+      const tileM = (ww, hh) => { const t = ptex('em_tile.png', ww, hh); return std({ map: t, roughness: 0.45 }); };
+      // tiled wall with a 1.2 m glass door in the middle
+      for (const [a, b] of [[-w / 2, -0.6], [0.6, w / 2]]) { g.add(box(0.12, OH, b - a, std({ color: '#7a8a90' }), s * (HW + 0.07), OH / 2, zc + (a + b) / 2)); g.add(plane(b - a, OH, tileM(b - a, OH), s * (HW + 0.009), OH / 2, zc + (a + b) / 2, ry(s))); }
+      const glass = new THREE.MeshStandardMaterial({ color: '#cfe0e6', transparent: true, opacity: 0.25, roughness: 0.05, depthWrite: false });
+      g.add(plane(1.2, 2.2, glass, s * (HW + 0.07), 1.1, zc, ry(s)));
+      for (const k of [-1, 0, 1]) g.add(box(0.05, 2.25, 0.05, steel, s * (HW + 0.07), 1.12, zc + k * 0.6));
+      g.add(box(0.05, 0.33, 1.25, steel, s * (HW + 0.07), 2.38, zc));
+      const dec = canvasTex(256, 512, (c, ww, hh) => { c.clearRect(0, 0, ww, hh); c.fillStyle = 'rgba(255,255,255,0.9)'; c.fillRect(20, 60, ww - 40, 120); c.fillStyle = '#1d3a8f'; fitText(c, 'SILK SCREEN', ww / 2, 96, ww - 60, 34, F.label); fitText(c, 'SMT · PROTOTYPE', ww / 2, 146, ww - 60, 28, F.label); c.fillStyle = 'rgba(255,255,255,0.85)'; c.fillRect(40, 380, ww - 80, 70); c.fillStyle = '#c22'; fitText(c, 'PULL', ww / 2, 415, ww - 100, 40, F.heavy); });
+      g.add(plane(0.55, 1.1, new THREE.MeshBasicMaterial({ map: dec, transparent: true }), s * (HW + 0.04), 1.35, zc - 0.3, ry(s)));
+    }
+    return zc;
   };
-  const shutter = (s, zc, cols, lift = 0, w = PITCH - 0.4) => {
-    const h = DY - 0.45 - lift;
-    const sm = std({ map: shutterTex(cols), roughness: 0.5, metalness: 0.2 });
-    sm.map.repeat.set(w / 1.2, h / 1.2);
-    g.add(plane(w, h, sm, s * (HW + 0.1), lift + h / 2, zc, s > 0 ? -Math.PI / 2 : Math.PI / 2));
-    g.add(box(0.06, 0.05, w, steel, s * (HW + 0.08), lift + 0.025, zc));
-    for (const k of [-1, 1]) g.add(box(0.07, DY - 0.45, 0.06, steel, s * (HW + 0.08), (DY - 0.45) / 2, zc + k * w / 2));
-    g.add(box(0.3, 0.3, w + 0.1, std({ color: '#c9ccc8' }), s * (HW + 0.2), DY - 0.6, zc));
-  };
-  const interior = (s, zc, w, light = true) => {
-    const x0 = s * HW, x1 = s * (HW + SD);
-    g.add(plane(w, DY - 0.45, std({ map: partsDrawersTex(), roughness: 0.6 }), x1 - s * 0.05, (DY - 0.45) / 2, zc, s > 0 ? -Math.PI / 2 : Math.PI / 2));
-    for (const k of [-1, 1]) g.add(plane(SD, DY - 0.45, std({ color: '#d9d5cc' }), (x0 + x1) / 2, (DY - 0.45) / 2, zc + k * w / 2, k > 0 ? Math.PI : 0));
-    const cl = plane(SD, w, light ? glow(1.05, 1.05, 1.0) : std({ color: '#888' }), (x0 + x1) / 2, DY - 0.46, zc); cl.rotation.x = Math.PI / 2; cl.rotation.z = Math.PI / 2; g.add(cl);
-    const fl = plane(SD, w, std({ color: '#c7c3b8' }), (x0 + x1) / 2, 0.009, zc); fl.rotation.x = -Math.PI / 2; fl.rotation.z = Math.PI / 2; g.add(fl);
-    // counter with test gear
-    g.add(box(0.6, 0.9, w * 0.6, std({ color: '#d2ccc0' }), x1 - s * 0.9, 0.45, zc));
-    g.add(gearBox(0.36, 0.14, 0.3, 0, 21 + zc).translateX(x1 - s * 0.9).translateY(0.9).translateZ(zc - 0.3));
-    const scope = gearBox(0.34, 0.2, 0.3, 1, 33 + zc); scope.position.set(x1 - s * 0.9, 0.9, zc + 0.25); scope.rotation.y = -s * Math.PI / 2; g.add(scope);
-    if (light) { const pl = new THREE.PointLight('#fff2dc', 2.2, 4.5, 1.6); pl.position.set((x0 + x1) / 2, DY - 0.9, zc); g.add(pl); }
-  };
+  // piers at every unit boundary (under the cross beams), both sides, with skirting
+  for (const s of [-1, 1]) for (let i = 0; i <= 5; i++) {
+    const z = -i * PITCH;
+    g.add(box(0.36, HB, 0.34, facadeM, s * (HW + 0.13), HB / 2, z));
+    g.add(box(0.38, 0.12, 0.36, skirtM, s * (HW + 0.13), 0.06, z));
+    col(s > 0 ? HW - 0.05 : -HW - 0.31, s > 0 ? HW + 0.31 : -HW + 0.05, z - 0.17, z + 0.17);
+  }
+  // shop fronts are the walkway edge: nothing walks into the shops
+  for (const s of [-1, 1]) col(s > 0 ? HW + 0.05 : -HW - SD, s > 0 ? HW + SD : -HW - 0.05, -L, 0);
 
-  // EAST (+x): MIRAE (big sign), P.C.B design office (tiles), open parts shop, closed shutter, open shop
+  // EAST (+x)
+  unit(1, 0, 'open', {});
+  unit(1, 1, 'tile', { sign: canvasTex(1024, 128, (c, w, h) => { c.fillStyle = '#f6d53a'; c.fillRect(0, 0, w, h); c.fillStyle = '#1d3a8f'; fitText(c, 'P.C.B  DESIGN  ·  DEVELOPMENT', w / 2, h / 2 + 4, w - 60, 70, F.heavy, { spacing: 6 }); }) });
+  unit(1, 2, 'open', { sign: blueSignTex('BORAM PARTS', 'DISPLAY & SALES  ·  WHOLESALE', 'UNIT 2-14'), back: 'peg' });
+  unit(1, 3, 'shutter', { sign: plaqueTex('HANUL AUDIO', '#f19a2e', '#ffffff'), cols: ['#6e8fa8', '#9db8cc', '#56738a'] });
+  unit(1, 4, 'glass', { sign: plaqueTex('JEIL REPAIR', '#f4f1e8', '#d9262e'), decal: 'TV · AUDIO · REPAIR' });
+  // MIRAE's big three-band lightbox over unit 0 (in the photo it's the shop's main sign), on brackets
   {
-    const s = 1;
-    // 1. MIRAE, z -2: lit open shop + the big three-band lightbox as a corner sign facing the entrance
-    interior(s, -2, PITCH - 0.4);
     const big = new THREE.Group();
-    big.add(box(0.2, 1.2, 2.4, std({ color: '#ddd' })));
-    const fm = plane(2.36, 1.18, lit(miraeTex(), 0.6), -0.101, 0, 0, -Math.PI / 2); big.add(fm);
-    big.position.set(HW - 0.05, DY - 0.95, -1.9); g.add(big);
-    // CCTV on the sign's corner (aimed down the alley)
+    big.add(box(0.22, 1.05, 3.4, std({ color: '#dcdcd8' })));
+    big.add(plane(3.36, 1.02, lit(miraeTex(), 0.6), -0.111, 0, 0, -Math.PI / 2));
+    for (const k of [-1, 1]) big.add(box(0.3, 0.06, 0.06, steel, 0.24, 0.45, k * 1.3));
+    big.position.set(HW - 0.15, OH + 0.12, -2); g.add(big);
     const cam = new THREE.Group();
     cam.add(rbox(0.26, 0.11, 0.11, 0.03, std({ color: '#f2f2ee' })));
     const lens = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.02, 16), std({ color: '#111' })); lens.rotation.z = Math.PI / 2; lens.position.x = -0.135; cam.add(lens);
-    cam.add(box(0.04, 0.12, 0.04, std({ color: '#ddd' }), 0.08, 0.1, 0));
-    cam.position.set(HW - 0.25, DY - 0.32, -0.6); cam.rotation.y = -0.6; g.add(cam);
-    // 2. P.C.B design office: blue tiled front, glass door, banner
-    const zc = -6;
-    const tileM = std({ map: ptex('em_tile.png', 1, 1), roughness: 0.45 });
-    for (const [a, b] of [[-1.8, -0.6], [0.6, 1.8]]) { const m = tileM.clone(); m.map = tileM.map.clone(); m.map.repeat.set(b - a, DY - 0.45); m.map.needsUpdate = true; g.add(plane(b - a, DY - 0.45, m, HW + 0.02, (DY - 0.45) / 2, zc + (a + b) / 2, -Math.PI / 2)); }
-    const glass = new THREE.MeshStandardMaterial({ color: '#cfe0e6', transparent: true, opacity: 0.25, roughness: 0.05, depthWrite: false });
-    g.add(plane(1.2, 2.2, glass, HW + 0.05, 1.1, zc, -Math.PI / 2));
-    for (const k of [-1, 0, 1]) g.add(box(0.05, 2.25, 0.05, steel, HW + 0.05, 1.12, zc + k * 0.6));
-    g.add(box(0.05, 0.05, 1.25, steel, HW + 0.05, 2.22, zc));
-    const ban = canvasTex(1024, 128, (c, w, h) => { c.fillStyle = '#f6d53a'; c.fillRect(0, 0, w, h); c.fillStyle = '#1d3a8f'; fitText(c, 'P.C.B  DESIGN  ·  DEVELOPMENT', w / 2, h / 2 + 4, w - 60, 70, F.heavy, { spacing: 6 }); });
-    g.add(plane(3.4, 0.36, std({ map: ban }), HW + 0.03, 2.62, zc, -Math.PI / 2));
-    const dec = canvasTex(256, 512, (c, w, h) => { c.clearRect(0, 0, w, h); c.fillStyle = 'rgba(255,255,255,0.9)'; c.fillRect(20, 60, w - 40, 120); c.fillStyle = '#1d3a8f'; fitText(c, 'SILK SCREEN', w / 2, 96, w - 60, 34, F.label); fitText(c, 'SMT · PROTOTYPE', w / 2, 146, w - 60, 28, F.label); c.fillStyle = 'rgba(255,255,255,0.85)'; c.fillRect(40, 380, w - 80, 70); c.fillStyle = '#c22'; fitText(c, 'PULL', w / 2, 415, w - 100, 40, F.heavy); });
-    g.add(plane(0.55, 1.1, new THREE.MeshBasicMaterial({ map: dec, transparent: true }), HW + 0.04, 1.35, zc - 0.3, -Math.PI / 2));
-    interior(s, zc, 1.15, true);
-    // 3. open parts shop
-    interior(s, -10, PITCH - 0.4);
-    fascia(s, -10, blueSignTex('BORAM PARTS', 'DISPLAY & SALES  ·  WHOLESALE', 'UNIT 2-14'));
-    // 4. closed shutter
-    shutter(s, -14, ['#6e8fa8', '#9db8cc', '#56738a']);
-    fascia(s, -14, plaqueTex('HANUL AUDIO', '#f19a2e', '#ffffff'));
-    // 5. open repair stall
-    interior(s, -18, PITCH - 0.4);
-    fascia(s, -18, plaqueTex('JEIL REPAIR', '#f4f1e8', '#d9262e'));
-    for (const z of [-2, -6, -10, -18]) col(HW + 0.4, HW + SD, z - 1.9, z + 1.9);   // counters / interiors stop walking deep
-    col(HW, HW + 0.4, -15.9, -12.1);
-    col(HW, HW + 0.1, -7.9, -6.6); col(HW, HW + 0.1, -5.4, -4.1);
+    cam.add(box(0.04, 0.16, 0.04, std({ color: '#ddd' }), 0.08, 0.12, 0));
+    cam.position.set(HW - 0.2, HB - 0.2, -0.35); cam.rotation.y = -0.6; g.add(cam);
   }
-  // WEST (-x): awning shop, display-case shop, shutters
+  // WEST (-x)
+  unit(-1, 0, 'half', { sign: plaqueTex('DAEHAN SOUND', '#f2c21a', '#1d1d1d'), cols: ['#d8dcdc', '#f2f4f2', '#b9bebe'], lift: 1.25 });
+  unit(-1, 1, 'open', { sign: blueSignTex('OK SWITCH', 'SWITCHES · RELAYS · SENSORS', 'OPEN 9:00 – 18:00'), cases: true });
+  unit(-1, 2, 'shutter', { sign: plaqueTex('BITNA LED', '#ffffff', '#1d3a8f'), cols: ['#4f6a86', '#7b98b4', '#3e5670'] });
+  unit(-1, 3, 'half', { sign: plaqueTex('SAMIL WIRE', '#e9532c', '#ffffff'), cols: ['#d0d4d4', '#eceeee', '#aeb3b3'], lift: 1.7 });
+  unit(-1, 4, 'glass', { sign: blueSignTex('DONGIL CIRCUITS', 'BOARDS · ASSEMBLY · PARTS', 'SINCE 1987'), decal: 'P.C.B ASSEMBLY' });
+  // striped awning over DAEHAN, fixed to the header
   {
-    const s = -1;
-    // 1. half shutter under a striped awning
-    shutter(s, -2.5, ['#d8dcdc', '#f2f4f2', '#b9bebe'], 1.2);
-    interior(s, -2.5, PITCH - 0.4, false);
     const aw = new THREE.Group();
     const am = std({ map: stripeTex(), roughness: 0.8, side: THREE.DoubleSide });
     am.map.repeat.set(4, 1);
-    const sl = new THREE.Mesh(new THREE.PlaneGeometry(PITCH - 0.2, 1.0), am); sl.rotation.x = -Math.PI / 2 + 0.55; sl.position.set(0, 0, 0.42); aw.add(sl);
-    const val = plane(PITCH - 0.2, 0.22, am, 0, -0.33, 0.85); aw.add(val);
-    aw.rotation.y = Math.PI / 2; aw.position.set(-HW, 2.55, -2.5); g.add(aw);
-    // globe lamp on the wall + a sign plaque
-    const globe = new THREE.Mesh(new THREE.SphereGeometry(0.11, 20, 14), glow(1.1, 1.08, 1.0)); globe.position.set(-HW + 0.25, 2.25, -4.8); g.add(globe);
-    g.add(tube(V(-HW, 2.42, -4.8), V(-HW + 0.25, 2.42, -4.8), 0.015, steel, 6));
-    fascia(s, -2.5, plaqueTex('DAEHAN SOUND', '#f2c21a', '#1d1d1d'));
-    const chair = massageChair(); chair.position.set(-HW + 0.6, 0, -3.4); chair.rotation.y = Math.PI / 2 - 0.15; g.add(chair);
-    col(-HW, -HW + 1.15, -3.95, -2.85);
-    const cr = crate(); cr.position.set(-HW + 0.4, 0, -1.6); cr.rotation.y = Math.PI / 2; g.add(cr);
-    const amp = gearBox(0.44, 0.12, 0.34, 1, 5); amp.position.set(-HW + 0.4, 0.31, -1.6); amp.rotation.y = Math.PI / 2; g.add(amp);
-    const amp2 = gearBox(0.43, 0.1, 0.33, 0, 6); amp2.position.set(-HW + 0.4, 0.43, -1.6); amp2.rotation.y = Math.PI / 2 + 0.05; g.add(amp2);
-    col(-HW, -HW + 0.65, -1.95, -1.25);
-    // 2. display cases in front of a lit shop
-    interior(s, -6.5, PITCH - 0.4);
-    fascia(s, -6.5, blueSignTex('OK SWITCH', 'SWITCHES · RELAYS · SENSORS', 'OPEN 9:00 – 18:00'));
-    for (const [z, w] of [[-5.4, 1.2], [-7.4, 1.0]]) { const dc = displayCase(0.6, 1.3, w, z * 10); dc.position.set(-HW + 0.4, 0, z); dc.rotation.y = Math.PI / 2; g.add(dc); col(-HW, -HW + 0.75, z - w / 2, z + w / 2); }
-    // 3. closed shutters
-    shutter(s, -10.5, ['#4f6a86', '#7b98b4', '#3e5670']);
-    fascia(s, -10.5, plaqueTex('BITNA LED', '#ffffff', '#1d3a8f'));
-    shutter(s, -14.5, ['#d0d4d4', '#eceeee', '#aeb3b3'], 0.5);
-    interior(s, -14.5, PITCH - 0.4, false);
-    fascia(s, -14.5, plaqueTex('SAMIL WIRE', '#e9532c', '#ffffff'));
-    interior(s, -18.5, PITCH - 0.4);
-    fascia(s, -18.5, blueSignTex('DONGIL CIRCUITS', 'BOARDS · ASSEMBLY · PARTS', 'SINCE 1987'));
-    for (const z of [-2.5, -10.5, -14.5]) col(-HW - 0.4, -HW, z - 1.9, z + 1.9);
-    for (const z of [-6.5, -18.5]) col(-HW - SD, -HW - 0.4, z - 1.9, z + 1.9);
+    const sl = new THREE.Mesh(new THREE.PlaneGeometry(PITCH - 0.4, 1.0), am); sl.rotation.x = -Math.PI / 2 + 0.55; sl.position.set(0, -0.25, 0.42); aw.add(sl);
+    aw.add(plane(PITCH - 0.4, 0.2, am, 0, -0.6, 0.85));
+    for (const k of [-1, 1]) aw.add(tube(V(k * (PITCH / 2 - 0.25), 0, 0), V(k * (PITCH / 2 - 0.25), -0.5, 0.85), 0.012, steel, 6));
+    aw.rotation.y = Math.PI / 2; aw.position.set(-HW, OH - 0.08, -2); g.add(aw);
+  }
+  // globe lamp on the pier between DAEHAN and OK SWITCH
+  {
+    const globe = new THREE.Mesh(new THREE.SphereGeometry(0.11, 20, 14), glow(1.1, 1.08, 1.0)); globe.position.set(-HW + 0.3, 2.3, -4); g.add(globe);
+    g.add(tube(V(-HW + 0.05, 2.45, -4), V(-HW + 0.3, 2.45, -4), 0.015, steel, 6));
+    g.add(tube(V(-HW + 0.3, 2.45, -4), V(-HW + 0.3, 2.4, -4), 0.015, steel, 6));
   }
 
-  // ---------------------------------------------------------------- blade signs hanging down the alley
+  // ---------------------------------------------------------------- entrance: block end walls + arcade sign
+  {
+    for (const s of [-1, 1]) {
+      const xc = s * (HW + 0.15 + (SD + 0.15) / 2);
+      g.add(beam(SD + 0.3, DY, 0.3, deckTex, 2, xc, DY / 2, 0.15));
+      // a poster board on each end wall (made-up market notices)
+      const pt = canvasTex(512, 384, (c, w, h) => {
+        c.fillStyle = '#20314f'; c.fillRect(0, 0, w, h);
+        c.fillStyle = '#f2c21a'; fitText(c, s > 0 ? 'PARTS · TOOLS · REPAIR' : 'AUDIO · LED · CABLE', w / 2, 60, w - 50, 46, F.heavy, { spacing: 3 });
+        c.fillStyle = '#fff'; fitText(c, 'ELECTRONICS ARCADE', w / 2, 150, w - 60, 58, F.heavy, { spacing: 4 });
+        c.fillStyle = '#c8d2e4'; fitText(c, '1F shops · 2F workshops · deck walkway', w / 2, 230, w - 60, 28, F.label);
+        fitText(c, 'Mon – Sat  9:00 – 18:00', w / 2, 290, w - 60, 30, F.label);
+        c.strokeStyle = '#f2c21a'; c.lineWidth = 6; c.strokeRect(12, 12, w - 24, h - 24);
+      });
+      g.add(box(1.7, 1.3, 0.04, std({ color: '#2a2a2a' }), xc, 1.5, 0.32));
+      g.add(plane(1.6, 1.2, lit(pt, 0.25), xc, 1.5, 0.342));
+      const pl = new THREE.PointLight('#fff1dc', 1.5, 3.5, 1.6); pl.position.set(xc, 2.6, 0.9); g.add(pl);
+      col(s > 0 ? HW : -HW - SD - 0.3, s > 0 ? HW + SD + 0.3 : -HW, 0, 0.3);
+    }
+    // arcade name sign spanning the alley mouth on the first beam
+    const at = canvasTex(1600, 200, (c, w, h) => {
+      c.fillStyle = '#1d3a8f'; c.fillRect(0, 0, w, h);
+      c.fillStyle = '#f2c21a'; c.fillRect(0, h - 16, w, 16);
+      c.fillStyle = '#fff'; fitText(c, 'DAEHAN  ELECTRONICS  ARCADE', w / 2, 92, w - 140, 110, F.heavy, { spacing: 10 });
+    });
+    g.add(box(4.2, 0.5, 0.12, std({ color: '#1d3a8f' }), 0, DY - 0.66, 0.08));
+    g.add(plane(4.16, 0.48, lit(at, 0.55), 0, DY - 0.66, 0.141));
+  }
+
+  // ---------------------------------------------------------------- blade signs on bracket arms off the piers
   {
     const blades = [
-      [1.95, -3.4, bladeTex('PARTS', 'MIRAE', '1F', '#ffffff', '#d9262e', '#d9262e')],
-      [-1.95, -8.2, bladeTex('AUDIO', 'DAEHAN', 'B-12', '#f2c21a', '#1d1d1d', null)],
-      [1.95, -12.2, bladeTex('P.C.B', 'BORAM', 'SALES', '#f7f8fa', '#1d3a8f', '#1d3a8f')],
-      [-1.95, -16.2, bladeTex('LED', 'BITNA', 'ALL DAY', '#1d3a8f', '#ffffff', null)],
-      [1.95, -19.2, bladeTex('REPAIR', 'JEIL', 'TV · AV', '#f19a2e', '#ffffff', null)],
+      [1, -4, bladeTex('PARTS', 'MIRAE', '1F', '#ffffff', '#d9262e', '#d9262e')],
+      [-1, -8, bladeTex('AUDIO', 'DAEHAN', 'B-12', '#f2c21a', '#1d1d1d', null)],
+      [1, -12, bladeTex('P.C.B', 'BORAM', 'SALES', '#f7f8fa', '#1d3a8f', '#1d3a8f')],
+      [-1, -12, bladeTex('LED', 'BITNA', 'ALL DAY', '#1d3a8f', '#ffffff', null)],
+      [1, -20, bladeTex('REPAIR', 'JEIL', 'TV · AV', '#f19a2e', '#ffffff', null)],
     ];
-    for (const [x, z, t] of blades) {
+    for (const [s, z, t] of blades) {
+      const x0 = s * (HW - 0.05), xc = s * (HW - 0.5), y = OH - 0.05;
+      g.add(box(0.95, 0.05, 0.05, steel, s * (HW - 0.47), y + 0.02, z + 0.25));         // arm off the pier face
+      g.add(tube(V(x0, y + 0.02, z + 0.25), V(x0, y - 0.35, z + 0.25), 0.012, steel, 6)); // knee brace
       const b = new THREE.Group();
-      b.add(box(0.66, 1.6, 0.1, std({ color: '#d8d8d4' })));
-      for (const k of [-1, 1]) b.add(plane(0.62, 1.56, lit(t, 0.55), 0, 0, k * 0.051, k > 0 ? 0 : Math.PI));
-      b.rotation.y = Math.PI / 2;
-      b.position.set(x + (x > 0 ? -0.33 : 0.33), DY - 1.15, z); b.rotation.y = 0; g.add(b);
-      g.add(tube(V(x + (x > 0 ? -0.33 : 0.33), DY - 0.35, z), V(x + (x > 0 ? -0.33 : 0.33), DY - 0.02, z), 0.01, steel, 6));
+      b.add(box(0.66, 1.4, 0.1, std({ color: '#d8d8d4' })));
+      for (const k of [-1, 1]) b.add(plane(0.62, 1.36, lit(t, 0.55), 0, 0, k * 0.051, k > 0 ? 0 : Math.PI));
+      b.position.set(xc, y - 0.78, z + 0.25); g.add(b);
+      for (const k of [-1, 1]) g.add(tube(V(xc + k * 0.25, y, z + 0.25), V(xc + k * 0.25, y - 0.08, z + 0.25), 0.006, steel, 4));
     }
   }
 
   // ---------------------------------------------------------------- props on the walkway
   {
-    // rusty bench by the entrance (west)
+    // DAEHAN's things out front: the old massage chair, a crate of amps and receivers
+    const chair = massageChair(); chair.position.set(-HW + 0.6, 0, -1.4); chair.rotation.y = Math.PI / 2 - 0.15; g.add(chair);
+    col(-HW, -HW + 1.15, -1.95, -0.85);
+    const cr = crate(); cr.position.set(-HW + 0.4, 0, -3.0); cr.rotation.y = Math.PI / 2; g.add(cr);
+    const amp = gearBox(0.44, 0.12, 0.34, 1, 5); amp.position.set(-HW + 0.4, 0.31, -3.0); amp.rotation.y = Math.PI / 2; g.add(amp);
+    const amp2 = gearBox(0.43, 0.1, 0.33, 0, 6); amp2.position.set(-HW + 0.4, 0.43, -3.0); amp2.rotation.y = Math.PI / 2 + 0.05; g.add(amp2);
+    col(-HW, -HW + 0.65, -3.35, -2.65);
+    // BORAM's delivery: crate, hand truck with a carton, green stool; the junk robot by its door
+    const c1 = crate(); c1.position.set(HW - 0.4, 0, -9.0); c1.rotation.y = Math.PI / 2; g.add(c1);
+    const ht = handTruck(); ht.position.set(HW - 0.9, 0, -9.7); ht.rotation.y = -Math.PI / 2 + 0.3; g.add(ht);
+    const st = stool('#2fa37a'); st.position.set(HW - 0.4, 0, -10.0); g.add(st);
+    const rb = junkRobot(); rb.position.set(HW - 0.45, 0, -11.2); rb.rotation.y = -Math.PI / 2 - 0.4; g.add(rb);
+    col(HW - 1.15, HW, -10.3, -8.7); col(HW - 0.8, HW, -11.5, -10.9);
+    // a red stool outside JEIL, a blue crate with a power supply outside SAMIL
+    const st2 = stool('#c9372f'); st2.position.set(HW - 0.35, 0, -17.0); g.add(st2);
+    const c2 = crate('#3a7fc0'); c2.position.set(-HW + 0.4, 0, -13.3); c2.rotation.y = Math.PI / 2; g.add(c2);
+    const g3 = gearBox(0.5, 0.18, 0.4, 0, 9); g3.position.set(-HW + 0.4, 0.31, -13.3); g3.rotation.y = Math.PI / 2; g.add(g3);
+    col(-HW, -HW + 0.65, -13.65, -12.95);
+    // rusty bench against BITNA's closed shutter
     const rust = std({ color: '#6a4030', roughness: 0.85, metalness: 0.2 });
     const bench = new THREE.Group();
     bench.add(box(1.4, 0.04, 0.4, std({ color: '#8f9a9e', roughness: 0.6 }), 0, 0.45, 0));
     for (const x of [-0.6, 0.6]) for (const z of [-0.16, 0.16]) bench.add(box(0.04, 0.45, 0.04, rust, x, 0.225, z));
     bench.add(box(1.25, 0.03, 0.03, rust, 0, 0.15, -0.16));
-    bench.position.set(-HW + 0.5, 0, -0.2); bench.rotation.y = Math.PI / 2; g.add(bench);
-    col(-HW, -HW + 0.75, -0.95, 0.55);
-    // east: hand truck on crates, green stool, junk robot, cartons
-    const c1 = crate(); c1.position.set(HW - 0.45, 0, -8.3); c1.rotation.y = Math.PI / 2; g.add(c1);
-    const ht = handTruck(); ht.position.set(HW - 0.85, 0, -8.9); ht.rotation.y = -Math.PI / 2 + 0.3; g.add(ht);
-    const st = stool('#2fa37a'); st.position.set(HW - 0.45, 0, -9.4); g.add(st);
-    const rb = junkRobot(); rb.position.set(HW - 0.5, 0, -11.2); rb.rotation.y = -Math.PI / 2 - 0.4; g.add(rb);
-    col(HW - 1.1, HW, -9.7, -7.9); col(HW - 0.8, HW, -11.5, -10.9);
-    const st2 = stool('#c9372f'); st2.position.set(HW - 0.4, 0, -16.6); g.add(st2);
-    const c2 = crate('#3a7fc0'); c2.position.set(-HW + 0.4, 0, -12.4); c2.rotation.y = Math.PI / 2; g.add(c2);
-    const g3 = gearBox(0.5, 0.18, 0.4, 0, 9); g3.position.set(-HW + 0.4, 0.31, -12.4); g3.rotation.y = Math.PI / 2; g.add(g3);
-    col(-HW, -HW + 0.65, -12.75, -12.05);
+    bench.position.set(-HW + 0.3, 0, -10.0); bench.rotation.y = Math.PI / 2; g.add(bench);
+    col(-HW, -HW + 0.55, -10.75, -9.25);
   }
 
   // ---------------------------------------------------------------- far end: white block with windows
