@@ -141,7 +141,7 @@ function noSmokingTex() {
 
 // ------------------------------------------------------------------ props
 // paper lantern (chochin): ribbed lathe body with lettering, black lacquer caps, lit from inside
-function lantern(r, h, col, text, ink = '#111111', seed = 1) {
+export function lantern(r, h, col, text, ink = '#111111', seed = 1) {
   const g = new THREE.Group();
   const pts = [];
   for (let i = 0; i <= 40; i++) {

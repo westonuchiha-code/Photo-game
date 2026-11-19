@@ -52,6 +52,7 @@ import { makeUndergroundMall } from './models/mall28f.js';
 import { makeStairEntrance } from './models/stairs28g.js';
 import { makeMarketAlley } from './models/alley28h.js';
 import { makeBarAlley } from './models/baralley28i.js';
+import { makeCornDog, makePorkBun, makeMelonBread, makeKatsuCurry, makeCheeseSticks, makeYogurtDrink, makeEnergyCan, makeUmeSour, makeCocoCan, makeCandyPack, makePizzaDisplay, makeNoodleShop } from './models/food16.js';
 import { WalkControls } from './walk.js';
 import { fontsReady } from './fonts.js';
 await fontsReady;   // sign fonts must be loaded before any canvas sign is drawn
@@ -1071,6 +1072,29 @@ for (const [x0, x1, z0, z1] of barAlley.userData.colliders) colliders.push({ typ
 const baArea = (() => { const a = barAlley.userData.area; return { minX: BA.x - a.maxX, maxX: BA.x - a.minX, minZ: BA.z - a.maxZ, maxZ: BA.z - a.minZ, y0: -0.5, y1: 0.6 }; })();
 // the teahouse inside the bar alley (28j): its room + doorway
 const teaAreas = barAlley.userData.areas.map((a) => ({ minX: BA.x - a.maxX, maxX: BA.x - a.minX, minZ: BA.z - a.maxZ, maxZ: BA.z - a.minZ, y0: -0.5, y1: 0.6 }));
+// ------------------------------------------------------------------ noodle shop + food set 1 remainder (food photos, item 16)
+// The shop faces the forecourt from its south-west corner; its bench table holds the rest of food set 1.
+const NS = { x: -4.5, z: 49 };
+const noodle = makeNoodleShop();
+noodle.position.set(NS.x, 0, NS.z); add(noodle);
+for (const [x0, x1, z0, z1] of noodle.userData.colliders) colliders.push({ type: 'box', minX: NS.x + x0, maxX: NS.x + x1, minZ: NS.z + z0, maxZ: NS.z + z1, y0: -0.5, y1: 3 });
+{
+  const t = noodle.userData.table, tx = NS.x + t.x, tz = NS.z + t.z;
+  const put = (o, dx, dz, ry = 0) => { o.position.set(tx + dx, t.y, tz + dz); o.rotation.y = ry; add(o); };
+  put(makeKatsuCurry(), -0.55, -0.08, 0.1);
+  put(makeCornDog(), -0.1, 0.12, 1.35);
+  put(makePorkBun(), 0.32, -0.1, -0.4);
+  put(makeMelonBread('orange'), 0.62, 0.15, 0);
+  put(makeMelonBread('green'), 0.66, -0.17, 0.5);
+  put(makeYogurtDrink(), 0.42, 0.2, 0.3);
+  put(makeEnergyCan(), 0.12, -0.2, 2.6);
+  put(makeUmeSour(), -0.28, 0.22, 2.9);
+  put(makeCocoCan(), -0.82, 0.18, 2.4);
+  const cand = makeCandyPack(); put(cand, -0.75, -0.2, 0.3); cand.rotation.x = -Math.PI / 2; cand.position.y += 0.007;
+  const ch = makeCheeseSticks(); put(ch, 0.05, -0.27, 0.1); ch.rotation.x = -Math.PI / 2 + 0.05; ch.position.y += 0.02; ch.position.z += 0.1;
+  const pd = makePizzaDisplay(); pd.position.set(NS.x - 3.2, 0, NS.z + 1.1); pd.rotation.y = 0.15; add(pd);
+  rect(NS.x - 3.85, NS.x - 2.55, NS.z + 0.7, NS.z + 1.5);
+}
 const mallAreas = mall.userData.areas.map((a) => ({ ...a, minX: a.minX + MALL.x, maxX: a.maxX + MALL.x, minZ: a.minZ + MALL.z, maxZ: a.maxZ + MALL.z }));
 {
   // forecourt: rain-soaked concrete slabs with puddles (rainy-plaza photo, 28k), cut around the stair well
@@ -1238,6 +1262,11 @@ const VIEWS = {
   mallpillars: { pos: [7.0, -2.8, 45.5], target: [4.0, -3.0, 34] },
   malleast: { pos: [3.0, -2.6, 36], target: [9, -2.8, 42] },
   mallstair: { pos: [2.0, 1.2, 60.5], target: [2.0, -3.2, 48] },
+  noodleshop: { pos: [-3.2, 1.7, 55.5], target: [-4.8, 1.6, 49] },
+  foodtable: { pos: [-5.0, 1.25, 51.6], target: [-5.65, 0.75, 50.62] },
+  foodclose: { pos: [-5.45, 0.98, 51.0], target: [-5.75, 0.76, 50.6] },
+  pizzadisplay: { pos: [-6.6, 1.5, 51.4], target: [-7.7, 0.85, 50.1] },
+  vending: { pos: [-1.6, 1.4, 51.2], target: [-1.15, 1.2, 49.4] },
   forecourt: { pos: [10, 2.0, 66], target: [-1, 0, 58] },
   puddles: { pos: [6.5, 1.6, 52.5], target: [3.5, 0, 56.5] },
   mallkiosk: { pos: [6.5, 1.8, 66], target: [2.0, 1.0, 57] },

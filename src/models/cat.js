@@ -276,4 +276,4 @@ export function makeCat(kind = 'tabby', pose = 'sit', scale = 1) {
   return g;
 }
 
-export { ellipsoid, cone, smin, surfaceNets, v3 };
+export { ellipsoid, cone, smin, surfaceNets, v3, noise3 };

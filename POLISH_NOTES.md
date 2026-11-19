@@ -151,3 +151,8 @@ This is a running list, added to as models get built. Nothing here is urgent.
 ## 28k leftover city textures
 - sky_day.png (sun-flare photo) is ready for a day mode; the town is lit for night, so a day mode needs its own lighting pass.
 - Puddles only reflect lights (no environment map outside); a captured street probe would make them mirror the signs.
+
+## 16 food set 1 remainder (noodle shop)
+- The bench table is plain wood boxes; could use the wood texture from the bar photos.
+- The pizza lids read a little silvery; a real clear-plastic look needs an environment map.
+- Noodle shop interior is not built (the lattice doors are lit panels).

@@ -7,6 +7,7 @@ Rules (from you):
   sign's shape and material. Keep text that's already generic (LIQUOR).
 
 ## Approved
+- 28k Leftover city textures (rainy forecourt, moss pavers, day sky)
 - 28j Teahouse
 - 28i Bar alley
 - 28h Covered electronics market alley (after layout polish)
@@ -54,7 +55,7 @@ Rules (from you):
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- 28k Leftover city photos as textures (in progress)
+- 16 Food set 1 remainder (in progress)
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
