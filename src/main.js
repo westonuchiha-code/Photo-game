@@ -50,6 +50,7 @@ import { makeDumpTruck, makePipeBarrier, makeSiteSign, makeWeeds } from './model
 import { makeDeliveryBag, makeCupCarrier, makePaperBag } from './models/delivery.js';
 import { makeUndergroundMall } from './models/mall28f.js';
 import { makeStairEntrance } from './models/stairs28g.js';
+import { makeMarketAlley } from './models/alley28h.js';
 import { WalkControls } from './walk.js';
 import { fontsReady } from './fonts.js';
 await fontsReady;   // sign fonts must be loaded before any canvas sign is drawn
@@ -1051,6 +1052,14 @@ stairEnt.position.set(SE.x, 0, SE.z); stairEnt.rotation.y = SE.rot; add(stairEnt
 // local (x, z) -> world for this rotation: wx = SE.x - z, wz = SE.z + x
 for (const [x0, x1, z0, z1] of stairEnt.userData.colliders) colliders.push({ type: 'box', minX: SE.x - z1, maxX: SE.x - z0, minZ: SE.z + x0, maxZ: SE.z + x1 });
 const seArea = (() => { const a = stairEnt.userData.area; return { minX: SE.x - a.maxZ, maxX: SE.x - a.minZ, minZ: SE.z + a.minX, maxZ: SE.z + a.maxX }; })();
+// ------------------------------------------------------------------ covered electronics market alley (city photo, 28h)
+// Runs south from the forecourt (entrance at world z 49.4) above the underground mall; its colliders
+// only apply at street level so they don't block the mall below.
+const MA = { x: 9, z: 49.4 };
+const alley = makeMarketAlley();
+alley.position.set(MA.x, 0, MA.z); add(alley);
+for (const [x0, x1, z0, z1] of alley.userData.colliders) colliders.push({ type: 'box', minX: MA.x + x0, maxX: MA.x + x1, minZ: MA.z + z0, maxZ: MA.z + z1, y0: -0.5, y1: 3 });
+const maArea = (() => { const a = alley.userData.area; return { minX: MA.x + a.minX, maxX: MA.x + a.maxX, minZ: MA.z + a.minZ, maxZ: MA.z + a.maxZ, y0: -0.5, y1: 0.6 }; })();
 const mallAreas = mall.userData.areas.map((a) => ({ ...a, minX: a.minX + MALL.x, maxX: a.maxX + MALL.x, minZ: a.minZ + MALL.z, maxZ: a.maxZ + MALL.z }));
 {
   // forecourt paving like the station plaza, cut around the stair well
@@ -1085,6 +1094,7 @@ const walk = new WalkControls(camera, renderer.domElement, {
     { minX: -9.2, maxX: 13.7, minZ: 49.5, maxZ: 69.7, y0: -0.5, y1: 0.6 }, // underground-mall forecourt (street level)
     ...mallAreas, // the mall hall + its stair (below the street)
     seArea, // the Go-club stair
+    maArea, // the market alley
   ],
   colliders,
 });
@@ -1212,6 +1222,10 @@ const VIEWS = {
   stairent: { pos: [7.6, 1.7, 63.2], target: [14, 2.3, 61] },
   stairsign: { pos: [10.9, 2.3, 60.1], target: [14, 2.5, 61.3] },
   stairdown: { pos: [21.4, 5.6, 61], target: [14.6, 0.6, 61] },
+  alley: { pos: [9.6, 1.65, 50.6], target: [8.6, 1.5, 38] },
+  alleysigns: { pos: [8.2, 1.7, 46.5], target: [11.6, 2.5, 43.5] },
+  alleyleft: { pos: [9.8, 1.6, 44.4], target: [6.6, 0.8, 46.2] },
+  alleyprops: { pos: [9.2, 1.5, 42.8], target: [11.6, 0.6, 39.8] },
   rockdoorside: { pos: [-36.4, 1.6, 10.6], target: [-38.5, 2.0, 12.0] },
   walkinshelf: { pos: [17.6, 1.6, -44.0], target: [21.4, 1.0, -45.6] },
   van: { pos: [25.5, 1.9, -22.4], target: [21.5, 0.9, -26.5] },

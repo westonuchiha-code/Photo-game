@@ -132,3 +132,8 @@ This is a running list, added to as models get built. Nothing here is urgent.
 - Ceiling plenum is a flat colour; could add a faint photo texture and more ducts.
 - No people / mannequins; the half-open shop could get a few displays on stands and a rack.
 - Forecourt paving is the station-plaza pattern; could get its own stone.
+
+## 28h market alley
+- The junk robot sculpture is simple; could be rebuilt from more audio parts like the photo's.
+- Shop interiors repeat the same parts-drawer wall; vary per shop (cables on reels, TVs, LED strips).
+- Add hanging cables / extension cords and a few people-less clutter piles to make it busier.
