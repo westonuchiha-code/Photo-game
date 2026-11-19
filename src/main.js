@@ -1069,6 +1069,8 @@ const barAlley = makeBarAlley();
 barAlley.position.set(BA.x, 0, BA.z); barAlley.rotation.y = Math.PI; add(barAlley);
 for (const [x0, x1, z0, z1] of barAlley.userData.colliders) colliders.push({ type: 'box', minX: BA.x - x1, maxX: BA.x - x0, minZ: BA.z - z1, maxZ: BA.z - z0 });
 const baArea = (() => { const a = barAlley.userData.area; return { minX: BA.x - a.maxX, maxX: BA.x - a.minX, minZ: BA.z - a.maxZ, maxZ: BA.z - a.minZ, y0: -0.5, y1: 0.6 }; })();
+// the teahouse inside the bar alley (28j): its room + doorway
+const teaAreas = barAlley.userData.areas.map((a) => ({ minX: BA.x - a.maxX, maxX: BA.x - a.minX, minZ: BA.z - a.maxZ, maxZ: BA.z - a.minZ, y0: -0.5, y1: 0.6 }));
 const mallAreas = mall.userData.areas.map((a) => ({ ...a, minX: a.minX + MALL.x, maxX: a.maxX + MALL.x, minZ: a.minZ + MALL.z, maxZ: a.maxZ + MALL.z }));
 {
   // forecourt paving like the station plaza, cut around the stair well
@@ -1105,6 +1107,7 @@ const walk = new WalkControls(camera, renderer.domElement, {
     seArea, // the Go-club stair
     maArea, // the market alley
     baArea, // the bar alley
+    ...teaAreas, // the teahouse
   ],
   colliders,
 });
@@ -1243,6 +1246,10 @@ const VIEWS = {
   barizakaya: { pos: [-0.8, 1.6, 74.2], target: [-5.0, 1.6, 77.8] },
   bartower: { pos: [-1.0, 2.0, 79.5], target: [-4.0, 3.6, 83.5] },
   barstair: { pos: [-2.0, 1.6, 82.0], target: [-4.2, 1.0, 84.5] },
+  teafront: { pos: [-3.4, 1.7, 95.5], target: [0.3, 2.6, 92.0] },
+  teaceiling: { pos: [4.6, 1.4, 96.0], target: [2.8, 5.6, 92.0], lookUp: true },
+  tearoom: { pos: [2.6, 1.6, 97.2], target: [3.4, 2.2, 88.5] },
+  teabar: { pos: [3.0, 1.6, 93.2], target: [3.3, 1.4, 87.7] },
   barend: { pos: [-2.2, 1.7, 86], target: [-2.4, 2.4, 98] },
   rockdoorside: { pos: [-36.4, 1.6, 10.6], target: [-38.5, 2.0, 12.0] },
   walkinshelf: { pos: [17.6, 1.6, -44.0], target: [21.4, 1.0, -45.6] },
@@ -1267,6 +1274,8 @@ function setMode(m, view = 'room') {
   orbit.enabled = m === 'orbit';
   if (m === 'orbit') {
     const v = VIEWS[view] || VIEWS.room;
+    // indoor views that look up at a ceiling may orbit below the target; everywhere else stay above the ground
+    orbit.maxPolarAngle = v.lookUp ? Math.PI * 0.97 : Math.PI * 0.49;
     camera.position.set(...v.pos);
     orbit.target.set(...v.target);
     orbit.update();

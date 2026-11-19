@@ -142,3 +142,8 @@ This is a running list, added to as models get built. Nothing here is urgent.
 - Building blocks are simple boxes; add eaves, rooftop water tanks and balcony clutter.
 - The 2F stair is a painted backdrop; could become real geometry if the building gets an interior.
 - More people-less clutter: umbrellas, beer kegs, a vending machine.
+
+## 28j teahouse
+- Hairline striping on the plaster beside the tea-tin wall (likely a z-fight); check.
+- The street front reuses the carved plaster; a plainer outside render might read better.
+- Add steam / teapots on tables, a menu card, the order screen showing a made-up menu.

@@ -20,6 +20,7 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { F, fitText } from '../fonts.js';
+import { makeTeahouse } from './teahouse28j.js';
 
 const _L = new THREE.TextureLoader();
 const _cache = new Map();
@@ -260,7 +261,7 @@ export function makeBarAlley() {
   const g = new THREE.Group();
   g.name = 'bar_alley';
   const L = 26, HW = 2.2, BD = 6;
-  const colliders = [];
+  const colliders = [], teaAreas = [];
   const col = (x0, x1, z0, z1) => colliders.push([x0, x1, z0, z1]);
   const steel = std({ color: '#9a9ea2', metalness: 0.45, roughness: 0.4 });
   const iron = std({ color: '#2a2b2c', metalness: 0.4, roughness: 0.5 });
@@ -349,25 +350,27 @@ export function makeBarAlley() {
     bin.add(rbox(0.46, 0.06, 0.4, 0.02, std({ color: '#c8c8c4', roughness: 0.5 }), 0, 0.65, 0));
     bin.position.set(-HW + 0.3, 0, -12.3); g.add(bin);
     col(-HW, -HW + 0.55, -12.55, -7.45);
-    // W3: low row of small bars, z -12..-26, 2 storeys with shutters
-    g.add(block(BD, 6.5, 14, 'ba_stucco.png', 1.0, '#c9c2b4', bx, 0, -19));
+    // W3: one shuttered bar at z -12..-15.6, then the Silk Garden teahouse (28j) at z -15.6..-25.6
+    g.add(block(BD, 6.5, 3.6, 'ba_stucco.png', 1.0, '#c9c2b4', bx, 0, -13.8));
     const shutterT = canvasTex(128, 256, (c, w, h) => { for (let i = 0; i < 26; i++) { const gr = c.createLinearGradient(0, i * 10, 0, i * 10 + 10); gr.addColorStop(0, '#8a8e90'); gr.addColorStop(0.5, '#b9bdbf'); gr.addColorStop(1, '#6e7274'); c.fillStyle = gr; c.fillRect(0, i * 10, w, 10); } grime(c, w, h, 8, 50, 0.1); });
-    for (const [z, open] of [[-14, false], [-17.5, true], [-21, false], [-24.2, true]]) {
-      if (open) {
-        g.add(plane(2.6, 2.4, std({ color: '#f0d8a8', emissive: '#ffcf90', emissiveIntensity: 0.45 }), -HW + 0.02, 1.2, z, Math.PI / 2));
-        for (let k = 0; k < 5; k++) g.add(box(0.03, 2.4, 0.03, darkWood, -HW + 0.04, 1.2, z - 1.2 + k * 0.6));
-        // noren (short split curtain) over the door
-        const nt = canvasTex(512, 160, (c, w, h) => { c.fillStyle = '#1c2a48'; c.fillRect(0, 0, w, h); c.fillStyle = '#f2ead8'; fitText(c, z < -20 ? 'おでん' : '居酒屋', w / 2, h / 2 + 4, w - 80, 100, F.brush); c.fillStyle = '#f4eee4'; for (let k = 1; k < 4; k++) c.fillRect(k * w / 4 - 2, h * 0.35, 4, h); });
-        g.add(plane(1.3, 0.45, std({ map: nt, side: THREE.DoubleSide }), -HW + 0.12, 2.15, z, Math.PI / 2));
-      } else {
-        const sm = std({ map: shutterT, roughness: 0.5, metalness: 0.2 }); sm.map = shutterT.clone(); sm.map.repeat.set(2.4, 2); sm.map.needsUpdate = true;
-        g.add(plane(2.6, 2.5, sm, -HW + 0.02, 1.25, z, Math.PI / 2));
-      }
+    {
+      const z = -13.8;
+      const sm = std({ map: shutterT, roughness: 0.5, metalness: 0.2 }); sm.map = shutterT.clone(); sm.map.repeat.set(2.4, 2); sm.map.needsUpdate = true;
+      g.add(plane(2.6, 2.5, sm, -HW + 0.02, 1.25, z, Math.PI / 2));
       g.add(box(0.25, 0.25, 2.8, std({ color: '#9a9c9a' }), -HW - 0.1, 2.6, z));
-      windowAt(s, z, 4.4, 1.5, 1.1, z === -17.5, true);
+      windowAt(s, z, 4.4, 1.5, 1.1, false, true);
     }
-    const ol = new THREE.PointLight('#ffcf90', 2.0, 5, 1.6); ol.position.set(-HW + 0.8, 2.0, -17.5); g.add(ol);
-    col(-HW - BD, -HW, -L, 0);
+    const tea = makeTeahouse();
+    tea.position.set(-HW, 0, -20.6); tea.rotation.y = Math.PI / 2; g.add(tea);
+    // teahouse local (x, z) -> alley local (-HW + z, -20.6 - x)
+    const tr = ([x0, x1, z0, z1]) => [-HW + Math.min(z0, z1), -HW + Math.max(z0, z1), -20.6 - x1, -20.6 - x0];
+    for (const c of tea.userData.colliders) col(...tr(c));
+    const ta = tea.userData.area, td = tea.userData.door;
+    const [ax0, ax1, az0, az1] = tr([ta.minX, ta.maxX, ta.minZ, ta.maxZ]);
+    const [dx0, dx1, dz0, dz1] = tr([td.x0, td.x1, -0.7, 0.4]);
+    teaAreas.push({ minX: ax0, maxX: ax1, minZ: az0, maxZ: az1 }, { minX: dx0, maxX: dx1, minZ: dz0, maxZ: dz1 });
+    col(-HW - BD, -HW, -15.6, 0);
+    col(-HW - BD, -HW, -L - 1, -25.6);
   }
 
   // ---------------------------------------------------------------- EAST side
@@ -526,17 +529,17 @@ export function makeBarAlley() {
       sg.add(box(w + 0.04, h + 0.04, 0.22, std({ color: frame, roughness: 0.4 })));
       for (const k of [-1, 1]) sg.add(plane(w, h, lit(tex, 0.55), 0, 0, k * 0.111, k > 0 ? 0 : Math.PI));
       sg.position.set(x, y, z); g.add(sg);
-      for (const yy of [y + h / 2 - 0.2, y - h / 2 + 0.2]) g.add(box(Math.abs(x - -HW) + 0.05, 0.05, 0.05, steel, (x + -HW) / 2, yy, z));
+      const wall = x < 0 ? -HW : HW;
+      for (const yy of [y + h / 2 - 0.2, y - h / 2 + 0.2]) g.add(box(Math.abs(x - wall) + 0.05, 0.05, 0.05, steel, (x + wall) / 2, yy, z));
     };
     // dark sign, pink lettering: つき · BAR · 2F
     mount(vSign(256, 680, '#16182a', [['つき', F.brush, 2.6, '#f0a0b8'], ['BAR · 2F', F.label, 0.45, '#ffffff', true]], { seed: 11 }), 0.6, 1.6, -HW + 0.5, 6.4, -0.8, '#1e1e24');
     // tall white sign: 膳や 灯楽 Toraku
     mount(vSign(256, 760, '#f4f1ea', [['膳や', F.antique, 0.8, '#1a1a1a'], ['灯楽', F.brush, 2.2, '#1a1a1a'], ['Toraku', F.couture, 0.35, '#5a5248', true]], { seed: 12 }), 0.7, 2.1, -HW + 0.55, 4.25, -1.6);
     // narrow green sign low down: 小料理 夢見
-    mount(vSign(160, 560, '#1e3a2a', [['小料理', F.antique, 1, '#d8e8d0'], ['夢見', F.brush, 1.6, '#f2e070']], { seed: 13 }), 0.42, 1.5, -HW + 0.35, 2.3, -12.8, '#14261c');
+    mount(vSign(160, 560, '#1e3a2a', [['小料理', F.antique, 1, '#d8e8d0'], ['夢見', F.brush, 1.6, '#f2e070']], { seed: 13 }), 0.42, 1.5, -HW + 0.35, 2.3, -11.5, '#14261c');
     // yellow ホルモン sign further down + a small red ラーメン sign
-    mount(vSign(200, 520, '#f2c21a', [['ホルモン', F.antique, 1, '#c42020']], { seed: 14 }), 0.5, 1.3, -HW + 0.4, 3.6, -20.5, '#d8a818');
-    mount(vSign(200, 360, '#c42020', [['ラーメン', F.antique, 1, '#ffffff']], { seed: 15 }), 0.45, 0.85, -HW + 0.38, 2.3, -24.6, '#9a1818');
+    mount(vSign(200, 520, '#f2c21a', [['ホルモン', F.antique, 1, '#c42020']], { seed: 14 }), 0.5, 1.3, HW - 0.4, 3.7, -20.4, '#d8a818');
   }
 
   // ---------------------------------------------------------------- utility poles, lamps, wires, string lights
@@ -596,5 +599,6 @@ export function makeBarAlley() {
   g.traverse((o) => { if (o.isMesh && o.material && o.material.transparent) o.castShadow = false; });
   g.userData.colliders = colliders;
   g.userData.area = { minX: -HW + 0.25, maxX: HW - 0.25, minZ: -L - 2.6, maxZ: 2.6 };
+  g.userData.areas = teaAreas;
   return g;
 }
