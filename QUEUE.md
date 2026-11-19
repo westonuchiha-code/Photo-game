@@ -7,6 +7,7 @@ Rules (from you):
   sign's shape and material. Keep text that's already generic (LIQUOR).
 
 ## Approved
+- 28h Covered electronics market alley (after layout polish)
 - 28g Go-club stairway (Go boards good for now)
 - 28f Underground mall
 - 28e Station gateway, lotus pond, rock bar door (polish later)
@@ -51,7 +52,7 @@ Rules (from you):
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- 28h Covered electronics market alley (in progress)
+- 28i Bar alley signs (in progress)
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
@@ -61,7 +62,6 @@ Rules (from you):
    Screenshot: `screenshots/burger-poster.png`.
 
 ## Up next (in order)
-28i. Bar alley (izakaya-alley-signs): brick paving, vertical lit signs, paper lanterns, string lights, wires, menu stands (made-up names).
 28j. Teahouse (teahouse-painted-ceiling): painted coffered ceiling, tea tins wall, carved white plaster, brick pillars, curtains, bar + tables.
 28k. Leftover city photos as textures/sky: rainy-plaza (wet concrete + puddles), sidewalk-tiles-backpack (grey pavers with moss joints), sun-flare-sky (day sky option).
 16. Food inspiration (photos/food/, 17 photos): corn dog in a paper boat with sauce, spaghetti

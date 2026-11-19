@@ -137,3 +137,8 @@ This is a running list, added to as models get built. Nothing here is urgent.
 - The junk robot sculpture is simple; could be rebuilt from more audio parts like the photo's.
 - Shop interiors repeat the same parts-drawer wall; vary per shop (cables on reels, TVs, LED strips).
 - Add hanging cables / extension cords and a few people-less clutter piles to make it busier.
+
+## 28i bar alley
+- Building blocks are simple boxes; add eaves, rooftop water tanks and balcony clutter.
+- The 2F stair is a painted backdrop; could become real geometry if the building gets an interior.
+- More people-less clutter: umbrellas, beer kegs, a vending machine.
