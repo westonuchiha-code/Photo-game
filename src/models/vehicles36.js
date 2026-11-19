@@ -300,3 +300,94 @@ export function makeCoachBus() {
   box(L - 1.2, 0.3, Wd - 0.5, new THREE.MeshStandardMaterial({ color: '#1a1a1a', roughness: 0.9 }), 0, clr - 0.05, 0, g);
   return g;
 }
+
+// ---------------------------------------------------------------------------------------------------------
+//   makeScoutTruck()  dusty olive 70s two-door 4x4 (old-army-scout-truck.jpg), 4.2 m x 1.78 m x 1.68 m.
+//   Front, hood and windscreen are the photo itself, straightened (grille, round headlights, amber lamps,
+//   rust-bloomed bumper; dust on the glass with the wipers parked); the badge, plates and hood sticker are
+//   painted out. Body sides: the fender's olive with the hood's real dust grain. A 3D brush guard, a round
+//   door mirror, rusty orange steel wheels, and the front right tyre gone flat. Nose toward +x, ground y = 0.
+export function makeScoutTruck() {
+  const g = new THREE.Group(); g.name = 'scout_truck';
+  const L = 4.2, Wd = 1.78, hw = Wd / 2, clr = 0.42, axR = 0.95, axF = 3.25, R = 0.36;
+  const sh = new THREE.Shape(); sh.moveTo(0.02, clr + 0.05);
+  const arch = (cx) => { sh.lineTo(cx - 0.45, clr + 0.05); sh.absarc(cx, R, 0.45, Math.PI, 0, true); };
+  arch(axR); arch(axF);
+  sh.lineTo(L - 0.06, clr + 0.05); sh.lineTo(L, 0.58); sh.lineTo(L, 1.0); sh.lineTo(L - 0.06, 1.06);
+  sh.lineTo(L - 1.25, 1.1); sh.lineTo(L - 1.62, 1.64); sh.lineTo(0.12, 1.68); sh.lineTo(0.02, 1.6); sh.lineTo(0.02, clr + 0.05);
+  const geo = new THREE.ExtrudeGeometry(sh, { depth: Wd - 0.06, bevelEnabled: true, bevelThickness: 0.03, bevelSize: 0.03, bevelSegments: 3, curveSegments: 10 });
+  geo.translate(-L / 2, 0, -(Wd - 0.06) / 2);
+  const pp = geo.attributes.position, puv = geo.attributes.uv;
+  for (let i = 0; i < pp.count; i++) puv.setXY(i, (pp.getX(i) + pp.getZ(i) * 0.5) / 2.4, (pp.getY(i) + pp.getZ(i)) / 2.4);
+  const pt = tex('st_paint', true);
+  const paint = new THREE.MeshStandardMaterial({ map: pt, roughness: 0.92, metalness: 0.05 });
+  const body = new THREE.Mesh(geo, paint); body.castShadow = true; body.receiveShadow = true; g.add(body);
+  const X = (s) => s - L / 2;
+  // front (photo) and hood (photo)
+  const front = new THREE.Mesh(new THREE.PlaneGeometry(Wd + 0.04, 0.76), new THREE.MeshStandardMaterial({ map: tex('st_front'), roughness: 0.8 }));
+  front.rotation.y = Math.PI / 2; front.position.set(X(L) + 0.035, 0.68, 0); g.add(front);
+  const hoodGeo = new THREE.PlaneGeometry(Wd - 0.02, 1.22); hoodGeo.rotateX(-Math.PI / 2); hoodGeo.rotateY(Math.PI / 2);
+  // texture rows run back (top of the crop = cowl) to front; columns left-to-right as seen from the front (= +z to -z)
+  const hood = new THREE.Mesh(hoodGeo, new THREE.MeshStandardMaterial({ map: tex('st_hood'), color: '#a9aca4', roughness: 0.9 }));
+  hood.rotation.z = -Math.atan2(0.04, 1.19); hood.position.set(X(L - 0.66), 1.128, 0); g.add(hood);
+  // windscreen (dusty, wipers) on the slope; side glass reusing the dusty glass
+  const ws0 = new THREE.Vector2(X(L - 1.25), 1.1), ws1 = new THREE.Vector2(X(L - 1.62), 1.64);
+  const glassM = new THREE.MeshStandardMaterial({ map: tex('st_glass'), roughness: 0.35, metalness: 0.1 });
+  const wsm = new THREE.Mesh(new THREE.PlaneGeometry(Wd - 0.08, ws0.distanceTo(ws1)), glassM);
+  wsm.rotation.order = 'ZYX'; wsm.rotation.y = Math.PI / 2; wsm.rotation.z = Math.atan2(ws0.x - ws1.x, ws1.y - ws0.y);
+  wsm.position.set((ws0.x + ws1.x) / 2 + 0.035, (ws0.y + ws1.y) / 2 + 0.02, 0); g.add(wsm);
+  const sideT = tex('st_glass'); sideT.repeat.set(0.5, 0.7); sideT.offset.set(0.08, 0.2);
+  const sideM = new THREE.MeshStandardMaterial({ map: sideT, roughness: 0.35, color: '#8a8e90' });
+  for (const z of [-1, 1]) for (const [s0, s1] of [[L - 2.32, L - 1.42], [0.35, L - 2.5]]) {
+    const top = 1.6, bot = 1.16, sl = s1 > L - 1.5 ? 0.18 : 0;
+    const w = new THREE.Shape([new THREE.Vector2(s0, bot), new THREE.Vector2(s1, bot), new THREE.Vector2(s1 - sl, top), new THREE.Vector2(s0, top)]);
+    const wg = new THREE.ShapeGeometry(w); wg.translate(-L / 2, 0, 0);
+    const p = wg.attributes.position, uv = wg.attributes.uv; for (let i = 0; i < p.count; i++) uv.setXY(i, (p.getX(i) + L / 2) / 1.2, (p.getY(i) - bot) / 0.5);
+    const m = new THREE.Mesh(wg, z > 0 ? sideM : sideM.clone()); if (z < 0) m.material.side = THREE.BackSide;
+    m.position.z = z * (hw + 0.004); g.add(m);
+  }
+  // door shut lines, handles, the little side marker lamp, a rust bloom along the sills
+  const dark = new THREE.MeshStandardMaterial({ color: '#2a2e2a', roughness: 0.9 });
+  const chrome = new THREE.MeshStandardMaterial({ color: '#9a9c98', roughness: 0.45, metalness: 0.6 });
+  const rust = new THREE.MeshStandardMaterial({ color: '#7a4a2a', roughness: 1 });
+  for (const z of [-1, 1]) {
+    for (const s of [L - 1.4, L - 2.42]) box(0.012, 0.6, 0.01, dark, X(s), 0.82, z * (hw + 0.003), g);
+    box(0.12, 0.025, 0.02, chrome, X(L - 2.25), 1.02, z * (hw + 0.01), g);
+    box(0.05, 0.03, 0.01, new THREE.MeshStandardMaterial({ color: '#c8641e', roughness: 0.5 }), X(L - 0.35), 0.78, z * (hw + 0.004), g);
+  }
+  // round door mirror on a stalk (driver's side, left as you face the truck = +z)
+  const mir = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.075, 0.03, 20), chrome); mir.rotation.z = Math.PI / 2; mir.rotation.y = 0.4; mir.position.set(X(L - 1.3), 1.3, hw + 0.2); g.add(mir);
+  tube(new THREE.Vector3(X(L - 1.3), 1.15, hw), new THREE.Vector3(X(L - 1.3), 1.27, hw + 0.18), 0.012, chrome, g);
+  // brush guard: two uprights through the bumper, a hoop round the lamps, a mid rail
+  const gm = new THREE.MeshStandardMaterial({ map: pt, color: '#9aa29a', roughness: 0.85 });
+  const gx = X(L) + 0.14, gr = 0.028;
+  for (const z of [-0.5, 0.5]) { box(0.06, 0.82, 0.07, gm, gx, 0.73, z, g); box(0.14, 0.06, 0.07, gm, gx - 0.07, 0.4, z, g); }
+  const hoop = [new THREE.Vector3(gx - 0.35, 1.06, hw - 0.04), new THREE.Vector3(gx - 0.02, 1.1, hw - 0.06), new THREE.Vector3(gx, 1.12, 0.5), new THREE.Vector3(gx, 1.12, -0.5), new THREE.Vector3(gx - 0.02, 1.1, -hw + 0.06), new THREE.Vector3(gx - 0.35, 1.06, -hw + 0.04)];
+  const hm = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(hoop), 40, gr, 8), gm); hm.castShadow = true; g.add(hm);
+  for (const z of [-1, 1]) tube(new THREE.Vector3(gx, 1.1, z * 0.5), new THREE.Vector3(gx - 0.02, 0.72, z * (hw - 0.04)), gr, gm, g);
+  box(0.05, 0.05, 1.0, gm, gx, 0.86, 0, g);
+  // bumper underside, tow shackles, rusty frame horns, the rear: tailgate with lamps + bumper
+  box(0.14, 0.14, Wd + 0.06, new THREE.MeshStandardMaterial({ map: pt, roughness: 0.9 }), X(L) + 0.03, 0.38, 0, g);
+  for (const z of [-0.62, 0.62]) { const sk = new THREE.Mesh(new THREE.TorusGeometry(0.04, 0.012, 6, 12), rust); sk.position.set(X(L) + 0.12, 0.3, z); g.add(sk); }
+  box(L - 0.4, 0.12, 1.0, rust, 0, 0.36, 0, g);
+  box(0.1, 0.12, Wd + 0.04, chrome, X(0) - 0.03, 0.42, 0, g);
+  for (const z of [-1, 1]) box(0.03, 0.22, 0.1, new THREE.MeshStandardMaterial({ color: '#8a1a14', roughness: 0.4, emissive: '#200000' }), X(0) - 0.02, 0.85, z * (hw - 0.1), g);
+  box(0.02, 0.012, 0.8, dark, X(0) - 0.02, 1.08, 0, g);
+  // wheels: rust-orange steel rims, worn tyres; the front right one is flat
+  const rc = document.createElement('canvas'); rc.width = rc.height = 256; const rx = rc.getContext('2d');
+  rx.fillStyle = '#1d1d1c'; rx.fillRect(0, 0, 256, 256);
+  const rg = rx.createRadialGradient(128, 128, 10, 128, 128, 92); rg.addColorStop(0, '#8a5434'); rg.addColorStop(0.5, '#9a6040'); rg.addColorStop(0.85, '#6e4028'); rg.addColorStop(1, '#2a1a12');
+  rx.fillStyle = rg; rx.beginPath(); rx.arc(128, 128, 92, 0, 7); rx.fill();
+  rx.fillStyle = '#5a3420'; for (let i = 0; i < 5; i++) { const a = i * Math.PI * 2 / 5; rx.beginPath(); rx.arc(128 + Math.cos(a) * 30, 128 + Math.sin(a) * 30, 6, 0, 7); rx.fill(); }
+  rx.fillStyle = '#3a2416'; rx.beginPath(); rx.arc(128, 128, 18, 0, 7); rx.fill();
+  for (let i = 0; i < 200; i++) { rx.fillStyle = `rgba(${150 + Math.random() * 60},${90 + Math.random() * 30},50,${Math.random() * 0.3})`; rx.fillRect(Math.random() * 256, Math.random() * 256, 3, 3); }
+  const rt = new THREE.CanvasTexture(rc); rt.colorSpace = THREE.SRGBColorSpace;
+  const tyre = new THREE.MeshStandardMaterial({ color: '#1e1e1e', roughness: 0.95 }), rim = new THREE.MeshStandardMaterial({ map: rt, roughness: 0.8 });
+  for (const ax of [axR, axF]) for (const z of [-1, 1]) {
+    const flat = ax === axF && z < 0;
+    const t = new THREE.Mesh(new THREE.CylinderGeometry(R, R, 0.26, 32), [tyre, rim, rim]); t.rotation.x = Math.PI / 2;
+    t.position.set(X(ax), flat ? R * 0.82 : R, z * (hw - 0.14)); if (flat) { t.scale.set(1.06, 1, 0.82); t.position.y = R * 0.82; }
+    t.castShadow = true; g.add(t);
+  }
+  return g;
+}

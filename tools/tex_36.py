@@ -55,3 +55,25 @@ cv2.imwrite(os.path.join(OUT, "cb_rear.png"), rear)
 im3 = load("red-coach-bus-front.jpg"); k3 = im3.size[0] / 1400
 im3.crop((int(228 * k3), int(1068 * k3), int(330 * k3), int(1136 * k3))).resize((256, 170), Image.LANCZOS).save(os.path.join(OUT, "cb_lamp.png"), optimize=True)
 print("wrote cb_rear, cb_lamp")
+
+# ---- olive scout truck (old-army-scout-truck.jpg, 1400-px thumbnail coordinates)
+im4 = load_cv("old-army-scout-truck.jpg"); k4 = im4.shape[1] / 1400
+m4 = np.zeros(im4.shape[:2], np.uint8)
+for x0, y0, x1, y1 in [(668, 790, 709, 1075), (1018, 778, 1062, 1025), (920, 868, 1020, 893), (586, 1015, 657, 1064), (798, 1008, 928, 1098), (620, 740, 660, 796)]:
+    cv2.rectangle(m4, (int(x0 * k4), int(y0 * k4)), (int(x1 * k4), int(y1 * k4)), 255, -1)
+im4 = cv2.inpaint(im4, m4, 11, cv2.INPAINT_TELEA)
+def warp(img, quad, size):
+    src = np.float32(quad) * k4; w, h = size
+    return cv2.warpPerspective(img, cv2.getPerspectiveTransform(src, np.float32([(0, 0), (w, 0), (w, h), (0, h)])), size)
+cv2.imwrite(os.path.join(OUT, "st_front.png"), warp(im4, [(537, 803), (1120, 785), (1140, 1007), (517, 1073)], (1024, 448)))
+cv2.imwrite(os.path.join(OUT, "st_hood.png"), warp(im4, [(460, 700), (893, 700), (1100, 770), (530, 802)], (1024, 640)))
+cv2.imwrite(os.path.join(OUT, "st_glass.png"), warp(im4, [(457, 563), (827, 563), (863, 680), (460, 683)], (1024, 360)))
+# body patina: the olive sampled off the fender, with the hood's real dust/rust grain flattened onto it,
+# mirrored into a seamless tile
+olive = np.median(warp(im4, [(410, 775), (440, 775), (440, 815), (410, 815)], (32, 32)).reshape(-1, 3), 0)
+hood = warp(im4, [(560, 712), (880, 712), (900, 760), (580, 768)], (256, 256)).astype(np.float32)
+hp = hood / (cv2.GaussianBlur(hood, (0, 0), 30) + 1)
+p = np.clip(olive * (1 + (hp - 1) * 0.55) * 0.9 + (hood - hood.mean((0, 1))) * 0.12, 0, 255).astype(np.uint8)
+tile = np.concatenate([np.concatenate([p, p[:, ::-1]], 1), np.concatenate([p[::-1], p[::-1, ::-1]], 1)], 0)
+cv2.imwrite(os.path.join(OUT, "st_paint.png"), tile)
+print("wrote st_front, st_hood, st_glass, st_paint")

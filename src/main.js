@@ -5,7 +5,7 @@
 // napkin dispensers, the framed poster, the slatted fence and wall globes outside.
 import * as THREE from 'three';
 import { shrinkCanvases } from './texcache.js';
-import { makeKeiTruck, makeCoachBus } from './models/vehicles36.js';
+import { makeKeiTruck, makeCoachBus, makeScoutTruck } from './models/vehicles36.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
@@ -1131,6 +1131,10 @@ rect(KT.x - 0.78, KT.x + 0.78, KT.z - 1.75, KT.z + 1.75);
 const CBP = { x: -29.7, z: 37, rot: Math.PI / 2 };
 const coach = makeCoachBus(); coach.position.set(CBP.x, 0, CBP.z); coach.rotation.y = CBP.rot; add(coach);
 rect(CBP.x - 1.3, CBP.x + 1.3, CBP.z - 6.1, CBP.z + 6.1);
+// the dusty olive scout truck, left to rot in the dirt lot (front right tyre flat)
+const ST = { x: 39.9, z: -0.6, rot: Math.PI / 2 + 0.04 };
+const scout = makeScoutTruck(); scout.position.set(ST.x, 0, ST.z); scout.rotation.y = ST.rot; add(scout);
+circle(ST.x, ST.z - 1.1, 1.05); circle(ST.x, ST.z + 1.1, 1.05);
 const mallAreas = mall.userData.areas.map((a) => ({ ...a, minX: a.minX + MALL.x, maxX: a.maxX + MALL.x, minZ: a.minZ + MALL.z, maxZ: a.maxZ + MALL.z }));
 {
   // forecourt: rain-soaked concrete slabs with puddles (rainy-plaza photo, 28k), cut around the stair well
@@ -1314,6 +1318,7 @@ const VIEWS = {
   knotbar: { pos: [16.5, 1.6, 69.6], target: [20.2, 1.4, 69.6] },
   keitruck: { pos: [-26.2, 1.9, 48.9], target: [-22.75, 0.9, 44.5] },
   coach: { pos: [-24.5, 2.4, 27.5], target: [-29.7, 1.6, 36] },
+  scout: { pos: [36.4, 1.7, -5.4], target: [39.9, 0.8, -0.6] },
   knotsconce: { pos: [16.6, 1.7, 68.0], target: [18.6, 1.9, 66.3] },
   forecourt: { pos: [10, 2.0, 66], target: [-1, 0, 58] },
   puddles: { pos: [6.5, 1.6, 52.5], target: [3.5, 0, 56.5] },

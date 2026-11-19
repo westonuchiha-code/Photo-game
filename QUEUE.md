@@ -63,7 +63,7 @@ Rules (from you):
 
 ## In review
 - 35 Claw hammer (done, parked)
-- 36 Vehicles: kei truck (approved), river boat (skipped), coach bus (in review)
+- 36 Vehicles: kei truck (approved), river boat (skipped), coach bus (approved), scout truck (in review)
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
@@ -353,6 +353,19 @@ Rules (from you):
     cylinder. Textures: scratched brass swirl, foil shards. Five more of the user's paintings (green mug,
     pink splatter, drip pour, pink swirls, blue/red figure) to hang as-is. All brands, game names,
     characters and markings replaced with original ones.
+
+73. Batch 73 (photos/batch73/): beef rice bowl with mayo, greens and chili threads in a black
+    bowl on a tray; corner shopfront with a painted green fascia, hand-lettered name and a mural
+    on the yellow side wall, brick front, hanging street banner; overgrown yellow canned-ramen
+    vending machine wrapped in vines; rusty serrated sickle with a weathered wooden handle;
+    green concrete dome shrine burner with a red arched entry, its paper pile and price boards;
+    green dome shed with an arched wooden door; row of white sit-down arcade cabinets with stools;
+    closed arcade front (shutters, angled red sign panels); dark-wood izakaya front with a red
+    lantern, sake barrels, posters, AC units, drink machine; old corner shop with a balcony piled
+    with junk (cart wheels, enamel signs, clocks, lanterns, masks, statues) and shutters below;
+    concrete stairwell kiosk to an underground car park in a park; electronics/hobby shop street
+    with capsule-toy machines and sandwich-board signs. All brands, characters and real names
+    replaced with made-up ones.
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"
