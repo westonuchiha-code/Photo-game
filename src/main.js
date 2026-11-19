@@ -54,6 +54,7 @@ import { makeStairEntrance } from './models/stairs28g.js';
 import { makeMarketAlley } from './models/alley28h.js';
 import { makeBarAlley } from './models/baralley28i.js';
 import { makeAbandonedOffice } from './models/abandoned29.js';
+import { makeKnotRoom } from './models/knotroom30.js';
 import { makeCornDog, makePorkBun, makeMelonBread, makeKatsuCurry, makeCheeseSticks, makeYogurtDrink, makeEnergyCan, makeUmeSour, makeCocoCan, makeCandyPack, makePizzaDisplay, makeNoodleShop } from './models/food16.js';
 import { WalkControls } from './walk.js';
 import { fontsReady } from './fonts.js';
@@ -1100,13 +1101,21 @@ for (const [x0, x1, z0, z1] of noodle.userData.colliders) colliders.push({ type:
 // ------------------------------------------------------------------ abandoned office (grime photos, item 29)
 // A vacant unit on the forecourt's north edge, beside the bar alley; rotated half a turn so it faces the
 // forecourt: local (x, z) -> world (AO.x - x, AO.z - z).
-const AO = { x: 10.2, z: 73.6 };
+const AO = { x: 12.4, z: 73.6 };
 const abOffice = makeAbandonedOffice();
 abOffice.position.set(AO.x, 0, AO.z); abOffice.rotation.y = Math.PI; add(abOffice);
 for (const [x0, x1, z0, z1] of abOffice.userData.colliders) colliders.push({ type: 'box', minX: AO.x - x1, maxX: AO.x - x0, minZ: AO.z - z1, maxZ: AO.z - z0 });
 const aoAreas = abOffice.userData.areas.map((a) => ({ minX: AO.x - a.maxX, maxX: AO.x - a.minX, minZ: AO.z - a.maxZ, maxZ: AO.z - a.minZ, y0: -0.5, y1: 0.6 }));
-aoAreas.push({ minX: 6.4, maxX: 13.7, minZ: 69, maxZ: 73.2, y0: -0.5, y1: 0.6 });     // the strip of forecourt in front of it
-add(plane(new THREE.MeshStandardMaterial({ color: '#5a5650', roughness: 0.9 }), 6.4, 14.2, 72, 73.7, 0.006, 1));
+aoAreas.push({ minX: 8.4, maxX: 15.9, minZ: 69, maxZ: 73.2, y0: -0.5, y1: 0.6 });     // the strip of forecourt in front of it
+add(plane(new THREE.MeshStandardMaterial({ color: '#5a5650', roughness: 0.9 }), 8.2, 16.4, 72, 73.7, 0.006, 1));
+// ------------------------------------------------------------------ the Knot Room bar (grime photos, item 30)
+// On the forecourt's east edge between the Go-club building and the abandoned office, front facing west.
+// rotation -90 deg: local (x, z) -> world (KR.x - z, KR.z + x)
+const KR = { x: 14.4, z: 69.5 };
+const knot = makeKnotRoom();
+knot.position.set(KR.x, 0, KR.z); knot.rotation.y = -Math.PI / 2; add(knot);
+for (const [x0, x1, z0, z1] of knot.userData.colliders) colliders.push({ type: 'box', minX: KR.x - z1, maxX: KR.x - z0, minZ: KR.z + x0, maxZ: KR.z + x1 });
+const krAreas = knot.userData.areas.map((a) => ({ minX: KR.x - a.maxZ, maxX: KR.x - a.minZ, minZ: KR.z + a.minX, maxZ: KR.z + a.maxX, y0: -0.5, y1: 0.6 }));
 const mallAreas = mall.userData.areas.map((a) => ({ ...a, minX: a.minX + MALL.x, maxX: a.maxX + MALL.x, minZ: a.minZ + MALL.z, maxZ: a.maxZ + MALL.z }));
 {
   // forecourt: rain-soaked concrete slabs with puddles (rainy-plaza photo, 28k), cut around the stair well
@@ -1152,6 +1161,7 @@ const walk = new WalkControls(camera, renderer.domElement, {
     baArea, // the bar alley
     ...teaAreas, // the teahouse
     ...aoAreas, // the abandoned office
+    ...krAreas, // the Knot Room
   ],
   colliders,
 });
@@ -1280,10 +1290,14 @@ const VIEWS = {
   foodclose: { pos: [-5.45, 0.98, 51.0], target: [-5.75, 0.76, 50.6] },
   pizzadisplay: { pos: [-6.6, 1.5, 51.4], target: [-7.7, 0.85, 50.1] },
   vending: { pos: [-1.6, 1.4, 51.2], target: [-1.15, 1.2, 49.4] },
-  abfront: { pos: [10.2, 1.7, 66.5], target: [10.2, 1.8, 74] },
-  abroom: { pos: [9.0, 1.6, 74.4], target: [11.5, 1.2, 79.4] },
-  abceiling: { pos: [9.2, 1.4, 75.0], target: [10.6, 2.7, 77.6], lookUp: true },
-  abwash: { pos: [9.8, 1.5, 76.2], target: [7.2, 1.0, 79.2] },
+  abfront: { pos: [12.4, 1.7, 66.5], target: [12.4, 1.8, 74] },
+  abroom: { pos: [11.2, 1.6, 74.4], target: [13.7, 1.2, 79.4] },
+  abceiling: { pos: [11.4, 1.4, 75.0], target: [12.8, 2.7, 77.6], lookUp: true },
+  abwash: { pos: [11.3, 1.5, 77.9], target: [9.2, 1.0, 79.0] },
+  knotfront: { pos: [8.6, 1.7, 68.4], target: [14.4, 2.0, 69.8] },
+  knotroom: { pos: [15.2, 1.6, 67.6], target: [19.5, 1.4, 70.8] },
+  knotbar: { pos: [16.5, 1.6, 69.6], target: [20.2, 1.4, 69.6] },
+  knotsconce: { pos: [16.6, 1.7, 68.0], target: [18.6, 1.9, 66.3] },
   forecourt: { pos: [10, 2.0, 66], target: [-1, 0, 58] },
   puddles: { pos: [6.5, 1.6, 52.5], target: [3.5, 0, 56.5] },
   mallkiosk: { pos: [6.5, 1.8, 66], target: [2.0, 1.0, 57] },

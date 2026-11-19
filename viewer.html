@@ -151,7 +151,7 @@ const list = document.getElementById('list'); list.textContent = '';
 const entries = [];
 for (const f of FILES) {
   let mod; try { mod = await import(`./src/models/${f}.js`); } catch (e) { continue; }
-  const names = Object.keys(mod).filter((k) => /^make/.test(k) && typeof mod[k] === 'function' && !SKIP.has(k));
+  const names = Object.keys(mod).filter((k) => /^make/.test(k) && typeof mod[k] === 'function' && !SKIP.has(k) && !(f === 'food' && /CornDog|PorkBun/.test(k)));   // old versions, replaced in food16
   if (!names.length) continue;
   const g = document.createElement('div'); g.className = 'grp'; g.textContent = NAMES[f] || f; list.appendChild(g);
   for (const n of names) {
