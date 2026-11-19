@@ -367,6 +367,22 @@ Rules (from you):
     with capsule-toy machines and sandwich-board signs. All brands, characters and real names
     replaced with made-up ones.
 
+74. Batch 74 (photos/batch74/): laminated "please wait" queue-number card (blue, big outlined
+    number); a weathered app-ad panel bolted to a post (two phone mock-ups, cartoon mascot, QR);
+    sticker-covered grey pole (red no-symbol sticker, yellow tape strip, pixel-art sticker, big
+    black letters); stainless steel pillar plastered with stickers (yellow no-smoking-street
+    notice, tag, cartoon stickers, torn ones, a postal-label sticker with a doodled face);
+    black energy-drink can with a gold surfing-samurai cartoon. All characters, brands, app
+    names, ward emblems and QR codes replaced with made-up ones.
+
+75. Batch 75 (photos/batch75/): black CRT TV with a built-in game console on top (cartridge slot,
+    controller ports), plastered with neon-yellow hand-lettered price cards and a no-touching
+    sticker; mall shutter painted with a flat cartoon lake landscape, SALE signs, bunting, notices,
+    brick header with ivy; red mall shutters with a yellow-and-black monster-movie mural (hero
+    vs. kaiju) and framed old film posters above; wire magazine rack of old anime, train and
+    comic magazines. All shop names, brands, characters, film posters and magazine titles
+    replaced with made-up ones.
+
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"
   transom and the "OPEN!" plaque (both generic, so low priority).

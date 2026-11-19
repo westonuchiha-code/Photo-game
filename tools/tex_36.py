@@ -86,6 +86,29 @@ side = cv2.warpPerspective(im5, cv2.getPerspectiveTransform(src, np.float32([(0,
 m5 = np.zeros(side.shape[:2], np.uint8)
 for x0, y0, x1, y1 in [(372, 655, 780, 752), (1170, 682, 1810, 768)]: cv2.rectangle(m5, (x0, y0), (x1, y1), 255, -1)
 side = cv2.inpaint(side, m5, 7, cv2.INPAINT_TELEA)
+# the windows reflected the orange shop across the road: repaint them as plain tinted glass with
+# the cab's seats faintly visible inside (no reflections)
+wins = [np.int32([(426, 424), (468, 300), (545, 186), (600, 136), (905, 134), (900, 398)]),
+        np.int32([(994, 140), (1490, 140), (1484, 400), (984, 406)]),
+        np.int32([(1556, 124), (1902, 124), (1918, 160), (1900, 330), (1830, 390), (1544, 400)])]
+glass = np.zeros_like(side)
+for yy in range(side.shape[0]):
+    t = np.clip((yy - 120) / 300, 0, 1); glass[yy] = (np.array([78, 72, 66]) * (1 - t) + np.array([34, 30, 28]) * t)
+seat = (40, 37, 36)
+for x0, top in [(760, 250), (1220, 290), (1290, 290)]:                                             # seat backs seen side-on
+    cv2.rectangle(glass, (x0, top + 40), (x0 + 55, 440), seat, -1); cv2.rectangle(glass, (x0 + 6, top), (x0 + 40, top + 34), seat, -1)
+cv2.rectangle(glass, (430, 330), (640, 430), (26, 24, 24), -1)                                  # dashboard
+glass = cv2.GaussianBlur(glass, (31, 31), 0)
+wm = np.zeros(side.shape[:2], np.uint8)
+for w in wins: cv2.fillPoly(wm, [w], 255)
+side = np.where(wm[:, :, None] > 0, glass, side)
+for w in wins: cv2.polylines(side, [w], True, (18, 18, 20), 6, cv2.LINE_AA)
+# nose corner: the side view of the headlight + reflections smear when wrapped round the rounded nose; the
+# headlights live on the front face instead, so the corner here is plain body white fading into the photo
+bw = np.median(side[520:600, 200:300].reshape(-1, 3), 0).astype(np.float32)
+for xx in range(0, 200):
+    t = np.clip((xx - 120) / 80, 0, 1)
+    side[396:640, xx] = (side[396:640, xx].astype(np.float32) * t + bw * (1 - t)).astype(np.uint8)
 cv2.imwrite(os.path.join(OUT, "kv_side.png"), side)
 print("wrote kv_side")
 wd = side[1015 - 180:1015 + 180, 1656 - 180:1656 + 180].copy()
