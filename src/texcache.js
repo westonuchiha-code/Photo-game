@@ -1,8 +1,8 @@
 // Texture memory guard. Imported first by main.js.
 // 1. Every image URL is loaded once; each TextureLoader.load() call gets a clone (own repeat/offset, shared
 //    image and GPU upload). Models load the same file once per face, so this saves a lot of decoding.
-// 2. Phones and tablets (coarse pointer) load assets/textures_lite/ instead (max 512 px, made by
-//    tools/make_lite.py). The full set is ~530 MB of GPU memory, which mobile browsers can't hold.
+// 2. Phones and tablets (coarse pointer, or ?lite) scale every loaded image to max 512 px before it's
+//    uploaded. The full-size set is ~530 MB of GPU memory, which mobile browsers can't hold.
 // 3. Canvas-drawn textures (signs, labels) bigger than the device budget (1024 px desktop, 256 px mobile)
 //    are swapped for a scaled copy by shrinkCanvases(scene), called once the world is built.
 import * as THREE from 'three';
@@ -13,13 +13,13 @@ const CANVAS_MAX = LITE ? 256 : 1024;
 const base = new Map();
 const origLoad = THREE.TextureLoader.prototype.load;
 THREE.TextureLoader.prototype.load = function (url, onLoad, onProgress, onError) {
-  if (LITE && url.startsWith('assets/textures/')) url = 'assets/textures_lite/' + url.slice(16);
   const key = (this.path || '') + url;
   let e = base.get(key);
   if (!e) {
     e = { tex: null, clones: [], loaded: false, waiting: [] };
     base.set(key, e);
     e.tex = origLoad.call(this, url, (t) => {
+      if (LITE) { const im = t.image, m = Math.max(im.width, im.height); if (m > 512) { const k = 512 / m, cv = document.createElement('canvas'); cv.width = Math.round(im.width * k); cv.height = Math.round(im.height * k); cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height); t.image = cv; } }
       e.loaded = true;
       for (const c of e.clones) { c.image = t.image; c.needsUpdate = true; }
       for (const [c, cb] of e.waiting) cb(c);
