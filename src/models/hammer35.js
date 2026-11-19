@@ -2,8 +2,8 @@
 //   makeClawHammer()  33 cm: a forged steel head (side profile extruded, bevelled): a round striking face
 //   (the photo's face, worn with paint chips), a ringed neck, the eye block with the handle wedged in, a
 //   curved claw split into two tines; ground-bright cheeks with a dark forging line; a wooden handle that
-//   swells toward the butt, oval in section, wood straight from the photo (grime + dark grip spots), a
-//   peeling red label. Lies on its side: head at +x, handle toward -z... origin at the handle butt centre,
+//   swells toward the butt, oval in section, wood straight from the photo (grime + dark grip spots), the
+//   remains of a sun-faded label, mostly rubbed off (lettering barely a ghost). Lies on its side: head at +x, handle toward -z... origin at the handle butt centre,
 //   the handle runs along +y, the face points +x.
 import * as THREE from 'three';
 import { F, fitText } from '../fonts.js';
@@ -28,13 +28,22 @@ export function makeClawHammer() {
   const butt = new THREE.Mesh(new THREE.CircleGeometry(1, 32), new THREE.MeshStandardMaterial({ color: '#7a5a34', roughness: 0.8 })); butt.rotation.x = Math.PI / 2; butt.scale.set(halfW(0), halfD(0), 1); g.add(butt);
   // red label, peeling at one corner (made-up brand)
   const lc = document.createElement('canvas'); lc.width = 128; lc.height = 512; const x = lc.getContext('2d');
-  x.fillStyle = '#c81e28'; x.fillRect(0, 0, 128, 512); x.save(); x.translate(64, 256); x.rotate(-Math.PI / 2);
-  x.fillStyle = '#ffffff'; fitText(x, 'IRONCLAD', 0, -6, 380, 64, F.heavy, { spacing: 6 }); x.fillStyle = '#f2c0c0'; fitText(x, 'FORGED STEEL', 0, 40, 300, 24, F.label, { spacing: 3 }); x.restore();
-  x.clearRect(0, 470, 50, 42); x.fillStyle = '#e8d8c0'; x.fillRect(0, 466, 50, 4);
-  for (let i = 0; i < 60; i++) { x.fillStyle = `rgba(255,255,255,${Math.random() * 0.2})`; x.fillRect(Math.random() * 128, Math.random() * 512, 2, 6); }
+  // sun-bleached and rubbed off by years of grip: dusty pink, ghost lettering, wood showing through the wear
+  x.fillStyle = 'rgba(176,110,100,0.62)'; x.fillRect(0, 0, 128, 512);
+  for (let i = 0; i < 400; i++) { x.fillStyle = `rgba(${200 + Math.random() * 30},${170 + Math.random() * 30},${150 + Math.random() * 30},${Math.random() * 0.12})`; x.fillRect(Math.random() * 128, Math.random() * 512, 3 + Math.random() * 10, 2 + Math.random() * 14); }
+  x.save(); x.translate(64, 256); x.rotate(-Math.PI / 2);
+  x.fillStyle = 'rgba(238,222,210,0.28)'; fitText(x, 'IRONCLAD', 0, -6, 380, 64, F.heavy, { spacing: 6 }); x.restore();
+  // wear: the middle of the grip side is rubbed away almost completely, plus scattered scuffs and a torn-off end
+  x.globalCompositeOperation = 'destination-out';
+  const gr = x.createLinearGradient(0, 0, 128, 0); gr.addColorStop(0, 'rgba(0,0,0,0.75)'); gr.addColorStop(0.45, 'rgba(0,0,0,0.15)'); gr.addColorStop(1, 'rgba(0,0,0,0.5)');
+  x.fillStyle = gr; x.fillRect(0, 0, 128, 512);
+  for (let i = 0; i < 260; i++) { x.fillStyle = `rgba(0,0,0,${0.4 + Math.random() * 0.6})`; x.beginPath(); x.ellipse(Math.random() * 128, Math.random() * 512, 2 + Math.random() * 12, 1 + Math.random() * 5, Math.random() * 3, 0, 7); x.fill(); }
+  for (let i = 0; i < 120; i++) { x.fillStyle = 'rgba(0,0,0,0.8)'; x.fillRect(Math.random() * 128, Math.random() * 512, 1, 10 + Math.random() * 40); }
+  x.beginPath(); x.moveTo(0, 512); x.lineTo(0, 380); for (let i = 0; i <= 8; i++) x.lineTo(i * 16, 380 + 40 * Math.sin(i * 1.9) + i * 12 + Math.random() * 20); x.lineTo(128, 512); x.fillStyle = '#000'; x.fill();
+  x.globalCompositeOperation = 'source-over';
   const lt = new THREE.CanvasTexture(lc); lt.colorSpace = THREE.SRGBColorSpace;
   const labGeo = new THREE.CylinderGeometry(1, 1, 0.075, 24, 1, true, Math.PI * 0.25, Math.PI * 0.5);
-  const lab = new THREE.Mesh(labGeo, new THREE.MeshStandardMaterial({ map: lt, transparent: true, alphaTest: 0.4, roughness: 0.4 }));
+  const lab = new THREE.Mesh(labGeo, new THREE.MeshStandardMaterial({ map: lt, transparent: true, alphaTest: 0.04, depthWrite: false, roughness: 0.8 }));
   lab.scale.set(halfW(0.55) + 0.0004, 1, halfD(0.55) + 0.0004); lab.position.y = 0.55 * L; lab.rotation.y = -Math.PI / 4; g.add(lab);
   // ---- head: the outline traced from the side photo (assets/textures/hm_side.json), extruded 26 mm, with the photo
   // itself on both cheeks (grime, scratches, dull ground finish) and dirty dark steel on the narrow edges
