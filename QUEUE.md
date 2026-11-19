@@ -7,6 +7,7 @@ Rules (from you):
   sign's shape and material. Keep text that's already generic (LIQUOR).
 
 ## Approved
+- 29 Grime surfaces → abandoned office
 - 16 Food set 1 remainder (corn dog + bun rebuilt, noodle shop)
 - 28k Leftover city textures (rainy forecourt, moss pavers, day sky)
 - 28j Teahouse
@@ -56,7 +57,7 @@ Rules (from you):
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- 29 Grime surfaces → abandoned office on the forecourt (in review)
+- 30 More surfaces (in progress)
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
@@ -328,6 +329,14 @@ Rules (from you):
     a vending machine with comic-style wrap; a pizza A-frame; a tower of stacked old books with candles
     and a birdcage; a faded rainbow mural on a block wall; a bun in a bag; street-sticker wall textures.
     Stickers: draw original stickers in a similar style (no real people, characters, bands or brands).
+71. Inspiration 6 (photos/inspo6/, 15 photos): a green cardboard baler with warning labels and a big clear
+    bag of plastic, a store backroom aisle (pallet racking, cages of boxes, yellow bollards, ceiling pipes),
+    a box of shelf strips on stacked pallets with a spray bottle, a walk-in egg cooler (black/blue crates,
+    EGGS box, cart), a black game disc + an open/closed retro game case on a shelf of game spines, a pink
+    house porch with a bottle tree, pots, a ghost cutout and river rock, taped notices on a wall, a pink
+    crown-shaped CRT TV on a wooden stand with a console, an orange full moon, clear storage bins, a dark
+    and a white sedan, yakisoba noodle packs in a shelf bin. All brands, game titles, logos, house numbers
+    and phone numbers made up; no real characters.
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"
