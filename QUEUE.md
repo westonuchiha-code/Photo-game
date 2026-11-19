@@ -318,6 +318,16 @@ Rules (from you):
     and downpipe, curry with rice. Two more of the user's paintings (black/white splatter, pink square
     with turquoise loops) and a marker face drawn across bathroom tiles. All brands, characters,
     logos and prices made up/replaced; paintings used as-is.
+70. Inspiration 5 (photos/inspo5/, 20 photos): mossy rough-hewn stone aqueduct blocks with a square
+    window, behind a tied bamboo fence, with an info board (made-up text); a mushroom-cap stone lantern
+    among hydrangeas and ferns; a station plaza with wooden barrel planters, curved benches, a canopy,
+    a weeping red maple and a Wi-Fi sign stand; a pottery gallery (rough timber shelves of tea bowls,
+    sawhorse table, glazed lumpy ceramic sculptures, concrete floor); a quiet arcade corridor with
+    shutters and hanging wayfinding; an overhead arcade view (tiled vault, iron balcony, info kiosk);
+    a weathered old izakaya facade (charred wood boards, cut-out lettering, lattice doors, taped labels);
+    a vending machine with comic-style wrap; a pizza A-frame; a tower of stacked old books with candles
+    and a birdcage; a faded rainbow mural on a block wall; a bun in a bag; street-sticker wall textures.
+    Stickers: draw original stickers in a similar style (no real people, characters, bands or brands).
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"
