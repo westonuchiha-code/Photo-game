@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Model Viewer</title>
+<style>
+  :root { --bg: #f2f1ee; --panel: #ffffff; --fg: #1d1d1f; --muted: #6b6b70; --line: #e2e0dc; --accent: #b8862a; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #141416; --panel: #1d1d20; --fg: #f1f1ef; --muted: #9a9aa2; --line: #2e2e33; } }
+  :root[data-theme="dark"] { --bg: #141416; --panel: #1d1d20; --fg: #f1f1ef; --muted: #9a9aa2; --line: #2e2e33; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); font: 14px/1.4 system-ui, sans-serif; overflow: hidden; }
+  #wrap { display: flex; height: 100%; }
+  #side { width: 290px; flex: none; background: var(--panel); border-right: 1px solid var(--line); display: flex; flex-direction: column; }
+  #side header { padding: 14px 14px 8px; }
+  #side h1 { font-size: 17px; margin: 0 0 8px; }
+  #q { width: 100%; box-sizing: border-box; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); font: inherit; }
+  #list { overflow: auto; flex: 1; padding: 0 6px 16px; }
+  .grp { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding: 12px 8px 4px; }
+  .item { display: block; width: 100%; text-align: left; border: 0; background: none; color: var(--fg); font: inherit; padding: 7px 8px; border-radius: 7px; cursor: pointer; }
+  .item:hover { background: var(--bg); }
+  .item.on { background: var(--accent); color: #fff; }
+  .item.bad { color: var(--muted); text-decoration: line-through; }
+  #view { flex: 1; position: relative; min-width: 0; }
+  #view canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+  #info { position: absolute; left: 12px; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; max-width: calc(100% - 48px); }
+  #info b { color: var(--accent); }
+  #tools { position: absolute; right: 12px; top: calc(12px + env(safe-area-inset-top, 0px)); display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  #tools button, #menu { font: inherit; border: 1px solid var(--line); background: var(--panel); color: var(--fg); border-radius: 8px; padding: 7px 11px; cursor: pointer; }
+  #menu { display: none; position: absolute; left: 12px; top: calc(12px + env(safe-area-inset-top, 0px)); }
+  #busy { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; color: var(--muted); }
+  @media (max-width: 720px) {
+    #side { position: absolute; z-index: 5; height: 100%; width: min(85vw, 320px); transform: translateX(-100%); transition: transform .2s; }
+    #side.open { transform: none; box-shadow: 0 0 40px rgba(0,0,0,.3); }
+    #menu { display: block; }
+  }
+</style>
+<script type="importmap">{ "imports": { "three": "./vendor/three/three.module.js", "three/addons/": "./vendor/three/addons/" } }</script>
+</head>
+<body>
+<div id="wrap">
+  <aside id="side">
+    <header><h1>Photo Town models</h1><input id="q" placeholder="Search models…" autocomplete="off"></header>
+    <div id="list">Loading…</div>
+  </aside>
+  <main id="view">
+    <button id="menu">☰ Models</button>
+    <div id="tools"><button id="spin">Spin: off</button><button id="bg">Background</button><button id="frame">Re-frame</button></div>
+    <div id="busy">Building…</div>
+    <div id="info">Pick a model from the list. Drag to rotate, scroll or pinch to zoom, right-drag / two fingers to pan.</div>
+  </main>
+</div>
+<script type="module">
+import * as THREE from 'three';
+import { shrinkCanvases } from './src/texcache.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { fontsReady } from './src/fonts.js';
+await fontsReady;
+
+// every model file; each exported make*() becomes a list entry
+const FILES = ['abandoned','abandoned29','alien','alley28h','apartment','baralley28i','bluehouse','booth','buildings','cat','city28e','cityplaza','counter','creep','delivery','dumpsite','entrance','food','food16','grocery','ground','houses','knotroom30','livingroom','locations','mall28f','misc27e','neon','oldtown','police','props','scooter','shops28c','shrines','signs','sky','stairs28g','stockroom','stool','street','street28d','streetground','teahouse28j','tireshop','trees','units','van','wheel'];
+const SKIP = new Set(['makeSky', 'makePaverTexture', 'makeGreyBandTexture']);   // not models
+// friendlier group names
+const NAMES = { abandoned: 'Boarded-up shop', abandoned29: 'Abandoned office', alien: 'Alien rocks', alley28h: 'Electronics alley', apartment: 'Apartments', baralley28i: 'Bar alley', bluehouse: 'Blue house + cats', booth: 'Bar booths', buildings: 'Street buildings', cat: 'Cats', city28e: 'Station, pond, rock door', cityplaza: 'City plaza', counter: 'Bar counter', creep: 'Hoodie figure', delivery: 'Deliveries', dumpsite: 'Dirt site', entrance: 'Bar entrance', food: 'Food set 1', food16: 'Food + noodle shop', grocery: 'Grocery', ground: 'Ground', houses: 'Houses', knotroom30: 'Knot Room', livingroom: 'Living room', locations: 'Objects & locations', mall28f: 'Underground mall', misc27e: 'Misc props', neon: 'Neon', oldtown: 'Old town', police: 'Police', props: 'Props', scooter: 'Scooter', shops28c: 'Shops', shrines: 'Shrines', signs: 'Signs', stairs28g: 'Go-club stairway', stockroom: 'Stockroom', stool: 'Stools', street: 'Street', street28d: 'Street props', streetground: 'Street ground', teahouse28j: 'Teahouse', tireshop: 'Tire shop', trees: 'Trees', units: 'Apartment units', van: 'Van', wheel: 'Tire + wheel' };
+const pretty = (n) => n.replace(/^make/, '').replace(/([a-z0-9])([A-Z])/g, '$1 $2');
+
+const view = document.getElementById('view');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, matchMedia('(pointer: coarse)').matches ? 1.5 : 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.0;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+view.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+const bgs = ['#c9ccd1', '#2a2c31', '#f4f2ee'];
+let bgi = 0; scene.background = new THREE.Color(bgs[0]);
+const camera = new THREE.PerspectiveCamera(40, 1, 0.01, 2000);
+const controls = new OrbitControls(camera, renderer.domElement); controls.enableDamping = true;
+scene.add(new THREE.HemisphereLight('#ffffff', '#8a8070', 1.6));
+const sun = new THREE.DirectionalLight('#fff6ea', 2.2); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); scene.add(sun); scene.add(sun.target);
+const fill = new THREE.DirectionalLight('#dce6ff', 0.7); scene.add(fill);
+const floor = new THREE.Mesh(new THREE.CircleGeometry(1, 64), new THREE.ShadowMaterial({ opacity: 0.25 })); floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
+const grid = new THREE.GridHelper(1, 20, 0x888888, 0xaaaaaa); grid.material.transparent = true; grid.material.opacity = 0.25; scene.add(grid);
+
+let mats = null;
+async function getMats() {
+  if (mats) return mats;
+  for (const p of ['./src/materials.js', './src/world/materials.js']) { try { const m = await import(p); if (m.makeMaterials) { mats = m.makeMaterials(); return mats; } } catch (e) { /* try next */ } }
+  return null;
+}
+
+// call a maker with sensible arguments: (mats) when its first parameter is called mats, else nothing
+// makers that need specific arguments: give each a sample set so it can be shown on its own
+const ARGS = {
+  makeGrassTufts: () => [[[0, 0], [0.6, 0.3], [-0.5, 0.4], [0.2, -0.6], [-0.4, -0.4]], 3],
+  makeCanvas: () => ['canvas_impasto.png', 0.62, 1.1],
+  makeLivingRoom: () => [{ F1: 0, FH: 3, x0: -5, x1: 0, z0: -3, z1: 3, doorZ: 0, doorW: 0.9, sideWin: null }],
+  makeAC: () => [{ u: 0, ySill: 1.0 }],
+  makeUnit: () => [{ x0: -5, x1: 0, z0: -3, z1: 3, F: 0, FH: 3, door: { side: 'east', z: 0, w: 0.9 }, windows: [], kind: 'kitchen' }],
+};
+async function build(fn) {
+  if (ARGS[fn.name]) return fn(...ARGS[fn.name]());
+  const src = fn.toString(), params = src.slice(src.indexOf('(') + 1, src.indexOf(')')).trim();
+  if (/^mats\b/.test(params)) return fn(await getMats());
+  if (/^x0\s*,\s*x1/.test(params)) return fn(-2, 2, -2, 2);
+  if (/^x\s*,\s*z/.test(params)) return fn(0, 0);
+  return fn();
+}
+
+let current = null, currentBtn = null, spin = false;
+function dispose(o) { o.traverse((c) => { if (c.geometry) c.geometry.dispose(); }); }
+function frame() {
+  if (!current) return;
+  const box = new THREE.Box3().setFromObject(current), size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
+  const r = Math.max(size.x, size.y, size.z) * 0.5 || 1;
+  const d = r / Math.sin(THREE.MathUtils.degToRad(camera.fov / 2)) * 1.05;
+  camera.near = d / 200; camera.far = d * 20; camera.updateProjectionMatrix();
+  camera.position.set(c.x + d * 0.6, c.y + d * 0.45, c.z + d * 0.75);
+  controls.target.copy(c); controls.update();
+  floor.scale.setScalar(r * 3); floor.position.y = box.min.y + 0.001; grid.scale.setScalar(r * 4); grid.position.y = box.min.y + 0.002;
+  sun.position.set(c.x + r * 2, c.y + r * 4, c.z + r * 3); sun.target.position.copy(c);
+  Object.assign(sun.shadow.camera, { left: -r * 2, right: r * 2, top: r * 2, bottom: -r * 2, near: 0.01, far: r * 12 }); sun.shadow.camera.updateProjectionMatrix();
+  fill.position.set(c.x - r * 3, c.y + r, c.z - r * 2);
+  return size;
+}
+async function show(file, name, btn) {
+  document.getElementById('busy').style.display = 'flex';
+  await new Promise((r) => setTimeout(r, 30));
+  try {
+    const mod = await import(`./src/models/${file}.js`);
+    const obj = await build(mod[name]);
+    if (!obj || !obj.isObject3D) throw new Error('not a 3D model');
+    if (current) { scene.remove(current); dispose(current); }
+    current = obj; scene.add(obj);
+    obj.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } if (o.isPointLight) o.intensity *= 0.5; });
+    shrinkCanvases(scene);
+    const s = frame();
+    let tris = 0; obj.traverse((o) => { if (o.isMesh && o.geometry) tris += (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3; });
+    document.getElementById('info').innerHTML = `<b>${pretty(name)}</b> · ${NAMES[file] || file}<br>${s.x.toFixed(2)} × ${s.y.toFixed(2)} × ${s.z.toFixed(2)} m · ${Math.round(tris).toLocaleString()} triangles`;
+    if (currentBtn) currentBtn.classList.remove('on');
+    currentBtn = btn; btn.classList.add('on');
+    try { history.replaceState(null, '', `#${file}/${name}`); } catch (e) { /* ignore */ }
+  } catch (e) {
+    btn.classList.add('bad'); btn.title = e.message;
+    document.getElementById('info').innerHTML = `<b>${pretty(name)}</b> can't be shown on its own (${e.message}).`;
+  }
+  document.getElementById('busy').style.display = 'none';
+  document.getElementById('side').classList.remove('open');
+}
+
+// build the list: import each file once just to read its exports
+const list = document.getElementById('list'); list.textContent = '';
+const entries = [];
+for (const f of FILES) {
+  let mod; try { mod = await import(`./src/models/${f}.js`); } catch (e) { continue; }
+  const names = Object.keys(mod).filter((k) => /^make/.test(k) && typeof mod[k] === 'function' && !SKIP.has(k));
+  if (!names.length) continue;
+  const g = document.createElement('div'); g.className = 'grp'; g.textContent = NAMES[f] || f; list.appendChild(g);
+  for (const n of names) {
+    const b = document.createElement('button'); b.className = 'item'; b.textContent = pretty(n);
+    b.onclick = () => show(f, n, b); list.appendChild(b); entries.push({ f, n, b, g });
+  }
+}
+document.getElementById('q').oninput = (e) => {
+  const q = e.target.value.toLowerCase();
+  const vis = new Set();
+  for (const { f, n, b, g } of entries) { const ok = !q || n.toLowerCase().includes(q) || (NAMES[f] || f).toLowerCase().includes(q); b.style.display = ok ? '' : 'none'; if (ok) vis.add(g); }
+  for (const { g } of entries) g.style.display = vis.has(g) ? '' : 'none';
+};
+document.getElementById('menu').onclick = () => document.getElementById('side').classList.toggle('open');
+document.getElementById('frame').onclick = frame;
+document.getElementById('spin').onclick = (e) => { spin = !spin; e.target.textContent = `Spin: ${spin ? 'on' : 'off'}`; controls.autoRotate = spin; };
+document.getElementById('bg').onclick = () => { bgi = (bgi + 1) % bgs.length; scene.background.set(bgs[bgi]); };
+// open a model from the URL hash, else the first entry
+const [hf, hn] = decodeURIComponent(location.hash.slice(1)).split('/');
+const start = entries.find((e) => e.f === hf && e.n === hn) || entries.find((e) => e.n === 'makeCornDog') || entries[0];
+if (start) show(start.f, start.n, start.b);
+
+function resize() { const w = view.clientWidth, h = view.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+addEventListener('resize', resize); resize();
+renderer.setAnimationLoop(() => { controls.update(); renderer.render(scene, camera); });
+window.__viewer = { entries, show };
+</script>
+</body>
+</html>

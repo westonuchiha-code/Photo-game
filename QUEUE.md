@@ -337,6 +337,16 @@ Rules (from you):
     crown-shaped CRT TV on a wooden stand with a console, an orange full moon, clear storage bins, a dark
     and a white sedan, yakisoba noodle packs in a shelf bin. All brands, game titles, logos, house numbers
     and phone numbers made up; no real characters.
+72. Inspiration 7 (photos/inspo7/, 20 photos): carnival rides on trailers at dusk (dragon coaster cars,
+    kiddie train), a jet trainer on display by a picnic shelter (made-up markings), an arcade room
+    through a black arch with an air-hockey table and a four-player cabinet, a foggy lakeshore with a
+    stump and rubble, a snowy pine forest, a stone cairn above a mountain valley (sky/backdrop), a board
+    game table, a console stack on a VCR, a painted shutter of a woman in a starry kimono under a red
+    sign, a temple front with rows of white lanterns, an incense burner and banners, racing arcade
+    cabinets, a coin changer by claw machines, a quiet street with poles, planters and a drum + red
+    cylinder. Textures: scratched brass swirl, foil shards. Five more of the user's paintings (green mug,
+    pink splatter, drip pour, pink swirls, blue/red figure) to hang as-is. All brands, game names,
+    characters and markings replaced with original ones.
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"
