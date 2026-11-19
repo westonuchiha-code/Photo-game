@@ -17,6 +17,7 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { F, fitText } from '../fonts.js';
+import { makeClawHammer } from './hammer35.js';
 
 const _L = new THREE.TextureLoader();
 const _c = new Map();
@@ -169,6 +170,8 @@ export function makeAbandonedOffice() {
     for (const x of [-0.45, 0.45]) for (const s of [-1, 1]) { const l = box(0.05, 0.78, 0.05, pine(0.78), x, 0.36, s * 0.14); l.rotation.x = s * 0.2; sh.add(l); }
     const board = box(2.2, 0.025, 0.2, pine(2.2), 0.3, 0.78, 0.02); board.rotation.y = 0.15; sh.add(board);
     sh.position.set(-1.0, 0, -2.9); sh.rotation.y = 0.3; g.add(sh);
+    // a claw hammer left lying on the plank (item 35)
+    const hm = makeClawHammer(); hm.rotation.x = -Math.PI / 2; const hg = new THREE.Group(); hg.add(hm); hg.rotation.y = Math.PI / 2 + 0.2; hg.position.set(0.25, 0.8115, 0.03); sh.add(hg);
     col(-2.2, 0.2, -3.4, -2.4);
     // old office chair, tipped back against the right wall, foam showing
     const chair = new THREE.Group();
