@@ -18,6 +18,7 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { F, fitText } from '../fonts.js';
+import { makeCircuitBoard, makeCordBundle } from './pcb33.js';
 
 const _L = new THREE.TextureLoader();
 function ptex(name, rx = 1, ry = 1) {
@@ -428,6 +429,8 @@ export function makeMarketAlley() {
       g.add(box(0.55, 0.9, w * 0.7, std({ color: '#cfc8ba' }), bx - s * 0.75, 0.45, zc));
       g.add(box(0.6, 0.03, w * 0.72, std({ color: '#8a7a62' }), bx - s * 0.75, 0.915, zc));
       const a1 = gearBox(0.36, 0.14, 0.3, 0, 21 + i * 7 + s); a1.position.set(bx - s * 0.75, 0.93, zc - 0.45); a1.rotation.y = ry(s) + Math.PI; g.add(a1);
+      // circuit boards on the counter (item 33)
+      for (const dz of [0.05, 0.22]) { const pb = makeCircuitBoard(); pb.position.set(bx - s * 0.75, 0.93, zc + dz); pb.rotation.y = dz * 9 + i; g.add(pb); }
       const a2 = gearBox(0.34, 0.2, 0.3, 1, 33 + i * 5 + s); a2.position.set(bx - s * 0.75, 0.93, zc + 0.35); a2.rotation.y = ry(s) + Math.PI; g.add(a2);
       if (lightOn) { const pl = new THREE.PointLight('#fff2dc', 2.0, 4.5, 1.6); pl.position.set((fx + bx) / 2, OH - 0.4, zc); g.add(pl); }
     }
@@ -458,6 +461,7 @@ export function makeMarketAlley() {
         for (const [dz, cw] of [[-0.9, 1.4], [0.9, 1.4]]) { const dc = displayCase(0.6, 1.25, cw, i * 13 + dz * 10); dc.position.set(s * (HW + 0.4), 0, zc + dz); dc.rotation.y = s > 0 ? -Math.PI / 2 : Math.PI / 2; g.add(dc); }
       } else {
         g.add(box(0.6, 0.75, w * 0.55, std({ color: '#6a6e72', metalness: 0.3 }), s * (HW + 0.45), 0.375, zc - 0.5));
+        const cb = makeCordBundle(); cb.position.set(s * (HW + 0.45), 0.75, zc - 0.5); cb.rotation.y = s > 0 ? Math.PI / 2 : -Math.PI / 2; g.add(cb);
         const tr = rng(i * 31 + 7);
         for (let k = 0; k < 6; k++) { const b2 = box(0.14 + tr() * 0.1, 0.05 + tr() * 0.06, 0.12 + tr() * 0.1, std({ color: ['#1c1c1c', '#c9a040', '#2a4a8a', '#b8b8b8', '#2a6a3a'][k % 5], roughness: 0.45 }), s * (HW + 0.3 + tr() * 0.3), 0.78, zc - 0.5 + (tr() - 0.5) * w * 0.45); g.add(b2); }
       }

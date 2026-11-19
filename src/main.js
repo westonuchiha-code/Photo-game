@@ -55,6 +55,7 @@ import { makeMarketAlley } from './models/alley28h.js';
 import { makeBarAlley } from './models/baralley28i.js';
 import { makeAbandonedOffice } from './models/abandoned29.js';
 import { makeKetchupBottle } from './models/ketchup32.js';
+import { makeCircuitBoard, makeCordBundle } from './models/pcb33.js';
 import { makeKnotRoom } from './models/knotroom30.js';
 import { makeCornDog, makePorkBun, makeMelonBread, makeKatsuCurry, makeCheeseSticks, makeYogurtDrink, makeEnergyCan, makeUmeSour, makeCocoCan, makeCandyPack, makePizzaDisplay, makeNoodleShop } from './models/food16.js';
 import { WalkControls } from './walk.js';
