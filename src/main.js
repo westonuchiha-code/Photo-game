@@ -4,6 +4,7 @@
 // teal window trim, subway tile and lime walls, globe pendants, LED strips,
 // napkin dispensers, the framed poster, the slatted fence and wall globes outside.
 import * as THREE from 'three';
+import { shrinkCanvases } from './texcache.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
@@ -1415,6 +1416,7 @@ function updateLightBudget() {
   sorted.forEach((l, i) => { l.visible = i < MAX_LIGHTS; });
 }
 updateLightBudget();
+shrinkCanvases(scene);
 
 // The mall's chrome pillars, polished floor and steel need something to reflect: render the hall once
 // into a cube map from its middle (pillars hidden) and hand it to those materials. Done again once
