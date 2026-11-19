@@ -304,6 +304,11 @@ Rules (from you):
     edging, mossy gravel path, wet channel, small wooden plank bridge, concrete flood walls, an
     elevated road overhead), two receipts as paper props (made-up store, items, prices; no real
     addresses or phone numbers), a frozen grilled rice-ball pack (made-up name).
+68. Inspiration 3 (photos/inspo3/, 10 photos): shredded chicken curry in a black bowl (+ with naan and
+    chopsticks on a painted tablecloth), a chip aisle with shelf price tags and sale tags, a box display
+    of stacked chip bags (made-up brand and prices), a soot-splattered white plaster texture, and five
+    original paintings to hang as wall art (purple face "NO!", yellow collage face, yellow/black splash,
+    eye over mushrooms, blue-haired portrait). The paintings are the user's own art: use them as-is.
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"
