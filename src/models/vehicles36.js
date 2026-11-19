@@ -391,3 +391,110 @@ export function makeScoutTruck() {
   }
   return g;
 }
+
+// ---------------------------------------------------------------------------------------------------------
+//   makeWorkVan()  white kei box van with an orange stripe (kei-work-van.jpg): 3.33 m x 1.475 m x 1.88 m.
+//   Both sides are the photo itself, rectified to a flat elevation (doors, handles, window visors, the slide-door
+//   rail, the stripe, the real steel wheels) with the shop's name painted out; a made-up outfitter ("Hataraku
+//   Shokai", with a hand-drawn logo) and the generic "work clothes · work goods" line lettered back on.
+//   Short nose with the headlights and a small grille, raked windscreen, upright tailgate with corner lamps.
+//   Nose toward +x, ground y = 0.
+export function makeWorkVan() {
+  const g = new THREE.Group(); g.name = 'work_van';
+  const PXM = 603, G = 1180, L = 2006 / PXM, Wd = 1.475, hw = Wd / 2, IW = 2048, IH = 1160;
+  const X = (px) => L / 2 - px / PXM, Y = (py) => (G - py) / PXM;
+  const R = 0.285, AR = 0.33, AY = 0.30, xF = X(170), xR = X(1656);
+  const sh = new THREE.Shape();
+  [[8, 790], [8, 690], [22, 672], [32, 482], [60, 470], [85, 450], [125, 415], [165, 395], [215, 387], [280, 376], [580, 44], [640, 16], [1980, 8], [2006, 40], [2006, 1010]].forEach(([px, py], i) => (i ? sh.lineTo(X(px), Y(py)) : sh.moveTo(X(px), Y(py))));
+  sh.lineTo(xR - AR, Y(1010)); sh.lineTo(xR - AR, AY); sh.absarc(xR, AY, AR, Math.PI, 0, true);
+  sh.lineTo(xR + AR, Y(1010)); sh.lineTo(xF - AR, Y(1010)); sh.lineTo(xF - AR, AY); sh.absarc(xF, AY, AR, Math.PI, 0.5, true);
+  sh.lineTo(X(8), Y(790));
+  const geo = new THREE.ExtrudeGeometry(sh, { depth: Wd - 0.04, bevelEnabled: true, bevelThickness: 0.02, bevelSize: 0.02, bevelSegments: 3, curveSegments: 12 });
+  geo.translate(0, 0, -(Wd - 0.04) / 2);
+  const white = new THREE.MeshStandardMaterial({ color: '#eceeee', roughness: 0.4, metalness: 0.1 });
+  const body = new THREE.Mesh(geo, [new THREE.MeshBasicMaterial({ visible: false }), white]); body.castShadow = true; body.receiveShadow = true; g.add(body);
+  // ---- sides: the rectified photo + made-up lettering (drawn once the photo has loaded)
+  const sideTex = (farSide) => {
+    const c = document.createElement('canvas'); c.width = IW; c.height = IH; const x = c.getContext('2d');
+    x.fillStyle = '#eceeee'; x.fillRect(0, 0, IW, IH);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+    const img = new Image();
+    img.onload = () => {
+      x.drawImage(img, 0, 0, IW, IH);
+      x.save(); if (!farSide) { x.translate(IW, 0); x.scale(-1, 1); }      // +z side is shown mirrored: mirror the lettering back
+      // logo: a circle with a stylised hammer-and-H, then the name, in the stripe's dark brown ink
+      const ink = '#33200f';
+      x.strokeStyle = ink; x.lineWidth = 7; x.beginPath(); x.arc(430, 704, 34, 0, 7); x.stroke();
+      x.fillStyle = ink; x.fillRect(412, 684, 9, 42); x.fillRect(440, 684, 9, 42); x.fillRect(412, 700, 37, 8);
+      x.beginPath(); x.moveTo(404, 690); x.lineTo(458, 674); x.lineTo(460, 684); x.lineTo(406, 698); x.fill();
+      x.fillStyle = ink; fitText(x, 'ハタラク商会', 620, 708, 300, 74, F.antique, { spacing: 6 });
+      fitText(x, '作業服・作業用品', 1500, 728, 600, 58, F.antique, { spacing: 30 });
+      x.restore(); t.needsUpdate = true;
+    };
+    img.src = 'assets/textures/kv_side.png';
+    return t;
+  };
+  for (const z of [-1, 1]) {
+    const sg = new THREE.ShapeGeometry(sh, 12), p = sg.attributes.position, uv = sg.attributes.uv;
+    for (let i = 0; i < p.count; i++) uv.setXY(i, (L / 2 - p.getX(i)) * PXM / IW, 1 - (G - p.getY(i) * PXM) / IH);
+    const m = new THREE.Mesh(sg, new THREE.MeshStandardMaterial({ map: sideTex(z < 0), roughness: 0.4, metalness: 0.1, side: z < 0 ? THREE.BackSide : THREE.FrontSide }));
+    m.position.z = z * (hw + 0.001); g.add(m);
+  }
+  // ---- windscreen on the rake, wipers
+  const glass = new THREE.MeshStandardMaterial({ color: '#1e262c', roughness: 0.06, metalness: 0.5 });
+  const a = new THREE.Vector2(X(300), Y(360)), b = new THREE.Vector2(X(570), Y(56));
+  const ws = new THREE.Mesh(new THREE.PlaneGeometry(Wd - 0.14, a.distanceTo(b)), glass);
+  ws.rotation.order = 'ZYX'; ws.rotation.y = Math.PI / 2; ws.rotation.z = Math.atan2(a.x - b.x, b.y - a.y);
+  ws.position.set((a.x + b.x) / 2 + 0.02, (a.y + b.y) / 2 + 0.016, 0); g.add(ws);
+  const blk = new THREE.MeshStandardMaterial({ color: '#141414', roughness: 0.6 });
+  for (const z of [-0.32, 0.22]) { const w = box(0.015, 0.012, 0.5, blk, a.x + 0.03, a.y + 0.03, z, g); w.rotation.x = 0.12; }
+  // ---- nose: headlights at the corners, small black grille, bumper with a dark lower lip (no plate)
+  const fc = document.createElement('canvas'); fc.width = 590; fc.height = 160; const fx = fc.getContext('2d');
+  fx.fillStyle = '#eceeee'; fx.fillRect(0, 0, 590, 160);
+  for (const s of [-1, 1]) {
+    const cx = 295 + s * 220;
+    const hg = fx.createLinearGradient(cx - 60, 0, cx + 60, 60); hg.addColorStop(0, '#f4f6f6'); hg.addColorStop(0.5, '#b8c0c4'); hg.addColorStop(1, '#e8ecee');
+    fx.fillStyle = '#2a2e30'; fx.beginPath(); fx.roundRect(cx - 66, 6, 132, 66, 14); fx.fill();
+    fx.fillStyle = hg; fx.beginPath(); fx.roundRect(cx - 60, 10, 120, 58, 12); fx.fill();
+    fx.fillStyle = '#f0a020'; fx.fillRect(cx + s * 30 - 18, 48, 36, 14);
+    fx.fillStyle = '#fbfdfd'; fx.beginPath(); fx.arc(cx - s * 18, 36, 16, 0, 7); fx.fill();
+  }
+  fx.fillStyle = '#1c1c1c'; fx.beginPath(); fx.roundRect(175, 26, 240, 32, 8); fx.fill();
+  fx.fillStyle = '#3a3a3a'; for (let i = 0; i < 4; i++) fx.fillRect(185, 31 + i * 7, 220, 2);
+  fx.fillStyle = '#c8cacc'; fx.fillRect(0, 96, 590, 6);
+  fx.fillStyle = '#2a2a2a'; fx.beginPath(); fx.roundRect(160, 120, 270, 24, 6); fx.fill();
+  const ft = new THREE.CanvasTexture(fc); ft.colorSpace = THREE.SRGBColorSpace;
+  const nose = new THREE.Mesh(new THREE.PlaneGeometry(Wd - 0.02, Y(470) - Y(790)), new THREE.MeshStandardMaterial({ map: ft, roughness: 0.35 }));
+  nose.rotation.y = Math.PI / 2; nose.position.set(X(8) + 0.021, (Y(470) + Y(790)) / 2, 0); g.add(nose);
+  box(0.06, Y(800) - Y(960), Wd + 0.02, new THREE.MeshStandardMaterial({ color: '#d8dadb', roughness: 0.5 }), X(16) - 0.01, (Y(800) + Y(960)) / 2, 0, g);
+  // ---- tailgate: big window, corner lamps, handle, bumper
+  const rc = document.createElement('canvas'); rc.width = 590; rc.height = 640; const rx = rc.getContext('2d');
+  rx.fillStyle = '#eceeee'; rx.fillRect(0, 0, 590, 640);
+  rx.fillStyle = '#16191c'; rx.beginPath(); rx.roundRect(60, 30, 470, 250, 26); rx.fill();
+  rx.fillStyle = 'rgba(160,190,210,0.12)'; rx.beginPath(); rx.moveTo(80, 40); rx.lineTo(240, 40); rx.lineTo(120, 260); rx.lineTo(80, 260); rx.fill();
+  for (const s of [0, 1]) {
+    const lx = s ? 548 : 6;
+    rx.fillStyle = '#b81818'; rx.fillRect(lx, 300, 36, 120); rx.fillStyle = '#e88a14'; rx.fillRect(lx, 420, 36, 40); rx.fillStyle = '#f2f2f2'; rx.fillRect(lx, 460, 36, 40);
+    rx.strokeStyle = '#888'; rx.lineWidth = 2; rx.strokeRect(lx, 300, 36, 200);
+  }
+  rx.fillStyle = '#9a9c9e'; rx.fillRect(245, 330, 100, 16);
+  rx.strokeStyle = 'rgba(0,0,0,0.25)'; rx.lineWidth = 3; rx.strokeRect(50, 20, 490, 540);
+  rx.fillStyle = '#cfd1d2'; rx.fillRect(0, 580, 590, 60);
+  const rt = new THREE.CanvasTexture(rc); rt.colorSpace = THREE.SRGBColorSpace;
+  const back = new THREE.Mesh(new THREE.PlaneGeometry(Wd - 0.02, Y(60) - Y(1010)), new THREE.MeshStandardMaterial({ map: rt, roughness: 0.35 }));
+  back.rotation.y = -Math.PI / 2; back.position.set(X(2006) - 0.021, (Y(60) + Y(1010)) / 2, 0); g.add(back);
+  // ---- door mirrors (black, on short arms by the A-pillar), wheels from the photo
+  for (const z of [-1, 1]) {
+    const mr = box(0.05, 0.14, 0.1, blk, X(430), Y(330), z * (hw + 0.1), g); mr.rotation.y = z * 0.15;
+    box(0.06, 0.03, 0.1, blk, X(420), Y(380), z * (hw + 0.04), g);
+  }
+  const wm = new THREE.MeshStandardMaterial({ map: tex('kv_wheel'), roughness: 0.55, transparent: true, alphaTest: 0.5 });
+  const tyre = new THREE.MeshStandardMaterial({ color: '#1b1b1b', roughness: 0.9 });
+  for (const xw of [xF, xR]) for (const z of [-1, 1]) {
+    const wz = z * (hw - 0.1);
+    const t = new THREE.Mesh(new THREE.CylinderGeometry(R, R, 0.16, 32), tyre); t.rotation.x = Math.PI / 2; t.position.set(xw, R, wz); t.castShadow = true; g.add(t);
+    const f = new THREE.Mesh(new THREE.CircleGeometry(R, 40), wm); f.position.set(xw, R, wz + z * 0.081); f.rotation.y = z > 0 ? 0 : Math.PI; g.add(f);
+  }
+  box(L - 0.9, 0.12, Wd - 0.4, new THREE.MeshStandardMaterial({ color: '#1e1e1e', roughness: 0.9 }), 0, 0.22, 0, g);
+  return g;
+}

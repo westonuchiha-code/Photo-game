@@ -5,7 +5,7 @@
 // napkin dispensers, the framed poster, the slatted fence and wall globes outside.
 import * as THREE from 'three';
 import { shrinkCanvases } from './texcache.js';
-import { makeKeiTruck, makeCoachBus, makeScoutTruck } from './models/vehicles36.js';
+import { makeKeiTruck, makeCoachBus, makeScoutTruck, makeWorkVan } from './models/vehicles36.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
@@ -1127,6 +1127,10 @@ const krAreas = knot.userData.areas.map((a) => ({ minX: KR.x - a.maxZ, maxX: KR.
 const KT = { x: -22.75, z: 44.5, rot: -Math.PI / 2 };
 const keiTruck = makeKeiTruck(); keiTruck.position.set(KT.x, 0, KT.z); keiTruck.rotation.y = KT.rot; add(keiTruck);
 rect(KT.x - 0.78, KT.x + 0.78, KT.z - 1.75, KT.z + 1.75);
+// the outfitter's white work van, parked nose-to-tail behind the truck
+const KV = { x: -22.8, z: 39.7, rot: -Math.PI / 2 };
+const workVan = makeWorkVan(); workVan.position.set(KV.x, 0, KV.z); workVan.rotation.y = KV.rot; add(workVan);
+rect(KV.x - 0.78, KV.x + 0.78, KV.z - 1.7, KV.z + 1.7);
 // the red coach, pulled in at the opposite kerb (nose north)
 const CBP = { x: -29.7, z: 37, rot: Math.PI / 2 };
 const coach = makeCoachBus(); coach.position.set(CBP.x, 0, CBP.z); coach.rotation.y = CBP.rot; add(coach);
@@ -1318,6 +1322,7 @@ const VIEWS = {
   knotbar: { pos: [16.5, 1.6, 69.6], target: [20.2, 1.4, 69.6] },
   keitruck: { pos: [-26.2, 1.9, 48.9], target: [-22.75, 0.9, 44.5] },
   coach: { pos: [-24.5, 2.4, 27.5], target: [-29.7, 1.6, 36] },
+  workvan: { pos: [-26.0, 1.7, 36.2], target: [-22.8, 0.9, 39.9] },
   scout: { pos: [36.4, 1.7, -5.4], target: [39.9, 0.8, -0.6] },
   knotsconce: { pos: [16.6, 1.7, 68.0], target: [18.6, 1.9, 66.3] },
   forecourt: { pos: [10, 2.0, 66], target: [-1, 0, 58] },

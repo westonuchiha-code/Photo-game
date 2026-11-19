@@ -12,7 +12,7 @@ LATIN = [  # (family, weight, file)
     ("Alfa Slab One", 400, "alfa-slab-one"), ("Fredoka", 600, "fredoka-semibold"), ("Black Ops One", 400, "black-ops-one"),
     ("Cormorant Garamond", 600, "cormorant-semibold"), ("Marcellus", 400, "marcellus"), ("Josefin Sans", 600, "josefin-semibold"),
 ]
-JP_TEXT = "茶菓子そば甘味和紙漬物団子酒祭大売出信用金庫本舗月見屋小料理夢膳や灯楽スナック鈴カラオケ歌声パブ星桜やきとりおでん炭火焼もつ生ビールホルモン居酒営業中名物煮込み串定食ラーメン餃子立飲みつ地下階うど天丼親海老麦庵手打円梅サワ冷温限特製汁ひばり資源回収有㈲()"
+JP_TEXT = "茶菓子そば甘味和紙漬物団子酒祭大売出信用金庫本舗月見屋小料理夢膳や灯楽スナック鈴カラオケ歌声パブ星桜やきとりおでん炭火焼もつ生ビールホルモン居酒営業中名物煮込み串定食ラーメン餃子立飲みつ地下階うど天丼親海老麦庵手打円梅サワ冷温限特製汁ひばり資源回収有㈲()作業服用品ハタラク商会・"
 JP = [("Yuji Syuku", 400, "yuji-syuku"), ("Zen Antique", 400, "zen-antique")]
 
 def get(url):

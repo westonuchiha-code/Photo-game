@@ -77,3 +77,19 @@ p = np.clip(olive * (1 + (hp - 1) * 0.55) * 0.9 + (hood - hood.mean((0, 1))) * 0
 tile = np.concatenate([np.concatenate([p, p[:, ::-1]], 1), np.concatenate([p[::-1], p[::-1, ::-1]], 1)], 0)
 cv2.imwrite(os.path.join(OUT, "st_paint.png"), tile)
 print("wrote st_front, st_hood, st_glass, st_paint")
+
+# ---- kei work van (kei-work-van.jpg): its side rectified to a flat elevation (2048 x 1160, ~603 px/m, nose at
+# the left, ground near y 1170); all stripe lettering painted out (the model letters made-up text back on)
+im5 = load_cv("kei-work-van.jpg"); k5 = im5.shape[1] / 1400
+src = np.float32([(760, 444), (1377.5, 401), (1377.5, 722.5), (760, 649.5)]) * k5
+side = cv2.warpPerspective(im5, cv2.getPerspectiveTransform(src, np.float32([(0, 0), (2048, 0), (2048, 1001), (0, 1001)])), (2048, 1160))
+m5 = np.zeros(side.shape[:2], np.uint8)
+for x0, y0, x1, y1 in [(372, 655, 780, 752), (1170, 682, 1810, 768)]: cv2.rectangle(m5, (x0, y0), (x1, y1), 255, -1)
+side = cv2.inpaint(side, m5, 7, cv2.INPAINT_TELEA)
+cv2.imwrite(os.path.join(OUT, "kv_side.png"), side)
+print("wrote kv_side")
+wd = side[1015 - 180:1015 + 180, 1656 - 180:1656 + 180].copy()
+wd = cv2.cvtColor(cv2.resize(wd, (512, 512), interpolation=cv2.INTER_AREA), cv2.COLOR_BGR2BGRA)
+wm = np.zeros((512, 512), np.uint8); cv2.circle(wm, (256, 256), 254, 255, -1); wd[:, :, 3] = wm
+cv2.imwrite(os.path.join(OUT, "kv_wheel.png"), wd)
+print("wrote kv_wheel")
