@@ -12,6 +12,7 @@
 //                  ('kitchen' | 'studio' | 'bedroom' | 'bedroom2')
 // Window / wall frames: a wall's local +z points outward, local x runs along the wall.
 import * as THREE from 'three';
+import { makePrivacyKnob, makeThumbturn, makeToggleSwitch, wornBrass } from './hardware31.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 
 const std = (o) => new THREE.MeshStandardMaterial({ roughness: 0.7, ...o });
@@ -203,10 +204,10 @@ export function makeUnitDoor({ w = 0.86, h = 2.03, hand = 1, number = '', lite =
   }
   const kx = hand * (w / 2 - 0.075);
   for (const zs of [1, -1]) {
-    const rose = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.032, 0.012, 20), M.brass); rose.rotation.x = Math.PI / 2; rose.position.set(kx, 0.97, zs * 0.027); g.add(rose);
-    const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.009, 0.009, 0.05, 10), M.brass); neck.rotation.x = Math.PI / 2; neck.position.set(kx, 0.97, zs * 0.05); g.add(neck);
-    const lever = box(0.12, 0.018, 0.018, M.brass, kx - hand * 0.055, 0.97, zs * 0.07); g.add(lever);
-    const db = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 0.02, 20), M.brass); db.rotation.x = Math.PI / 2; db.position.set(kx, 1.14, zs * 0.03); g.add(db);
+    // brass privacy knob + deadbolt (hardware photos): turn-button + thumb-turn inside, pin-hole + cylinder outside
+    const kn = makePrivacyKnob({ side: zs < 0 ? 'inside' : 'outside' }); kn.position.set(kx, 0.97, zs * 0.021); if (zs < 0) kn.rotation.y = Math.PI; g.add(kn);
+    if (zs < 0) { const tt = makeThumbturn(); tt.position.set(kx, 1.14, -0.021); tt.rotation.y = Math.PI; g.add(tt); }
+    else { const db = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.032, 0.012, 32), wornBrass()); db.rotation.x = Math.PI / 2; db.position.set(kx, 1.14, 0.027); g.add(db); const ky = new THREE.Mesh(new THREE.BoxGeometry(0.003, 0.012, 0.002), new THREE.MeshStandardMaterial({ color: '#1a140c' })); ky.position.set(kx, 1.14, 0.0335); g.add(ky); }
   }
   const hinge = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.1, 8), M.brass);
   for (const y of [0.25, 1.0, 1.8]) { const hh = hinge.clone(); hh.position.set(-hand * (w / 2 + 0.004), y, 0.02); g.add(hh); }
@@ -466,7 +467,11 @@ export function makeUnit({ x0, x1, z0, z1, F, FH, door, windows = [], kind = 'st
     let a = -wl.len / 2;
     for (const [g0, g1] of [...gaps, [wl.len / 2, wl.len / 2]]) { if (g0 > a) frame.add(box(g0 - a, 0.1, 0.016, trim, (a + g0) / 2, 0.05, 0.008)); a = g1; }
     frame.add(box(wl.len, 0.06, 0.03, trim, 0, FH - 0.05, 0.015));
-    for (const h of holes.filter((o) => o.door)) { const cs = doorCasing(h.u1 - h.u0, 2.08, trim); cs.position.x = (h.u0 + h.u1) / 2; frame.add(cs); }
+    for (const h of holes.filter((o) => o.door)) {
+      const cs = doorCasing(h.u1 - h.u0, 2.08, trim); cs.position.x = (h.u0 + h.u1) / 2; frame.add(cs);
+      // cream toggle switch beside the door, on the latch side (hardware photos)
+      const sw = makeToggleSwitch(); sw.position.set(h.u1 + 0.2, 1.22, 0.004); frame.add(sw);
+    }
     // window interior trim, stool, blinds or curtains
     for (const h of holes.filter((o) => o.win)) {
       const ww = h.u1 - h.u0, wh = h.y1 - h.y0, uc = (h.u0 + h.u1) / 2, yc = (h.y0 + h.y1) / 2;
