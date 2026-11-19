@@ -7,6 +7,7 @@ Rules (from you):
   sign's shape and material. Keep text that's already generic (LIQUOR).
 
 ## Approved
+- 31 Door hardware
 - 30 More surfaces → the Knot Room
 - 29 Grime surfaces → abandoned office
 - 16 Food set 1 remainder (corn dog + bun rebuilt, noodle shop)
@@ -58,7 +59,7 @@ Rules (from you):
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- 31 Door hardware (in review)
+- 32 Ketchup bottle (in review)
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
