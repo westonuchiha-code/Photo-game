@@ -7,6 +7,7 @@ Rules (from you):
   sign's shape and material. Keep text that's already generic (LIQUOR).
 
 ## Approved
+- 33 Circuit board + braided cords
 - 32 Ketchup bottle
 - 31 Door hardware
 - 30 More surfaces → the Knot Room
@@ -60,7 +61,7 @@ Rules (from you):
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- 33 Circuit board + braided cords (in review)
+- 34 Tuna can (in review)
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text

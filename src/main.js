@@ -56,6 +56,7 @@ import { makeBarAlley } from './models/baralley28i.js';
 import { makeAbandonedOffice } from './models/abandoned29.js';
 import { makeKetchupBottle } from './models/ketchup32.js';
 import { makeCircuitBoard, makeCordBundle } from './models/pcb33.js';
+import { makeTunaCan } from './models/tuna34.js';
 import { makeKnotRoom } from './models/knotroom30.js';
 import { makeCornDog, makePorkBun, makeMelonBread, makeKatsuCurry, makeCheeseSticks, makeYogurtDrink, makeEnergyCan, makeUmeSour, makeCocoCan, makeCandyPack, makePizzaDisplay, makeNoodleShop } from './models/food16.js';
 import { WalkControls } from './walk.js';
@@ -1093,6 +1094,8 @@ for (const [x0, x1, z0, z1] of noodle.userData.colliders) colliders.push({ type:
   put(makeMelonBread('green'), 0.66, -0.17, 0.5);
   put(makeYogurtDrink(), 0.42, 0.2, 0.3);
   put(makeKetchupBottle(), -0.32, -0.24, 0.4);
+  put(makeTunaCan(), 0.78, -0.05, 2.2);
+  { const t2 = makeTunaCan(); put(t2, 0.78, -0.05, 0.6); t2.position.y += 0.039; }
   put(makeEnergyCan(), 0.12, -0.2, 2.6);
   put(makeUmeSour(), -0.28, 0.22, 2.9);
   put(makeCocoCan(), -0.82, 0.18, 2.4);
