@@ -36,37 +36,37 @@ export function makeClawHammer() {
   const labGeo = new THREE.CylinderGeometry(1, 1, 0.075, 24, 1, true, Math.PI * 0.25, Math.PI * 0.5);
   const lab = new THREE.Mesh(labGeo, new THREE.MeshStandardMaterial({ map: lt, transparent: true, alphaTest: 0.4, roughness: 0.4 }));
   lab.scale.set(halfW(0.55) + 0.0004, 1, halfD(0.55) + 0.0004); lab.position.y = 0.55 * L; lab.rotation.y = -Math.PI / 4; g.add(lab);
-  // ---- head: side profile in the x-y plane (face at +x), extruded across z and centred
-  const HY = L - 0.012;                 // head sits over the top of the handle
-  const p = new THREE.Shape();
-  p.moveTo(0.032, -0.008); p.lineTo(0.06, -0.006); p.lineTo(0.074, -0.01); p.lineTo(0.074, 0.018); p.lineTo(0.06, 0.014);       // neck to face (underside, face block)
-  p.lineTo(0.034, 0.022); p.lineTo(0.018, 0.026); p.lineTo(-0.018, 0.024);                                                         // top
-  p.bezierCurveTo(-0.045, 0.02, -0.07, 0.006, -0.085, -0.022);                                                                     // claw back
-  p.lineTo(-0.083, -0.028); p.bezierCurveTo(-0.068, -0.006, -0.042, 0.002, -0.022, -0.002);                                     // claw tip + inside curve
-  p.lineTo(-0.018, -0.018); p.lineTo(0.022, -0.018); p.lineTo(0.032, -0.008);                                                     // eye block bottom
-  const headGeo = new THREE.ExtrudeGeometry(p, { depth: 0.022, bevelEnabled: true, bevelThickness: 0.0018, bevelSize: 0.0015, bevelSegments: 3, curveSegments: 24 });
-  headGeo.translate(0, 0, -0.011);
-  const head = new THREE.Mesh(headGeo, [steel, dark]); head.position.y = HY; head.castShadow = true; g.add(head);
-  // claw split: a dark wedge cut down the middle of the claw
-  const slot = new THREE.Shape(); slot.moveTo(-0.087, -0.03); slot.bezierCurveTo(-0.07, -0.003, -0.05, 0.006, -0.03, 0.006); slot.lineTo(-0.03, 0.004); slot.bezierCurveTo(-0.05, 0.003, -0.068, -0.006, -0.08, -0.03);
-  const sg = new THREE.Mesh(new THREE.ExtrudeGeometry(slot, { depth: 0.006, bevelEnabled: false }), new THREE.MeshStandardMaterial({ color: '#0e0e10' }));
-  sg.position.set(0, HY, -0.003); g.add(sg);
-  // round striking face (photo) on a short cylinder
-  const fc = new THREE.Mesh(new THREE.CylinderGeometry(0.0145, 0.0145, 0.01, 40), dark); fc.rotation.z = Math.PI / 2; fc.position.set(0.079, HY + 0.004, 0); g.add(fc);
+  // ---- head: the outline traced from the side photo (assets/textures/hm_side.json), extruded 26 mm, with the photo
+  // itself on both cheeks (grime, scratches, dull ground finish) and dirty dark steel on the narrow edges
+  const SJ = { w: 1289, h: 602, pts: [[36, 468], [90, 405], [150, 335], [220, 265], [300, 190], [380, 128], [460, 85], [540, 55], [620, 40], [720, 34], [800, 32], [842, 42], [868, 70], [896, 108], [930, 122], [980, 112], [1040, 86], [1100, 70], [1170, 66], [1232, 70], [1252, 92], [1258, 160], [1258, 250], [1252, 318], [1232, 340], [1170, 345], [1110, 332], [1040, 300], [960, 280], [905, 290], [880, 312], [850, 340], [822, 410], [808, 470], [800, 494], [540, 494], [530, 470], [522, 330], [515, 255], [500, 225], [470, 212], [420, 214], [360, 232], [290, 268], [220, 318], [150, 382], [95, 450], [52, 520], [40, 538], [32, 520]] };
+  const PX = 1 / 1226 * 0.17, CX = 670, EYE = 494;                       // 17 cm head; handle centre + eye bottom in the photo
+  const X = (px) => (px - CX) * PX, Y = (py) => (EYE - py) * PX;
+  const shape = new THREE.Shape(); SJ.pts.forEach(([px, py], i) => (i ? shape.lineTo(X(px), Y(py)) : shape.moveTo(X(px), Y(py))));
+  const T = 0.026;
+  const headGeo = new THREE.ExtrudeGeometry(shape, { depth: T - 0.002, bevelEnabled: true, bevelThickness: 0.001, bevelSize: 0.0008, bevelSegments: 2 });
+  headGeo.translate(0, 0, -(T - 0.002) / 2);
+  const side = _L.load('assets/textures/hm_side.png'); side.colorSpace = THREE.SRGBColorSpace; side.anisotropy = 8;
+  side.repeat.set(1 / (PX * SJ.w), 1 / (PX * SJ.h)); side.offset.set(CX / SJ.w, (SJ.h - EYE) / SJ.h);
+  const cheek = new THREE.MeshStandardMaterial({ map: side, roughness: 0.7, metalness: 0.05 });
+  const edge = new THREE.MeshStandardMaterial({ color: '#56585a', roughness: 0.75, metalness: 0.25 });
+  const HB = L - 0.035;                                                  // eye bottom height (handle runs up inside)
+  const head = new THREE.Mesh(headGeo, [cheek, edge]); head.position.y = HB; head.castShadow = true; g.add(head);
+  // striking face: the face-on photo (paint chips) on the end of the poll
   const ft = _L.load('assets/textures/hm_face.png'); ft.colorSpace = THREE.SRGBColorSpace;
-  const face = new THREE.Mesh(new THREE.CircleGeometry(0.0145, 40), new THREE.MeshStandardMaterial({ map: ft, transparent: true, metalness: 0.4, roughness: 0.5 }));
-  face.rotation.y = Math.PI / 2; face.position.set(0.0842, HY + 0.004, 0); g.add(face);
-  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.0132, 0.0012, 8, 40), steel); ring.rotation.y = Math.PI / 2; ring.position.set(0.0745, HY + 0.004, 0); g.add(ring);
-  // the handle's top wedged into the eye (end grain + metal wedge)
-  const top = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.002, 0.016), new THREE.MeshStandardMaterial({ color: '#8a6a40', roughness: 0.8 })); top.position.set(0.006, HY + 0.0265, 0); g.add(top);
-  const wedge = new THREE.Mesh(new THREE.BoxGeometry(0.026, 0.0022, 0.002), steel); wedge.position.set(0.006, HY + 0.0268, 0); g.add(wedge);
-  // "16 OZ" stamped on both cheeks
-  for (const s of [-1, 1]) {
-    const sc = document.createElement('canvas'); sc.width = 256; sc.height = 96; const y = sc.getContext('2d');
-    y.fillStyle = 'rgba(30,30,32,0.85)'; fitText(y, '16 OZ', 128, 50, 200, 66, F.roman, { spacing: 6 });
-    const st = new THREE.CanvasTexture(sc);
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(0.022, 0.008), new THREE.MeshBasicMaterial({ map: st, transparent: true, depthWrite: false }));
-    m.position.set(-0.004, HY + 0.012, s * 0.0129); if (s < 0) m.rotation.y = Math.PI; g.add(m);
-  }
+  const fr = 0.0142, fy = Y((66 + 345) / 2);
+  const face = new THREE.Mesh(new THREE.CircleGeometry(fr * 0.97, 40), new THREE.MeshStandardMaterial({ map: ft, transparent: true, roughness: 0.75 }));
+  face.rotation.y = Math.PI / 2; face.position.set(X(1258) + 0.0012, HB + fy, 0); face.scale.set(1, 1, 1); g.add(face);
+  // the poll is round: a dark collar so the flat extrusion reads as a cylinder at the face end
+  const collar = new THREE.Mesh(new THREE.CylinderGeometry(fr, fr * 0.97, X(1258) - X(1185), 32, 1, true), new THREE.MeshStandardMaterial({ color: '#3e4042', roughness: 0.8, metalness: 0.2 }));
+  collar.rotation.z = Math.PI / 2; collar.position.set((X(1258) + X(1185)) / 2, HB + fy, 0); g.add(collar);
+  // end grain of the handle showing on top of the eye
+  const top = new THREE.Mesh(new THREE.PlaneGeometry(0.02, 0.011), new THREE.MeshStandardMaterial({ color: '#6a5034', roughness: 0.9 }));
+  top.rotation.x = -Math.PI / 2; top.position.set(X(670), HB + Y(34) + 0.0004, 0); g.add(top);
+  // "16 OZ" stamped on the far cheek (it's on that side in the photos)
+  const sc = document.createElement('canvas'); sc.width = 256; sc.height = 96; const y = sc.getContext('2d');
+  y.fillStyle = 'rgba(20,20,22,0.9)'; fitText(y, '16OZ', 128, 50, 190, 70, F.roman, { spacing: 4 });
+  const st = new THREE.CanvasTexture(sc);
+  const stamp = new THREE.Mesh(new THREE.PlaneGeometry(0.022, 0.008), new THREE.MeshBasicMaterial({ map: st, transparent: true, depthWrite: false }));
+  stamp.rotation.y = Math.PI; stamp.position.set(X(700), HB + Y(150), -T / 2 - 0.0012); g.add(stamp);
   return g;
 }
