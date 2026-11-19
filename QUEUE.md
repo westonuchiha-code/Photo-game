@@ -62,7 +62,8 @@ Rules (from you):
 - Restaurant burger poster (BIG BUN BURGERS)
 
 ## In review
-- 35 Claw hammer (in review)
+- 35 Claw hammer (done, parked)
+- 36 Vehicles: kei truck (in review)
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text

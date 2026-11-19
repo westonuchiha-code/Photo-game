@@ -5,6 +5,7 @@
 // napkin dispensers, the framed poster, the slatted fence and wall globes outside.
 import * as THREE from 'three';
 import { shrinkCanvases } from './texcache.js';
+import { makeKeiTruck } from './models/vehicles36.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
@@ -1122,6 +1123,10 @@ const knot = makeKnotRoom();
 knot.position.set(KR.x, 0, KR.z); knot.rotation.y = -Math.PI / 2; add(knot);
 for (const [x0, x1, z0, z1] of knot.userData.colliders) colliders.push({ type: 'box', minX: KR.x - z1, maxX: KR.x - z0, minZ: KR.z + x0, maxZ: KR.z + x1 });
 const krAreas = knot.userData.areas.map((a) => ({ minX: KR.x - a.maxZ, maxX: KR.x - a.minZ, minZ: KR.z + a.minX, maxZ: KR.z + a.maxX, y0: -0.5, y1: 0.6 }));
+// 36 Vehicles: the kei mini-truck on its recycling round, parked at the kerb of the west street
+const KT = { x: -22.75, z: 44.5, rot: -Math.PI / 2 };
+const keiTruck = makeKeiTruck(); keiTruck.position.set(KT.x, 0, KT.z); keiTruck.rotation.y = KT.rot; add(keiTruck);
+rect(KT.x - 0.78, KT.x + 0.78, KT.z - 1.75, KT.z + 1.75);
 const mallAreas = mall.userData.areas.map((a) => ({ ...a, minX: a.minX + MALL.x, maxX: a.maxX + MALL.x, minZ: a.minZ + MALL.z, maxZ: a.maxZ + MALL.z }));
 {
   // forecourt: rain-soaked concrete slabs with puddles (rainy-plaza photo, 28k), cut around the stair well
@@ -1303,6 +1308,7 @@ const VIEWS = {
   knotfront: { pos: [8.6, 1.7, 68.4], target: [14.4, 2.0, 69.8] },
   knotroom: { pos: [15.2, 1.6, 67.6], target: [19.5, 1.4, 70.8] },
   knotbar: { pos: [16.5, 1.6, 69.6], target: [20.2, 1.4, 69.6] },
+  keitruck: { pos: [-26.2, 1.9, 48.9], target: [-22.75, 0.9, 44.5] },
   knotsconce: { pos: [16.6, 1.7, 68.0], target: [18.6, 1.9, 66.3] },
   forecourt: { pos: [10, 2.0, 66], target: [-1, 0, 58] },
   puddles: { pos: [6.5, 1.6, 52.5], target: [3.5, 0, 56.5] },
