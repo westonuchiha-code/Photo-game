@@ -73,7 +73,8 @@ Rules (from you):
 - 43 Snacks (approved)
 - 44 School bus (approved; street scenery from those photos not done)
 - 45 Street graffiti (approved)
-- 46 Burl veneer (in review)
+- 46 Burl veneer (approved)
+- 47 Decor (in review)
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text

@@ -11,6 +11,7 @@
 //                      wall poster; returns colliders + an interior walk area
 // Faces +z, origin at the front-centre at ground level.
 import * as THREE from 'three';
+import { makePachinko, makeGalaxyPC, makeRetroShelf } from './decor47.js';
 import { fitText } from '../fonts.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 
@@ -405,6 +406,11 @@ export function makeJunkShop(W = 9, D = 12) {
   solid(W / 2 - 0.7, W / 2, -9.2, -3.8);
   shelfUnit(4.0, 0.6, 0, -D + 0.4, 0, comps, 11);
   solid(-2.1, 2.1, -D, -D + 0.75);
+  // item 47: the vintage pachinko machine on its little table and a retro shelf with the galaxy PC on it,
+  // in the two front corners by the windows
+  { const pk = makePachinko(); pk.position.set(-W / 2 + 0.45, 0, -2.2); pk.rotation.y = Math.PI / 2; g.add(pk); solid(-W / 2, -W / 2 + 0.8, -2.6, -1.8);
+    const rs = makeRetroShelf(); rs.position.set(W / 2 - 0.25, 0, -2.3); rs.rotation.y = -Math.PI / 2; g.add(rs); solid(W / 2 - 0.45, W / 2, -2.85, -1.75);
+    const pc = makeGalaxyPC(); pc.position.set(W / 2 - 0.3, 1.215, -2.3); pc.rotation.y = -Math.PI / 2; g.add(pc); }
   // centre counter of blue crates with records/CDs, big TVs on top
   const crateM = std({ color: '#2a5ad8', roughness: 0.5 });
   const discs = canvasTex(256, 64, (c, w, h) => { const r = rng(4); for (let x = 0; x < w; x += 4) { c.fillStyle = ['#1a1a1a', '#e8e2d0', '#c8202a', '#2a4a8a', '#e8c23a', '#3a7a4a', '#8a5aa8'][Math.floor(r() * 7)]; c.fillRect(x, 0, 3, h); } });
