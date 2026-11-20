@@ -5,7 +5,7 @@ Quality policy (the PNGs in the repo stay the masters):
   - every other image lossy at quality 94; it is decoded again and compared with the PNG, and if the error is above a
     visually-transparent level (PSNR < 44 dB) it is re-encoded at 98, then losslessly
   - non-image files (json) are packed as they are
-Writes <out>/pack<N>.wasm (a served binary type on the artifact host; it's raw bytes, not WebAssembly) (each <= 12 MB) and <out>/packs.json: { "assets/textures/<name>": [pack, offset, length, mime] }
+Writes <out>/pack<N>.wasm (N = 12 fixed hash buckets; a served binary type on the artifact host, raw bytes, not WebAssembly) and <out>/packs.json: { "assets/textures/<name>": [pack, offset, length, mime] }
 """
 import io, json, os, sys
 from multiprocessing import Pool
@@ -46,11 +46,14 @@ def encode(name):
 if __name__ == '__main__':
     names = sorted(os.listdir(SRC))
     with Pool() as pool: res = pool.map(encode, names)
-    index, packs, cur, n = {}, [], bytearray(), 0
+    # each file goes to a fixed pack chosen by a hash of its name, so adding or changing one texture only changes one
+    # pack (and the published update stays small); packs are written in name order inside
+    import zlib
+    NP = 12
+    packs = [bytearray() for _ in range(NP)]; index = {}
     for name, data, mime, how in res:
-        if len(cur) + len(data) > LIMIT and cur: packs.append(cur); cur = bytearray()
-        index['assets/textures/' + name] = [len(packs), len(cur), len(data), mime]; cur += data
-    if cur: packs.append(cur)
+        k = zlib.crc32(name.encode()) % NP
+        index['assets/textures/' + name] = [k, len(packs[k]), len(data), mime]; packs[k] += data
     for i, b in enumerate(packs): open(os.path.join(OUT, f'pack{i}.wasm'), 'wb').write(b)
     json.dump({'packs': [len(b) for b in packs], 'files': index}, open(os.path.join(OUT, 'packs.json'), 'w'))
     tot = sum(os.path.getsize(os.path.join(SRC, n)) for n in names)
