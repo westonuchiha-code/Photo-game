@@ -559,3 +559,174 @@ export function makeWorkVan() {
   }
   return g;
 }
+
+// ---------------------------------------------------------------------------------------------------------
+//   makeCommuterTrain()  two-tone commuter car (commuter-train.jpg): 20 m x 2.95 m, stainless body with a red cab
+//   front. The cab face is the photo itself, straightened, its reflections faded to tinted glass and every
+//   real name, logo and number painted out; a made-up line ("Hibari Railway") lettered back on: destination
+//   "普通 ひばり台 / HIBARIDAI", run number, the car number and a bird roundel. Raised headlight rings, the red
+//   frame lip, skirt with a coupler, bogies, roof AC units and a pantograph. Nose toward +x, y = 0 at rail top.
+export function makeCommuterTrain() {
+  const g = new THREE.Group(); g.name = 'commuter_train';
+  const L = 20, W = 2.95, hw = W / 2, yb = 0.9, yt = 3.75, rt = 0.5, rb = 0.08;
+  const sec = new THREE.Shape();
+  sec.moveTo(-hw + rb, yb); sec.lineTo(hw - rb, yb); sec.quadraticCurveTo(hw, yb, hw, yb + rb); sec.lineTo(hw, yt - rt);
+  sec.quadraticCurveTo(hw, yt, hw - rt, yt); sec.lineTo(-hw + rt, yt); sec.quadraticCurveTo(-hw, yt, -hw, yt - rt); sec.lineTo(-hw, yb + rb); sec.quadraticCurveTo(-hw, yb, -hw + rb, yb);
+  const steel = new THREE.MeshStandardMaterial({ color: '#b8bcc0', roughness: 0.38, metalness: 0.55 });
+  const bg = new THREE.ExtrudeGeometry(sec, { depth: L - 0.06, bevelEnabled: false, curveSegments: 10 });
+  bg.translate(0, 0, -(L - 0.06) / 2); bg.rotateY(Math.PI / 2);
+  const body = new THREE.Mesh(bg, steel); body.castShadow = true; body.receiveShadow = true; g.add(body);
+  // ---- sides: stainless with doors, windows and made-up lettering, drawn per side
+  const sideTex = (mirror) => {
+    const S = 205, w = Math.round(L * S), h = Math.round((yt - rt - yb) * S), c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d');
+    const Y = (m) => h - (m - yb) * S, X = (m) => (mirror ? m : L - m) * S;          // m measured from the nose
+    const st = x.createLinearGradient(0, 0, 0, h); st.addColorStop(0, '#c8ccd0'); st.addColorStop(0.5, '#b4b8bc'); st.addColorStop(1, '#9ea2a6');
+    x.fillStyle = st; x.fillRect(0, 0, w, h);
+    for (let i = 0; i < 260; i++) { x.fillStyle = `rgba(255,255,255,${Math.random() * 0.05})`; x.fillRect(Math.random() * w, 0, 2 + Math.random() * 6, h); }
+    const rect = (m0, m1, y0, y1, col) => { x.fillStyle = col; x.fillRect(Math.min(X(m0), X(m1)), Y(y1), Math.abs(X(m1) - X(m0)), Y(y0) - Y(y1)); };
+    const glass = (m0, m1, y0, y1) => { rect(m0 - 0.04, m1 + 0.04, y0 - 0.04, y1 + 0.04, '#1a1a1c'); const gg = x.createLinearGradient(0, Y(y1), 0, Y(y0)); gg.addColorStop(0, '#4a4e52'); gg.addColorStop(1, '#202224'); x.fillStyle = gg; x.fillRect(Math.min(X(m0), X(m1)), Y(y1), Math.abs(X(m1) - X(m0)), Y(y0) - Y(y1)); };
+    // the red frame wrapping round from the cab front
+    rect(0, 0.12, yb, yt - rt, '#c01a24');
+    // small rounded cab-side window, then the red cab door with its window
+    glass(0.42, 0.78, 2.15, 2.95);
+    rect(1.0, 1.7, 1.0, 3.05, '#b8141e'); rect(1.08, 1.62, 1.06, 2.99, '#c8222c'); glass(1.15, 1.55, 2.2, 2.9);
+    // passenger doors (stainless, red frame, tall windows) and big windows between
+    const doors = [3.3, 9.3, 15.3];
+    for (const d of doors) { rect(d - 0.08, d + 1.38, 0.96, 3.0, '#b0141e'); rect(d, d + 0.64, 0.98, 2.94, '#bcc0c4'); rect(d + 0.66, d + 1.3, 0.98, 2.94, '#bcc0c4'); glass(d + 0.12, d + 0.54, 1.95, 2.8); glass(d + 0.76, d + 1.18, 1.95, 2.8); rect(d + 0.64, d + 0.66, 0.98, 2.94, '#333'); }
+    for (const [a, b] of [[4.9, 9.1], [10.9, 15.1], [16.9, 19.5]]) { glass(a, (a + b) / 2 - 0.06, 1.9, 2.85); glass((a + b) / 2 + 0.06, b, 1.9, 2.85); }
+    glass(2.2, 3.0, 1.9, 2.85);
+    // made-up lettering: line name by the cab door, car number, small roundel
+    const tx = (m) => X(m);
+    x.fillStyle = '#2a2c30'; fitText(x, 'HIBARI RAILWAY', tx(2.6), Y(3.25), 1.0 * S, 0.09 * S, F.wayfind, { spacing: 3 });
+    x.fillStyle = '#2a2c30'; fitText(x, 'クモハ 7302', tx(19.0), Y(1.4), 0.9 * S, 0.12 * S, F.antique, { spacing: 4 });
+    x.strokeStyle = '#c01a24'; x.lineWidth = 6; x.beginPath(); x.arc(tx(2.6), Y(1.5), 0.13 * S, 0, 7); x.stroke();
+    x.fillStyle = '#c01a24'; x.beginPath(); x.moveTo(tx(2.6) - 0.09 * S, Y(1.5)); x.quadraticCurveTo(tx(2.6), Y(1.5) - 0.12 * S, tx(2.6) + 0.1 * S, Y(1.52)); x.quadraticCurveTo(tx(2.6), Y(1.5) - 0.04 * S, tx(2.6) - 0.09 * S, Y(1.5)); x.fill();
+    // grime along the skirt
+    const dg = x.createLinearGradient(0, Y(1.3), 0, h); dg.addColorStop(0, 'rgba(70,55,40,0)'); dg.addColorStop(1, 'rgba(70,55,40,0.3)'); x.fillStyle = dg; x.fillRect(0, Y(1.3), w, h - Y(1.3));
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
+  };
+  for (const z of [-1, 1]) {
+    const sp = new THREE.Mesh(new THREE.PlaneGeometry(L - 0.06, yt - rt - yb), new THREE.MeshStandardMaterial({ map: sideTex(z < 0), roughness: 0.35, metalness: 0.45 }));
+    sp.position.set(0, (yt - rt + yb) / 2, z * (hw + 0.003)); if (z < 0) sp.rotation.y = Math.PI; g.add(sp);
+  }
+  // ---- cab front: the photo on the section shape, plus made-up lettering on an overlay
+  const fg = new THREE.ShapeGeometry(sec, 10), fp = fg.attributes.position, fu = fg.attributes.uv;
+  for (let i = 0; i < fp.count; i++) fu.setXY(i, 0.5 + fp.getX(i) / W, (fp.getY(i) - yb) / (yt - yb));
+  const front = new THREE.Mesh(fg, new THREE.MeshStandardMaterial({ map: tex('tr_front'), roughness: 0.4 }));
+  front.rotation.y = Math.PI / 2; front.position.x = L / 2 + 0.002; g.add(front);
+  // back end: plain gangway end, stainless with a door
+  const back = new THREE.Mesh(fg.clone(), steel); back.rotation.y = -Math.PI / 2; back.position.x = -L / 2 - 0.002; g.add(back);
+  box(0.06, 2.0, 0.9, new THREE.MeshStandardMaterial({ color: '#2a2a2c', roughness: 0.7 }), -L / 2 - 0.03, 2.0, 0, g);
+  {
+    const c = document.createElement('canvas'); c.width = 1024; c.height = 1000; const x = c.getContext('2d');
+    const U = (u) => u * 1024, V = (v) => v * 1000;
+    // destination box (LED-style panel) above the door
+    x.fillStyle = '#0c0d0e'; x.fillRect(U(0.37), V(0.035), U(0.22), V(0.085)); x.fillStyle = '#e9e9e2'; x.fillRect(U(0.375), V(0.04), U(0.06), V(0.075));
+    x.fillStyle = '#1a1a1a'; fitText(x, '普通', U(0.405), V(0.078), U(0.05), 46, F.antique);
+    x.fillStyle = '#fafaf4'; fitText(x, 'ひばり台', U(0.52), V(0.07), U(0.13), 62, F.antique, { spacing: 4 });
+    fitText(x, 'HIBARIDAI', U(0.52), V(0.105), U(0.1), 16, F.wayfind, { spacing: 2 });
+    x.fillStyle = '#e8ece8'; fitText(x, 'H012', U(0.17), V(0.14), U(0.11), 54, F.wayfind, { spacing: 2 });
+    // door: line name, series, car number, bird roundel
+    x.fillStyle = '#ffffff'; fitText(x, 'HIBARI RAILWAY', U(0.47), V(0.555), U(0.17), 22, F.wayfind, { spacing: 1 });
+    fitText(x, 'Commuter Series 7300', U(0.47), V(0.585), U(0.17), 20, F.wayfind);
+    fitText(x, '7302', U(0.47), V(0.635), U(0.12), 52, F.wayfind, { spacing: 2 });
+    x.strokeStyle = '#fff'; x.lineWidth = 3; x.beginPath(); x.arc(U(0.47), V(0.7), 22, 0, 7); x.stroke();
+    x.fillStyle = '#fff'; x.beginPath(); x.moveTo(U(0.47) - 15, V(0.7)); x.quadraticCurveTo(U(0.47), V(0.7) - 20, U(0.47) + 16, V(0.703)); x.quadraticCurveTo(U(0.47), V(0.7) - 7, U(0.47) - 15, V(0.7)); x.fill();
+    x.fillStyle = '#c01a24'; fitText(x, 'HR', U(0.13), V(0.9), U(0.06), 34, F.heavy);
+    x.fillStyle = '#3a3c40'; fitText(x, 'HIBARI RAILWAY', U(0.77), V(0.95), U(0.18), 20, F.wayfind, { spacing: 2 });
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+    const ov = new THREE.Mesh(fg, new THREE.MeshStandardMaterial({ map: t, transparent: true, roughness: 0.4, polygonOffset: true, polygonOffsetFactor: -2 }));
+    ov.rotation.y = Math.PI / 2; ov.position.x = L / 2 + 0.004; g.add(ov);
+  }
+  // red frame lip round the cab face, headlight rings (lit), horn on the roof
+  const red = new THREE.MeshStandardMaterial({ color: '#b8141e', roughness: 0.4, metalness: 0.2 });
+  const pts = sec.getPoints(16).map((p) => new THREE.Vector3(L / 2 + 0.02, p.y, -p.x));
+  const lip = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts, true), 160, 0.035, 8, true), red); g.add(lip);
+  const fu2 = (u) => -(u - 0.5) * W, fv = (v) => yt - v * (yt - yb);
+  for (const [u, v] of [[0.09, 0.70], [0.82, 0.73]]) {
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.13, 0.03, 10, 28), new THREE.MeshStandardMaterial({ color: '#18181a', roughness: 0.5 })); ring.rotation.y = Math.PI / 2; ring.position.set(L / 2 + 0.03, fv(v), fu2(u)); g.add(ring);
+    const lens = new THREE.Mesh(new THREE.CircleGeometry(0.085, 24), new THREE.MeshStandardMaterial({ color: '#f0a040', emissive: '#ff9a20', emissiveIntensity: 0.9, roughness: 0.2 })); lens.rotation.y = Math.PI / 2; lens.position.set(L / 2 + 0.035, fv(v), fu2(u)); g.add(lens);
+  }
+  const horn = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.09, 0.14, 12), new THREE.MeshStandardMaterial({ color: '#3a3c3e', roughness: 0.6 })); horn.position.set(L / 2 - 0.5, yt + 0.06, 0.4); g.add(horn);
+  // skirt (anti-climber) with lightening holes + coupler
+  for (const z of [-1, 1]) {
+    const sk = box(0.35, 0.5, 0.75, red, L / 2 - 0.12, 0.65, z * 0.95, g);
+    const hole = new THREE.Mesh(new THREE.CircleGeometry(0.08, 16), new THREE.MeshBasicMaterial({ color: '#111' })); hole.rotation.y = Math.PI / 2; hole.position.set(L / 2 + 0.056, 0.68, z * 0.95); g.add(hole); void sk;
+  }
+  const dk = new THREE.MeshStandardMaterial({ color: '#2c2a28', roughness: 0.75, metalness: 0.3 });
+  box(0.7, 0.22, 0.32, dk, L / 2 + 0.25, 0.72, 0, g); box(0.25, 0.32, 0.4, dk, L / 2 + 0.55, 0.72, 0, g);
+  // underframe, equipment boxes, bogies
+  box(L - 1.2, 0.35, W - 0.3, dk, 0, 0.72, 0, g);
+  for (const [x0, w] of [[-3.5, 2.2], [0.5, 1.6], [3.4, 1.4]]) box(w, 0.45, W - 0.7, new THREE.MeshStandardMaterial({ color: '#3a3c3e', roughness: 0.7 }), x0, 0.5, 0, g);
+  const wheel = new THREE.MeshStandardMaterial({ color: '#4a4440', roughness: 0.6, metalness: 0.5 });
+  for (const bx of [-6.9, 6.9]) {
+    box(2.7, 0.3, 2.2, dk, bx, 0.48, 0, g);
+    for (const ax of [-1.05, 1.05]) for (const z of [-1, 1]) { const wh = new THREE.Mesh(new THREE.CylinderGeometry(0.43, 0.43, 0.13, 24), wheel); wh.rotation.x = Math.PI / 2; wh.position.set(bx + ax, 0.43, z * 0.6); g.add(wh); }
+  }
+  // roof: two AC units, a pantograph near the back, conduit
+  const roofM = new THREE.MeshStandardMaterial({ color: '#8e9296', roughness: 0.6, metalness: 0.3 });
+  for (const ax of [-4.5, 4.5]) { box(2.6, 0.35, 1.9, roofM, ax, yt + 0.12, 0, g); for (let i = 0; i < 6; i++) box(0.1, 0.02, 1.7, dk, ax - 1 + i * 0.4, yt + 0.3, 0, g); }
+  const pan = new THREE.Group(); pan.position.set(-7.6, yt + 0.05, 0); g.add(pan);
+  box(1.2, 0.12, 1.4, dk, 0, 0.06, 0, pan);
+  const pm = new THREE.MeshStandardMaterial({ color: '#2c2c2c', roughness: 0.5, metalness: 0.5 });
+  for (const z of [-0.45, 0.45]) { tube(new THREE.Vector3(-0.5, 0.12, z), new THREE.Vector3(0.15, 0.7, z * 0.6), 0.02, pm, pan); tube(new THREE.Vector3(0.15, 0.7, z * 0.6), new THREE.Vector3(-0.2, 1.25, z * 0.4), 0.018, pm, pan); }
+  box(0.08, 0.04, 1.6, new THREE.MeshStandardMaterial({ color: '#7a6040', roughness: 0.6, metalness: 0.6 }), -0.2, 1.28, 0, pan);
+  return g;
+}
+
+// the platform the train stands at: raised concrete slab with tan tiles, a yellow tactile strip and white edge,
+// stairs down from the station side; a stretch of narrow-gauge track on ballast; two catenary masts + wire.
+// Local: track along x; the platform edge faces +z; ground y = 0, platform top = PLAT_Y.
+export const PLAT_Y = 1.05;
+export function makeTrainPlatform(len = 26) {
+  const g = new THREE.Group(); g.name = 'train_platform';
+  const D = 3.0, edgeZ = 0, trackZ = 1.62;
+  const tc = document.createElement('canvas'); tc.width = 256; tc.height = 256; const tx = tc.getContext('2d');
+  tx.fillStyle = '#8c8478'; tx.fillRect(0, 0, 256, 256);
+  for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) { tx.fillStyle = ['#c9b998', '#bfae8c', '#cdbf9f', '#b8a888'][(i * 3 + j) % 4]; tx.fillRect(i * 64 + 2, j * 64 + 2, 60, 60); }
+  const tt = new THREE.CanvasTexture(tc); tt.colorSpace = THREE.SRGBColorSpace; tt.wrapS = tt.wrapT = THREE.RepeatWrapping; tt.repeat.set(len / 1.2, D / 1.2);
+  const top = new THREE.Mesh(new THREE.PlaneGeometry(len, D), new THREE.MeshStandardMaterial({ map: tt, roughness: 0.85 }));
+  top.rotation.x = -Math.PI / 2; top.position.set(0, PLAT_Y + 0.001, edgeZ - D / 2); top.receiveShadow = true; g.add(top);
+  const conc = new THREE.MeshStandardMaterial({ color: '#8a8884', roughness: 0.95 });
+  box(len, PLAT_Y, D, conc, 0, PLAT_Y / 2, edgeZ - D / 2, g);
+  // yellow tactile strip (raised dots) and the white edge line, a nosing overhang
+  const yc = document.createElement('canvas'); yc.width = 128; yc.height = 32; const yx = yc.getContext('2d');
+  yx.fillStyle = '#e8c21c'; yx.fillRect(0, 0, 128, 32); yx.fillStyle = '#f6d43a'; for (let i = 0; i < 8; i++) for (let j = 0; j < 2; j++) { yx.beginPath(); yx.arc(8 + i * 16, 8 + j * 16, 4, 0, 7); yx.fill(); }
+  const yt2 = new THREE.CanvasTexture(yc); yt2.colorSpace = THREE.SRGBColorSpace; yt2.wrapS = THREE.RepeatWrapping; yt2.repeat.set(len / 0.6, 1);
+  const strip = new THREE.Mesh(new THREE.PlaneGeometry(len, 0.4), new THREE.MeshStandardMaterial({ map: yt2, roughness: 0.6 })); strip.rotation.x = -Math.PI / 2; strip.position.set(0, PLAT_Y + 0.004, edgeZ - 1.0); g.add(strip);
+  const line = new THREE.Mesh(new THREE.PlaneGeometry(len, 0.12), new THREE.MeshStandardMaterial({ color: '#f0f0ea', roughness: 0.6 })); line.rotation.x = -Math.PI / 2; line.position.set(0, PLAT_Y + 0.004, edgeZ - 0.12); g.add(line);
+  box(len, 0.08, 0.2, new THREE.MeshStandardMaterial({ color: '#b4b0a8', roughness: 0.8 }), 0, PLAT_Y - 0.04, edgeZ + 0.02, g);
+  // car-stop markers (red squares on the floor, like the photo) with made-up numbers
+  for (const xm of [-6, 0, 6]) {
+    const c = document.createElement('canvas'); c.width = 128; c.height = 64; const x = c.getContext('2d'); x.fillStyle = '#c8202a'; x.fillRect(0, 0, 128, 64); x.fillStyle = '#fff'; fitText(x, '2–4', 64, 34, 110, 40, F.wayfind);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.3), new THREE.MeshStandardMaterial({ map: t, roughness: 0.6 })); m.rotation.x = -Math.PI / 2; m.position.set(xm, PLAT_Y + 0.005, edgeZ - 0.45); g.add(m);
+  }
+  // stairs down to the station side
+  const steps = 7, sw = 3.0, rise = PLAT_Y / steps, run = 0.3;
+  for (let i = 0; i < steps; i++) box(sw, rise * (i + 1), run, conc, 0, rise * (i + 1) / 2, edgeZ - D - (steps - i) * run + run / 2, g);
+  for (const sx of [-1, 1]) tube(new THREE.Vector3(sx * (sw / 2 + 0.02), 0.9, edgeZ - D - steps * run), new THREE.Vector3(sx * (sw / 2 + 0.02), PLAT_Y + 0.9, edgeZ - D), 0.025, new THREE.MeshStandardMaterial({ color: '#c8ccd0', metalness: 0.6, roughness: 0.3 }), g);
+  // track: ballast bed, sleepers, rails (1067 mm gauge)
+  const ball = document.createElement('canvas'); ball.width = ball.height = 256; const bx = ball.getContext('2d');
+  bx.fillStyle = '#5e5650'; bx.fillRect(0, 0, 256, 256); for (let i = 0; i < 2600; i++) { const v = 60 + Math.random() * 90; bx.fillStyle = `rgb(${v + 20},${v + 8},${v})`; bx.beginPath(); bx.arc(Math.random() * 256, Math.random() * 256, 1.5 + Math.random() * 3, 0, 7); bx.fill(); }
+  const bt = new THREE.CanvasTexture(ball); bt.colorSpace = THREE.SRGBColorSpace; bt.wrapS = bt.wrapT = THREE.RepeatWrapping; bt.repeat.set(len / 2, 2);
+  box(len, 0.12, 3.2, new THREE.MeshStandardMaterial({ map: bt, roughness: 1 }), 0, 0.06, trackZ, g);
+  const sl = new THREE.InstancedMesh(new THREE.BoxGeometry(0.2, 0.06, 2.0), new THREE.MeshStandardMaterial({ color: '#7a7670', roughness: 0.9 }), Math.floor(len / 0.6));
+  const m4 = new THREE.Matrix4(); for (let i = 0; i < sl.count; i++) { m4.makeTranslation(-len / 2 + 0.3 + i * 0.6, 0.15, trackZ); sl.setMatrixAt(i, m4); } g.add(sl);
+  const railM = new THREE.MeshStandardMaterial({ color: '#7a6a5a', roughness: 0.5, metalness: 0.7 });
+  for (const z of [-0.535, 0.535]) { box(len, 0.03, 0.12, railM, 0, 0.195, trackZ + z, g); box(len, 0.12, 0.07, railM, 0, 0.25, trackZ + z, g).material = new THREE.MeshStandardMaterial({ color: '#a8a6a2', roughness: 0.3, metalness: 0.9 }); }
+  // catenary: masts on the far side, cantilever arms, contact wire
+  const mast = new THREE.MeshStandardMaterial({ color: '#8a8c8e', roughness: 0.6, metalness: 0.4 });
+  for (const xm of [-len / 2 + 2, len / 2 - 2]) {
+    box(0.3, 6.2, 0.3, mast, xm, 3.1, trackZ + 2.3, g);
+    tube(new THREE.Vector3(xm, 5.6, trackZ + 2.2), new THREE.Vector3(xm, 5.6, trackZ - 0.3), 0.04, mast, g);
+    tube(new THREE.Vector3(xm, 6.0, trackZ + 2.2), new THREE.Vector3(xm, 5.6, trackZ - 0.1), 0.03, mast, g);
+  }
+  const wire = new THREE.MeshStandardMaterial({ color: '#2a2a2a', roughness: 0.5 });
+  tube(new THREE.Vector3(-len / 2, 5.25, trackZ), new THREE.Vector3(len / 2, 5.25, trackZ), 0.008, wire, g);
+  tube(new THREE.Vector3(-len / 2, 5.6, trackZ), new THREE.Vector3(len / 2, 5.6, trackZ), 0.01, wire, g);
+  // a low wall behind the track
+  box(len, 1.2, 0.2, new THREE.MeshStandardMaterial({ color: '#a8a49c', roughness: 0.9 }), 0, 0.6, trackZ + 2.8, g);
+  g.userData.trackZ = trackZ; g.userData.D = D; g.userData.stairs = { x0: -sw / 2, x1: sw / 2, z0: edgeZ - D - steps * run, z1: edgeZ - D };
+  return g;
+}

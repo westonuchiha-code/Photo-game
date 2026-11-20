@@ -63,7 +63,7 @@ Rules (from you):
 
 ## In review
 - 35 Claw hammer (done, parked)
-- 36 Vehicles: kei truck (approved), river boat (skipped), coach bus (approved), scout truck (approved), work van (in review)
+- 36 Vehicles: kei truck (approved), river boat (skipped), coach bus (approved), scout truck (approved), work van (approved), commuter train (in review)
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
@@ -382,6 +382,14 @@ Rules (from you):
     vs. kaiju) and framed old film posters above; wire magazine rack of old anime, train and
     comic magazines. All shop names, brands, characters, film posters and magazine titles
     replaced with made-up ones.
+
+76. Batch 76 (photos/batch76/): dusty blue 70s kei car in a garage, finger-drawn doodles in the dust
+    on the windscreen and hood, round headlights, honeycomb grille, round mirrors on stalks; scrambled
+    egg + bacon with ketchup in a cream pan beside a sub roll; the finished egg-bacon sub; walk-in
+    freezer full of roll-cage carts stacked with frozen-food cases, evaporator fans on the wall;
+    "PLEASE LAY FLAT" painting (blue, red, gold; hung as-is if it's the user's own); cooler aisle with
+    two doors patched over with taped cardboard and finger holes; long-shackle padlock on a steel hasp
+    next to a worn notice. All brands, plates and store names replaced with made-up ones.
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"

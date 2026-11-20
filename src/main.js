@@ -5,7 +5,7 @@
 // napkin dispensers, the framed poster, the slatted fence and wall globes outside.
 import * as THREE from 'three';
 import { shrinkCanvases } from './texcache.js';
-import { makeKeiTruck, makeCoachBus, makeScoutTruck, makeWorkVan } from './models/vehicles36.js';
+import { makeKeiTruck, makeCoachBus, makeScoutTruck, makeWorkVan, makeCommuterTrain, makeTrainPlatform, PLAT_Y } from './models/vehicles36.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
@@ -1131,6 +1131,20 @@ rect(KT.x - 0.78, KT.x + 0.78, KT.z - 1.75, KT.z + 1.75);
 const KV = { x: -22.8, z: 39.7, rot: -Math.PI / 2 };
 const workVan = makeWorkVan(); workVan.position.set(KV.x, 0, KV.z); workVan.rotation.y = KV.rot; add(workVan);
 rect(KV.x - 0.78, KV.x + 0.78, KV.z - 1.7, KV.z + 1.7);
+// the commuter train waiting at a platform behind the station gate
+const TP = { x: -28, z: 75.6 };
+const platform = makeTrainPlatform(26); platform.position.set(TP.x, 0, TP.z); add(platform);
+const train = makeCommuterTrain(); train.position.set(TP.x + 1.5, 0.31, TP.z + platform.userData.trackZ); add(train);
+rect(TP.x - 13, TP.x + 13, TP.z + 0.05, TP.z + 4.6);                               // the track bed + train
+const pSt = platform.userData.stairs;
+rect(TP.x - 13, TP.x + pSt.x0 - 0.05, TP.z - 3.05, TP.z - 2.9); rect(TP.x + pSt.x1 + 0.05, TP.x + 13, TP.z - 3.05, TP.z - 2.9);   // platform back edge
+rect(TP.x - 13.2, TP.x - 13, TP.z - 3, TP.z); rect(TP.x + 13, TP.x + 13.2, TP.z - 3, TP.z);
+const platformY = (x, z) => {
+  const lx = x - TP.x, lz = z - TP.z;
+  if (lx >= -13 && lx <= 13 && lz >= -3 && lz <= 0) return PLAT_Y;
+  if (lx >= pSt.x0 && lx <= pSt.x1 && lz >= pSt.z0 && lz < pSt.z1) return PLAT_Y * Math.ceil((lz - pSt.z0) / (pSt.z1 - pSt.z0) * 7) / 7;
+  return null;
+};
 // the red coach, pulled in at the opposite kerb (nose north)
 const CBP = { x: -29.7, z: 37, rot: Math.PI / 2 };
 const coach = makeCoachBus(); coach.position.set(CBP.x, 0, CBP.z); coach.rotation.y = CBP.rot; add(coach);
@@ -1185,6 +1199,7 @@ const walk = new WalkControls(camera, renderer.domElement, {
     ...teaAreas, // the teahouse
     ...aoAreas, // the abandoned office
     ...krAreas, // the Knot Room
+    { minX: TP.x - 12.8, maxX: TP.x + 12.8, minZ: TP.z - 5.2, maxZ: TP.z - 0.3 }, // train platform + its stairs
   ],
   colliders,
 });
@@ -1193,6 +1208,8 @@ walk.ground = (x, z, prevY) => {
   if (my !== null) return my;
   const sy = stairEnt.userData.floorY(z - SE.z, SE.x - x);
   if (sy !== null) return sy;
+  const py = platformY(x, z);
+  if (py !== null) return py;
   const ay = apt.userData.floorY(z - AP.z, AP.x - x, prevY);
   return ay !== null ? ay : rampFloorY(x, z);
 };
@@ -1322,6 +1339,7 @@ const VIEWS = {
   knotbar: { pos: [16.5, 1.6, 69.6], target: [20.2, 1.4, 69.6] },
   keitruck: { pos: [-26.2, 1.9, 48.9], target: [-22.75, 0.9, 44.5] },
   coach: { pos: [-24.5, 2.4, 27.5], target: [-29.7, 1.6, 36] },
+  train: { pos: [-12.5, 2.6, 71.0], target: [-17.5, 2.0, 77.2] },
   workvan: { pos: [-26.0, 1.7, 36.2], target: [-22.8, 0.9, 39.9] },
   scout: { pos: [36.4, 1.7, -5.4], target: [39.9, 0.8, -0.6] },
   knotsconce: { pos: [16.6, 1.7, 68.0], target: [18.6, 1.9, 66.3] },

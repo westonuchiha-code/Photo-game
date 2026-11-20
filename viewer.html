@@ -177,7 +177,7 @@ if (start) show(start.f, start.n, start.b);
 function resize() { const w = view.clientWidth, h = view.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
 addEventListener('resize', resize); resize();
 renderer.setAnimationLoop(() => { controls.update(); renderer.render(scene, camera); });
-window.__viewer = { entries, show };
+window.__viewer = { entries, show, camera, controls };
 </script>
 </body>
 </html>

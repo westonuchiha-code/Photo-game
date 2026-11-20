@@ -116,3 +116,28 @@ wd = cv2.cvtColor(cv2.resize(wd, (512, 512), interpolation=cv2.INTER_AREA), cv2.
 wm = np.zeros((512, 512), np.uint8); cv2.circle(wm, (256, 256), 254, 255, -1); wd[:, :, 3] = wm
 cv2.imwrite(os.path.join(OUT, "kv_wheel.png"), wd)
 print("wrote kv_wheel")
+
+# ---- commuter train (commuter-train.jpg, 1400-px thumbnail coordinates): the cab front rectified flat,
+# operator name/logos, car number, destination and every lettering painted out (the model draws made-up ones)
+im6 = load_cv("commuter-train.jpg"); k6 = im6.shape[1] / 1400
+m6 = np.zeros(im6.shape[:2], np.uint8)
+for x0, y0, x1, y1 in [(392, 186, 560, 268), (255, 262, 335, 312), (418, 598, 540, 678), (455, 682, 497, 724), (275, 868, 315, 905),
+                       (628, 985, 785, 1052), (720, 762, 800, 790), (225, 678, 275, 698), (640, 852, 712, 866), (280, 765, 340, 778)]:
+    cv2.rectangle(m6, (int(x0 * k6), int(y0 * k6)), (int(x1 * k6), int(y1 * k6)), 255, -1)
+im6 = cv2.inpaint(im6, m6, 9, cv2.INPAINT_TELEA)
+src = np.float32([(160, 168), (942, 104), (912, 1112), (208, 936)]) * k6
+front = cv2.warpPerspective(im6, cv2.getPerspectiveTransform(src, np.float32([(0, 0), (1024, 0), (1024, 1000), (0, 1000)])), (1024, 1000))
+# the windscreen + door window reflect the station: fade the reflections into plain dark tinted glass (the
+# wipers, frames and seals stay from the photo)
+wm6 = np.zeros(front.shape[:2], np.uint8)
+cv2.rectangle(wm6, (40, 40), (980, 472), 255, -1); cv2.rectangle(wm6, (278, 150), (645, 1000), 0, -1)
+cv2.rectangle(wm6, (390, 256), (517, 484), 255, -1)
+wm6 = cv2.GaussianBlur(wm6, (15, 15), 0).astype(np.float32)[:, :, None] / 255
+grey = cv2.cvtColor(cv2.cvtColor(front, cv2.COLOR_BGR2GRAY), cv2.COLOR_GRAY2BGR).astype(np.float32)
+ramp = np.linspace(66, 34, front.shape[0], dtype=np.float32)[:, None, None] * np.ones((1, front.shape[1], 3), np.float32)
+glass6 = ramp * 0.75 + (grey - grey.mean()) * 0.18 + 6
+dark = np.minimum(grey, 70)                     # wipers / seals: keep anything darker than the glass
+glass6 = np.minimum(glass6, dark + 12)
+front = (front.astype(np.float32) * (1 - wm6) + glass6 * wm6).clip(0, 255).astype(np.uint8)
+cv2.imwrite(os.path.join(OUT, "tr_front.png"), front)
+print("wrote tr_front")
