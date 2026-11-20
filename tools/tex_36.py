@@ -156,3 +156,31 @@ tile((612, 560, 650, 630), "sc_orange.png")          # leg shield paint, soft sh
 tile((890, 572, 935, 622), "sc_rustwhite.png")     # dirty white panel paint
 tile((762, 575, 792, 635), "sc_rustbox.png")         # scaly bare rust
 print("wrote sc_orange, sc_rustwhite, sc_rustbox")
+
+# ---- silver kei hatchback (silver-kei-car-stripes.jpg, 1400-px thumb): the left side rectified to a flat
+# elevation in metres (rear axle at x=0, ground y=0, 400 px/m); the real racing livery + its lettering are
+# painted out to plain silver (the model paints an original stripe set back on). Also the headlight + wheel.
+im8 = load_cv("silver-kei-car-stripes.jpg"); k8 = im8.shape[1] / 1400
+WB, RW = 2.36, 0.285
+srcp = np.float32([(355, 398), (688, 452), (352, 284), (690, 318)]) * k8
+dstm = np.float32([(0, RW), (WB, RW), (0, 0.93), (WB, 0.93)])
+Hm = cv2.getPerspectiveTransform(srcp, dstm)
+PPM, X0, X1, YT = 400, -0.62, WB + 0.78, 1.46
+A = np.array([[PPM, 0, -X0 * PPM], [0, -PPM, YT * PPM], [0, 0, 1]], np.float64)
+side8 = cv2.warpPerspective(im8, A @ Hm, (int((X1 - X0) * PPM), int(YT * PPM)))
+silver = np.float32([196, 196, 198])
+hsv8 = cv2.cvtColor(side8, cv2.COLOR_BGR2HSV)
+liv = (((hsv8[:, :, 1] > 70) & (hsv8[:, :, 2] > 60)) | ((hsv8[:, :, 1] > 40) & (hsv8[:, :, 0] > 95) & (hsv8[:, :, 0] < 130))).astype(np.uint8)
+band = np.zeros_like(liv); band[int((YT - 0.62) * PPM):int((YT - 0.22) * PPM), :int((WB + 0.05 - X0) * PPM)] = 1
+liv = cv2.dilate(liv * band, np.ones((9, 9), np.uint8))
+white = ((hsv8[:, :, 2] > 200) & (hsv8[:, :, 1] < 40)).astype(np.uint8) * band
+liv |= cv2.dilate(white, np.ones((5, 5), np.uint8)) * (cv2.dilate(liv, np.ones((31, 31), np.uint8)) > 0)
+side8 = cv2.inpaint(side8, liv * 255, 9, cv2.INPAINT_TELEA)
+cv2.imwrite(os.path.join(OUT, "kc_side.png"), side8)
+def warpc(quad, size):
+    w, h = size; return cv2.warpPerspective(im8, cv2.getPerspectiveTransform(np.float32(quad) * k8, np.float32([(0, 0), (w, 0), (w, h), (0, h)])), size)
+cv2.imwrite(os.path.join(OUT, "kc_lamp.png"), warpc([(762, 365), (832, 365), (832, 404), (762, 404)], (256, 144)))
+wh8 = warpc([(643, 400), (735, 400), (735, 506), (643, 506)], (512, 512)); wh8 = cv2.cvtColor(wh8, cv2.COLOR_BGR2BGRA)
+wm8 = np.zeros((512, 512), np.uint8); cv2.circle(wm8, (256, 256), 250, 255, -1); wh8[:, :, 3] = wm8
+cv2.imwrite(os.path.join(OUT, "kc_wheel.png"), wh8)
+print("wrote kc_side, kc_lamp, kc_wheel", side8.shape)

@@ -951,3 +951,132 @@ export function makeRustedScooter() {
   g.rotation.x = -0.05;
   return g;
 }
+
+// ---------------------------------------------------------------------------------------------------------
+//   makeKeiHatch()  silver 90s kei hot hatch (silver-kei-car-stripes.jpg): 3.4 m x 1.475 m x 1.42 m. Both sides
+//   are the photo, rectified to a flat elevation (doors, handles, mirror, side glass, fuel flap, the real alloy
+//   wheels); the real racing livery and its lettering painted out, an original three-stripe livery with a
+//   made-up "KESTREL SPORT" script painted on instead. Lofted body (rounded nose, tumblehome, wheel arches cut
+//   in), raked windscreen and hatch glass, front face drawn with the photo's headlights, mesh grille, fog
+//   lamps and a lip spoiler. No plates. Nose toward +x, ground y = 0.
+export function makeKeiHatch() {
+  const g = new THREE.Group(); g.name = 'kei_hatch';
+  const WB = 2.36, R = 0.285, AR = 0.33, Wd = 1.475, hw = Wd / 2, PPM = 400, X0 = -0.62, YT = 1.46, IW = 1504, IH = 584;
+  const OFF = WB / 2 - 0.25;                                     // shift so the car is centred on the origin
+  const TOP = [[-0.44, 0.32], [-0.47, 0.55], [-0.45, 0.9], [-0.36, 1.27], [-0.22, 1.38], [0.1, 1.41], [1.5, 1.42], [1.76, 1.39], [2.3, 0.98], [2.75, 0.87], [3.0, 0.78], [3.05, 0.6], [3.02, 0.32]];
+  const xT = -0.44, xN = 3.05, SILL = 0.24;
+  const lerp = (pts, x) => { for (let i = 1; i < pts.length; i++) if ((x - pts[i - 1][0]) * (x - pts[i][0]) <= 0 && pts[i][0] !== pts[i - 1][0]) { const [a, b] = pts[i - 1], [c, d] = pts[i]; return b + (d - b) * (x - a) / (c - a); } return null; };
+  // top line: walk the outline's upper part (x increasing from the tail top to the nose top)
+  const UP = [[-0.36, 1.27], [-0.22, 1.38], [0.1, 1.41], [1.5, 1.42], [1.76, 1.39], [2.3, 0.98], [2.7, 0.91], [3.05, 0.85]];
+  const topY = (x) => { if (x <= UP[0][0]) return UP[0][1] - (UP[0][0] - x) * 2.4; if (x >= UP[UP.length - 1][0]) return UP[UP.length - 1][1] - (x - UP[UP.length - 1][0]) * 3; return lerp(UP, x); };
+  const botY = (x) => {
+    let y = SILL + 0.06 * THREE.MathUtils.smoothstep(x, 2.75, 3.03) + 0.06 * (1 - THREE.MathUtils.smoothstep(x, -0.44, -0.2));
+    for (const c of [0, WB]) { const d = x - c; if (Math.abs(d) < AR) y = Math.max(y, R + Math.sqrt(AR * AR - d * d)); }
+    return y;
+  };
+  const halfW = (x, y) => {
+    let w = hw; const rf = 0.16, rr = 0.08;
+    if (x > xN - rf) { const d = x - (xN - rf); w = hw - rf + Math.sqrt(Math.max(0, rf * rf - d * d)); }
+    if (x < xT + rr) { const d = xT + rr - x; w = hw - rr + Math.sqrt(Math.max(0, rr * rr - d * d)); }
+    return w * (1 - 0.13 * THREE.MathUtils.clamp((y - 0.95) / 0.45, 0, 1));
+  };
+  const NS = 150, K = 6, ring = [];
+  for (const [cyS, czS, a0] of [[-1, 1, -Math.PI / 2], [1, 1, 0], [1, -1, Math.PI / 2], [-1, -1, Math.PI]]) for (let k = 0; k <= K; k++) ring.push([cyS, czS, a0 + (k / K) * Math.PI / 2]);
+  const M = ring.length, pos = [], uv = [];
+  for (let i = 0; i <= NS; i++) {
+    const x = xT + (xN - xT) * i / NS, yb = botY(x), yt = Math.max(yb + 0.05, topY(x)), rt = Math.min(0.12, (yt - yb) / 3), rb = 0.04;
+    for (const [cyS, czS, a] of ring) {
+      const r = cyS > 0 ? rt : rb, cy = cyS > 0 ? yt - rt : yb + rb, y = cy + r * Math.sin(a), w = halfW(x, y), z = czS * (w - r) + r * Math.cos(a);
+      const u0 = (x - X0) * PPM / IW; pos.push(x - OFF, y, z); uv.push(z < 0 ? 1 - u0 : u0, THREE.MathUtils.clamp(y, yb + 0.01, yt - 0.01) / YT);
+    }
+  }
+  const groups = [[], [], [], []];
+  for (let i = 0; i < NS; i++) for (let j = 0; j < M - 1; j++) {
+    const a = i * M + j, b = a + M, nz = Math.abs(pos[a * 3 + 2] + pos[(a + 1) * 3 + 2]) / 2, yc = (pos[a * 3 + 1] + pos[(a + 1) * 3 + 1]) / 2, zc = pos[a * 3 + 2];
+    const gi = nz > hw * 0.72 ? (zc < 0 ? 0 : 1) : (yc > 0.6 ? 2 : 3);
+    groups[gi].push(a, b, a + 1, a + 1, b, b + 1);
+  }
+  const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  let off = 0; const all = []; groups.forEach((gi, n) => { geo.addGroup(off, gi.length, n); off += gi.length; all.push(...gi); }); geo.setIndex(all); geo.computeVertexNormals();
+  // side canvas: the photo, the nose part (which shows the car's front, not its side) repainted silver,
+  // then the original stripe livery
+  const sideTex = (flip) => {
+    const c = document.createElement('canvas'); c.width = IW; c.height = IH; const x = c.getContext('2d');
+    x.fillStyle = '#c4c4c6'; x.fillRect(0, 0, IW, IH);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+    const PX = (m) => (m - X0) * PPM, PY = (m) => (YT - m) * PPM;
+    const img = new Image();
+    img.onload = () => {
+      x.drawImage(img, 0, 0);
+      const gr = x.createLinearGradient(PX(2.45), 0, PX(2.7), 0); gr.addColorStop(0, 'rgba(198,198,200,0)'); gr.addColorStop(1, 'rgba(198,198,200,1)');
+      x.fillStyle = gr; x.fillRect(PX(2.45), PY(0.97), PX(3.2) - PX(2.45), PY(0.28) - PY(0.97));
+      x.fillStyle = '#c6c6c8'; x.fillRect(PX(-0.62), PY(1.46), PX(-0.2) - PX(-0.62), PY(0.3) - PY(1.46));
+      const g2 = x.createLinearGradient(PX(-0.2), 0, PX(0.12), 0); g2.addColorStop(0, '#c6c6c8'); g2.addColorStop(1, 'rgba(198,198,200,0)'); x.fillStyle = g2; x.fillRect(PX(-0.2), PY(1.46), PX(0.12) - PX(-0.2), PY(1.0) - PY(1.46));
+      x.save();
+      const fx = (m) => PX(m);
+      // three stripes (orange / teal / navy) rising from the rear wheel arch, running forward along the sills
+      const cols = ['#e8742a', '#1f9aa8', '#1d2f6a'];
+      cols.forEach((col, i) => {
+        const y0 = 0.38 + i * 0.045, h = 0.03;
+        x.fillStyle = col; x.beginPath();
+        x.moveTo(fx(0.36), PY(y0 + 0.08)); x.lineTo(fx(2.0), PY(y0)); x.lineTo(fx(2.0), PY(y0 - h)); x.lineTo(fx(0.36), PY(y0 + 0.08 - h)); x.closePath(); x.fill();
+        for (let k = 0; k < 6; k++) { x.globalAlpha = 1 - k * 0.15; x.fillRect(Math.min(fx(0.28 - k * 0.05), fx(0.3 - k * 0.05)), PY(y0 + 0.085 + k * 0.004), Math.abs(fx(0.03) - fx(0)), PY(y0 - h) - PY(y0)); } x.globalAlpha = 1;
+      });
+      x.restore();
+      if (flip) { const tmp = document.createElement('canvas'); tmp.width = IW; tmp.height = IH; tmp.getContext('2d').drawImage(c, 0, 0); x.clearRect(0, 0, IW, IH); x.save(); x.translate(IW, 0); x.scale(-1, 1); x.drawImage(tmp, 0, 0); x.restore(); }
+      x.save(); x.translate(flip ? IW - PX(1.2) : PX(1.2), PY(0.53)); x.rotate(flip ? 0.03 : -0.03);
+      x.fillStyle = '#1d2f6a'; fitText(x, 'Kestrel', 0, 0, 0.5 * PPM, 0.12 * PPM, F.script); x.fillStyle = '#e8742a'; fitText(x, 'SPORT', 0.32 * PPM, 0.035 * PPM, 0.2 * PPM, 0.05 * PPM, F.heavy, { spacing: 3 });
+      x.restore(); t.needsUpdate = true;
+    };
+    img.src = 'assets/textures/kc_side.png';
+    return t;
+  };
+  const silver = new THREE.MeshStandardMaterial({ color: '#c8c9cb', roughness: 0.35, metalness: 0.35 });
+  const under = new THREE.MeshStandardMaterial({ color: '#1e1e1e', roughness: 0.9 });
+  const body = new THREE.Mesh(geo, [new THREE.MeshStandardMaterial({ map: sideTex(true), roughness: 0.35, metalness: 0.25 }), new THREE.MeshStandardMaterial({ map: sideTex(false), roughness: 0.35, metalness: 0.25 }), silver, under]);
+  body.castShadow = true; body.receiveShadow = true; g.add(body);
+  // front face: drawn (the photo's headlights, mesh grille, fog lamps, intake, the stripes wrapping the corners)
+  const base = NS * M, ys = [], zs = []; for (let j = 0; j < M; j++) { ys.push(pos[(base + j) * 3 + 1]); zs.push(pos[(base + j) * 3 + 2]); }
+  const y0 = Math.min(...ys), y1 = Math.max(...ys), zm = Math.max(...zs);
+  const fc = document.createElement('canvas'); fc.width = 512; fc.height = Math.round(512 * (y1 - y0) / (2 * zm)); const fx2 = fc.getContext('2d');
+  const FH = fc.height, FY = (m) => FH - (m - y0) / (y1 - y0) * FH;
+  fx2.fillStyle = '#c6c6c8'; fx2.fillRect(0, 0, 512, FH);
+  fx2.fillStyle = '#1a1a1a'; fx2.beginPath(); fx2.roundRect(180, FY(0.73), 152, FY(0.6) - FY(0.73), 8); fx2.fill();
+  fx2.strokeStyle = '#444'; fx2.lineWidth = 2; for (let i = 0; i < 15; i++) { fx2.beginPath(); fx2.moveTo(182 + i * 10, FY(0.74)); fx2.lineTo(192 + i * 10, FY(0.6)); fx2.stroke(); fx2.beginPath(); fx2.moveTo(192 + i * 10, FY(0.74)); fx2.lineTo(182 + i * 10, FY(0.6)); fx2.stroke(); }
+  fx2.fillStyle = '#1a1a1a'; fx2.beginPath(); fx2.roundRect(150, FY(0.42), 212, FY(0.3) - FY(0.42), 10); fx2.fill();
+  for (const s of [-1, 1]) { fx2.fillStyle = '#e8d090'; fx2.beginPath(); fx2.roundRect(256 + s * 175 - 26, FY(0.43), 52, FY(0.35) - FY(0.43), 8); fx2.fill(); }
+  ['#e8742a', '#1f9aa8', '#1d2f6a'].forEach((col, i) => { fx2.fillStyle = col; fx2.fillRect(0, FY(0.47 - i * 0.04), 60, 12); fx2.fillRect(452, FY(0.47 - i * 0.04), 60, 12); });
+  const ft = new THREE.CanvasTexture(fc); ft.colorSpace = THREE.SRGBColorSpace;
+  const li = new Image(); li.onload = () => { for (const s of [-1, 1]) { fx2.save(); fx2.translate(256 + s * 168, FY(0.67)); if (s > 0) fx2.scale(-1, 1); fx2.drawImage(li, -70, -(FY(0.6) - FY(0.74)) / 2, 140, FY(0.6) - FY(0.74)); fx2.restore(); } ft.needsUpdate = true; }; li.src = 'assets/textures/kc_lamp.png';
+  const cs = new THREE.Shape(); for (let j = 0; j < M; j++) j ? cs.lineTo(zs[j], ys[j]) : cs.moveTo(zs[j], ys[j]);
+  const cg = new THREE.ShapeGeometry(cs), cp = cg.attributes.position, cu = cg.attributes.uv;
+  for (let k = 0; k < cp.count; k++) cu.setXY(k, 0.5 - cp.getX(k) / (2 * zm), (cp.getY(k) - y0) / (y1 - y0));
+  const nose = new THREE.Mesh(cg, new THREE.MeshStandardMaterial({ map: ft, roughness: 0.35, metalness: 0.2, side: THREE.DoubleSide })); nose.rotation.y = Math.PI / 2; nose.position.x = xN - OFF + 0.001; g.add(nose);
+  box(0.06, 0.018, Wd - 0.3, new THREE.MeshStandardMaterial({ color: '#202020', roughness: 0.7 }), xN - OFF - 0.06, 0.3, 0, g);
+  // tail: hatch glass, lamps, bumper (drawn)
+  const tb = 0, tys = [], tzs = []; for (let j = 0; j < M; j++) { tys.push(pos[(tb + j) * 3 + 1]); tzs.push(pos[(tb + j) * 3 + 2]); }
+  const ts = new THREE.Shape(); for (let j = 0; j < M; j++) j ? ts.lineTo(tzs[j], tys[j]) : ts.moveTo(tzs[j], tys[j]);
+  const tg = new THREE.Mesh(new THREE.ShapeGeometry(ts), silver); tg.rotation.y = -Math.PI / 2; tg.position.x = xT - OFF - 0.001; g.add(tg);
+  // glass: windscreen and hatch on their slopes
+  const glass = new THREE.MeshStandardMaterial({ color: '#3a444a', roughness: 0.2, metalness: 0.2 });
+  const slopeGlass = (xa, ya, xb, yb, inset, back) => {
+    const a = new THREE.Vector2(xa - OFF, ya), b = new THREE.Vector2(xb - OFF, yb), w = 2 * halfW((xa + xb) / 2, (ya + yb) / 2) - inset;
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, a.distanceTo(b) * 0.9), glass);
+    m.rotation.order = 'ZYX'; m.rotation.y = back ? -Math.PI / 2 : Math.PI / 2; m.rotation.z = Math.atan2(a.x - b.x, b.y - a.y) * (back ? 1 : 1);
+    m.position.set((a.x + b.x) / 2 + (back ? -0.012 : 0.012), (a.y + b.y) / 2 + 0.01, 0); g.add(m);
+  };
+  slopeGlass(2.3, 0.98, 1.76, 1.39, 0.2, false);
+  const hb = new THREE.Mesh(new THREE.PlaneGeometry(1.05, 0.4), glass); hb.position.set(xT - OFF - 0.035, 1.1, 0); hb.rotation.y = -Math.PI / 2; hb.rotation.x = 0; hb.rotateX(-0.22); g.add(hb);
+  for (const s of [-1, 1]) box(0.03, 0.22, 0.1, new THREE.MeshStandardMaterial({ color: '#b01818', roughness: 0.3, emissive: '#300000' }), xT - OFF - 0.02, 0.78, s * (hw - 0.12), g);
+  // the real alloy wheels from the photo, black tyres
+  const wm = new THREE.MeshStandardMaterial({ map: tex('kc_wheel'), roughness: 0.5, metalness: 0.4, transparent: true, alphaTest: 0.5 });
+  const tyre = new THREE.MeshStandardMaterial({ color: '#181818', roughness: 0.9 });
+  for (const xw of [0, WB]) for (const s of [-1, 1]) {
+    const t = new THREE.Mesh(new THREE.CylinderGeometry(R, R, 0.17, 32), tyre); t.rotation.x = Math.PI / 2; t.position.set(xw - OFF, R, s * (hw - 0.11)); t.castShadow = true; g.add(t);
+    const f = new THREE.Mesh(new THREE.CircleGeometry(R * 0.98, 36), wm); f.position.set(xw - OFF, R, s * (hw - 0.11) + s * 0.087); f.rotation.y = s > 0 ? 0 : Math.PI; g.add(f);
+  }
+  for (const c of [0, WB]) { const wl = new THREE.Mesh(new THREE.CylinderGeometry(AR - 0.01, AR - 0.01, Wd - 0.08, 24, 1, true, -Math.PI / 2, Math.PI), new THREE.MeshStandardMaterial({ color: '#111', side: THREE.BackSide })); wl.rotation.x = Math.PI / 2; wl.position.set(c - OFF, R, 0); g.add(wl); }
+  // door mirrors
+  for (const s of [-1, 1]) { const m = box(0.12, 0.09, 0.1, silver, 1.78 - OFF, 0.98, s * (hw * 0.88 + 0.1), g); m.rotation.y = s * 0.2; }
+  return g;
+}
