@@ -83,7 +83,8 @@ Rules (from you):
 - 53 Robot vending (approved)
 - 54 Cleaning robot (approved)
 - 55 Moss creature (approved)
-- 56 Fabrics + thrift rack (in review)
+- 56 Fabrics + thrift rack (approved)
+- 57 Dentist waiting room (in review)
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
