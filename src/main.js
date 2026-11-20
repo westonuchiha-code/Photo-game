@@ -12,6 +12,7 @@ import { makePosterCase } from './models/posters42.js';
 import { makeSchoolBus } from './models/bus44.js';
 import { makeStickerBox, makeMoldySign } from './models/graffiti45.js';
 import { makeBurlKiosk } from './models/burl46.js';
+import { makeDriedRose, makePropPistol, makeWhitePC } from './models/misc48.js';
 import { makeKeiTruck, makeCoachBus, makeScoutTruck, makeWorkVan, makeCommuterTrain, makeTrainPlatform, PLAT_Y, makeVintageScooter, makeRustedScooter, makeKeiHatch } from './models/vehicles36.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
@@ -1154,6 +1155,11 @@ rect(TP.x - 13, TP.x + 13, TP.z + 0.05, TP.z + 4.6);                            
 const pSt = platform.userData.stairs;
 rect(TP.x - 13, TP.x + pSt.x0 - 0.05, TP.z - 3.05, TP.z - 2.9); rect(TP.x + pSt.x1 + 0.05, TP.x + 13, TP.z - 3.05, TP.z - 2.9);   // platform back edge
 rect(TP.x - 13.2, TP.x - 13, TP.z - 3, TP.z); rect(TP.x + 13, TP.x + 13.2, TP.z - 3, TP.z);
+// 48 Misc: a dried rose in a bud vase on the restaurant's bar counter; the prop pistol on the pawn shop's
+// till counter; the white blue-glow PC on the floor of the junk & retro shop beside the shelf
+{ const rose = makeDriedRose(); rose.position.set(1.7 + 1.5, 1.07, Z0 + 0.3); add(rose);
+  const pis = makePropPistol(); pis.position.set(55.2 + 8 - 1.5, 1.045, -25.5 + 2.85); pis.rotation.y = 0.6; pis.scale.setScalar(1.1); add(pis);
+  const wpc = makeWhitePC(); wpc.position.set(3.5 - (9 / 2 - 0.4), 0, 12.2 + 3.3); wpc.rotation.y = Math.PI / 2; add(wpc); rect(-1.0, -0.5, 15.05, 15.55); }
 // 46 Burl veneer: a luxury watch kiosk in the underground mall hall
 const burlK = makeBurlKiosk(); burlK.position.set(MALL.x - 2.6, -4.2, MALL.z - 7); add(burlK);
 { const c = burlK.userData.collider; colliders.push({ type: 'box', minX: MALL.x - 2.6 + c[0], maxX: MALL.x - 2.6 + c[1], minZ: MALL.z - 7 + c[2], maxZ: MALL.z - 7 + c[3], y0: -4.6, y1: -1.6 }); }
@@ -1356,6 +1362,7 @@ const VIEWS = {
   vendinglow: { pos: [-0.8, 0.95, 10.75], target: [-0.85, 0.7, 11.7] },
   junkshop: { pos: [6.8, 1.8, 13.2], target: [1.5, 1.0, 20.5] },
   junkfront: { pos: [3.5, 2.2, 5.8], target: [3.5, 2.0, 12.2] },
+  rose: { pos: [3.6, 1.4, Z0 + 1.1], target: [3.2, 1.25, Z0 + 0.3] },
   decor: { pos: [1.4, 1.6, 16.2], target: [-0.6, 1.1, 14.4] },
   pachinko: { pos: [5.6, 1.5, 16.0], target: [7.6, 1.15, 14.4] },
   burl: { pos: [MALL.x + 0.2, -2.6, MALL.z - 4.6], target: [MALL.x - 2.6, -3.3, MALL.z - 7.2], lookUp: true },
@@ -1386,6 +1393,7 @@ const VIEWS = {
   knotbar: { pos: [16.5, 1.6, 69.6], target: [20.2, 1.4, 69.6] },
   keitruck: { pos: [-26.2, 1.9, 48.9], target: [-22.75, 0.9, 44.5] },
   coach: { pos: [-24.5, 2.4, 27.5], target: [-29.7, 1.6, 36] },
+  rose: { pos: [3.6, 1.4, Z0 + 1.1], target: [3.2, 1.25, Z0 + 0.3] },
   decor: { pos: [1.4, 1.6, 16.2], target: [-0.6, 1.1, 14.4] },
   pachinko: { pos: [5.6, 1.5, 16.0], target: [7.6, 1.15, 14.4] },
   burl: { pos: [MALL.x + 0.2, -2.6, MALL.z - 4.6], target: [MALL.x - 2.6, -3.3, MALL.z - 7.2], lookUp: true },
