@@ -90,7 +90,9 @@ Rules (from you):
 - 59 Utility + parking decoration (approved)
 - 60 Texture library (approved)
 - 61 Sport coupe (approved)
-- 62 Storage + snacks (in review)
+- 62 Storage + snacks (approved)
+- 63 Monkey (skipped by request)
+- 64 Random street batch (in review)
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text

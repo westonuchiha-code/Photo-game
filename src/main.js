@@ -15,6 +15,7 @@ import { makeTreatmentWing } from './models/treatment58.js';
 import { makeUtilityLot } from './models/utility59.js';
 import { makeCoupe } from './models/coupe61.js';
 import { makeStorageRow } from './models/storage62.js';
+import { makeCornerStore, makePoliceSedan, makeAircraftCarport } from './models/random64.js';
 import { makeGunShop } from './models/gunshop41.js';
 import { makePosterCase } from './models/posters42.js';
 import { makeSchoolBus } from './models/bus44.js';
@@ -1308,6 +1309,16 @@ const storage = makeStorageRow(); storage.position.set(SS.x, 0.02, SS.z); add(st
 for (const [x0, x1, z0, z1] of storage.userData.colliders) rect(SS.x + x0, SS.x + x1, SS.z + z0, SS.z + z1);
 const stAreas = storage.userData.areas.map((a) => ({ minX: SS.x + a.minX, maxX: SS.x + a.maxX, minZ: SS.z + a.minZ, maxZ: SS.z + a.maxZ }));
 stAreas.push({ minX: 176, maxX: 194, minZ: 90.5, maxZ: 92.2 });   // from the sidewalk onto the apron
+// 64 street batch: corner store on the corner of 161st Ave + the main street, a police sedan at the curb outside it,
+// the aircraft nose on its carport across the main street
+const CS = { x: 176, z: -12 };
+const cstore = makeCornerStore(); cstore.position.set(CS.x, 0.14, CS.z); add(cstore);
+for (const [x0, x1, z0, z1] of cstore.userData.colliders) rect(CS.x + x0, CS.x + x1, CS.z + z0, CS.z + z1);
+const csAreas = cstore.userData.areas.map((a) => ({ minX: CS.x + a.minX, maxX: CS.x + a.maxX, minZ: CS.z + a.minZ, maxZ: CS.z + a.maxZ }));
+const cop = makePoliceSedan(); cop.position.set(181, 0.012, -3.7); cop.rotation.y = Math.PI; add(cop); rect(178.4, 183.6, -4.7, -2.7);
+const AC = { x: 259, z: 14 };
+const acp = makeAircraftCarport(); acp.position.set(AC.x, 0.14, AC.z); acp.rotation.y = Math.PI; add(acp);
+for (const [x0, x1, z0, z1] of acp.userData.colliders) rect(AC.x - x1, AC.x - x0, AC.z - z1, AC.z - z0);
 const dnAreas = [...dentist.userData.areas, ...wing.userData.areas].map((a) => { const [minX, maxX, minZ, maxZ] = dnW([a.minX, a.maxX, a.minZ, a.maxZ]); return { minX, maxX, minZ, maxZ }; });
 
 const walk = new WalkControls(camera, renderer.domElement, {
@@ -1340,6 +1351,7 @@ const walk = new WalkControls(camera, renderer.domElement, {
     ...dnAreas, // the dentist's waiting room + its door
     ulArea, // the utility + parking lot
     ...stAreas, // the storage row's apron + the two open units
+    ...csAreas, // inside the corner store
   ],
   colliders,
 });
@@ -1462,6 +1474,9 @@ const VIEWS = {
   dentist2: { pos: [84.3, 1.8, 34.5], target: [93.5, 1.0, 38.6] },
   operatory: { pos: [97.25, 1.85, 30.1], target: [100.6, 0.95, 29.8] },
   operatory2: { pos: [99.6, 1.8, 28.6], target: [97.6, 0.9, 30.4] },
+  cornerstore: { pos: [163.5, 1.7, -1.5], target: [172, 2.2, -8] },
+  policecar: { pos: [185.6, 1.4, -0.9], target: [181, 0.7, -3.7] },
+  aircraft: { pos: [256, 1.7, 1.8], target: [259, 3.8, 14] },
   storage: { pos: [181, 1.7, 88.6], target: [186, 1.3, 96] },
   storageunit: { pos: [181.0, 1.65, 94.6], target: [181.0, 0.9, 98.8] },
   canwall: { pos: [189.0, 1.25, 96.6], target: [189.0, 0.9, 98.7] },

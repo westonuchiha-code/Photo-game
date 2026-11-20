@@ -24,6 +24,8 @@ export const LOTS = [
   { id: 'dentist', x0: 82, x1: 108, z0: 28, z1: 50, face: 'w', built: true },   // Brightwater Dental (item 57)
   { id: 'lotB', x0: 82, x1: 104, z0: -50, z1: -30, face: 'w', built: true },   // utility + parking lot (item 59)
   { id: 'lotC', x0: 175, x1: 195, z0: 91, z1: 115, face: 'n', built: true },   // Cedar Self Storage (item 62)
+  { id: 'store', x0: 168, x1: 184, z0: -17, z1: -7, face: 's', built: true },        // corner store (item 64)
+  { id: 'aircraft', x0: 252, x1: 266, z0: 7, z1: 21, face: 'n', built: true },     // aircraft-nose carport (item 64)
   { id: 'lotD', x0: 210, x1: 236, z0: -31, z1: -7, face: 's' },
 ];
 
