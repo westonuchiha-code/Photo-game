@@ -409,6 +409,13 @@ Rules (from you):
     running bond, recessed mortar, on a concrete plinth. Make seamless tiling textures plus
     normal maps, and use them on pillars/walls in the world.
 
+79. Batch 79 (photos/batch79/): two free-paper boxes on a street corner: a red plastic box on a
+    pedestal with a round domed top, a window door and "free, take one" lettering, covered in
+    stickers; a grey speckled box shaped like a little house (shingled gable roof with a chimney
+    stub, window door, logo decals). Also the slatted black steel trash can, a utility vault lid
+    with a red paint mark, and the concrete sidewalk with its joints. Real publication names and
+    logos replaced with made-up ones.
+
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"
   transom and the "OPEN!" plaque (both generic, so low priority).
