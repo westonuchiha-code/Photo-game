@@ -69,7 +69,8 @@ Rules (from you):
 - 39 Peeling sticker (approved)
 - 40 Nature trail (approved)
 - 41 Gun shop (approved)
-- 42 Gig posters (in review)
+- 42 Gig posters (approved)
+- 43 Snacks (in review)
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text

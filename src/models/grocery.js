@@ -6,6 +6,7 @@
 // panels, evaporator fans, stacked blue + black milk crates, green U-boat
 // carts with boxes) behind a strip curtain. Automatic sliding front doors.
 import * as THREE from 'three';
+import { makeShelfEdge } from './snacks43.js';
 import { fitText } from '../fonts.js';
 import { makeStockroom } from './stockroom.js';
 
@@ -409,6 +410,12 @@ export function makeGrocery() {
     g.add(gd);
     solid(-1.5, 4.5, z - 0.5, z + 0.5);
   }
+  // end-cap at the west end of the front aisle: snack boxes, the clearance tag, hanging bags (item 43)
+  { const ec2 = new THREE.Group(); ec2.position.set(-1.75, 0, 2.2); ec2.rotation.y = -Math.PI / 2; g.add(ec2);
+    ec2.add(box(1.2, 1.9, 0.08, std({ color: '#e8eaec', roughness: 0.5 }), 0, 0.95, -0.42));
+    ec2.add(box(1.2, 0.12, 0.46, std({ color: '#d8dadc' }), 0, 0.06, -0.2));
+    for (const y of [1.05, 1.55]) { const se = makeShelfEdge(1.2); se.position.y = y; ec2.add(se); }
+    solid(-2.25, -1.5, 1.6, 2.8); }
   // checkout near the front left
   const chk = new THREE.Group();
   chk.add(box(2.2, 0.9, 0.8, std({ color: '#3b3d40' }), 0, 0.45, 0));

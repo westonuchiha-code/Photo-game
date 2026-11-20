@@ -14,6 +14,7 @@
 import * as THREE from 'three';
 import { F, fitText } from '../fonts.js';
 import { makeBlueCrate } from './grime39.js';
+import { makeSnackPile, makeSodaCan, makeCandyPouch } from './snacks43.js';
 
 const _L = new THREE.TextureLoader();
 function tex(name, rx = 1, ry = 1) { const t = _L.load(`assets/textures/${name}.png`); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx, ry); t.anisotropy = 8; return t; }
@@ -231,6 +232,10 @@ export function makeTrail() {
   const bench = new THREE.Group(); bench.position.set(OV[0] + 0.4, 0, OV[1] - 0.6); g.add(bench);
   box(1.6, 0.06, 0.36, std({ color: '#7a5a3a' }), 0, 0.45, 0, bench); for (const s of [-1, 1]) box(0.08, 0.45, 0.32, std({ color: '#5a5a58' }), s * 0.65, 0.225, 0, bench);
   col(OV[0] - 0.5, OV[0] + 1.3, OV[1] - 0.8, OV[1] - 0.4);
+  // someone's picnic at the overlook: the snack pile on its woven blanket, a coconut-jelly can and a candy pouch on the bench
+  const pic = makeSnackPile(); pic.position.set(OV[0] - 0.4, 0.01, OV[1] + 0.5); pic.rotation.y = 0.3; g.add(pic);
+  const coco = makeSodaCan('coco'); coco.position.set(OV[0] + 0.7, 0.48, OV[1] - 0.6); g.add(coco);
+  const candy = makeCandyPouch(); candy.rotation.set(-Math.PI / 2, 0, 0.5); candy.position.set(OV[0] + 0.25, 0.49, OV[1] - 0.58); g.add(candy);
   // trail-start sign at the entrance (made-up name)
   const ts = canvasT(512, 160, (x) => { x.fillStyle = '#5a3a20'; x.fillRect(0, 0, 512, 160); x.strokeStyle = '#e8d8b0'; x.lineWidth = 4; x.strokeRect(10, 10, 492, 140); x.fillStyle = '#f2e6c8'; fitText(x, 'すぎかげ遊歩道', 256, 62, 460, 56, F.brush, { spacing: 6 }); fitText(x, 'SUGIKAGE NATURE TRAIL  →  OVERLOOK 600 m', 256, 122, 460, 26, F.label, { spacing: 2 }); });
   const tsg = new THREE.Group(); tsg.position.set(-0.5, 0, 0.4); g.add(tsg);

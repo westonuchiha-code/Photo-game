@@ -1367,6 +1367,8 @@ const VIEWS = {
   knotbar: { pos: [16.5, 1.6, 69.6], target: [20.2, 1.4, 69.6] },
   keitruck: { pos: [-26.2, 1.9, 48.9], target: [-22.75, 0.9, 44.5] },
   coach: { pos: [-24.5, 2.4, 27.5], target: [-29.7, 1.6, 36] },
+  snacks: { pos: [-74.5, 1.3, -36.0], target: [-75.8, 0.3, -37.4] },
+  snackshelf: { pos: [20.6, 1.5, -38.2], target: [22.25, 1.2, -38.8] },
   posters: { pos: [-11.8, 1.6, 0.4], target: [-8.3, 1.45, 0] },
   pawnshop: { pos: [56.2, 1.6, -28.4], target: [59.0, 0.9, -25.0] },
   pawnfront: { pos: [49.5, 2.0, -24.0], target: [55.0, 2.2, -25.5] },
