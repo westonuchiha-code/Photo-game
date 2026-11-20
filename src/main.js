@@ -17,6 +17,7 @@ import { makeFoldingEbike, makeWaveRack, makePourGrid } from './models/misc49.js
 import { makeCompactCorner } from './models/badparker50.js';
 import { makeCartCorral } from './models/cart51.js';
 import { makeRealtyWindow } from './models/listings52.js';
+import { makeRobotVending, makePlainVending } from './models/robotvend53.js';
 import { makeKeiTruck, makeCoachBus, makeScoutTruck, makeWorkVan, makeCommuterTrain, makeTrainPlatform, PLAT_Y, makeVintageScooter, makeRustedScooter, makeKeiHatch } from './models/vehicles36.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
@@ -1169,6 +1170,10 @@ for (const [x0, x1, z0, z1] of bpc.userData.colliders) colliders.push({ type: 'b
 const RW = { x: -14.4, z: 47.75 };
 { const rw = makeRealtyWindow(); rw.position.set(RW.x, 0, RW.z); add(rw); rect(RW.x - 1.9, RW.x + 1.9, RW.z - 0.3, RW.z + 0.05);
   add(plane(mats.lotConcrete, -19.7, -9.2, 47.4, 51.9, 0.005, 4)); }
+// 53 Robot vending machine, beside an ordinary blue and red machine, along the same wall west of the realty window
+{ const rv = makeRobotVending(); rv.position.set(-17.85, 0, 48.05); add(rv); rect(-18.7, -17.1, 47.6, 48.7);
+  const b = makePlainVending('#1d4aa8'); b.position.set(-16.55, 0, 47.85); add(b); rect(-17.05, -16.05, 47.45, 48.25);
+  const r = makePlainVending('#b81a22'); r.position.set(-19.3, 0, 47.85); add(r); rect(-19.8, -18.8, 47.45, 48.25); }
 // 51 Smashed cart: a cart corral in the grocery lot with the crushed cart jammed against it
 { const cc = makeCartCorral(); cc.position.set(12.6, 0, -22.4); add(cc); const c = cc.userData.collider; rect(12.6 + c[0], 12.6 + c[1], -22.4 + c[2], -22.4 + c[3]); }
 // 49 Misc 2: the folding e-bike locked to a wave rack on the old-town sidewalk; the user's pour-painting grid
@@ -1412,6 +1417,7 @@ const VIEWS = {
   knotbar: { pos: [16.5, 1.6, 69.6], target: [20.2, 1.4, 69.6] },
   keitruck: { pos: [-26.2, 1.9, 48.9], target: [-22.75, 0.9, 44.5] },
   coach: { pos: [-24.5, 2.4, 27.5], target: [-29.7, 1.6, 36] },
+  robotvend: { pos: [-17.6, 1.6, 51.4], target: [-17.9, 1.2, 48.0] },
   realty: { pos: [RW.x + 0.4, 1.7, RW.z + 3.6], target: [RW.x, 1.8, RW.z] },
   carts: { pos: [14.0, 1.7, -19.6], target: [14.0, 0.5, -22.3] },
   badparker: { pos: [BP.x + 9.0, 2.0, BP.z - 4.6], target: [BP.x + 3.0, 1.0, BP.z - 1.6] },
