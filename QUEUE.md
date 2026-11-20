@@ -70,7 +70,8 @@ Rules (from you):
 - 40 Nature trail (approved)
 - 41 Gun shop (approved)
 - 42 Gig posters (approved)
-- 43 Snacks (in review)
+- 43 Snacks (approved)
+- 44 School bus (in review)
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
