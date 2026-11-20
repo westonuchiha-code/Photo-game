@@ -67,7 +67,8 @@ Rules (from you):
 - 37 Retro electronics (approved; steam loco cab skipped)
 - 38 Bar alley signage (already built as 28i bar alley)
 - 39 Peeling sticker (approved)
-- 40 Nature trail (in review)
+- 40 Nature trail (approved)
+- 41 Gun shop (in review)
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
@@ -418,6 +419,15 @@ Rules (from you):
     stub, window door, logo decals). Also the slatted black steel trash can, a utility vault lid
     with a red paint mark, and the concrete sidewalk with its joints. Real publication names and
     logos replaced with made-up ones.
+
+80. Batch 80 (photos/batch80/): yellow plastic free-paper box on a pedestal ("FREE" down the post)
+    against a brick wall; orange-and-yellow message-board trailer with solar panel, mast and a dot-
+    matrix LED board ("road closing" style notice, made-up street + date); black pebbled plastic
+    texture; red-and-black-trimmed counter on a cream/black speckled checker-tile floor with a
+    takeout logo door mat (made-up shop + mascot); red textured wall paint; condiment station on a
+    butcher-block counter against a teal wall (stainless swing-lid bin, black labelled bins for lids/
+    forks/straws..., pump ketchup dispenser, thermostat); three-tank iced drink dispenser with labelled
+    tanks. All brands, logos, handles and street names replaced with made-up ones.
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"
