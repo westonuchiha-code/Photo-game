@@ -16,7 +16,7 @@
 // Faces +z (entrance at z = 0, alley runs to -z), origin at ground level on the centre line.
 // userData: colliders [[x0,x1,z0,z1]] (street level only), area {minX..}
 import * as THREE from 'three';
-import { makePortableTV, makeSoundCard, makeHandheldCase } from './electronics37.js';
+import { makePortableTV, makeSoundCard, makeHandheldCase, makeGadgetCase } from './electronics37.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { F, fitText } from '../fonts.js';
 import { makeCircuitBoard, makeCordBundle } from './pcb33.js';
@@ -459,7 +459,7 @@ export function makeMarketAlley() {
       // shutter rolled up into its housing; a low display table at the front line
       g.add(box(0.28, 0.24, w, std({ color: '#c3c6c2', metalness: 0.2 }), s * (HW + 0.2), OH - 0.12, zc));
       if (o.cases) {
-        for (const [dz, cw] of [[-0.9, 1.4], [0.9, 1.4]]) { const hcase = dz < 0 && !g.userData.hasHH; if (hcase) g.userData.hasHH = true; const dc = hcase ? makeHandheldCase() : displayCase(0.6, 1.25, cw, i * 13 + dz * 10); if (hcase) (g.userData.anim ||= []).push(dc); dc.position.set(s * (HW + 0.4), 0, zc + dz); dc.rotation.y = s > 0 ? -Math.PI / 2 : Math.PI / 2; g.add(dc); }
+        for (const [dz, cw] of [[-0.9, 1.4], [0.9, 1.4]]) { const hcase = dz < 0 && !g.userData.hasHH, gcase = dz > 0 && g.userData.hasHH && !g.userData.hasGC; if (hcase) g.userData.hasHH = true; if (gcase) g.userData.hasGC = true; const dc = hcase ? makeHandheldCase() : gcase ? makeGadgetCase() : displayCase(0.6, 1.25, cw, i * 13 + dz * 10); if (hcase || gcase) (g.userData.anim ||= []).push(dc); dc.position.set(s * (HW + 0.4), 0, zc + dz); dc.rotation.y = s > 0 ? -Math.PI / 2 : Math.PI / 2; g.add(dc); }
       } else {
         g.add(box(0.6, 0.75, w * 0.55, std({ color: '#6a6e72', metalness: 0.3 }), s * (HW + 0.45), 0.375, zc - 0.5));
         const cb = makeCordBundle(); cb.position.set(s * (HW + 0.45), 0.75, zc - 0.5); cb.rotation.y = s > 0 ? Math.PI / 2 : -Math.PI / 2; g.add(cb);

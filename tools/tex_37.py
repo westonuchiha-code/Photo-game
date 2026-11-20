@@ -121,3 +121,11 @@ layout = {"tabY": round(yb / BH, 4), "tab": [round(fx0 / BW, 4), round(fx1 / BW,
           "ext1": [P(338, 400), P(356, 535)], "ext2": [P(1035, 437), P(1080, 512)], "edge": [P(300, 697), P(1120, 745)], "jacks": [P(628, 120), P(706, 120)]}
 json.dump(layout, open(os.path.join(OUT, "sc_board.json"), "w"))
 print("wrote sc_board, sc_daughter", layout["tabY"], layout["tab"])
+
+# ---- cartridge reader (custom-gg-msx-cart.jpg): a patch of its green board (traces + vias) as a seamless tile
+# the reader photo is too glary for a board texture: use the sound card's real green (traces + vias) instead
+pz = cv2.resize(board[440:600, 1080:1240], (256, 256), interpolation=cv2.INTER_AREA).astype(np.float32)
+pz = pz * 0.9 + np.array([10, 30, 0], np.float32) * 0.1
+rz = np.roll(np.roll(pz, 128, 0), 128, 1); wz = np.minimum(np.minimum(np.arange(256), 255 - np.arange(256)) / 128, 1); mz = np.minimum(wz[:, None], wz[None, :])[:, :, None] ** 0.7
+cv2.imwrite(os.path.join(OUT, "cr_green.png"), (pz * mz + rz * (1 - mz)).clip(0, 255).astype(np.uint8))
+print("wrote cr_green")

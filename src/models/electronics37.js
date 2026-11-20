@@ -302,3 +302,136 @@ export function makeHandheldCase() {
   box(W - 0.2, 0.012, 0.03, new THREE.MeshBasicMaterial({ color: '#f4f8ff' }), 0, H - 0.02, -0.18, g);
   return g;
 }
+
+// ---------------------------------------------------------------------------------------------------------
+//   Gadget turntable (custom-gg-msx-cart.jpg), made-up maker "SLOTWORKS":
+//   makeCartReader()  a green multi-slot cartridge reader standing upright in a clear acrylic sandwich stand:
+//     two long black edge-connector slots and one with gold contacts showing, a grey round DIN socket, a small
+//     OLED showing the cart it read, a lit green LED, silkscreen. Board texture from the photographed boards.
+//   makeUsbAdapter()  the grey controller-to-USB adapter (green board end, USB-C port).
+//   makeCpuMeter()  the "%CPU" desk gauge: analog panel meter with a red needle, two glowing nixie tubes in
+//     front, a red LED bar display on top.  makeGadgetCase()  glass case with a black turntable carrying all of it.
+function canvasT(w, h, draw) { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; }
+export function makeCartReader() {
+  const g = new THREE.Group(); g.name = 'cart_reader';
+  const W = 0.17, H = 0.2, T = 0.0016;
+  const gt = tex('cr_green', true); gt.repeat.set(2.2, 2.6);
+  const green = new THREE.MeshStandardMaterial({ map: gt, roughness: 0.45 });
+  const silk = canvasT(512, 600, (x, w, h) => {
+    x.clearRect(0, 0, w, h); x.strokeStyle = '#e8f0e8'; x.fillStyle = '#e8f0e8'; x.lineWidth = 3;
+    x.save(); x.translate(300, 470); x.transform(1, 0, -0.2, 1, 0, 0); fitText(x, 'SLOTWORKS', 0, 0, 270, 56, F.retro, { spacing: 4 }); x.restore();
+    x.beginPath(); x.roundRect(180, 520, 260, 44, 22); x.stroke(); fitText(x, 'CARTRIDGE READER', 310, 543, 230, 24, F.wayfind, { spacing: 3 });
+    x.font = `16px ${F.small}`; x.textAlign = 'left'; ['SLOT A 60P', 'SLOT B 60P', 'SLOT C 46P'].forEach((t, i) => x.fillText(t, 380, 128 + i * 120));
+    for (let i = 0; i < 22; i++) { x.beginPath(); x.arc(486, 60 + i * 24, 5, 0, 7); x.stroke(); }                    // right-edge header holes
+    for (let i = 0; i < 40; i++) { x.beginPath(); x.arc(30 + (i % 4) * 14, 430 + Math.floor(i / 4) * 14, 3, 0, 7); x.fill(); }
+  });
+  // board (vertical, facing +z) with the silkscreen overlay
+  const board = new THREE.Mesh(new THREE.BoxGeometry(W, H, T), green); board.position.y = 0.03 + H / 2; board.castShadow = true; g.add(board);
+  const sk = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.MeshStandardMaterial({ map: silk, transparent: true, roughness: 0.5 })); sk.position.set(0, board.position.y, T / 2 + 0.0004); g.add(sk);
+  const y0 = 0.03;
+  // edge-connector slots (black bodies with a dark mouth and contact rows); the lowest shows gold fingers
+  const blk = new THREE.MeshStandardMaterial({ color: '#141414', roughness: 0.5 }), gold = new THREE.MeshStandardMaterial({ color: '#d4a640', metalness: 0.85, roughness: 0.3 });
+  const contacts = canvasT(512, 64, (x) => { x.fillStyle = '#0a0a0a'; x.fillRect(0, 0, 512, 64); x.fillStyle = '#4a4a4a'; for (let i = 0; i < 60; i++) { x.fillRect(6 + i * 8.4, 8, 4, 20); x.fillRect(6 + i * 8.4, 36, 4, 20); } });
+  [[0.17, 0.15, false], [0.12, 0.15, false], [0.065, 0.13, true]].forEach(([yy, ww, showGold]) => {
+    const s = new THREE.Mesh(new THREE.BoxGeometry(ww, 0.016, 0.018), [blk, blk, new THREE.MeshStandardMaterial({ map: contacts, roughness: 0.5 }), blk, blk, blk]);
+    s.position.set(-0.005, y0 + yy, 0.01); s.castShadow = true; g.add(s);
+    if (showGold) for (let i = 0; i < 23; i++) box(0.0028, 0.012, 0.002, gold, -0.005 - ww / 2 + 0.006 + i * (ww - 0.012) / 22, y0 + yy - 0.002, 0.02, g);
+    for (const sx of [-1, 1]) box(0.006, 0.02, 0.02, blk, -0.005 + sx * (ww / 2 + 0.003), y0 + yy, 0.01, g);
+  });
+  // round DIN socket at the top, OLED, green LED
+  const din = cyl(0.017, 0.012, new THREE.MeshStandardMaterial({ color: '#8a8c8a', roughness: 0.5 }), g, 24); din.rotation.x = Math.PI / 2; din.position.set(0.0, y0 + 0.2 - 0.012, 0.007);
+  for (const dx of [-0.007, 0, 0.007]) { const h = new THREE.Mesh(new THREE.CircleGeometry(0.0028, 10), new THREE.MeshBasicMaterial({ color: '#111' })); h.position.set(dx, y0 + 0.188, 0.0132); g.add(h); }
+  const oled = canvasT(256, 128, (x) => { x.fillStyle = '#04060a'; x.fillRect(0, 0, 256, 128); x.fillStyle = '#7ad0ff'; x.font = `22px ${F.led}`; ['STAR PUFF', '8 MBIT  OK', 'CRC 3F9A', 'SAVE >'].forEach((t, i) => x.fillText(t, 10, 28 + i * 28)); });
+  box(0.04, 0.026, 0.003, blk, -0.05, y0 + 0.025, 0.003, g);
+  const om = new THREE.Mesh(new THREE.PlaneGeometry(0.036, 0.02), new THREE.MeshBasicMaterial({ map: oled })); om.position.set(-0.05, y0 + 0.025, 0.0047); g.add(om);
+  const led = new THREE.Mesh(new THREE.SphereGeometry(0.004, 10, 8), new THREE.MeshBasicMaterial({ color: '#40ff80' })); led.position.set(-0.07, y0 + 0.19, 0.004); g.add(led);
+  const pl = new THREE.PointLight('#40ff80', 0.08, 0.25, 2); pl.position.set(-0.07, y0 + 0.19, 0.03); g.add(pl);
+  // acrylic sandwich stand: front + back clear plates, four standoffs, a clear base
+  const acr = new THREE.MeshStandardMaterial({ color: '#e8f2f4', transparent: true, opacity: 0.22, roughness: 0.05, depthWrite: false });
+  const edge = new THREE.MeshStandardMaterial({ color: '#cfe6ea', transparent: true, opacity: 0.6, roughness: 0.1 });
+  for (const z of [-0.012, 0.032]) { const p = box(W + 0.03, H + 0.04, 0.003, acr, 0, y0 - 0.01 + (H + 0.04) / 2, z, g); p.castShadow = false; }
+  box(W + 0.06, 0.006, 0.1, edge, 0, 0.003, 0.01, g);
+  for (const sx of [-1, 1]) for (const sy of [0.03, 0.22]) { const s2 = cyl(0.004, 0.044, new THREE.MeshStandardMaterial({ color: '#b8bcc0', metalness: 0.8, roughness: 0.3 }), g, 10); s2.rotation.x = Math.PI / 2; s2.position.set(sx * (W / 2 + 0.006), sy, 0.01); }
+  for (const sx of [-1, 1]) box(0.012, 0.03, 0.06, edge, sx * (W / 2 + 0.006), y0 - 0.005, 0.01, g);
+  return g;
+}
+export function makeUsbAdapter() {
+  const g = new THREE.Group(); g.name = 'usb_adapter';
+  const grey = new THREE.MeshStandardMaterial({ color: '#a8aaa8', roughness: 0.55 });
+  const sh = new THREE.Shape(); const w = 0.06, h = 0.026, r = 0.006;
+  sh.moveTo(-w / 2 + r, -h / 2); sh.lineTo(w / 2 - r, -h / 2); sh.quadraticCurveTo(w / 2, -h / 2, w / 2, -h / 2 + r); sh.lineTo(w / 2, h / 2 - r); sh.quadraticCurveTo(w / 2, h / 2, w / 2 - r, h / 2); sh.lineTo(-w / 2 + r, h / 2); sh.quadraticCurveTo(-w / 2, h / 2, -w / 2, h / 2 - r); sh.lineTo(-w / 2, -h / 2 + r); sh.quadraticCurveTo(-w / 2, -h / 2, -w / 2 + r, -h / 2);
+  const geo = new THREE.ExtrudeGeometry(sh, { depth: 0.032, bevelEnabled: true, bevelThickness: 0.003, bevelSize: 0.003, bevelSegments: 3 }); geo.translate(0, 0, -0.016);
+  const b = new THREE.Mesh(geo, grey); b.rotation.y = Math.PI / 2; b.position.y = h / 2 + 0.003; b.castShadow = true; g.add(b);
+  // green board end with a USB-C port, the controller plug end with grip ribs, a moulded label
+  const gt = tex('cr_green', true);
+  const end = new THREE.Mesh(new THREE.PlaneGeometry(0.03, 0.022), new THREE.MeshStandardMaterial({ map: gt, roughness: 0.45 })); end.rotation.y = Math.PI / 2; end.position.set(0.0332, h / 2 + 0.003, 0); g.add(end);
+  const port = new THREE.Mesh(new THREE.CapsuleGeometry(0.0016, 0.006, 4, 8), new THREE.MeshStandardMaterial({ color: '#c8ccd0', metalness: 0.8, roughness: 0.3 })); port.rotation.x = Math.PI / 2; port.position.set(0.0336, h / 2 + 0.003, 0); g.add(port);
+  for (let i = 0; i < 5; i++) box(0.002, 0.024, 0.03, new THREE.MeshStandardMaterial({ color: '#959795', roughness: 0.6 }), -0.025 + i * 0.004, h / 2 + 0.003, 0, g);
+  const lab = canvasT(256, 64, (x) => { x.fillStyle = '#2c2e2c'; x.beginPath(); x.roundRect(4, 4, 248, 56, 10); x.fill(); x.fillStyle = '#cfd2cf'; fitText(x, 'PAD  →  USB', 128, 34, 220, 30, F.wayfind, { spacing: 3 }); });
+  const lm = new THREE.Mesh(new THREE.PlaneGeometry(0.03, 0.008), new THREE.MeshStandardMaterial({ map: lab, roughness: 0.5 })); lm.rotation.x = -Math.PI / 2; lm.rotation.z = Math.PI / 2; lm.position.set(0.004, h + 0.0062, 0); g.add(lm);
+  return g;
+}
+export function makeCpuMeter() {
+  const g = new THREE.Group(); g.name = 'cpu_meter';
+  const blk = new THREE.MeshStandardMaterial({ color: '#1a1a1c', roughness: 0.45 });
+  // analog panel meter: black bezel box, cream dial, red needle, glass
+  box(0.12, 0.1, 0.05, blk, 0, 0.065, -0.02, g);
+  const dial = canvasT(512, 420, (x, w, h) => {
+    x.fillStyle = '#f2efe6'; x.fillRect(0, 0, w, h); x.strokeStyle = '#222'; x.fillStyle = '#222'; x.lineWidth = 3;
+    const cx = 256, cy = 380, R = 300; x.beginPath(); x.arc(cx, cy, R, Math.PI * 1.22, Math.PI * 1.78); x.stroke();
+    for (let i = 0; i <= 50; i++) { const a = Math.PI * 1.22 + (i / 50) * Math.PI * 0.56, l = i % 10 === 0 ? 30 : (i % 5 === 0 ? 20 : 12); x.lineWidth = i % 10 === 0 ? 4 : 2; x.beginPath(); x.moveTo(cx + Math.cos(a) * R, cy + Math.sin(a) * R); x.lineTo(cx + Math.cos(a) * (R - l), cy + Math.sin(a) * (R - l)); x.stroke();
+      if (i % 10 === 0) { x.font = `28px ${F.small}`; x.textAlign = 'center'; x.fillText(String(i * 2), cx + Math.cos(a) * (R - 56), cy + Math.sin(a) * (R - 56) + 10); } }
+    x.font = `bold 46px ${F.small}`; x.textAlign = 'center'; x.fillText('%CPU', cx, 250);
+    x.strokeStyle = '#c01818'; x.lineWidth = 6; const an = Math.PI * 1.22 + 0.42 * Math.PI * 0.56; x.beginPath(); x.moveTo(cx, cy); x.lineTo(cx + Math.cos(an) * (R - 10), cy + Math.sin(an) * (R - 10)); x.stroke();
+  });
+  const dm = new THREE.Mesh(new THREE.PlaneGeometry(0.104, 0.085), new THREE.MeshStandardMaterial({ map: dial, roughness: 0.6 })); dm.position.set(0, 0.067, 0.0052); g.add(dm);
+  const gl = new THREE.Mesh(new THREE.PlaneGeometry(0.106, 0.087), new THREE.MeshStandardMaterial({ color: '#ffffff', transparent: true, opacity: 0.08, roughness: 0.02 })); gl.position.set(0, 0.067, 0.008); g.add(gl);
+  // two nixie tubes standing in front of the meter, glowing digits
+  const digit = (d) => canvasT(128, 192, (x) => { x.fillStyle = '#000'; x.fillRect(0, 0, 128, 192); x.strokeStyle = 'rgba(255,140,40,0.25)'; x.lineWidth = 2; for (let k = 0; k < 10; k++) { x.font = `150px ${F.small}`; x.strokeText(String(k), 30, 160); }
+    x.shadowColor = '#ff7a10'; x.shadowBlur = 18; x.strokeStyle = '#ffb050'; x.lineWidth = 6; x.font = `150px ${F.small}`; x.strokeText(String(d), 30, 160); });
+  [['4', -0.022], ['2', 0.022]].forEach(([d, px]) => {
+    const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.05, 20, 1, true), new THREE.MeshStandardMaterial({ color: '#c8b8a0', transparent: true, opacity: 0.22, roughness: 0.05, side: THREE.DoubleSide, depthWrite: false }));
+    tube.position.set(px, 0.035, 0.04); g.add(tube);
+    const dome = new THREE.Mesh(new THREE.SphereGeometry(0.014, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), tube.material); dome.position.set(px, 0.06, 0.04); g.add(dome);
+    const face = new THREE.Mesh(new THREE.PlaneGeometry(0.02, 0.03), new THREE.MeshBasicMaterial({ map: digit(d), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })); face.position.set(px, 0.036, 0.04); g.add(face);
+    const sock = cyl(0.016, 0.008, blk, g, 20); sock.position.set(px, 0.006, 0.04);
+  });
+  const glow = new THREE.PointLight('#ff8a30', 0.03, 0.2, 2); glow.position.set(0, 0.04, 0.07); g.add(glow);
+  box(0.13, 0.004, 0.11, blk, 0, 0.002, 0.015, g);
+  // red LED bar display on a little stand behind/above
+  const bar = canvasT(256, 48, (x) => { x.fillStyle = '#1a0404'; x.fillRect(0, 0, 256, 48); for (let i = 0; i < 20; i++) { x.fillStyle = i < 13 ? '#ff3030' : '#4a1010'; x.fillRect(6 + i * 12.4, 8, 9, 32); } });
+  box(0.07, 0.016, 0.01, blk, 0.07, 0.135, -0.02, g);
+  const bm = new THREE.Mesh(new THREE.PlaneGeometry(0.064, 0.012), new THREE.MeshBasicMaterial({ map: bar })); bm.position.set(0.07, 0.135, -0.0145); g.add(bm);
+  box(0.006, 0.02, 0.006, blk, 0.07, 0.118, -0.02, g);
+  return g;
+}
+export function makeGadgetCase() {
+  const g = new THREE.Group(); g.name = 'gadget_case';
+  const W = 1.4, H = 1.25, D = 0.6, BH = 0.82;
+  const glass = new THREE.MeshStandardMaterial({ color: '#d8e6ea', transparent: true, opacity: 0.14, roughness: 0.04, depthWrite: false });
+  const blackM = new THREE.MeshStandardMaterial({ color: '#1a1a1c', roughness: 0.5 }), alu = new THREE.MeshStandardMaterial({ color: '#c3c6c8', metalness: 0.5, roughness: 0.3 });
+  box(W, BH, D, blackM, 0, BH / 2, 0, g);
+  const gl = box(W - 0.02, H - BH, D - 0.02, glass, 0, BH + (H - BH) / 2, 0, g); gl.castShadow = false;
+  for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) box(0.02, H - BH, 0.02, alu, sx * (W / 2 - 0.01), BH + (H - BH) / 2, sz * (D / 2 - 0.01), g);
+  for (const y of [BH, H]) for (const sz of [-1, 1]) box(W, 0.02, 0.02, alu, 0, y, sz * (D / 2 - 0.01), g);
+  box(W - 0.04, 0.004, D - 0.04, new THREE.MeshStandardMaterial({ color: '#f2f2f0', roughness: 0.7 }), 0, BH + 0.002, 0, g);
+  // black turntable (slowly turning) with the reader, two adapters and price tickets
+  const tt = new THREE.Group(); tt.position.set(-0.35, BH + 0.004, 0.02); g.add(tt);
+  const base = cyl(0.24, 0.05, blackM, tt, 48); base.position.y = 0.025;
+  const plat = new THREE.Group(); plat.position.y = 0.05; tt.add(plat);
+  const top = cyl(0.23, 0.006, new THREE.MeshStandardMaterial({ color: '#0e0e10', roughness: 0.3, metalness: 0.2 }), plat, 48); top.position.y = 0.003;
+  const rd = makeCartReader(); rd.scale.setScalar(1.25); rd.position.set(0, 0.006, -0.03); plat.add(rd);
+  const u1 = makeUsbAdapter(); u1.position.set(-0.12, 0.006, 0.12); u1.rotation.y = 0.5; u1.scale.setScalar(1.3); plat.add(u1);
+  const ticket = (txt, px, pz, ry) => { const t = canvasT(256, 160, (x) => { x.fillStyle = '#fdfdfb'; x.fillRect(0, 0, 256, 160); x.fillStyle = '#222'; fitText(x, 'USED · TESTED', 128, 30, 220, 20, F.small); x.fillStyle = '#c81e28'; fitText(x, txt, 128, 82, 220, 52, F.condensed); x.fillStyle = '#111'; for (let i = 0; i < 40; i++) x.fillRect(30 + i * 5, 118, i % 3 ? 2 : 3, 30); });
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(0.08, 0.05), new THREE.MeshStandardMaterial({ map: t, roughness: 0.7 })); m.rotation.x = -Math.PI / 2; m.rotation.z = ry; m.position.set(px, 0.0065, pz); plat.add(m); };
+  ticket('¥4,800', 0.05, 0.14, 0.2); ticket('¥3,600', -0.13, 0.03, -0.4);
+  const u2 = makeUsbAdapter(); u2.position.set(0.25, BH + 0.004, 0.18); u2.rotation.y = -0.3; u2.scale.setScalar(1.3); g.add(u2);
+  const meter = makeCpuMeter(); meter.position.set(0.15, BH + 0.004, -0.08); meter.scale.setScalar(1.6); meter.rotation.y = -0.15; g.add(meter);
+  // a "sold out / restocking" handwritten card (made-up wording) and the strip light
+  const sc = canvasT(256, 192, (x) => { x.fillStyle = '#fff6e8'; x.fillRect(0, 0, 256, 192); x.fillStyle = '#d02020'; fitText(x, 'SOLD OUT', 128, 60, 220, 48, F.marker); x.fillStyle = '#333'; fitText(x, 'more coming soon!', 128, 130, 220, 30, F.hand); });
+  const card = new THREE.Mesh(new THREE.PlaneGeometry(0.11, 0.082), new THREE.MeshStandardMaterial({ map: sc, roughness: 0.7, side: THREE.DoubleSide })); card.position.set(0.45, BH + 0.05, -0.05); card.rotation.y = -0.3; g.add(card);
+  box(0.004, 0.05, 0.03, new THREE.MeshStandardMaterial({ color: '#888' }), 0.45, BH + 0.025, -0.07, g);
+  box(W - 0.2, 0.012, 0.03, new THREE.MeshBasicMaterial({ color: '#f4f8ff' }), 0, H - 0.02, -0.18, g);
+  g.userData.update = (t) => { plat.rotation.y = t * 0.25; };
+  return g;
+}
