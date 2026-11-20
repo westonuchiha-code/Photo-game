@@ -5,7 +5,7 @@
   dn_ribbed    ribbed-glass cabinet door panel (dentist10)
   dn_forest    the framed forest photo above the coffee cabinet (dentist10, as much as the photo shows)
   dn_cube      wood cube side table face (dentist04)   dn_rustic  wire coffee table's rustic top (dentist08)
-  dn_cow       the cow-painted pumpkin (dentist09)     dn_toothface  the tooth figurine's face (dentist07)
+  dn_toothface  the tooth figurine's face (dentist07)
 """
 import os, numpy as np, cv2
 from PIL import Image
@@ -35,5 +35,4 @@ save("dn_forest", cv2.resize(crop(d10, 0.0, 0.0, 0.245, 0.168), (384, 512), inte
 cb = seamless(crop(d04, 0.40, 0.548, 0.52, 0.578), (256, 256), 0).astype(np.float32)   # the shaded face: grain kept, re-lit to the sunny face's honey tone
 save("dn_cube", (cb * (np.array([70, 140, 205]) / cb.mean((0, 1)))).clip(0, 255).astype(np.uint8))
 save("dn_rustic", seamless(cv2.resize(crop(d08, 0.62, 0.43, 0.69, 0.48), (512, 256)), (512, 512), 0))
-save("dn_cow", cv2.resize(crop(d09, 0.64, 0.43, 0.97, 0.63), (512, 256), interpolation=cv2.INTER_AREA))
 save("dn_toothface", cv2.resize(crop(d07, 0.5, 0.19, 0.78, 0.36), (256, 160), interpolation=cv2.INTER_AREA))
