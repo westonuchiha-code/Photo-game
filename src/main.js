@@ -8,6 +8,7 @@ import { finishLoading } from './loading.js';
 import { shrinkCanvases } from './texcache.js';
 import { makeTrail } from './models/trail40.js';
 import { makeMossCreature, makeMossMound } from './models/creature55.js';
+import { makeThriftCorner } from './models/fabrics56.js';
 import { makeGunShop } from './models/gunshop41.js';
 import { makePosterCase } from './models/posters42.js';
 import { makeSchoolBus } from './models/bus44.js';
@@ -1017,6 +1018,8 @@ const junkArea = {};
   const junk = makeJunkShop(9, 12); rotPI(junk, 3.5, 12.2, junk.userData.colliders);
   const a2 = junk.userData.area;
   Object.assign(junkArea, { minX: 3.5 - a2.x1, maxX: 3.5 - a2.x0, minZ: 12.2 - a2.z1, maxZ: 12.2 - a2.z0 });
+  // 56 fabrics: a secondhand clothes rack + folded-stack table out on the sidewalk, west of the junk shop door
+  const thrift = makeThriftCorner(); rotPI(thrift, 6.4, 10.9, [thrift.userData.collider]);
   const vm = makeVendingMachine(); vm.position.set(-0.85, 0, 11.7); vm.rotation.y = Math.PI; add(vm); rect(-1.25, -0.4, 11.65, 12.45);
 }
 
@@ -1408,6 +1411,7 @@ const VIEWS = {
   vendingclose: { pos: [-0.75, 1.55, 10.85], target: [-0.85, 1.45, 11.7] },
   vendinglow: { pos: [-0.8, 0.95, 10.75], target: [-0.85, 0.7, 11.7] },
   junkshop: { pos: [6.8, 1.8, 13.2], target: [1.5, 1.0, 20.5] },
+  thrift: { pos: [4.6, 1.7, 7.4], target: [6.6, 1.0, 10.9] },
   junkfront: { pos: [3.5, 2.2, 5.8], target: [3.5, 2.0, 12.2] },
   graffiti: { pos: [-15.2, 1.9, 7.0], target: [-15.5, 1.9, 12.1] },
   arcade: { pos: [-11.6, 1.6, 9.8], target: [-12.2, 1.3, 11.4] },
