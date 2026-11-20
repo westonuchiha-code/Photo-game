@@ -8,7 +8,8 @@
 //                          disconnect handle, a meter, a gravel strip. Wall at z = 0, cabinets toward +z.
 //   makeTelecomPedestal()  pale-green ribbed telecom pedestal with a cap
 //   makeSprinklerFDC()     fire-department sprinkler connection: red ring plate, chrome two-way inlet with caps, drip valve
-//   makeAccessibleSign(onPost)  blue accessible-parking sign (redrawn), on a U-channel post or for a wall
+//   makeAccessibleSign(onPost, van)  the standard blue handicapped-parking sign, on a U-channel post or for a wall;
+//                          van adds the VAN ACCESSIBLE plate under it
 //   makeLeafScatter(n, w, d, seed)  instanced curled leaves (both kinds) over a w x d area
 //   makeUtilityLot()       the whole lot: 22 x 20 m (x -11..11, z -10..10), back wall (block + stone column) at x = +11
 //                          facing -x, parking stalls along it, an accessible stall + striped aisle, a drive aisle, a
@@ -177,7 +178,7 @@ function isa(x, cx, cy, s, col) {
   x.lineWidth = 8; x.beginPath(); x.arc(42, 66, 25, 0.62, 4.2); x.stroke();        // wheel, open at the upper right
   x.restore();
 }
-export function makeAccessibleSign(onPost = true) {
+export function makeAccessibleSign(onPost = true, van = false) {
   const g = new THREE.Group(); g.name = 'accessible_sign';
   const SW = 0.3, SH = 0.45, RAD = 0.022;
   const t = canvasT(400, 600, (x, w, h) => {
@@ -201,7 +202,13 @@ export function makeAccessibleSign(onPost = true) {
   const steel = std({ color: '#d0d4d6', metalness: 0.6, roughness: 0.3 });
   for (const y of [SH / 2 - 0.035, -SH / 2 + 0.035]) { const w = cyl(0.016, 0.016, 0.003, steel, 0, y, 0.002, sign, 18); w.rotation.x = Math.PI / 2; const b = cyl(0.007, 0.008, 0.006, steel, 0, y, 0.005, sign, 6); b.rotation.x = Math.PI / 2; }
   if (onPost) {
-    sign.position.y = 1.85;
+    sign.position.y = van ? 2.06 : 1.85;
+    if (van) {   // "VAN ACCESSIBLE" plate under the main sign, bottom edge 1.6 m up
+      const vt = canvasT(400, 200, (x, w, h) => { x.fillStyle = '#f4f4ef'; x.fillRect(0, 0, w, h); x.fillStyle = '#1f3f9e'; x.beginPath(); x.roundRect(9, 9, w - 18, h - 18, 16); x.fill(); x.fillStyle = '#f4f4ef'; fitText(x, 'VAN', w / 2, 62, w - 80, 70, F.label, { weight: 600 }); fitText(x, 'ACCESSIBLE', w / 2, 142, w - 50, 62, F.label, { weight: 600 }); });
+      const vp = new THREE.Group(); vp.position.y = 1.75; g.add(vp);
+      box(0.3, 0.15, 0.003, std({ color: '#c4c8ca', metalness: 0.5, roughness: 0.4 }), 0, 0, -0.0015, vp); plane(0.3, 0.15, std({ map: vt, roughness: 0.3 }), 0, 0, 0.0005, 0, vp);
+      for (const xx of [-0.11, 0.11]) cyl(0.012, 0.012, 0.003, std({ color: '#d0d4d6', metalness: 0.6, roughness: 0.3 }), xx, 0, 0.002, vp, 14).rotation.x = Math.PI / 2;
+    }
     // galvanized U-channel post with its row of holes
     const holes = canvasT(32, 256, (x, w, h) => { x.fillStyle = '#b8bcbe'; x.fillRect(0, 0, w, h); x.fillStyle = '#2a2a2a'; for (let y = 6; y < h; y += 12) { x.beginPath(); x.arc(16, y, 3, 0, 7); x.fill(); } });
     const post = new THREE.Mesh(new THREE.BoxGeometry(0.05, 2.1, 0.012), std({ map: holes, metalness: 0.4, roughness: 0.45 })); post.position.set(0, 1.05, -0.012); post.castShadow = true; g.add(post);
@@ -245,14 +252,17 @@ export function makeUtilityLot() {
     const stalls = [-10, -7.3, -4.6, -1.9, 0.8, 3.5, 6.2, 8.9];
     x.fillStyle = '#f2f2ec';
     for (const z of stalls) line(xa, m(z - Z0), w, m(z - Z0) + m(0.1));
-    // accessible stall (z -4.6..-1.9) painted blue with a white border + symbol; access aisle (z -1.9..0.8) striped
-    // the painted accessible symbol (util08): a light-blue square with a thick white border, the symbol upright as
-    // seen from the drive aisle (its top toward the wall, +x), filling the square
-    { const bx = xa + m(1.7), bz = m(-4.6 - Z0) + m(0.45), BS = m(1.8);
+    // two accessible stalls (z -4.6..-1.9 and 0.8..3.5) sharing one hatched access aisle (z -1.9..0.8), as US
+    // accessible parking is marked: each stall gets the painted symbol (util08: a light-blue square with a thick white
+    // border, the symbol upright as seen from the drive aisle, its top toward the wall) and its own sign at its head
+    for (const z0 of [-4.6, 0.8]) { const bx = xa + m(1.7), bz = m(z0 - Z0) + m(0.45), BS = m(1.8);
       x.fillStyle = '#f2f2ec'; x.fillRect(bx, bz, BS, BS); x.fillStyle = '#3f8ed8'; x.fillRect(bx + m(0.13), bz + m(0.13), BS - m(0.26), BS - m(0.26));
       x.save(); x.translate(bx + BS / 2, bz + BS / 2); x.rotate(Math.PI / 2); isa(x, 4, -2, m(1.4) / 100, '#f2f2ec'); x.restore(); }
     x.fillStyle = '#f2f2ec'; x.save(); x.beginPath(); x.rect(xa, m(-1.9 - Z0), m(SD), m(2.7)); x.clip(); x.lineWidth = m(0.1); x.strokeStyle = '#f2f2ec';
     for (let k = -6; k < 10; k++) { x.beginPath(); x.moveTo(xa + k * m(0.9), m(-1.9 - Z0)); x.lineTo(xa + k * m(0.9) + m(2.7), m(0.8 - Z0)); x.stroke(); } x.restore();
+    // "NO PARKING" across the aisle at its open end, reading from the drive aisle (a clear band cut in the hatching)
+    x.save(); x.globalCompositeOperation = 'destination-out'; x.fillRect(xa + m(0.35), m(-1.9 - Z0) + m(0.12), m(1.15), m(2.46)); x.restore();
+    x.save(); x.translate(xa + m(0.92), m(-0.55 - Z0)); x.rotate(Math.PI / 2); x.fillStyle = '#f2f2ec'; fitText(x, 'NO', 0, -m(0.27), m(1.2), m(0.42), F.label, { weight: 700 }); fitText(x, 'PARKING', 0, m(0.25), m(2.3), m(0.42), F.label, { weight: 700 }); x.restore();
     x.strokeRect(xa, m(-1.9 - Z0), m(SD), m(2.7));
     // drive-aisle arrow
     x.fillStyle = '#f2f2ec'; x.beginPath(); const ax = m(5), ay = m(6 - Z0); x.moveTo(ax, ay - m(1.2)); x.lineTo(ax + m(0.5), ay - m(0.3)); x.lineTo(ax + m(0.15), ay - m(0.3)); x.lineTo(ax + m(0.15), ay + m(1.0)); x.lineTo(ax - m(0.15), ay + m(1.0)); x.lineTo(ax - m(0.15), ay - m(0.3)); x.lineTo(ax - m(0.5), ay - m(0.3)); x.fill();
@@ -274,19 +284,19 @@ export function makeUtilityLot() {
   const WH = 6.5;
   const blockW = new THREE.Mesh(new THREE.PlaneGeometry(Z1 - Z0, WH), std({ map: tex('pk_block', (Z1 - Z0) / 3.2, WH / 1.6), roughness: 0.92 }));
   blockW.rotation.y = -Math.PI / 2; blockW.position.set(X1, WH / 2, 0); blockW.receiveShadow = true; g.add(blockW);
-  const stone = box(0.18, 2.6, 3.0, std({ map: tex('pk_stone', 3.0 / 1.4, 2.6 / 1.4), roughness: 0.95 }), X1 - 0.09, 1.3, -6.0, g);
-  stone.material.map = tex('pk_stone', 3.0 / 1.4, 2.6 / 1.4);
-  box(0.24, 0.08, 3.1, std({ color: '#b8b0a0', roughness: 0.85 }), X1 - 0.11, 2.64, -6.0, g);   // stone cap
+  const stone = box(0.18, 2.6, 2.9, std({ map: tex('pk_stone', 2.9 / 1.4, 2.6 / 1.4), roughness: 0.95 }), X1 - 0.09, 1.3, -3.25, g);
+  stone.material.map = tex('pk_stone', 2.9 / 1.4, 2.6 / 1.4);
+  box(0.24, 0.08, 3.0, std({ color: '#b8b0a0', roughness: 0.85 }), X1 - 0.11, 2.64, -3.25, g);   // stone cap
   box(0.3, 0.25, Z1 - Z0, std({ color: '#c8c0b0', roughness: 0.85 }), X1 + 0.05, WH, 0, g);       // parapet cap
   // windows high on the wall (as behind the transformer in util01)
   for (const z of [3.5, 7.5]) { const wn = new THREE.Group(); wn.position.set(X1 - 0.02, 4.3, z); wn.rotation.y = -Math.PI / 2; g.add(wn); box(1.6, 1.3, 0.06, std({ color: '#e8e8e4' }), 0, 0, 0, wn); plane(1.44, 1.14, std({ color: '#5a7a8a', roughness: 0.05, metalness: 0.4, emissive: '#1a2a3a', emissiveIntensity: 0.4 }), 0, 0, 0.032, 0, wn); box(0.04, 1.14, 0.03, std({ color: '#e8e8e4' }), 0, 0, 0.04, wn); }
   // wall-pack lights over the stalls (dark bronze boxes with a glowing lens) light the wall and its equipment
-  for (const z of [-6.0, 1.0, 6.5]) { box(0.28, 0.32, 0.4, std({ color: '#3a3430', metalness: 0.4 }), X1 - 0.2, 3.3, z, g); plane(0.3, 0.2, std({ color: '#fff4dc', emissive: '#ffe8c0', emissiveIntensity: 2.2 }), X1 - 0.41, 3.24, z, -Math.PI / 2, g); const wl = new THREE.PointLight('#ffe8c8', 7, 13, 1.5); wl.position.set(X1 - 0.8, 3.1, z); g.add(wl); }
-  const sign = makeAccessibleSign(false); sign.position.set(X1 - 0.185, 1.6, -5.0); sign.rotation.y = -Math.PI / 2; g.add(sign);
-  const fdc = makeSprinklerFDC(); fdc.position.set(X1 - 0.18, 0.95, -7.0); fdc.rotation.y = -Math.PI / 2; g.add(fdc);
+  for (const z of [-6.0, -0.55, 6.5]) { box(0.28, 0.32, 0.4, std({ color: '#3a3430', metalness: 0.4 }), X1 - 0.2, 3.3, z, g); plane(0.3, 0.2, std({ color: '#fff4dc', emissive: '#ffe8c0', emissiveIntensity: 2.2 }), X1 - 0.41, 3.24, z, -Math.PI / 2, g); const wl = new THREE.PointLight('#ffe8c8', 7, 13, 1.5); wl.position.set(X1 - 0.8, 3.1, z); g.add(wl); }
+  const sign = makeAccessibleSign(false); sign.position.set(X1 - 0.185, 1.8, -3.25); sign.rotation.y = -Math.PI / 2; g.add(sign);   // centred on its stall, bottom edge 1.57 m up (min 1.52 m)
+  const fdc = makeSprinklerFDC(); fdc.position.set(X1 - 0.18, 0.95, -4.2); fdc.rotation.y = -Math.PI / 2; g.add(fdc);
   const cabs = makeWallCabinets(); cabs.position.set(X1, 0.03, 4.5); cabs.rotation.y = -Math.PI / 2; g.add(cabs);
   // a second accessible sign on a post at the head of the stall
-  const ps = makeAccessibleSign(true); ps.position.set(X1 - 0.35, 0.03, -2.0); ps.rotation.y = -Math.PI / 2; g.add(ps);
+  const ps = makeAccessibleSign(true, true); ps.position.set(X1 - 0.35, 0.03, 2.15); ps.rotation.y = -Math.PI / 2; g.add(ps);   // the van-accessible stall's sign, centred at its head
   // the transformer on its pad in the strip (doors toward the drive), the telecom pedestal beside it
   const tf = makePadTransformer(); tf.position.set(-9.2, 0.03, -6.0); tf.rotation.y = Math.PI / 2; g.add(tf);
   const ped = makeTelecomPedestal(); ped.position.set(-9.6, 0.03, -2.6); g.add(ped);
