@@ -434,6 +434,15 @@ Rules (from you):
     forks/straws..., pump ketchup dispenser, thermostat); three-tank iced drink dispenser with labelled
     tanks. All brands, logos, handles and street names replaced with made-up ones.
 
+81. Batch 81 (photos/batch81/): branded energy-drink end-cap (lit header, water bottles on blue shelves
+    with LED edges, glass-door can cooler with a screen); black folding e-bike with rear rack locked to a
+    wave bike rack; cake-mix aisle (shelves of mix boxes, frosting tubs, electronic shelf tags, a few
+    gaps); stocking cart piled with shipping cases and black folding totes in front of a spice wall;
+    two fortune cookies in a clear wrapper; trailer interior (white walls, galvanized e-track rails and
+    logistic posts, trailer number strip, ribbed floor); order-picking handheld at a shelf with a
+    "discontinued, pull the tag" screen; blurry concrete floor with joints (skipped as a texture: too
+    blurred). All brands, logos, product names and numbers replaced with made-up ones.
+
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"
   transom and the "OPEN!" plaque (both generic, so low priority).
