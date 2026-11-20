@@ -6,6 +6,7 @@
 import * as THREE from 'three';
 import { shrinkCanvases } from './texcache.js';
 import { makeTrail } from './models/trail40.js';
+import { makeGunShop } from './models/gunshop41.js';
 import { makeKeiTruck, makeCoachBus, makeScoutTruck, makeWorkVan, makeCommuterTrain, makeTrainPlatform, PLAT_Y, makeVintageScooter, makeRustedScooter, makeKeiHatch } from './models/vehicles36.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
@@ -1148,6 +1149,11 @@ rect(TP.x - 13, TP.x + 13, TP.z + 0.05, TP.z + 4.6);                            
 const pSt = platform.userData.stairs;
 rect(TP.x - 13, TP.x + pSt.x0 - 0.05, TP.z - 3.05, TP.z - 2.9); rect(TP.x + pSt.x1 + 0.05, TP.x + 13, TP.z - 3.05, TP.z - 2.9);   // platform back edge
 rect(TP.x - 13.2, TP.x - 13, TP.z - 3, TP.z); rect(TP.x + 13, TP.x + 13.2, TP.z - 3, TP.z);
+// 41 Pawn & sport shop, east of the grocery lot, door facing west onto the lot
+const GSH = { x: 55.2, z: -25.5 };
+const gunShop = makeGunShop(); gunShop.position.set(GSH.x, 0, GSH.z); add(gunShop);
+for (const [x0, x1, z0, z1] of gunShop.userData.colliders) colliders.push({ type: 'box', minX: GSH.x + x0, maxX: GSH.x + x1, minZ: GSH.z + z0, maxZ: GSH.z + z1 });
+const gshArea = (() => { const a = gunShop.userData.area; return { minX: GSH.x + a.minX - 0.4, maxX: GSH.x + a.maxX, minZ: GSH.z + a.minZ, maxZ: GSH.z + a.maxZ }; })();
 // 40 Nature trail: a patch of hillside forest north-west of the city plaza
 const TRL = { x: -44, z: -14 };
 const trail = makeTrail(); trail.position.set(TRL.x, 0, TRL.z); add(trail);
@@ -1214,6 +1220,7 @@ const walk = new WalkControls(camera, renderer.domElement, {
     ...aoAreas, // the abandoned office
     ...krAreas, // the Knot Room
     trlArea, // the nature trail
+    gshArea, // the pawn & sport shop
     { minX: TP.x - 12.8, maxX: TP.x + 12.8, minZ: TP.z - 5.2, maxZ: TP.z - 0.3 }, // train platform + its stairs
   ],
   colliders,
@@ -1356,6 +1363,8 @@ const VIEWS = {
   knotbar: { pos: [16.5, 1.6, 69.6], target: [20.2, 1.4, 69.6] },
   keitruck: { pos: [-26.2, 1.9, 48.9], target: [-22.75, 0.9, 44.5] },
   coach: { pos: [-24.5, 2.4, 27.5], target: [-29.7, 1.6, 36] },
+  pawnshop: { pos: [56.2, 1.6, -28.4], target: [59.0, 0.9, -25.0] },
+  pawnfront: { pos: [49.5, 2.0, -24.0], target: [55.0, 2.2, -25.5] },
   trail: { pos: [-44.5, 1.7, -12.0], target: [-50, 1.4, -17] },
   trail2: { pos: [-48.5, 1.8, -29.0], target: [-51, 0.8, -35.2] },
   keihatch: { pos: [-26.0, 1.6, 32.0], target: [-22.8, 0.8, 35.4] },
