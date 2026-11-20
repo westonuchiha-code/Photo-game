@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import { finishLoading } from './loading.js';
 import { shrinkCanvases } from './texcache.js';
 import { makeTrail } from './models/trail40.js';
+import { makeMossCreature, makeMossMound } from './models/creature55.js';
 import { makeGunShop } from './models/gunshop41.js';
 import { makePosterCase } from './models/posters42.js';
 import { makeSchoolBus } from './models/bus44.js';
@@ -1215,6 +1216,18 @@ const gshArea = (() => { const a = gunShop.userData.area; return { minX: GSH.x +
 const TRL = { x: -44, z: -14 };
 const trail = makeTrail(); trail.position.set(TRL.x, 0, TRL.z); add(trail);
 for (const [x0, x1, z0, z1] of trail.userData.colliders) colliders.push({ type: 'box', minX: TRL.x + x0, maxX: TRL.x + x1, minZ: TRL.z + z0, maxZ: TRL.z + z1 });
+// 55 Moss creature: its grass-mound nest in a clearing just off the trail; it roams the trail (local trail points),
+// stops to look around, goes home to sit, and turns to watch the player when they come close
+const MCM = { x: TRL.x - 17, z: TRL.z - 5.8 };
+const mossMound = makeMossMound(2.2, 0.55); mossMound.position.set(MCM.x, 0, MCM.z); add(mossMound);
+const moundY = (x, z) => mossMound.userData.height(x - MCM.x, z - MCM.z);
+const mossCreature = makeMossCreature(); add(mossCreature);
+const mossCreatureUpdate = mossCreature.userData.brain({
+  nodes: [[-17.3, -6.0], [-11, -5.6], [-13.5, -8], [-15, -10.8], [-17.5, -12.6], [-21, -13.2], [-24, -15], [-26.5, -17.8]].map(([x, z]) => [TRL.x + x, TRL.z + z]),
+  links: [[2, 3], [2], [0, 1, 3], [0, 2, 4], [3, 5], [4, 6], [5, 7], [6]],
+  home: 0, ground: moundY,
+  player: () => (mode === 'walk' ? walk.position : null),
+});
 const trlArea = (() => { const a = trail.userData.area; return { minX: TRL.x + a.minX, maxX: TRL.x + a.maxX, minZ: TRL.z + a.minZ, maxZ: TRL.z + a.maxZ }; })();
 const platformY = (x, z) => {
   const lx = x - TP.x, lz = z - TP.z;
@@ -1292,6 +1305,8 @@ walk.ground = (x, z, prevY) => {
   if (py !== null) return py;
   const ty = trail.userData.floorY(x - TRL.x, z - TRL.z);
   if (ty !== null) return ty;
+  const mh = moundY(x, z);
+  if (mh > 0) return mh;
   const ay = apt.userData.floorY(z - AP.z, AP.x - x, prevY);
   return ay !== null ? ay : rampFloorY(x, z);
 };
@@ -1440,6 +1455,7 @@ const VIEWS = {
   pawnshop: { pos: [56.2, 1.6, -28.4], target: [59.0, 0.9, -25.0] },
   pawnfront: { pos: [49.5, 2.0, -24.0], target: [55.0, 2.2, -25.5] },
   trail: { pos: [-44.5, 1.7, -12.0], target: [-50, 1.4, -17] },
+  mosscreature: { pos: [MCM.x + 4.2, 1.7, MCM.z - 3.4], target: [MCM.x, 0.9, MCM.z] },
   trail2: { pos: [-48.5, 1.8, -29.0], target: [-51, 0.8, -35.2] },
   keihatch: { pos: [-26.0, 1.6, 32.0], target: [-22.8, 0.8, 35.4] },
   scooters: { pos: [-23.6, 1.5, 50.4], target: [-20.9, 0.5, 48.8] },
@@ -1627,6 +1643,7 @@ function frame() {
   puffCup.userData.update(t);
   creep.userData.update(t);
   cleanBotUpdate(t);
+  mossCreatureUpdate(t);
   (alley.userData.anim || []).forEach((a) => a.userData.update(t));
   cart.userData.update(t);
   {
