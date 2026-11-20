@@ -20,6 +20,7 @@ import { makeCafeFrontage } from './models/signs65.js';
 import { makeCanalPark } from './models/misc67.js';
 import { makeArtGallery } from './models/inspo68.js';
 import { makeWarehouseStore } from './models/inspo69.js';
+import { makeAqueductGarden, makeIzakaya, makePotteryGallery, makeBarrelPlanter, makeCurvedBench, makeWifiStand, makeWeepingMaple, makePizzaAFrame, makeComicVending, makeStickerPost, makeMural as makeRainbowMural } from './models/inspo70.js';
 import { makeGunShop } from './models/gunshop41.js';
 import { makePosterCase } from './models/posters42.js';
 import { makeSchoolBus } from './models/bus44.js';
@@ -1342,6 +1343,20 @@ const WH = { x: 286, z: 108 };
 const whs = makeWarehouseStore(); whs.position.set(WH.x, 0.14, WH.z); whs.rotation.y = Math.PI; add(whs);
 for (const [x0, x1, z0, z1] of whs.userData.colliders) rect(WH.x - x1, WH.x - x0, WH.z - z1, WH.z - z0);
 const whAreas = whs.userData.areas.map((a) => ({ minX: WH.x - a.maxX, maxX: WH.x - a.minX, minZ: WH.z - a.maxZ, maxZ: WH.z - a.minZ }));
+// 70 a quiet street west of the main crossing: Kiln & Co. pottery, the old izakaya, the aqueduct ruins garden with a
+// small station-style plaza and the rainbow mural, street props on the sidewalk (z -7..-5)
+const i5Areas = [];
+const placeL = (o, x, z, ry = 0, y = 0.14) => { o.position.set(x, y, z); o.rotation.y = ry; add(o); const c = o.userData.collider; if (c) { const q = Math.round(ry / (Math.PI / 2)) & 3; const [a0, b0, c0, c1] = c; let r; if (q === 0) r = [a0, b0, c0, c1]; else if (q === 2) r = [-b0, -a0, -c1, -c0]; else if (q === 1) r = [c0, c1, -b0, -a0]; else r = [-c1, -c0, a0, b0]; rect(x + r[0], x + r[1], z + r[2], z + r[3]); } return o; };
+{ const pg = makePotteryGallery(); pg.position.set(105.5, 0.14, -11.0); add(pg); for (const [x0, x1, z0, z1] of pg.userData.colliders) rect(105.5 + x0, 105.5 + x1, -11 + z0, -11 + z1); for (const a of pg.userData.areas) i5Areas.push({ minX: 105.5 + a.minX, maxX: 105.5 + a.maxX, minZ: -11 + a.minZ, maxZ: -11 + a.maxZ }); }
+placeL(makeIzakaya(), 116.5, -7.15);
+{ const gd = makeAqueductGarden(); gd.position.set(132, 0, -13.5); add(gd); for (const [x0, x1, z0, z1] of gd.userData.colliders) rect(132 + x0, 132 + x1, -13.5 + z0, -13.5 + z1); i5Areas.push({ minX: 124.2, maxX: 139.8, minZ: -13.8, maxZ: -7.0 }); }
+const pav = new THREE.Mesh(new THREE.PlaneGeometry(13, 14), new THREE.MeshStandardMaterial({ map: (() => { const t = new THREE.TextureLoader().load('assets/textures/i5_paving.png'); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(4, 4); return t; })(), roughness: 0.85 }));
+pav.rotation.x = -Math.PI / 2; pav.position.set(147, 0.03, -14.5); pav.receiveShadow = true; add(pav); i5Areas.push({ minX: 140.6, maxX: 153.4, minZ: -21.2, maxZ: -7.0 });
+placeL(makeRainbowMural(), 147, -21.3, 0, 0);
+for (const [x, z] of [[143.5, -17.5], [150.5, -17.5], [143.5, -11.5]]) placeL(makeBarrelPlanter(Math.round(x)), x, z, 0, 0);
+placeL(makeCurvedBench(), 147, -16.2, Math.PI, 0); placeL(makeCurvedBench(), 147, -12.0, 0, 0);
+placeL(makeWeepingMaple(), 150.5, -11.0, 0, 0); placeL(makeWifiStand(), 152.4, -8.2, 0, 0);
+placeL(makePizzaAFrame(), 101.2, -6.1, 0.3); placeL(makeComicVending(), 110.6, -6.5, 0); placeL(makeStickerPost(), 121.6, -5.6, 0);
 const dnAreas = [...dentist.userData.areas, ...wing.userData.areas].map((a) => { const [minX, maxX, minZ, maxZ] = dnW([a.minX, a.maxX, a.minZ, a.maxZ]); return { minX, maxX, minZ, maxZ }; });
 
 const walk = new WalkControls(camera, renderer.domElement, {
@@ -1378,6 +1393,7 @@ const walk = new WalkControls(camera, renderer.domElement, {
     cpArea, // the canal walkway park
     ...agAreas, // the art gallery
     ...whAreas, // the warehouse store
+    ...i5Areas, // the pottery gallery, the aqueduct garden + plaza
     { minX: 221.6, maxX: 224.4, minZ: -7.6, maxZ: -4.9 }, // its steps down to the sidewalk
   ],
   colliders,
@@ -1397,6 +1413,7 @@ walk.ground = (x, z, prevY) => {
   if (x > 221.5 && x < 224.5 && z >= -7.0 && z < -5.2) return 0.75 * (1 - (z + 7.0) / 1.8) + 0.14 * ((z + 7.0) / 1.8);   // its steps
   if (x > 337 && x < 351 && z > 7.9 && z < 18) return 0.14;   // the gallery floor
   if (x > 266 && x < 306 && z > 90 && z < 123) return 0.14;   // the warehouse floor + entrance apron
+  if (x > 100.5 && x < 110.5 && z > -14.5 && z < -7) return 0.14;   // the pottery gallery floor
   const dy = district.userData.floorY(x, z);
   if (dy !== null) return dy;
   if (x > 81.3 && x < 108 && z > 28 && z < 50) return 0.14;   // the dentist office floor
@@ -1491,6 +1508,10 @@ const VIEWS = {
   plywood: { pos: [37.4, 1.7, -28.9], target: [36.6, 1.25, -31.5] },
   glass: { pos: [23.6, 1.1, -24.4], target: [23.3, 0.0, -25.6] },
   plaza: { pos: [-12.0, 4.5, 10.5], target: [-28.0, 1.5, -2.0] },
+  izakaya: { pos: [114.0, 1.7, -2.6], target: [116.8, 2.6, -7.2] },
+  pottery: { pos: [107.5, 1.7, -8.3], target: [103, 1.0, -12.5] },
+  aqueduct: { pos: [131.6, 1.6, -6.0], target: [130.8, 1.0, -15] },
+  stationplaza: { pos: [146.0, 1.7, -6.2], target: [148, 1.2, -16] },
   warehouse: { pos: [-33.0, 2.4, -1.0], target: [-44.0, 4.5, -3.0] },
   ovalbuilding: { pos: [-25.5, 2.4, 1.5], target: [-25.5, 4.5, -14.0] },
   oldtown: { pos: [-26.5, 2.0, 14.0], target: [-26.5, 2.4, 40.0] },

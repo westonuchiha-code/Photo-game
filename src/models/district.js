@@ -28,6 +28,9 @@ export const LOTS = [
   { id: 'aircraft', x0: 252, x1: 266, z0: 7, z1: 21, face: 'n', built: true },     // aircraft-nose carport (item 64)
   { id: 'gallery', x0: 336, x1: 352, z0: 7, z1: 19, face: 'n', built: true },   // art gallery (item 68)
   { id: 'warehouse', x0: 266, x1: 306, z0: 91, z1: 124, face: 'n', built: true },  // Bulk Barn warehouse store (item 69)
+  { id: 'pottery', x0: 99, x1: 112, z0: -16, z1: -7, face: 's', built: true },     // Kiln & Co. pottery (item 70)
+  { id: 'izakaya', x0: 112, x1: 121, z0: -15, z1: -7, face: 's', built: true },    // old izakaya (item 70)
+  { id: 'ruins', x0: 122, x1: 154, z0: -22, z1: -7, face: 's', built: true },      // aqueduct garden + plaza (item 70)
   { id: 'lotD', x0: 210, x1: 236, z0: -31, z1: -7, face: 's', built: true },   // canal walkway park (item 67)
 ];
 
@@ -344,7 +347,7 @@ export function makeDistrict() {
   }
   const treePts = [];
   for (let z = ZMIN + 6; z < ZMAX - 6; z += 14) { if (zs.some((q) => Math.abs(z - q) < WH + 3)) continue; treePts.push([xs[0] + RH + 1.0, z + 7], [xs[0] - RH - 1.0, z]); }
-  for (const z of [0]) for (let x = xs[0] + 20; x < XMAX - 10; x += 14) { if (xs.some((q) => Math.abs(x - q) < WH + 3)) continue; treePts.push([x + 7, z - RH - 1.0], [x, z + RH + 1.0]); }
+  for (const z of [0]) for (let x = xs[0] + 20; x < XMAX - 10; x += 14) { if (xs.some((q) => Math.abs(x - q) < WH + 3)) continue; if (!(x + 7 > 98 && x + 7 < 124)) treePts.push([x + 7, z - RH - 1.0]); treePts.push([x, z + RH + 1.0]); }   // (no trees in front of the izakaya + pottery)
   const trunkG = new THREE.CylinderGeometry(0.12, 0.18, 3.2, 7); trunkG.translate(0, 1.6 + SW_H, 0);
   const crownG = new THREE.IcosahedronGeometry(1.9, 1); crownG.scale(1, 1.15, 1); crownG.translate(0, 4.4 + SW_H, 0);
   const trunks = new THREE.InstancedMesh(trunkG, new THREE.MeshStandardMaterial({ map: tex('tr_cedar'), color: '#8a7a6a', roughness: 0.95 }), treePts.length);
