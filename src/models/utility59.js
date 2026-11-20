@@ -246,16 +246,18 @@ export function makeUtilityLot() {
     x.fillStyle = '#f2f2ec';
     for (const z of stalls) line(xa, m(z - Z0), w, m(z - Z0) + m(0.1));
     // accessible stall (z -4.6..-1.9) painted blue with a white border + symbol; access aisle (z -1.9..0.8) striped
-    x.fillStyle = '#2a5ac8'; x.fillRect(xa + m(1.6), m(-4.6 - Z0) + m(0.45), m(2.4), m(1.8));
-    x.strokeStyle = '#f2f2ec'; x.lineWidth = m(0.1); x.strokeRect(xa + m(1.6), m(-4.6 - Z0) + m(0.45), m(2.4), m(1.8));
-    isa(x, xa + m(2.8), m(-3.25 - Z0), 0.62, '#f2f2ec');
+    // the painted accessible symbol (util08): a light-blue square with a thick white border, the symbol upright as
+    // seen from the drive aisle (its top toward the wall, +x), filling the square
+    { const bx = xa + m(1.7), bz = m(-4.6 - Z0) + m(0.45), BS = m(1.8);
+      x.fillStyle = '#f2f2ec'; x.fillRect(bx, bz, BS, BS); x.fillStyle = '#3f8ed8'; x.fillRect(bx + m(0.13), bz + m(0.13), BS - m(0.26), BS - m(0.26));
+      x.save(); x.translate(bx + BS / 2, bz + BS / 2); x.rotate(Math.PI / 2); isa(x, 4, -2, m(1.4) / 100, '#f2f2ec'); x.restore(); }
     x.fillStyle = '#f2f2ec'; x.save(); x.beginPath(); x.rect(xa, m(-1.9 - Z0), m(SD), m(2.7)); x.clip(); x.lineWidth = m(0.1); x.strokeStyle = '#f2f2ec';
     for (let k = -6; k < 10; k++) { x.beginPath(); x.moveTo(xa + k * m(0.9), m(-1.9 - Z0)); x.lineTo(xa + k * m(0.9) + m(2.7), m(0.8 - Z0)); x.stroke(); } x.restore();
     x.strokeRect(xa, m(-1.9 - Z0), m(SD), m(2.7));
     // drive-aisle arrow
     x.fillStyle = '#f2f2ec'; x.beginPath(); const ax = m(5), ay = m(6 - Z0); x.moveTo(ax, ay - m(1.2)); x.lineTo(ax + m(0.5), ay - m(0.3)); x.lineTo(ax + m(0.15), ay - m(0.3)); x.lineTo(ax + m(0.15), ay + m(1.0)); x.lineTo(ax - m(0.15), ay + m(1.0)); x.lineTo(ax - m(0.15), ay - m(0.3)); x.lineTo(ax - m(0.5), ay - m(0.3)); x.fill();
     // wear: knock speckles out of the paint
-    x.globalCompositeOperation = 'destination-out'; for (let i = 0; i < 9000; i++) { x.fillStyle = `rgba(0,0,0,${0.3 + r() * 0.7})`; x.fillRect(r() * w, r() * h, 1 + r() * 3, 1 + r() * 3); } x.globalCompositeOperation = 'source-over';
+    x.globalCompositeOperation = 'destination-out'; for (let i = 0; i < 5000; i++) { x.fillStyle = `rgba(0,0,0,${0.1 + r() * 0.3})`; x.fillRect(r() * w, r() * h, 1 + r() * 2, 1 + r() * 2); } x.globalCompositeOperation = 'source-over';
   });
   const pm = new THREE.Mesh(new THREE.PlaneGeometry(PW, PD), std({ map: paint, transparent: true, depthWrite: false, roughness: 0.7, polygonOffset: true, polygonOffsetFactor: -2 }));
   pm.rotation.x = -Math.PI / 2; pm.position.set((X1 + SX) / 2, 0.03, 0); pm.receiveShadow = true; g.add(pm);
