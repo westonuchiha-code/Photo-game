@@ -150,26 +150,61 @@ export function makeMayoStand() {
   const tray = new THREE.Group(); tray.position.set(0, 0.94, 0.32); g.add(tray);
   const steel = std({ color: '#b8bcc0', metalness: 0.7, roughness: 0.35 });
   box(0.46, 0.008, 0.33, steel, 0, 0, 0, tray); for (const [w, d, x, z] of [[0.46, 0.012, 0, 0.165], [0.46, 0.012, 0, -0.165], [0.012, 0.33, 0.23, 0], [0.012, 0.33, -0.23, 0]]) box(w, 0.035, d, steel, x, 0.016, z, tray);
-  // what's on the tray (as in the photo): a paper liner, a steel instrument cassette with colour-banded handles,
-  // loose instruments, a white suction tip, cotton rolls and gauze squares
+  // what's on the tray (as in operatory06): a beige liner, a slotted stainless cassette with two pink silicone
+  // racks holding six instruments (knurled steel or silicone-grip handles, colour rings, bent working tips: mirror,
+  // explorer, scalers, probe), and loose beside it a purple prophy handpiece, a saliva ejector, cotton pliers,
+  // a blue-tipped probe, a crumpled gauze and a folded gauze square
   const liner = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.27), std({ color: '#e6d9b8', roughness: 0.9 })); liner.rotation.x = -Math.PI / 2; liner.position.y = 0.006; tray.add(liner);
-  const cas = new THREE.Group(); cas.position.set(-0.04, 0.007, -0.05); tray.add(cas);
-  const perf = canvasT(128, 96, (x, w, h) => { x.fillStyle = '#c8ccd0'; x.fillRect(0, 0, w, h); x.fillStyle = '#5a5e62'; for (let i = 4; i < w; i += 8) for (let j = 4; j < h; j += 8) { x.beginPath(); x.arc(i, j, 2, 0, 7); x.fill(); } });
-  box(0.26, 0.004, 0.16, std({ map: perf, metalness: 0.6, roughness: 0.35 }), 0, 0.002, 0, cas);
   const st = std({ color: '#c8ccd0', metalness: 0.85, roughness: 0.25 });
-  for (const zz of [-0.08, 0.08]) box(0.26, 0.022, 0.004, st, 0, 0.011, zz, cas);
-  for (const xx of [-0.13, 0.13]) box(0.004, 0.022, 0.16, st, xx, 0.011, 0, cas);
-  for (const xx of [-0.08, 0.08]) box(0.006, 0.012, 0.16, st, xx, 0.016, 0, cas);   // the clip racks
-  ['#f2c21a', '#f2c21a', '#f08a1a', '#e8402a', '#3ac85a', '#9a5ad8', '#2a8ad8'].forEach((c, k) => {
-    const z = -0.06 + k * 0.02, h = cyl(0.0048, 0.0048, 0.13, std({ color: c, roughness: 0.4 }), 0, 0.012, z, cas, 10); h.rotation.z = Math.PI / 2;
-    for (const sd of [-1, 1]) { const tip = cyl(0.0012, 0.003, 0.03, st, sd * 0.08, 0.012, z, cas, 6); tip.rotation.z = sd * Math.PI / 2; }
+  const cas = new THREE.Group(); cas.position.set(-0.03, 0.007, -0.055); tray.add(cas);
+  const slots = canvasT(256, 160, (x, w, h) => { x.fillStyle = '#c8ccd0'; x.fillRect(0, 0, w, h); x.fillStyle = '#3a3e42'; for (let i = 10; i < w - 10; i += 14) x.fillRect(i, 14, 6, h - 28); });
+  box(0.26, 0.003, 0.16, std({ map: slots, metalness: 0.6, roughness: 0.3, transparent: false }), 0, 0.0015, 0, cas);
+  const wallT = canvasT(256, 32, (x, w, h) => { x.fillStyle = '#c8ccd0'; x.fillRect(0, 0, w, h); x.fillStyle = '#4a4e52'; for (let i = 8; i < w - 8; i += 12) x.fillRect(i, 8, 5, 16); });
+  const wm = std({ map: wallT, metalness: 0.7, roughness: 0.3 });
+  for (const zz of [-0.08, 0.08]) box(0.26, 0.02, 0.003, wm, 0, 0.01, zz, cas);
+  for (const xx of [-0.13, 0.13]) box(0.003, 0.02, 0.16, wm, xx, 0.01, 0, cas);
+  const pink = std({ color: '#d87aa0', roughness: 0.7 });
+  for (const xx of [-0.075, 0.07]) { box(0.014, 0.008, 0.15, pink, xx, 0.006, 0, cas); for (let k = 0; k < 7; k++) box(0.014, 0.006, 0.004, pink, xx, 0.013, -0.066 + k * 0.022, cas); }
+  // one instrument along +x: handle (knurled steel, or a thick silicone grip), colour rings, tapered bent shanks + tips
+  const knurl = canvasT(64, 64, (x, w, h) => { x.fillStyle = '#b8bcc0'; x.fillRect(0, 0, w, h); x.strokeStyle = '#6a6e72'; x.lineWidth = 2; for (let i = -64; i < 128; i += 6) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i + 64, 64); x.stroke(); x.beginPath(); x.moveTo(i + 64, 0); x.lineTo(i, 64); x.stroke(); } });
+  knurl.wrapS = knurl.wrapT = THREE.RepeatWrapping; knurl.repeat.set(2, 6);
+  const knurlM = std({ map: knurl, metalness: 0.7, roughness: 0.35 });
+  function instrument(grip, ring, tipA, tipB) {
+    const ig = new THREE.Group();
+    const R = grip ? 0.0055 : 0.0042, L = 0.11, prof = [];
+    for (let k = 0; k <= 12; k++) { const t = k / 12, y = -L / 2 + t * L; const r = R * (0.62 + 0.38 * Math.sin(Math.PI * Math.min(1, t * 1.25 + 0.06) ) ** 0.5) * (grip ? 1 + 0.08 * Math.sin(t * 9) : 1); prof.push(new THREE.Vector2(Math.max(0.002, r), y)); }
+    const h = new THREE.Mesh(new THREE.LatheGeometry(prof, 14), grip ? std({ color: grip, roughness: 0.55 }) : knurlM); h.rotation.z = -Math.PI / 2; h.castShadow = true; ig.add(h);
+    if (ring) for (const sd of [-1, 1]) { const rr = new THREE.Mesh(new THREE.TorusGeometry(R * 0.85, 0.0016, 6, 16), std({ color: ring, roughness: 0.5 })); rr.rotation.y = Math.PI / 2; rr.position.x = sd * (L / 2 - 0.008); ig.add(rr); }
+    for (const [sd, tip] of [[1, tipA], [-1, tipB]]) {
+      const x0 = sd * L / 2, pts = [V(x0, 0, 0), V(x0 + sd * 0.016, 0, 0), V(x0 + sd * 0.03, 0.001, 0)];
+      if (tip === 'mirror') pts.push(V(x0 + sd * 0.04, 0.003, 0), V(x0 + sd * 0.046, 0.006, 0));
+      else if (tip === 'hook') pts.push(V(x0 + sd * 0.04, 0.004, 0), V(x0 + sd * 0.045, 0.01, 0.0), V(x0 + sd * 0.041, 0.012, 0.002));
+      else if (tip === 'sickle') pts.push(V(x0 + sd * 0.038, 0.004, 0.002), V(x0 + sd * 0.043, 0.009, 0.006), V(x0 + sd * 0.042, 0.012, 0.011));
+      else pts.push(V(x0 + sd * 0.042, 0.002, 0), V(x0 + sd * 0.05, 0.005, 0));
+      tube(pts, tip === 'sickle' ? 0.0012 : 0.0014, st, ig, 16);
+      if (tip === 'mirror') { const m = cyl(0.011, 0.011, 0.002, std({ color: '#dfe6ea', metalness: 0.3, roughness: 0.12 }), x0 + sd * 0.05, 0.009, 0, ig, 20); m.rotation.z = sd * 0.9; }
+    }
+    return ig;
+  }
+  [['#e8c81a', null, 'hook', 'probe'], [null, '#3a9ad0', 'sickle', 'sickle'], ['#f0a020', null, 'hook', 'sickle'], [null, '#d87aa0', 'probe', 'hook'], ['#f07a1a', null, 'sickle', 'probe'], [null, null, 'mirror', 'probe']].forEach(([grip, ring, a, b], k) => {
+    const it = instrument(grip, ring, a, b); it.position.set(0, 0.022, -0.06 + k * 0.022); cas.add(it);
   });
-  const loose = [[0.13, 0.07, 0.3, '#b8bcc0'], [0.12, 0.1, -0.2, '#9a5ad8'], [0.07, 0.12, 0.1, '#b8bcc0']];
-  loose.forEach(([x, z, r, c]) => { const h = cyl(0.0045, 0.0045, 0.14, std({ color: c, metalness: c === '#b8bcc0' ? 0.85 : 0, roughness: 0.3 }), x - 0.06, 0.011, z, tray, 10); h.rotation.set(0, r, Math.PI / 2); });
-  const mir = cyl(0.011, 0.011, 0.003, std({ color: '#dfe6ea', metalness: 0.3, roughness: 0.15 }), 0.13, 0.012, 0.03, tray, 16); mir.rotation.x = 0.2;
-  tube([V(0.03, 0.012, 0.11), V(0.1, 0.012, 0.115), V(0.16, 0.02, 0.1), V(0.17, 0.035, 0.07)], 0.004, std({ color: '#f4f4f2', roughness: 0.4 }), tray, 16);   // suction tip
-  for (let k = 0; k < 3; k++) { const cr = cyl(0.005, 0.005, 0.035, std({ color: '#fbfbf8', roughness: 1 }), 0.15 + k * 0.012, 0.011, -0.1, tray, 8); cr.rotation.x = Math.PI / 2; }
-  for (let k = 0; k < 2; k++) { const gz = box(0.05, 0.003, 0.05, std({ color: '#fbfbf8', roughness: 1 }), -0.17 + k * 0.02, 0.009 + k * 0.003, 0.09 - k * 0.01, tray); gz.rotation.y = 0.3 * k; }
+  // purple prophy handpiece: tapered body, metal contra-angle head
+  const hp = new THREE.Group(); hp.position.set(-0.07, 0.013, 0.055); hp.rotation.y = 0.12; tray.add(hp);
+  const hpProf = [0.004, 0.0068, 0.0072, 0.0068, 0.0062, 0.0055, 0.005].map((r, k) => new THREE.Vector2(r, -0.05 + k * 0.016));
+  const hb = new THREE.Mesh(new THREE.LatheGeometry(hpProf, 18), std({ color: '#8a6ad0', roughness: 0.35, metalness: 0.2 })); hb.rotation.z = Math.PI / 2; hp.add(hb);
+  const head = tube([V(-0.05, 0, 0), V(-0.062, 0, 0), V(-0.07, 0.006, 0)], 0.0042, st, hp, 10); void head; cyl(0.006, 0.006, 0.008, st, -0.071, 0.009, 0, hp, 12);
+  tube([V(0.05, 0, 0), V(0.075, 0.0, 0.004), V(0.09, 0.0, 0.0)], 0.0035, std({ color: '#e8eef2', transparent: true, opacity: 0.7 }), hp, 10);
+  // saliva ejector: long grey-white tube with the bent white end and green connector
+  const ej = std({ color: '#c8cbcc', roughness: 0.5 });
+  tube([V(-0.19, 0.012, 0.1), V(0.05, 0.012, 0.105), V(0.12, 0.012, 0.1), V(0.155, 0.014, 0.085), V(0.16, 0.02, 0.065)], 0.004, ej, tray, 30);
+  box(0.03, 0.006, 0.01, std({ color: '#3ac83a', roughness: 0.5 }), 0.135, 0.015, 0.072, tray).rotation.y = 0.4;
+  // cotton pliers (two thin knurled arms) + a blue-ringed probe lying loose
+  for (const sd of [-1, 1]) tube([V(-0.12, 0.009, 0.118 + sd * 0.002), V(-0.04, 0.009, 0.118 + sd * 0.004), V(0.03, 0.009, 0.115 + sd * 0.001)], 0.0018, st, tray, 8);
+  const pr = instrument(null, '#2a6ac8', 'probe', 'probe'); pr.scale.setScalar(0.9); pr.position.set(0.02, 0.012, 0.035); pr.rotation.y = -0.25; tray.add(pr);
+  // gauze: a crumpled ball and a folded square
+  const gz = new THREE.Mesh(new THREE.IcosahedronGeometry(0.022, 1), std({ color: '#fbfbf8', roughness: 1, flatShading: true })); gz.scale.set(1.4, 0.6, 1.1); gz.position.set(0.15, 0.016, 0.02); tray.add(gz);
+  box(0.06, 0.004, 0.055, std({ color: '#fbfbf8', roughness: 1 }), -0.11, 0.009, 0.115, tray).rotation.y = 0.2;
   const bib = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.12), std({ color: '#a8d8f0', roughness: 0.8 })); bib.rotation.set(-1.2, 0, 0); bib.position.set(0, -0.04, 0.2); tray.add(bib);
   g.userData.collider = [-0.3, 0.3, -0.3, 0.5];
   return g;
@@ -183,19 +218,41 @@ export function makeSaddleStool() {
   g.userData.collider = [-0.32, 0.32, -0.32, 0.32];
   return g;
 }
-// tan leather bucket stool on a black sled frame (the corner chair in the photo): seat + one curved back shell
+// tan leather bucket chair on black sled legs (the corner chair, operatory03): one moulded shell, the seat
+// dishing slightly and sweeping up into a wide, gently wrapped back with a rolled edge; two U-shaped sled legs
 export function makeBucketStool() {
   const g = new THREE.Group(); g.name = 'bucket_stool';
-  const fr = std({ color: '#141416', metalness: 0.5, roughness: 0.4 }), lea = std({ map: tex('op_tan', 1.2, 1.2), roughness: 0.45, side: THREE.DoubleSide });
-  const SY = 0.64;
-  for (const s of [-1, 1]) { const x = s * 0.18; rod(V(x, 0.01, 0.2), V(x, 0.01, -0.2), 0.009, fr, g); rod(V(x, 0.01, 0.2), V(x, SY - 0.03, 0.16), 0.009, fr, g); rod(V(x, 0.01, -0.2), V(x, SY - 0.03, -0.16), 0.009, fr, g); rod(V(x, SY - 0.03, 0.16), V(x, SY - 0.03, -0.16), 0.009, fr, g); }
-  rod(V(-0.18, 0.24, 0.185), V(0.18, 0.24, 0.185), 0.009, fr, g);                         // foot bar
-  rbox(0.42, 0.05, 0.4, 0.02, lea, 0, SY, 0.0, g);
-  // back shell: a half-cylinder wrapping the back of the seat, leaning back a little
-  const sh = new THREE.Mesh(new THREE.CylinderGeometry(0.21, 0.2, 0.34, 28, 1, true, Math.PI * 0.5, Math.PI), lea);
-  sh.scale.set(1, 1, 0.85); sh.position.set(0, SY + 0.19, -0.02); sh.rotation.x = -0.12; sh.castShadow = true; g.add(sh);
-  const rim = new THREE.Mesh(new THREE.TorusGeometry(0.205, 0.012, 6, 28, Math.PI), lea); rim.rotation.set(Math.PI / 2, 0, Math.PI); rim.scale.set(1, 0.85, 1); rim.position.set(0, SY + 0.36, -0.04); g.add(rim);
-  g.userData.collider = [-0.25, 0.25, -0.25, 0.25];
+  const fr = std({ color: '#141416', metalness: 0.4, roughness: 0.45 }), lea = std({ map: tex('op_tan', 1.6, 1.6), roughness: 0.42, side: THREE.DoubleSide });
+  // centre-line profile (z, y): front lip -> seat -> curve -> back top
+  const prof = new THREE.CatmullRomCurve3([V(0, 0.455, 0.22), V(0, 0.47, 0.12), V(0, 0.46, -0.02), V(0, 0.475, -0.14), V(0, 0.55, -0.21), V(0, 0.68, -0.25), V(0, 0.8, -0.28)]);
+  const NU = 22, NV = 40, T = 0.022, top = [], bot = [];
+  for (let j = 0; j <= NV; j++) {
+    const v = j / NV, c = prof.getPoint(v), tg = prof.getTangent(v), nY = tg.z, nZ = -tg.y;   // surface normal (up / forward)
+    const back = Math.max(0, (v - 0.55) / 0.45), hw = 0.215 + 0.02 * back - 0.01 * (1 - v) * (v < 0.15 ? 1 : 0);
+    for (let i = 0; i <= NU; i++) {
+      const u = i / NU * 2 - 1, x = u * hw;
+      const dish = (1 - back) * 0.012 * u * u, wrap = back * 0.07 * u * u;          // seat dish, back wrapping forward
+      const p = V(x, c.y + dish, c.z + wrap);
+      top.push(p); bot.push(V(p.x, p.y - nY * T, p.z - nZ * T));
+    }
+  }
+  const pos = [], uv = [], idx = [], N = (NU + 1) * (NV + 1);
+  for (const q of top) pos.push(q.x, q.y, q.z); for (const q of bot) pos.push(q.x, q.y, q.z);
+  for (let j = 0; j <= NV; j++) for (let i = 0; i <= NU; i++) uv.push(i / NU * 0.45, j / NV * 0.6);
+  for (let j = 0; j <= NV; j++) for (let i = 0; i <= NU; i++) uv.push(i / NU * 0.45, j / NV * 0.6);
+  const at = (i, j, b = 0) => b * N + j * (NU + 1) + i;
+  for (let j = 0; j < NV; j++) for (let i = 0; i < NU; i++) { idx.push(at(i, j), at(i + 1, j), at(i + 1, j + 1), at(i, j), at(i + 1, j + 1), at(i, j + 1)); idx.push(at(i, j, 1), at(i + 1, j + 1, 1), at(i + 1, j, 1), at(i, j, 1), at(i, j + 1, 1), at(i + 1, j + 1, 1)); }
+  // close the edges (sides, front lip, back top) so it reads as a thick moulded shell
+  for (let j = 0; j < NV; j++) for (const i of [0, NU]) idx.push(at(i, j), at(i, j + 1), at(i, j + 1, 1), at(i, j), at(i, j + 1, 1), at(i, j, 1));
+  for (let i = 0; i < NU; i++) for (const j of [0, NV]) idx.push(at(i, j), at(i, j, 1), at(i + 1, j, 1), at(i, j), at(i + 1, j, 1), at(i + 1, j));
+  const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); geo.setIndex(idx); geo.computeVertexNormals();
+  const shell = new THREE.Mesh(geo, lea); shell.castShadow = true; shell.receiveShadow = true; g.add(shell);
+  // stitched seam across the bend
+  const seam = []; for (let i = 0; i <= 20; i++) { const u = i / 20 * 2 - 1, c = prof.getPoint(0.5); seam.push(V(u * 0.21, c.y + 0.003, c.z + 0.002)); } tube(seam, 0.0015, std({ color: '#8a5a2a' }), g, 20);
+  // sled legs: each side a U (front leg down, floor runner back, back leg up) joined under the seat
+  for (const sd of [-1, 1]) { const x = sd * 0.17; tube([V(x, 0.44, 0.15), V(x * 1.05, 0.2, 0.19), V(x * 1.1, 0.012, 0.21), V(x * 1.1, 0.012, -0.05), V(x * 1.1, 0.012, -0.2), V(x * 1.05, 0.2, -0.17), V(x, 0.44, -0.12)], 0.009, fr, g, 40); }
+  rod(V(-0.17, 0.44, 0.15), V(0.17, 0.44, 0.15), 0.008, fr, g); rod(V(-0.17, 0.44, -0.12), V(0.17, 0.44, -0.12), 0.008, fr, g);
+  g.userData.collider = [-0.25, 0.25, -0.3, 0.25];
   return g;
 }
 
