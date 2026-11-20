@@ -483,6 +483,8 @@ Rules (from you):
     rough sandy concrete curb with dirt and pine needles behind. Redraw with a made-up brand (no real logo or name):
     metallic blue body with a big white arrow-letter wordmark, orange band and nutrition panel on the back. Curb +
     sandy dirt as textures.
+    Also textures: sandy dirt with scattered pink/grey granite pebbles (sun-lit, hard shadows) and fine decomposed-
+    granite gravel with pine needles (good ground for lots, paths and the trail).
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"
