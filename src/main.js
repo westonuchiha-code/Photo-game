@@ -10,6 +10,7 @@ import { makeGunShop } from './models/gunshop41.js';
 import { makePosterCase } from './models/posters42.js';
 import { makeSchoolBus } from './models/bus44.js';
 import { makeStickerBox, makeMoldySign } from './models/graffiti45.js';
+import { makeBurlKiosk } from './models/burl46.js';
 import { makeKeiTruck, makeCoachBus, makeScoutTruck, makeWorkVan, makeCommuterTrain, makeTrainPlatform, PLAT_Y, makeVintageScooter, makeRustedScooter, makeKeiHatch } from './models/vehicles36.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
@@ -1152,6 +1153,9 @@ rect(TP.x - 13, TP.x + 13, TP.z + 0.05, TP.z + 4.6);                            
 const pSt = platform.userData.stairs;
 rect(TP.x - 13, TP.x + pSt.x0 - 0.05, TP.z - 3.05, TP.z - 2.9); rect(TP.x + pSt.x1 + 0.05, TP.x + 13, TP.z - 3.05, TP.z - 2.9);   // platform back edge
 rect(TP.x - 13.2, TP.x - 13, TP.z - 3, TP.z); rect(TP.x + 13, TP.x + 13.2, TP.z - 3, TP.z);
+// 46 Burl veneer: a luxury watch kiosk in the underground mall hall
+const burlK = makeBurlKiosk(); burlK.position.set(MALL.x - 2.6, -4.2, MALL.z - 7); add(burlK);
+{ const c = burlK.userData.collider; colliders.push({ type: 'box', minX: MALL.x - 2.6 + c[0], maxX: MALL.x - 2.6 + c[1], minZ: MALL.z - 7 + c[2], maxZ: MALL.z - 7 + c[3], y0: -4.6, y1: -1.6 }); }
 // 45 Street graffiti: a sticker-bombed utility box and a mildewed no-parking sign at the plaza's south edge
 const stBox = makeStickerBox(); stBox.position.set(-21.5, 0, 10.6); stBox.rotation.y = Math.PI; add(stBox);
 rect(-22.2, -20.1, 10.3, 10.9);
@@ -1351,6 +1355,7 @@ const VIEWS = {
   vendinglow: { pos: [-0.8, 0.95, 10.75], target: [-0.85, 0.7, 11.7] },
   junkshop: { pos: [6.8, 1.8, 13.2], target: [1.5, 1.0, 20.5] },
   junkfront: { pos: [3.5, 2.2, 5.8], target: [3.5, 2.0, 12.2] },
+  burl: { pos: [MALL.x + 0.2, -2.6, MALL.z - 4.6], target: [MALL.x - 2.6, -3.3, MALL.z - 7.2], lookUp: true },
   graffiti: { pos: [-15.2, 1.9, 7.0], target: [-15.5, 1.9, 12.1] },
   arcade: { pos: [-11.6, 1.6, 9.8], target: [-12.2, 1.3, 11.4] },
   trike: { pos: [-18.6, 1.5, 5.2], target: [-19.2, 0.7, 8.6] },
@@ -1378,6 +1383,7 @@ const VIEWS = {
   knotbar: { pos: [16.5, 1.6, 69.6], target: [20.2, 1.4, 69.6] },
   keitruck: { pos: [-26.2, 1.9, 48.9], target: [-22.75, 0.9, 44.5] },
   coach: { pos: [-24.5, 2.4, 27.5], target: [-29.7, 1.6, 36] },
+  burl: { pos: [MALL.x + 0.2, -2.6, MALL.z - 4.6], target: [MALL.x - 2.6, -3.3, MALL.z - 7.2], lookUp: true },
   graffiti: { pos: [-22.0, 1.6, 7.6], target: [-22.2, 1.4, 10.7] },
   schoolbus: { pos: [-26.6, 1.9, 15.8], target: [-29.7, 1.4, 22.5] },
   snacks: { pos: [-74.5, 1.3, -36.0], target: [-75.8, 0.3, -37.4] },
