@@ -26,7 +26,7 @@ export const LOTS = [
   { id: 'lotC', x0: 175, x1: 195, z0: 91, z1: 115, face: 'n', built: true },   // Cedar Self Storage (item 62)
   { id: 'store', x0: 168, x1: 184, z0: -17, z1: -7, face: 's', built: true },        // corner store (item 64)
   { id: 'aircraft', x0: 252, x1: 266, z0: 7, z1: 21, face: 'n', built: true },     // aircraft-nose carport (item 64)
-  { id: 'lotD', x0: 210, x1: 236, z0: -31, z1: -7, face: 's' },
+  { id: 'lotD', x0: 210, x1: 236, z0: -31, z1: -7, face: 's', built: true },   // canal walkway park (item 67)
 ];
 
 function rng(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }

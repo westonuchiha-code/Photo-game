@@ -17,6 +17,7 @@ import { makeCoupe } from './models/coupe61.js';
 import { makeStorageRow } from './models/storage62.js';
 import { makeCornerStore, makePoliceSedan, makeAircraftCarport } from './models/random64.js';
 import { makeCafeFrontage } from './models/signs65.js';
+import { makeCanalPark } from './models/misc67.js';
 import { makeGunShop } from './models/gunshop41.js';
 import { makePosterCase } from './models/posters42.js';
 import { makeSchoolBus } from './models/bus44.js';
@@ -1303,7 +1304,7 @@ const ulArea = (() => { const a = ulot.userData.area; return { minX: UL.x + a.mi
 // 61 sport coupe: parked nose-in in a regular stall of the utility lot; a crashed one nosed into the fence of the
 // vacant lot downtown (lot D, its fence on the z = -7 side)
 const coupe = makeCoupe(); coupe.position.set(UL.x + 7.7, 0.025, UL.z + 4.85); add(coupe); rect(UL.x + 5.4, UL.x + 9.95, UL.z + 3.95, UL.z + 5.75);
-const wreck = makeCoupe({ crashed: true }); wreck.position.set(223, 0.02, -9.3); wreck.rotation.y = -Math.PI / 2 + 0.12; add(wreck); rect(221.9, 224.1, -12.2, -7.2);
+const wreck = makeCoupe({ crashed: true }); wreck.position.set(229.5, 0.02, -5.0); wreck.rotation.y = -Math.PI / 2 + 0.12; add(wreck); rect(228.4, 230.6, -7.4, -2.8);
 // 62 self storage on lot C: a row of orange roll-up doors facing the cross street (z = 84), two units open
 const SS = { x: 176, z: 96 };
 const storage = makeStorageRow(); storage.position.set(SS.x, 0.02, SS.z); add(storage);
@@ -1324,6 +1325,11 @@ for (const [x0, x1, z0, z1] of acp.userData.colliders) rect(AC.x - x1, AC.x - x0
 const CF = { x: 198, z: -6.2 };
 const cafe = makeCafeFrontage(); cafe.position.set(CF.x, 0.14, CF.z); add(cafe);
 for (const [x0, x1, z0, z1] of cafe.userData.colliders) rect(CF.x + x0, CF.x + x1, CF.z + z0, CF.z + z1);
+// 67 canal walkway park on lot D (street side toward the main street at +z), the story sign on its path
+const CP = { x: 223, z: -19 };
+const canal = makeCanalPark(); canal.position.set(CP.x, 0.75, CP.z); add(canal);
+for (const [x0, x1, z0, z1] of canal.userData.colliders) rect(CP.x + x0, CP.x + x1, CP.z + z0, CP.z + z1);
+const cpArea = (() => { const a = canal.userData.area; return { minX: CP.x + a.minX, maxX: CP.x + a.maxX, minZ: CP.z + a.minZ, maxZ: CP.z + a.maxZ }; })();
 const dnAreas = [...dentist.userData.areas, ...wing.userData.areas].map((a) => { const [minX, maxX, minZ, maxZ] = dnW([a.minX, a.maxX, a.minZ, a.maxZ]); return { minX, maxX, minZ, maxZ }; });
 
 const walk = new WalkControls(camera, renderer.domElement, {
@@ -1357,6 +1363,8 @@ const walk = new WalkControls(camera, renderer.domElement, {
     ulArea, // the utility + parking lot
     ...stAreas, // the storage row's apron + the two open units
     ...csAreas, // inside the corner store
+    cpArea, // the canal walkway park
+    { minX: 221.6, maxX: 224.4, minZ: -7.6, maxZ: -4.9 }, // its steps down to the sidewalk
   ],
   colliders,
 });
@@ -1371,6 +1379,8 @@ walk.ground = (x, z, prevY) => {
   if (ty !== null) return ty;
   const mh = moundY(x, z);
   if (mh > 0) return mh;
+  if (x > 211 && x < 235 && z > -25.5 && z < -7.0) return 0.75;   // the raised canal park
+  if (x > 221.5 && x < 224.5 && z >= -7.0 && z < -5.2) return 0.75 * (1 - (z + 7.0) / 1.8) + 0.14 * ((z + 7.0) / 1.8);   // its steps
   const dy = district.userData.floorY(x, z);
   if (dy !== null) return dy;
   if (x > 81.3 && x < 108 && z > 28 && z < 50) return 0.14;   // the dentist office floor
@@ -1479,6 +1489,8 @@ const VIEWS = {
   dentist2: { pos: [84.3, 1.8, 34.5], target: [93.5, 1.0, 38.6] },
   operatory: { pos: [97.25, 1.85, 30.1], target: [100.6, 0.95, 29.8] },
   operatory2: { pos: [99.6, 1.8, 28.6], target: [97.6, 0.9, 30.4] },
+  canal: { pos: [214.2, 2.4, -15.6], target: [225, 0.4, -19.8] },
+  storysign: { pos: [229.0, 2.3, -9.6], target: [229.4, 2.05, -11.5] },
   sushi: { pos: [181.0, 1.7, -11.6], target: [183.2, 0.95, -14.3] },
   cafesigns: { pos: [198.6, 1.6, -2.2], target: [198.2, 1.0, -6.4] },
   cornerstore: { pos: [163.5, 1.7, -1.5], target: [172, 2.2, -8] },
@@ -1488,7 +1500,7 @@ const VIEWS = {
   storageunit: { pos: [181.0, 1.65, 94.6], target: [181.0, 0.9, 98.8] },
   canwall: { pos: [189.0, 1.25, 96.6], target: [189.0, 0.9, 98.7] },
   coupe: { pos: [96.0, 1.5, -31.6], target: [100.6, 0.6, -35.2] },
-  coupewreck: { pos: [226.8, 1.6, -3.6], target: [222.6, 0.6, -8.8] },
+  coupewreck: { pos: [234.3, 1.7, -0.8], target: [229.5, 0.6, -6.2] },
   parkinglot: { pos: [86.5, 2.4, -46.5], target: [102, 1.0, -40] },
   stall: { pos: [96.0, 1.75, -40.55], target: [100.5, 0.0, -40.55] },
   parksigns: { pos: [100.3, 1.7, -44.2], target: [104, 1.3, -44.4] },

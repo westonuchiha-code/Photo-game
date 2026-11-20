@@ -94,7 +94,8 @@ Rules (from you):
 - 63 Monkey (skipped by request)
 - 64 Random street batch (approved)
 - 65 Signage batch (approved)
-- 66 Grocery 2 (in review)
+- 66 Grocery 2 (approved)
+- 67 Misc 3 (in review)
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
