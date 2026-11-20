@@ -16,6 +16,7 @@
 // Faces +z (entrance at z = 0, alley runs to -z), origin at ground level on the centre line.
 // userData: colliders [[x0,x1,z0,z1]] (street level only), area {minX..}
 import * as THREE from 'three';
+import { makePortableTV } from './electronics37.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { F, fitText } from '../fonts.js';
 import { makeCircuitBoard, makeCordBundle } from './pcb33.js';
@@ -462,8 +463,11 @@ export function makeMarketAlley() {
       } else {
         g.add(box(0.6, 0.75, w * 0.55, std({ color: '#6a6e72', metalness: 0.3 }), s * (HW + 0.45), 0.375, zc - 0.5));
         const cb = makeCordBundle(); cb.position.set(s * (HW + 0.45), 0.75, zc - 0.5); cb.rotation.y = s > 0 ? Math.PI / 2 : -Math.PI / 2; g.add(cb);
+        // the old portable TV / radio (item 37) out front for in-store demonstration, facing the alley
+        let tvHere = false;
+        if (!g.userData.hasTV) { g.userData.hasTV = tvHere = true; const tv = makePortableTV(); tv.position.set(s * (HW + 0.42), 0.75, zc - 0.5 + w * 0.2); tv.rotation.y = s > 0 ? -Math.PI / 2 : Math.PI / 2; g.add(tv); }
         const tr = rng(i * 31 + 7);
-        for (let k = 0; k < 6; k++) { const b2 = box(0.14 + tr() * 0.1, 0.05 + tr() * 0.06, 0.12 + tr() * 0.1, std({ color: ['#1c1c1c', '#c9a040', '#2a4a8a', '#b8b8b8', '#2a6a3a'][k % 5], roughness: 0.45 }), s * (HW + 0.3 + tr() * 0.3), 0.78, zc - 0.5 + (tr() - 0.5) * w * 0.45); g.add(b2); }
+        for (let k = 0; k < 6; k++) { const dzb = (tr() - 0.5) * w * 0.45; if (tvHere && Math.abs(dzb - w * 0.2) < 0.3) continue; const b2 = box(0.14 + tr() * 0.1, 0.05 + tr() * 0.06, 0.12 + tr() * 0.1, std({ color: ['#1c1c1c', '#c9a040', '#2a4a8a', '#b8b8b8', '#2a6a3a'][k % 5], roughness: 0.45 }), s * (HW + 0.3 + tr() * 0.3), 0.78, zc - 0.5 + dzb); g.add(b2); }
       }
     }
     if (type === 'tile') {

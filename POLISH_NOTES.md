@@ -160,3 +160,8 @@ This is a running list, added to as models get built. Nothing here is urgent.
 ## 29 abandoned office
 - Box edges of the washroom partitions stretch the drywall texture; give them proper edge UVs.
 - Could add mould in the corners, a dripping leak under the missing tiles, dust motes in the light.
+
+## 36 Vehicles
+- Vintage scooter: cowl piping is lumpy (sampled onto the surface), horn grille sits a little off-centre; compare to the photo again.
+- Work van / coach: the front and back faces are drawn, not from photos.
+- River boat (futuristic-river-boat*) skipped at the user's request.
