@@ -16,6 +16,7 @@ import { makeUtilityLot } from './models/utility59.js';
 import { makeCoupe } from './models/coupe61.js';
 import { makeStorageRow } from './models/storage62.js';
 import { makeCornerStore, makePoliceSedan, makeAircraftCarport } from './models/random64.js';
+import { makeCafeFrontage } from './models/signs65.js';
 import { makeGunShop } from './models/gunshop41.js';
 import { makePosterCase } from './models/posters42.js';
 import { makeSchoolBus } from './models/bus44.js';
@@ -1319,6 +1320,10 @@ const cop = makePoliceSedan(); cop.position.set(181, 0.012, -3.7); cop.rotation.
 const AC = { x: 259, z: 14 };
 const acp = makeAircraftCarport(); acp.position.set(AC.x, 0.14, AC.z); acp.rotation.y = Math.PI; add(acp);
 for (const [x0, x1, z0, z1] of acp.userData.colliders) rect(AC.x - x1, AC.x - x0, AC.z - z1, AC.z - z0);
+// 65 signage: the comic & net cafe's street signs + a ramen ticket machine, on the sidewalk two doors down from the store
+const CF = { x: 198, z: -6.2 };
+const cafe = makeCafeFrontage(); cafe.position.set(CF.x, 0.14, CF.z); add(cafe);
+for (const [x0, x1, z0, z1] of cafe.userData.colliders) rect(CF.x + x0, CF.x + x1, CF.z + z0, CF.z + z1);
 const dnAreas = [...dentist.userData.areas, ...wing.userData.areas].map((a) => { const [minX, maxX, minZ, maxZ] = dnW([a.minX, a.maxX, a.minZ, a.maxZ]); return { minX, maxX, minZ, maxZ }; });
 
 const walk = new WalkControls(camera, renderer.domElement, {
@@ -1474,6 +1479,7 @@ const VIEWS = {
   dentist2: { pos: [84.3, 1.8, 34.5], target: [93.5, 1.0, 38.6] },
   operatory: { pos: [97.25, 1.85, 30.1], target: [100.6, 0.95, 29.8] },
   operatory2: { pos: [99.6, 1.8, 28.6], target: [97.6, 0.9, 30.4] },
+  cafesigns: { pos: [198.6, 1.6, -2.2], target: [198.2, 1.0, -6.4] },
   cornerstore: { pos: [163.5, 1.7, -1.5], target: [172, 2.2, -8] },
   policecar: { pos: [185.6, 1.4, -0.9], target: [181, 0.7, -3.7] },
   aircraft: { pos: [256, 1.7, 1.8], target: [259, 3.8, 14] },

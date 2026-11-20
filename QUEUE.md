@@ -92,7 +92,8 @@ Rules (from you):
 - 61 Sport coupe (approved)
 - 62 Storage + snacks (approved)
 - 63 Monkey (skipped by request)
-- 64 Random street batch (in review)
+- 64 Random street batch (approved)
+- 65 Signage batch (in review)
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
@@ -478,6 +479,10 @@ Rules (from you):
     Also the user's paintings (hang/use as-is): a pale blue brushed canvas with a black-line drawing of a strange
     figure (three-eyed face, antenna-tower head, long neck), plus close-ups of a blue brushed canvas and a grey
     brushed canvas (canvas-weave textures for painted walls / new canvases).
+83. Batch 83 (photos/batch83/): a 16 oz blue energy-drink can (opened, ring pull up), front + back, standing on a
+    rough sandy concrete curb with dirt and pine needles behind. Redraw with a made-up brand (no real logo or name):
+    metallic blue body with a big white arrow-letter wordmark, orange band and nutrition panel on the back. Curb +
+    sandy dirt as textures.
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"
