@@ -15,6 +15,7 @@ import { makeBurlKiosk } from './models/burl46.js';
 import { makeDriedRose, makePropPistol, makeWhitePC } from './models/misc48.js';
 import { makeFoldingEbike, makeWaveRack, makePourGrid } from './models/misc49.js';
 import { makeCompactCorner } from './models/badparker50.js';
+import { makeCartCorral } from './models/cart51.js';
 import { makeKeiTruck, makeCoachBus, makeScoutTruck, makeWorkVan, makeCommuterTrain, makeTrainPlatform, PLAT_Y, makeVintageScooter, makeRustedScooter, makeKeiHatch } from './models/vehicles36.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
@@ -1162,6 +1163,8 @@ rect(TP.x - 13.2, TP.x - 13, TP.z - 3, TP.z); rect(TP.x + 13, TP.x + 13.2, TP.z 
 const BP = { x: 13.6, z: -29.6 };
 const bpc = makeCompactCorner(); bpc.position.set(BP.x, 0, BP.z); bpc.rotation.y = Math.PI / 2; add(bpc);
 for (const [x0, x1, z0, z1] of bpc.userData.colliders) colliders.push({ type: 'box', minX: BP.x + z0, maxX: BP.x + z1, minZ: BP.z - x1, maxZ: BP.z - x0 });
+// 51 Smashed cart: a cart corral in the grocery lot with the crushed cart jammed against it
+{ const cc = makeCartCorral(); cc.position.set(12.6, 0, -22.4); add(cc); const c = cc.userData.collider; rect(12.6 + c[0], 12.6 + c[1], -22.4 + c[2], -22.4 + c[3]); }
 // 49 Misc 2: the folding e-bike locked to a wave rack on the old-town sidewalk; the user's pour-painting grid
 // and confetti watercolour hung on the pawn shop's north wall (art for sale)
 { const wr = makeWaveRack(); wr.position.set(-20.6, 0.12, 41.5); wr.rotation.y = Math.PI / 2; add(wr); rect(-20.75, -20.45, 40.4, 41.5);
@@ -1402,6 +1405,7 @@ const VIEWS = {
   knotbar: { pos: [16.5, 1.6, 69.6], target: [20.2, 1.4, 69.6] },
   keitruck: { pos: [-26.2, 1.9, 48.9], target: [-22.75, 0.9, 44.5] },
   coach: { pos: [-24.5, 2.4, 27.5], target: [-29.7, 1.6, 36] },
+  carts: { pos: [14.0, 1.7, -19.6], target: [14.0, 0.5, -22.3] },
   badparker: { pos: [BP.x + 9.0, 2.0, BP.z - 4.6], target: [BP.x + 3.0, 1.0, BP.z - 1.6] },
   ebike: { pos: [-20.4, 1.5, 44.2], target: [-20.9, 0.5, 41.0] },
   pawnart: { pos: [58.4, 1.6, -27.4], target: [58.4, 1.6, -30] },

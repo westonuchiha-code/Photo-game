@@ -193,3 +193,4 @@ This is a running list, added to as models get built. Nothing here is urgent.
   the truck from the main view; asphalt wet sheen is just low roughness (no puddle reflections).
 - Camera views: removed accidental duplicate view keys; the 28d graffiti-front view is back, the sticker box view is
   now "stickerbox", the noodle-forecourt drink machine view is "drinkvending".
+- 51 Carts: wire grid is many thin rods (~28k triangles for the corral set); could be an alpha-cut texture for performance; the smash is a smooth shear, could add kinks.
