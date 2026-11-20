@@ -20,6 +20,7 @@ import { makeCafeFrontage } from './models/signs65.js';
 import { makeCanalPark } from './models/misc67.js';
 import { makeArtGallery } from './models/inspo68.js';
 import { makeWarehouseStore } from './models/inspo69.js';
+import { makeOldTownRow, makePocketPark, makeGyudonBowl, makeSickle } from './models/batch73.js';
 import { makeArcade, makeShutterShop as makeShutterStall, makeStreetDrum, makeTempleFront, makeFairground, makeCairn } from './models/inspo72.js';
 import { makeBackroomCorner, makeGameShelf, makeBinShelf, makePinkHouse } from './models/inspo71.js';
 import { makeAqueductGarden, makeIzakaya, makePotteryGallery, makeBarrelPlanter, makeCurvedBench, makeWifiStand, makeWeepingMaple, makePizzaAFrame, makeComicVending, makeStickerPost, makeMural as makeRainbowMural } from './models/inspo70.js';
@@ -1392,6 +1393,16 @@ const FG = { x: 206, z: 144.5 };
 const fair = makeFairground(); fair.position.set(FG.x, 0, FG.z); add(fair);
 for (const [x0, x1, z0, z1] of fair.userData.colliders) rect(FG.x + x0, FG.x + x1, FG.z + z0, FG.z + z1);
 { const cx = TRL.x - 22.6, cz = TRL.z - 11.9; const cy = trail.userData.floorY(cx - TRL.x, cz - TRL.z) ?? 0; const cn = makeCairn(); cn.position.set(cx, cy, cz); add(cn); rect(cx - 0.45, cx + 0.45, cz - 0.4, cz + 0.4); }
+// 73 batch 73: an old-town shop row on the north side of the z = -84 street (Coconut Raft, the Tsurukame izakaya, the
+// junk-balcony shop + overgrown vending machine, Club Nova arcade, Denki Land with capsule machines) and a pocket park
+// opposite (dome talisman burner, dome shed with the sickle, underground-parking stair kiosk)
+const OT = { x: 253, z: -91 };
+const otRow = makeOldTownRow(); otRow.position.set(OT.x, 0.14, OT.z); add(otRow);
+for (const [x0, x1, z0, z1] of otRow.userData.colliders) rect(OT.x + x0, OT.x + x1, OT.z + z0, OT.z + z1);
+const otAreas = otRow.userData.areas.map((a) => ({ minX: a.minX + OT.x, maxX: a.maxX + OT.x, minZ: a.minZ + OT.z, maxZ: a.maxZ + OT.z }));
+const PP = { x: 288, z: -77 };
+const ppark = makePocketPark(); ppark.position.set(PP.x, 0, PP.z); add(ppark);
+for (const [x0, x1, z0, z1] of ppark.userData.colliders) rect(PP.x + x0, PP.x + x1, PP.z + z0, PP.z + z1);
 const dnAreas = [...dentist.userData.areas, ...wing.userData.areas].map((a) => { const [minX, maxX, minZ, maxZ] = dnW([a.minX, a.maxX, a.minZ, a.maxZ]); return { minX, maxX, minZ, maxZ }; });
 
 const walk = new WalkControls(camera, renderer.domElement, {
@@ -1430,6 +1441,8 @@ const walk = new WalkControls(camera, renderer.domElement, {
     ...whAreas, // the warehouse store
     ...i5Areas, // the pottery gallery, the aqueduct garden + plaza
     ...arAreas, // the arcade
+    ...otAreas, // inside Club Nova
+    { minX: PP.x - 19.8, maxX: PP.x + 19.8, minZ: PP.z, maxZ: PP.z + 16.8 }, // the pocket park
     { minX: TM.x - 13, maxX: TM.x + 13, minZ: TM.z - 26.6, maxZ: TM.z + 0.3 }, // the temple plaza, stairs + platform top
     { minX: FG.x - 29.6, maxX: FG.x + 29.6, minZ: FG.z - 16.2, maxZ: FG.z + 16.8 }, // the fairgrounds
     { minX: 221.6, maxX: 224.4, minZ: -7.6, maxZ: -4.9 }, // its steps down to the sidewalk
@@ -1453,6 +1466,8 @@ walk.ground = (x, z, prevY) => {
   if (x > 266 && x < 306 && z > 90 && z < 123) return 0.14;   // the warehouse floor + entrance apron
   if (x > 100.5 && x < 110.5 && z > -14.5 && z < -7) return 0.14;   // the pottery gallery floor
   if (x > 338 && x < 358 && z > 92 && z < 109.5) return 0.14;   // the arcade floor
+  if (x > 252 && x < 322 && z > -101 && z < -91) return 0.14;   // the old-town row (Club Nova floor)
+  if (x > 268 && x < 308 && z > -77 && z < -60) return 0;   // the pocket park
   if (x > TM.x + tmSt.x0 && x < TM.x + tmSt.x1 && z > TM.z + tmSt.front && z < TM.z + tmSt.z1) {   // the temple stairs + platform top
     const zz = z - TM.z; return 0.02 + (zz <= tmSt.zTop ? tmSt.top : tmSt.top * (tmSt.z1 - zz) / (tmSt.z1 - tmSt.zTop)); }
   if (x > TM.x - 13 && x < TM.x + 13 && z > TM.z - 18 && z < TM.z) return 0.06;   // the temple plaza
@@ -1558,6 +1573,17 @@ const VIEWS = {
   binshelf: { pos: [292.0, 1.5, 107.5], target: [292.0, 0.9, 109.6] },
   pinkhouse: { pos: [181.5, 1.7, 84.5], target: [175, 1.5, 74] },
   pinktv: { pos: [177.7, 1.5, 76.0], target: [177.9, 1.0, 73.2] },
+  oldrow73: { pos: [268, 2.0, -80.5], target: [262, 2.8, -92] },
+  izakaya73: { pos: [266.5, 1.6, -86.8], target: [268.2, 1.4, -91.5] },
+  junkbal73: { pos: [282.5, 2.0, -84.5], target: [281, 3.6, -91] },
+  vending73: { pos: [287.6, 1.3, -88.0], target: [286.4, 0.9, -91.5] },
+  clubnova: { pos: [297.5, 2.0, -83], target: [295.5, 2.6, -92] },
+  novain: { pos: [298, 1.6, -91.6], target: [299, 1.0, -96] },
+  denki: { pos: [314, 2.6, -79.5], target: [310, 2.6, -91] },
+  gyudon: { pos: [263.6, 1.45, -89.6], target: [263.25, 1.15, -90.0] },
+  domeburner: { pos: [295.5, 1.7, -71.0], target: [297, 1.1, -64.6] },
+  domeshed: { pos: [274.0, 1.5, -67.0], target: [273.5, 0.8, -63.5] },
+  parkkiosk: { pos: [299, 1.7, -78.5], target: [303.5, 1.6, -72.8] },
   pixelden: { pos: [353, 2.2, 82.5], target: [348, 2.6, 93] },
   arcadein: { pos: [352.5, 1.7, 94.5], target: [347, 1.2, 99.5] },
   gameroom: { pos: [348, 1.7, 100.5], target: [348, 1.4, 108.6] },

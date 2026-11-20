@@ -231,3 +231,10 @@ This is a running list, added to as models get built. Nothing here is urgent.
   mesh. Add intake covers / "REMOVE BEFORE FLIGHT" tags.
 - Ride trailers: the rides sit still; a slow loop of the dragon train around its oval when the fair is "open".
 - Not used yet from inspo7: the foggy lakeshore stump and snowy pine forest (sky/backdrop ideas for a winter mode).
+
+## 73 Batch 73
+- Old-town row: the shops are fronts with solid bodies; Denki Land's window is a printed shelf panel, could become a
+  real interior. Club Nova's cabinets have no animated screens.
+- Pocket park: pines are trunk + flattened spheres; proper layered pine canopies would read better. The parking kiosk
+  stairs drop into a black void (no car park below).
+- Gyudon bowl: beef strips are bent boxes; a glossier sauce pool between them would help.
