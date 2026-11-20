@@ -76,7 +76,8 @@ Rules (from you):
 - 46 Burl veneer (approved)
 - 47 Decor (approved)
 - 48 Misc batch (approved)
-- 49 Misc batch 2 (in review)
+- 49 Misc batch 2 (partly built: e-bike + paintings; rest listed in POLISH_NOTES)
+- 50 Bad-parker easter egg (in review)
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text

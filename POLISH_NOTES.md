@@ -167,3 +167,25 @@ This is a running list, added to as models get built. Nothing here is urgent.
 - River boat (futuristic-river-boat*) skipped at the user's request.
 - 37: sound card daughterboard still shows faint acrylic glare streaks (from the photo).
 - 36 Kei hatch: streaky texture on the lower rear corners; model bounding box reads 1.74 m tall (something pokes above the 1.425 m roof); compare the rear slant with more photos if any turn up.
+
+## 37–49 (one note per model)
+- 37 Portable TV: face is a flat photo; knobs/sliders could be 3D. Sound card: faint acrylic glare on the daughterboard.
+  Handhelds: simple shapes, screens flat. Gadget case: reader board texture is from the sound card, not its own photo.
+- 38 Bar alley signage: built as 28i; no separate pass.
+- 39 Blue crate: lattice windows are an alpha cut, no real depth; torn labels are flat decals.
+- 40 Nature trail: ferns + leafy tree tops are simple shapes; trail is very dark at night; distant hill planes visible at edges.
+- 41 Pawn shop: guns are simple extruded outlines; ammo-box cardboard reads plain; outside is invented.
+- 42 Gig posters: case is fine; posters could get slight paper curl/wrinkle.
+- 43 Snacks: hanging bags read small/samey; picnic is dark at night.
+- 44 School bus: flat paint, no wear/dirt; plain wheels; the street scenery from those photos (sky, median trees,
+  river rock, green street lights) not built.
+- 45 Sticker box: galvanized metal reads dark at night; doodle is cruder than the photo's.
+- 46 Burl kiosk: one burl photo, the mirrored pattern shows on big surfaces (totem); could mix in the other 8 photos.
+- 47 Pachinko: playfield is a flat photo (no 3D pins/pockets). Galaxy PC: OK after re-cut. Retro shelf: fine.
+- 48 Prop pistol: copper texture shows square tiling seams. Dried rose: bloom is cup shells, could use real petal curls.
+  White PC: inside is just a dark window + ring, no visible fans/parts.
+- 49 E-bike: frame is tubes/capsules, could be closer to the photo's shapes; camera view cluttered by a stone block +
+  the work van. Pour grid + confetti: fine.
+- 49 still unbuilt (moved on at the user's request): dusty doodle kei car, walk-in dairy cooler, loading dock + trailer,
+  bread aisle, pet aisle, stockroom pallets, iced-tea packs, breakfast sub, pizza slice + soda, dairy tub cart,
+  cardboard bale at the dock door, smashed shopping cart.
