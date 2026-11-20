@@ -403,6 +403,12 @@ Rules (from you):
     left out of the repo because it lists real people's names; a roster sheet can be made with
     invented names if wanted.)
 
+78. Batch 78 (photos/batch78/): brick textures from two pillars. White-painted textured brick
+    (rough raked faces, deep recessed joints, a soldier-course border down both edges with
+    running bond in the middle); tan/brown speckled face brick with dark flashed bricks in
+    running bond, recessed mortar, on a concrete plinth. Make seamless tiling textures plus
+    normal maps, and use them on pillars/walls in the world.
+
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"
   transom and the "OPEN!" plaque (both generic, so low priority).
