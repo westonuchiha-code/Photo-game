@@ -19,6 +19,13 @@ const outline = (x, t, cx, cy, mw, sz, font, fill, stroke, lw, o = {}) => { x.li
 
 // ---- bag art (front, back shares the colour field)
 const BAGS = {
+  // tortilla chip bags (photos/inspo3 chips): white top, a coloured band, "organic"-style script, chips on a bowl
+  sweetpotato: (x, w, h) => { x.fillStyle = '#f8f6f0'; x.fillRect(0, 0, w, h); x.fillStyle = '#e8702a'; x.beginPath(); x.moveTo(0, h * 0.45); x.quadraticCurveTo(w / 2, h * 0.38, w, h * 0.45); x.lineTo(w, h); x.lineTo(0, h); x.fill();
+    x.fillStyle = '#3a8a3a'; fitText(x, 'field & farm', w / 2, 70, w - 60, 40, F.script); x.fillStyle = '#e8702a'; fitText(x, 'SWEET POTATO', w / 2, 160, w - 40, 54, F.heavy); x.fillStyle = '#5a4a3a'; fitText(x, 'corn tortilla chips', w / 2, 210, w - 80, 28, F.label);
+    for (let i = 0; i < 6; i++) { x.fillStyle = ['#e8a040', '#d88a30', '#f2b860'][i % 3]; x.save(); x.translate(110 + (i % 3) * 90, 380 + Math.floor(i / 3) * 80); x.rotate(i); x.beginPath(); x.moveTo(0, -40); x.lineTo(40, 30); x.lineTo(-40, 30); x.fill(); x.restore(); } },
+  bluecorn: (x, w, h) => { x.fillStyle = '#f8f6f0'; x.fillRect(0, 0, w, h); x.fillStyle = '#2a4a8a'; x.beginPath(); x.moveTo(0, h * 0.45); x.quadraticCurveTo(w / 2, h * 0.38, w, h * 0.45); x.lineTo(w, h); x.lineTo(0, h); x.fill();
+    x.fillStyle = '#3a8a3a'; fitText(x, 'field & farm', w / 2, 70, w - 60, 40, F.script); x.fillStyle = '#2a4a8a'; fitText(x, 'BLUE CORN', w / 2, 160, w - 40, 58, F.heavy); x.fillStyle = '#5a4a3a'; fitText(x, 'tortilla chips', w / 2, 210, w - 80, 28, F.label);
+    for (let i = 0; i < 6; i++) { x.fillStyle = ['#4a4a7a', '#3a3a6a', '#6a6a9a'][i % 3]; x.save(); x.translate(110 + (i % 3) * 90, 380 + Math.floor(i / 3) * 80); x.rotate(i); x.beginPath(); x.moveTo(0, -40); x.lineTo(40, 30); x.lineTo(-40, 30); x.fill(); x.restore(); } },
   // gold foil airline-style snack pack (photos/storage/snack-pack-gold): ornate damask on gold, a bowl of peas,
   // crackers and puffs, the made-up name in navy
   peas: (x, w, h) => { const g = x.createLinearGradient(0, 0, w, h); g.addColorStop(0, '#c89a2a'); g.addColorStop(0.5, '#e8c45a'); g.addColorStop(1, '#a8781a'); x.fillStyle = g; x.fillRect(0, 0, w, h);

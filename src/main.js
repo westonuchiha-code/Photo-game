@@ -18,6 +18,7 @@ import { makeStorageRow } from './models/storage62.js';
 import { makeCornerStore, makePoliceSedan, makeAircraftCarport } from './models/random64.js';
 import { makeCafeFrontage } from './models/signs65.js';
 import { makeCanalPark } from './models/misc67.js';
+import { makeArtGallery } from './models/inspo68.js';
 import { makeGunShop } from './models/gunshop41.js';
 import { makePosterCase } from './models/posters42.js';
 import { makeSchoolBus } from './models/bus44.js';
@@ -1330,6 +1331,11 @@ const CP = { x: 223, z: -19 };
 const canal = makeCanalPark(); canal.position.set(CP.x, 0.75, CP.z); add(canal);
 for (const [x0, x1, z0, z1] of canal.userData.colliders) rect(CP.x + x0, CP.x + x1, CP.z + z0, CP.z + z1);
 const cpArea = (() => { const a = canal.userData.area; return { minX: CP.x + a.minX, maxX: CP.x + a.maxX, minZ: CP.z + a.minZ, maxZ: CP.z + a.maxZ }; })();
+// 68 the art gallery (the user's paintings) on its lot facing the main street
+const AG = { x: 344, z: 13 };
+const gallery = makeArtGallery(); gallery.position.set(AG.x, 0.14, AG.z); gallery.rotation.y = Math.PI; add(gallery);
+for (const [x0, x1, z0, z1] of gallery.userData.colliders) rect(AG.x - x1, AG.x - x0, AG.z - z1, AG.z - z0);
+const agAreas = gallery.userData.areas.map((a) => ({ minX: AG.x - a.maxX, maxX: AG.x - a.minX, minZ: AG.z - a.maxZ, maxZ: AG.z - a.minZ }));
 const dnAreas = [...dentist.userData.areas, ...wing.userData.areas].map((a) => { const [minX, maxX, minZ, maxZ] = dnW([a.minX, a.maxX, a.minZ, a.maxZ]); return { minX, maxX, minZ, maxZ }; });
 
 const walk = new WalkControls(camera, renderer.domElement, {
@@ -1364,6 +1370,7 @@ const walk = new WalkControls(camera, renderer.domElement, {
     ...stAreas, // the storage row's apron + the two open units
     ...csAreas, // inside the corner store
     cpArea, // the canal walkway park
+    ...agAreas, // the art gallery
     { minX: 221.6, maxX: 224.4, minZ: -7.6, maxZ: -4.9 }, // its steps down to the sidewalk
   ],
   colliders,
@@ -1381,6 +1388,7 @@ walk.ground = (x, z, prevY) => {
   if (mh > 0) return mh;
   if (x > 211 && x < 235 && z > -25.5 && z < -7.0) return 0.75;   // the raised canal park
   if (x > 221.5 && x < 224.5 && z >= -7.0 && z < -5.2) return 0.75 * (1 - (z + 7.0) / 1.8) + 0.14 * ((z + 7.0) / 1.8);   // its steps
+  if (x > 337 && x < 351 && z > 7.9 && z < 18) return 0.14;   // the gallery floor
   const dy = district.userData.floorY(x, z);
   if (dy !== null) return dy;
   if (x > 81.3 && x < 108 && z > 28 && z < 50) return 0.14;   // the dentist office floor
@@ -1489,6 +1497,9 @@ const VIEWS = {
   dentist2: { pos: [84.3, 1.8, 34.5], target: [93.5, 1.0, 38.6] },
   operatory: { pos: [97.25, 1.85, 30.1], target: [100.6, 0.95, 29.8] },
   operatory2: { pos: [99.6, 1.8, 28.6], target: [97.6, 0.9, 30.4] },
+  gallery: { pos: [344, 1.75, 10.6], target: [344, 1.6, 17.9] },
+  gallery2: { pos: [341.8, 1.55, 11.9], target: [339.4, 0.85, 10.0] },
+  galleryfront: { pos: [344, 2.2, -3.0], target: [344, 2.6, 8] },
   canal: { pos: [214.2, 2.4, -15.6], target: [225, 0.4, -19.8] },
   storysign: { pos: [229.0, 2.3, -9.6], target: [229.4, 2.05, -11.5] },
   sushi: { pos: [181.0, 1.7, -11.6], target: [183.2, 0.95, -14.3] },

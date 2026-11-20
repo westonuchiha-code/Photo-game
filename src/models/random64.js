@@ -15,6 +15,7 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 import { F, fitText } from '../fonts.js';
 import { makeSushiCase, makeGroceryEndcap, makeCounterThings } from './grocery66.js';
 import { makeReceipt, makeRiceballPack } from './misc67.js';
+import { makeChipTower } from './inspo68.js';
 
 const _L = new THREE.TextureLoader(); const _T = {};
 function tex(name, rx = 1, ry = 1) { const k = name + rx + '|' + ry; if (_T[k]) return _T[k]; const t = _L.load(`assets/textures/${name}.png`); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx, ry); t.anisotropy = 8; return (_T[k] = t); }
@@ -132,8 +133,9 @@ export function makeCornerStore() {
   const ec = makeGroceryEndcap(); ec.position.set(5.4, 0, -1.55); g.add(ec);
   { const r1 = makeReceipt('mart'); r1.position.set(X1 - 2.4, 1.042, 2.45); r1.rotation.y = 0.4; g.add(r1); const r2 = makeReceipt('dollar'); r2.position.set(X1 - 2.2, 1.044, 2.6); r2.rotation.y = -0.3; g.add(r2);
     const rb = makeRiceballPack(); rb.position.set(X1 - 1.75, 1.043, 2.5); rb.rotation.y = 1.3; g.add(rb); }
+  const chips = makeChipTower(); chips.position.set(1.4, 0, 3.4); chips.rotation.y = 0.15; g.add(chips);
   const ct = makeCounterThings(); ct.position.set(X1 - 3.6, 1.04, 2.5); ct.rotation.y = 0.2; g.add(ct);
-  g.userData.colliders = [[X0, X0 + 1.7, Z1 - 1.7, Z1], [X1 - 0.8, X1 + 0.1, Z1 - 0.8, Z1], [X0 + 1.7, X0 + 2.3, Z1 - 0.2, Z1], [X0 + 4.1, X1 - 0.8, Z1 - 0.2, Z1], [X0, X0 + 0.2, Z0, Z1 - 1.7], [X0, X1, Z0 - 0.1, Z0 + 0.8], [X1 - 0.1, X1 + 0.1, Z0, Z1], [-4.7, -0.5, -1.85, -1.15], [0.3, 4.5, -1.85, -1.15], [-4.7, -0.5, 1.05, 1.75], [X1 - 4.3, X1, 2.2, 3.05], [X0 + 0.35, X0 + 0.75, -4, 2.8], [X0 - 0.8, X0 - 0.2, Z0 + 0.8, Z0 + 1.2], [X1 - 1.05, X1, -3.6, -1.2], [4.8, 6.0, -2.05, -1.25]];
+  g.userData.colliders = [[X0, X0 + 1.7, Z1 - 1.7, Z1], [X1 - 0.8, X1 + 0.1, Z1 - 0.8, Z1], [X0 + 1.7, X0 + 2.3, Z1 - 0.2, Z1], [X0 + 4.1, X1 - 0.8, Z1 - 0.2, Z1], [X0, X0 + 0.2, Z0, Z1 - 1.7], [X0, X1, Z0 - 0.1, Z0 + 0.8], [X1 - 0.1, X1 + 0.1, Z0, Z1], [-4.7, -0.5, -1.85, -1.15], [0.3, 4.5, -1.85, -1.15], [-4.7, -0.5, 1.05, 1.75], [X1 - 4.3, X1, 2.2, 3.05], [X0 + 0.35, X0 + 0.75, -4, 2.8], [X0 - 0.8, X0 - 0.2, Z0 + 0.8, Z0 + 1.2], [X1 - 1.05, X1, -3.6, -1.2], [4.8, 6.0, -2.05, -1.25], [1.05, 1.75, 3.15, 3.65]];
   g.userData.areas = [{ minX: X0 + 0.4, maxX: X1 - 0.3, minZ: Z0 + 0.9, maxZ: Z1 - 0.25 }, { minX: X0 + 2.35, maxX: X0 + 4.05, minZ: Z1 - 0.4, maxZ: Z1 + 0.6 }];
   return g;
 }
