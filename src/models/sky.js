@@ -88,6 +88,9 @@ export function makeSky({ moonDir = new THREE.Vector3(-0.35, 0.62, -0.7), radius
   mat.uniforms.moonRight.value.copy(right).negate();
   mat.uniforms.moonUp.value.crossVectors(dir, right).negate();
 
+  // a hazy halo around the moon (the user's hazy-moon photo, added as a soft additive glow)
+  const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: loader.load('assets/textures/moon_halo.png'), blending: THREE.AdditiveBlending, transparent: true, opacity: 0.55, depthWrite: false, fog: false }));
+  halo.material.map.colorSpace = THREE.SRGBColorSpace; halo.position.copy(dir).multiplyScalar(radius * 0.92); halo.scale.setScalar(radius * 0.22); halo.renderOrder = -9; g.add(halo);
   g.userData.update = (camera, t) => {
     g.position.copy(camera.position);   // sky follows the viewer
     mat.uniforms.time.value = t;

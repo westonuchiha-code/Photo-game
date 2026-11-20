@@ -64,7 +64,7 @@ export function makeChipTower() {
   return g;
 }
 
-const ART = [['canvas_art_bluehair.png', 0.6, 0.96, 'Blue', 'marker on canvas'], ['canvas_art_eyeshroom.png', 0.95, 0.78, 'The Watcher', 'oil on canvas'], ['canvas_art_nopurple.png', 0.78, 0.97, 'NO!', 'acrylic and marker'], ['canvas_art_splash.png', 0.68, 0.98, 'Burst', 'acrylic'], ['canvas_art_collage.png', 0.65, 0.97, 'Head Full', 'mixed media']];
+const ART = [['canvas_art_bluehair.png', 0.6, 0.96, 'Blue', 'marker on canvas'], ['canvas_art_eyeshroom.png', 0.95, 0.78, 'The Watcher', 'oil on canvas'], ['canvas_art_nopurple.png', 0.78, 0.97, 'NO!', 'acrylic and marker'], ['canvas_art_splash.png', 0.68, 0.98, 'Burst', 'acrylic'], ['canvas_art_collage.png', 0.65, 0.97, 'Head Full', 'mixed media'], ['canvas_art_bwsplatter.png', 0.72, 0.95, 'Static', 'acrylic'], ['canvas_art_pinkloops.png', 0.74, 0.95, 'Loops', 'acrylic'], ['canvas_art_tileface.png', 0.5, 0.67, 'Tile Face', 'marker on bathroom tile (photo)']];
 export function makeArtGallery() {
   const g = new THREE.Group(); g.name = 'art_gallery';
   const W = 14, D = 10, X0 = -7, X1 = 7, Z0 = -5, Z1 = 5, H = 3.6;
@@ -86,7 +86,7 @@ export function makeArtGallery() {
   const name = canvasT(1024, 160, (x, w, h) => { x.clearRect(0, 0, w, h); x.fillStyle = '#141414'; fitText(x, 'THE SPLATTER ROOM', w / 2, 70, w - 80, 96, F.marker); x.fillStyle = '#c81e28'; fitText(x, 'gallery · paintings by a local artist · free entry', w / 2, 136, w - 160, 30, F.label); });
   plane(9, 1.3, std({ map: name, transparent: true }), 0, H + 0.7, Z1 + 0.16, 0, g);
   // the paintings: back wall gets three, each side wall one; track rail with a spot on each
-  const spots = [[-4.0, Z0 + 0.05, 0], [0, Z0 + 0.05, 0], [4.0, Z0 + 0.05, 0], [X0 + 0.05, -0.5, Math.PI / 2], [X1 - 0.05, -0.5, -Math.PI / 2]];
+  const spots = [[-4.8, Z0 + 0.05, 0], [-1.6, Z0 + 0.05, 0], [1.6, Z0 + 0.05, 0], [X0 + 0.05, -1.6, Math.PI / 2], [X1 - 0.05, -1.6, -Math.PI / 2], [X0 + 0.05, 1.4, Math.PI / 2], [X1 - 0.05, 1.4, -Math.PI / 2], [4.8, Z0 + 0.05, 0]];
   const rail = std({ color: '#141416', metalness: 0.6 });
   box(W - 2, 0.04, 0.04, rail, 0, H - 0.1, Z0 + 1.4, g); box(0.04, 0.04, D - 2, rail, X0 + 1.4, H - 0.1, 0, g); box(0.04, 0.04, D - 2, rail, X1 - 1.4, H - 0.1, 0, g);
   ART.forEach(([file, w0, h0, title, medium], i) => { let w = w0, h = h0;

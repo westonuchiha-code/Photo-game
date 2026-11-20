@@ -27,6 +27,7 @@ export const LOTS = [
   { id: 'store', x0: 168, x1: 184, z0: -17, z1: -7, face: 's', built: true },        // corner store (item 64)
   { id: 'aircraft', x0: 252, x1: 266, z0: 7, z1: 21, face: 'n', built: true },     // aircraft-nose carport (item 64)
   { id: 'gallery', x0: 336, x1: 352, z0: 7, z1: 19, face: 'n', built: true },   // art gallery (item 68)
+  { id: 'warehouse', x0: 266, x1: 306, z0: 91, z1: 124, face: 'n', built: true },  // Bulk Barn warehouse store (item 69)
   { id: 'lotD', x0: 210, x1: 236, z0: -31, z1: -7, face: 's', built: true },   // canal walkway park (item 67)
 ];
 

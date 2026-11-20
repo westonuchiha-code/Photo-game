@@ -96,7 +96,8 @@ Rules (from you):
 - 65 Signage batch (approved)
 - 66 Grocery 2 (approved)
 - 67 Misc 3 (approved)
-- 68 Inspiration 3 (in review)
+- 68 Inspiration 3 (approved)
+- 69 Inspiration 4 (in review)
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
