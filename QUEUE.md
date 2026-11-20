@@ -63,7 +63,7 @@ Rules (from you):
 
 ## In review
 - 35 Claw hammer (done, parked)
-- 36 Vehicles: kei truck (approved), river boat (skipped), coach bus (approved), scout truck (approved), work van (approved), commuter train (in review)
+- 36 Vehicles: kei truck (approved), river boat (skipped), coach bus (approved), scout truck (approved), work van (approved), commuter train (approved), scooters (in review)
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
@@ -390,6 +390,17 @@ Rules (from you):
     "PLEASE LAY FLAT" painting (blue, red, gold; hung as-is if it's the user's own); cooler aisle with
     two doors patched over with taped cardboard and finger holes; long-shackle padlock on a steel hasp
     next to a worn notice. All brands, plates and store names replaced with made-up ones.
+
+77. Batch 77 (photos/batch77/): two corn dogs in paper boats on a wood tray (crumb-coated, and one
+    studded with diced fries) with a pink dipping sauce; shipping case with a printed white label
+    (best-by, lot, barcode); order-picking handheld scanner screen (aisle/bay/shelf, qty badge);
+    open dairy case aisle under a blue wall with cream scroll mural, snack boxes on top, a drink
+    case display at the end; pallet of black folding totes shrink-wrapped with a "location / counted
+    by / do not add or remove" sheet; stacked black totes full of groceries with the same sheet;
+    dark textured painting with one pale-blue eye (hung as-is if it's the user's own). All brands,
+    numbers, codes and app names replaced with made-up ones. (A printed staff roster photo was
+    left out of the repo because it lists real people's names; a roster sheet can be made with
+    invented names if wanted.)
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"

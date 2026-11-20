@@ -730,3 +730,164 @@ export function makeTrainPlatform(len = 26) {
   g.userData.trackZ = trackZ; g.userData.D = D; g.userData.stairs = { x0: -sw / 2, x1: sw / 2, z0: edgeZ - D - steps * run, z1: edgeZ - D };
   return g;
 }
+
+// ---------------------------------------------------------------------------------------------------------
+//   Scooters (orange-scooter-rusty-scooter.jpg). Paint is sampled straight from the photo.
+//   makeVintageScooter()  orange 70s step-through: convex leg shield with a slotted horn cover and amber
+//     indicators, round headlight in the handlebar casting, round mirror on a stalk, front fender with a
+//     chrome crest, ribbed floorboard runners, two bulging side cowls edged in black piping, black seat
+//     with a chrome grab rail, split-rim wheels. Made-up badges ("Zefira", "ATELIER").
+//   makeRustedScooter()  the stripped white 50s scooter next to it: leg shield and front fender bloomed
+//     with rust, torn edges, no seat or cowls, the bare scaly rust tank box on the frame, bent bars,
+//     flat rear tyre. Front toward +x, ground y = 0.
+function scooterWheel(g, x, r, rimCol, tyreFlat = false) {
+  const tyre = new THREE.Mesh(new THREE.TorusGeometry(r - 0.035, 0.045, 12, 32), new THREE.MeshStandardMaterial({ color: '#1a1a1a', roughness: 0.9 }));
+  tyre.position.set(x, r, 0); if (tyreFlat) { tyre.scale.set(1.04, 0.92, 1.15); tyre.position.y = r * 0.92; } g.add(tyre);
+  const rim = new THREE.Mesh(new THREE.CylinderGeometry(r - 0.06, r - 0.06, 0.07, 24), new THREE.MeshStandardMaterial({ color: rimCol, roughness: 0.4, metalness: 0.6 }));
+  rim.rotation.x = Math.PI / 2; rim.position.copy(tyre.position); g.add(rim);
+  const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.1, 16), new THREE.MeshStandardMaterial({ color: '#888c90', roughness: 0.4, metalness: 0.7 }));
+  hub.rotation.x = Math.PI / 2; hub.position.copy(tyre.position); g.add(hub);
+  for (let i = 0; i < 5; i++) { const a = i * Math.PI * 2 / 5; const n = new THREE.Mesh(new THREE.SphereGeometry(0.008, 6, 4), hub.material); n.position.set(x + Math.cos(a) * 0.075, tyre.position.y + Math.sin(a) * 0.075, 0.037); g.add(n); }
+}
+// a body panel shell: half an ellipsoid (open side inward), used for cowls and fenders
+function shell(rx, ry, rz, mat, phiLen = Math.PI) {
+  const m = new THREE.Mesh(new THREE.SphereGeometry(1, 28, 16, 0, phiLen), mat); m.scale.set(rx, ry, rz); m.castShadow = true; return m;
+}
+function legShield(mat) {
+  // convex in plan, narrower at the top: a lofted strip of arcs from y 0.27 to 0.95
+  const pos = [], uv = [], idx = [], NY = 14, NA = 20;
+  for (let i = 0; i <= NY; i++) {
+    const t = i / NY, y = 0.27 + t * 0.66, hwid = 0.25 - 0.09 * t + 0.02 * Math.sin(t * Math.PI), bulge = 0.15 - 0.06 * t;
+    for (let j = 0; j <= NA; j++) { const u = j / NA, z = (u - 0.5) * 2 * hwid, xx = bulge * (1 - ((u - 0.5) * 2) ** 2) - 0.02 * t; pos.push(xx, y, z); uv.push(u * 0.5, t * 0.7); }
+  }
+  for (let i = 0; i < NY; i++) for (let j = 0; j < NA; j++) { const a = i * (NA + 1) + j, b = a + NA + 1; idx.push(a, a + 1, b, b, a + 1, b + 1); }
+  const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); geo.setIndex(idx); geo.computeVertexNormals();
+  const m = new THREE.Mesh(geo, mat); m.castShadow = true;
+  // the rubber edging round the sides and top (same surface function)
+  const P = (t, u) => { const y = 0.27 + t * 0.66, hwid = 0.25 - 0.09 * t + 0.02 * Math.sin(t * Math.PI), bulge = 0.15 - 0.06 * t, w = (u - 0.5) * 2; return new THREE.Vector3(bulge * (1 - w * w) - 0.02 * t, y, w * hwid); };
+  const edge = []; for (let i = 0; i <= 14; i++) edge.push(P(i / 14, 0)); for (let j = 1; j < 20; j++) edge.push(P(1, j / 20)); for (let i = 14; i >= 0; i--) edge.push(P(i / 14, 1));
+  m.userData.edge = edge; m.userData.P = P; return m;
+}
+export function makeVintageScooter() {
+  const g = new THREE.Group(); g.name = 'vintage_scooter';
+  const ot = tex('sc_orange', true); ot.repeat.set(0.6, 0.6);
+  const paint = new THREE.MeshStandardMaterial({ map: ot, roughness: 0.32, metalness: 0.05, side: THREE.DoubleSide });
+  const black = new THREE.MeshStandardMaterial({ color: '#141414', roughness: 0.7 });
+  const chrome = new THREE.MeshStandardMaterial({ color: '#d0d4d8', roughness: 0.15, metalness: 0.9 });
+  const Rw = 0.2, xF = 0.56, xR = -0.6;
+  scooterWheel(g, xF, Rw, '#c8ccd0'); scooterWheel(g, xR, Rw, '#c8ccd0');
+  // leg shield + horn cover + indicators
+  const ls = legShield(paint); ls.position.x = 0.2; g.add(ls);
+  const pip = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(ls.userData.edge), 120, 0.009, 6), black); pip.position.x = 0.2; g.add(pip);
+  const onShield = (y, z = 0, out = 0.004) => { const t = (y - 0.27) / 0.66, P = ls.userData.P(t, 0.5); const hw2 = 0.25 - 0.09 * t + 0.02 * Math.sin(t * Math.PI), w = z / hw2; return 0.2 + (0.15 - 0.06 * t) * (1 - w * w) - 0.02 * t + out + 0 * P.x; };
+  const hc = document.createElement('canvas'); hc.width = 128; hc.height = 96; const hx = hc.getContext('2d');
+  hx.fillStyle = '#e07a2c'; hx.fillRect(0, 0, 128, 96); hx.fillStyle = '#7a3a10'; for (let i = 0; i < 7; i++) hx.fillRect(10, 8 + i * 11, 108, 5);
+  hx.fillStyle = '#3a78c0'; hx.beginPath(); hx.arc(64, 48, 14, 0, 7); hx.fill(); hx.fillStyle = '#fff'; hx.font = `bold 14px ${F.label}`; hx.textAlign = 'center'; hx.fillText('Z', 64, 53);
+  const ht = new THREE.CanvasTexture(hc); ht.colorSpace = THREE.SRGBColorSpace;
+  const horn = new THREE.Mesh(new THREE.PlaneGeometry(0.1, 0.075), new THREE.MeshStandardMaterial({ map: ht, roughness: 0.4 })); horn.rotation.y = Math.PI / 2; horn.position.set(onShield(0.46), 0.46, 0); g.add(horn);
+  for (const z of [-1, 1]) { const ind = box(0.03, 0.08, 0.05, new THREE.MeshStandardMaterial({ color: '#f0a020', roughness: 0.2, emissive: '#5a3000', emissiveIntensity: 0.4, transparent: true, opacity: 0.9 }), onShield(0.55, z * 0.19, 0.01), 0.55, z * 0.19, g); ind.rotation.y = z * 0.6; }
+  // made-up script badge + top nameplate
+  const bc = document.createElement('canvas'); bc.width = 256; bc.height = 80; const bx2 = bc.getContext('2d');
+  bx2.fillStyle = '#e8eaec'; bx2.strokeStyle = '#5a5c60'; bx2.lineWidth = 3; fitText(bx2, 'Zefira', 128, 42, 230, 64, F.script, { stroke: 1 });
+  const bt = new THREE.CanvasTexture(bc); bt.colorSpace = THREE.SRGBColorSpace;
+  const badge = new THREE.Mesh(new THREE.PlaneGeometry(0.12, 0.037), new THREE.MeshStandardMaterial({ map: bt, transparent: true, metalness: 0.6, roughness: 0.25 }));
+  badge.rotation.y = Math.PI / 2; badge.position.set(onShield(0.66, -0.035), 0.66, -0.035); badge.rotation.z = 0.02; g.add(badge);
+  const pc = document.createElement('canvas'); pc.width = 256; pc.height = 48; const px = pc.getContext('2d');
+  px.fillStyle = '#1a1a1a'; px.fillRect(0, 0, 256, 48); px.strokeStyle = '#c8ccd0'; px.lineWidth = 4; px.strokeRect(2, 2, 252, 44); px.fillStyle = '#e8eaec'; fitText(px, 'ATELIER', 128, 25, 220, 30, F.engraved, { spacing: 6 });
+  const pt = new THREE.CanvasTexture(pc); pt.colorSpace = THREE.SRGBColorSpace;
+  const plate = new THREE.Mesh(new THREE.PlaneGeometry(0.08, 0.015), new THREE.MeshStandardMaterial({ map: pt, roughness: 0.3 })); plate.rotation.y = Math.PI / 2; plate.position.set(onShield(0.85), 0.85, 0); g.add(plate);
+  // steering column, handlebar casting with the round headlight, grips, mirror
+  tube(new THREE.Vector3(0.2, 0.9, 0), new THREE.Vector3(0.16, 1.02, 0), 0.03, paint, g);
+  const head = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.07, 0.12, 24), paint); head.rotation.z = Math.PI / 2; head.position.set(0.18, 1.06, 0); g.add(head);
+  const lens = new THREE.Mesh(new THREE.CircleGeometry(0.068, 24), new THREE.MeshStandardMaterial({ color: '#e8eae6', roughness: 0.1, metalness: 0.3, emissive: '#303028' })); lens.rotation.y = Math.PI / 2; lens.position.set(0.245, 1.06, 0); g.add(lens);
+  const bezel = new THREE.Mesh(new THREE.TorusGeometry(0.07, 0.008, 8, 24), chrome); bezel.rotation.y = Math.PI / 2; bezel.position.set(0.243, 1.06, 0); g.add(bezel);
+  for (const z of [-1, 1]) {
+    tube(new THREE.Vector3(0.15, 1.08, 0), new THREE.Vector3(0.12, 1.1, z * 0.3), 0.022, paint, g);
+    tube(new THREE.Vector3(0.12, 1.1, z * 0.3), new THREE.Vector3(0.11, 1.105, z * 0.4), 0.019, black, g);
+  }
+  tube(new THREE.Vector3(0.12, 1.1, -0.26), new THREE.Vector3(0.1, 1.3, -0.33), 0.006, chrome, g);
+  const mir = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.015, 20), chrome); mir.rotation.z = Math.PI / 2; mir.rotation.y = 0.3; mir.position.set(0.1, 1.33, -0.34); g.add(mir);
+  // front fender with chrome crest, fork link
+  const ff = shell(0.17, 0.12, 0.085, paint, Math.PI); ff.rotation.x = Math.PI / 2; ff.rotation.z = 0; ff.position.set(xF, Rw + 0.05, 0);
+  ff.geometry = new THREE.SphereGeometry(1, 28, 14, 0, Math.PI * 2, 0, Math.PI / 2); ff.rotation.set(0, 0, -0.15); ff.scale.set(0.2, 0.17, 0.085); ff.position.set(xF - 0.02, Rw + 0.08, 0); g.add(ff);
+  const crest = new THREE.Mesh(new THREE.CapsuleGeometry(0.009, 0.11, 4, 8), chrome); crest.rotation.z = -0.95; crest.position.set(xF + 0.1, Rw + 0.215, 0); g.add(crest);
+  tube(new THREE.Vector3(xF - 0.04, Rw, 0.06), new THREE.Vector3(0.24, 0.5, 0.05), 0.02, black, g);
+  // floorboard with ribbed runners, the centre tunnel
+  box(0.55, 0.035, 0.32, paint, -0.02, 0.26, 0, g);
+  const alu = new THREE.MeshStandardMaterial({ color: '#9a9ea2', roughness: 0.5, metalness: 0.6 });
+  for (let i = -2; i <= 2; i++) { box(0.5, 0.006, 0.05, black, -0.02, 0.28, i * 0.06, g); box(0.5, 0.01, 0.008, alu, -0.02, 0.283, i * 0.06 + 0.03, g); }
+  for (const z of [-1, 1]) box(0.55, 0.02, 0.012, chrome, -0.02, 0.27, z * 0.165, g);
+  // rear body: tunnel + two side cowls with black piping
+  const rb = shell(0.36, 0.28, 0.12, paint, Math.PI * 2); rb.position.set(-0.48, 0.45, 0); g.add(rb);
+  for (const z of [-1, 1]) {
+    const cw = shell(0.3, 0.2, 0.13, paint, Math.PI * 2); cw.position.set(-0.47, 0.45, z * 0.13); g.add(cw);
+    const pts = []; for (let i = 0; i <= 40; i++) { const a = i / 40 * Math.PI * 2; pts.push(new THREE.Vector3(-0.47 + Math.cos(a) * 0.3, 0.45 + Math.sin(a) * 0.2, z * 0.13)); }
+    g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts, true), 60, 0.008, 6, true), black));
+  }
+  // seat (rounded black pad), grab rail, tail lamp, kickstand
+  const sg = new THREE.Shape(); sg.moveTo(-0.3, 0); sg.lineTo(0.28, 0); sg.quadraticCurveTo(0.33, 0, 0.3, 0.08); sg.quadraticCurveTo(0.1, 0.11, -0.3, 0.1); sg.quadraticCurveTo(-0.36, 0.05, -0.3, 0);
+  const seatG = new THREE.ExtrudeGeometry(sg, { depth: 0.22, bevelEnabled: true, bevelThickness: 0.03, bevelSize: 0.03, bevelSegments: 4 }); seatG.translate(0, 0, -0.11);
+  const seat = new THREE.Mesh(seatG, new THREE.MeshStandardMaterial({ color: '#1d1e22', roughness: 0.55 })); seat.position.set(-0.4, 0.7, 0); seat.castShadow = true; g.add(seat);
+  const rail = []; for (let i = 0; i <= 20; i++) { const a = i / 20 * Math.PI; rail.push(new THREE.Vector3(-0.72 - Math.sin(a) * 0.1, 0.78, Math.cos(a) * 0.14)); }
+  g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(rail), 30, 0.01, 6), chrome));
+  box(0.03, 0.05, 0.1, new THREE.MeshStandardMaterial({ color: '#a01818', roughness: 0.3, emissive: '#300000' }), -0.84, 0.55, 0, g);
+  tube(new THREE.Vector3(-0.2, 0.25, -0.1), new THREE.Vector3(-0.28, 0, -0.16), 0.012, black, g);
+  g.rotation.x = 0.06;                                                          // leaning on its side stand
+  return g;
+}
+export function makeRustedScooter() {
+  const g = new THREE.Group(); g.name = 'rusted_scooter';
+  // white panel paint from the photo with rust blooming over it (the rust is the photo's own rust texture)
+  const c = document.createElement('canvas'); c.width = c.height = 512; const x = c.getContext('2d');
+  x.fillStyle = '#d8dcde'; x.fillRect(0, 0, 512, 512);
+  const tW = tex('sc_rustwhite'), tR = tex('sc_rustbox');
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+  const draw = () => {
+    if (!tW.image?.width || !tR.image?.width) return;
+    x.drawImage(tW.image, 0, 0, 512, 512);
+    const pat = x.createPattern(tR.image, 'repeat'); let s = 9; const r = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+    // rust eats in from the edges (the texture's bottom + sides map to the panel edges), in ragged clusters
+    const blob = (cx, cy, rr) => { x.beginPath(); for (let k = 0; k <= 14; k++) { const a = k / 14 * Math.PI * 2, q = rr * (0.55 + r() * 0.6); k ? x.lineTo(cx + Math.cos(a) * q, cy + Math.sin(a) * q * 0.8) : x.moveTo(cx + Math.cos(a) * q, cy + Math.sin(a) * q * 0.8); } x.closePath(); x.fill(); };
+    for (let i = 0; i < 70; i++) {
+      const side = r(); let cx, cy;
+      if (side < 0.5) { cx = r() * 512; cy = 512 - Math.pow(r(), 2) * 160; } else if (side < 0.75) { cx = Math.pow(r(), 2) * 90; cy = r() * 512; } else if (side < 0.9) { cx = 512 - Math.pow(r(), 2) * 90; cy = r() * 512; } else { cx = r() * 512; cy = r() * 400; }
+      const rr = 4 + r() * (side < 0.9 ? 26 : 10);
+      x.fillStyle = 'rgba(130,64,24,0.5)'; blob(cx, cy, rr * 1.4);
+      x.fillStyle = pat; x.globalAlpha = 0.9; blob(cx, cy, rr); x.globalAlpha = 1;
+      if (r() < 0.35) { x.strokeStyle = 'rgba(150,80,30,0.35)'; x.lineWidth = 2 + r() * 3; x.beginPath(); x.moveTo(cx, cy); x.lineTo(cx + (r() - 0.5) * 8, cy - 20 - r() * 70); x.stroke(); }
+    }
+    const edge = x.createLinearGradient(0, 430, 0, 512); edge.addColorStop(0, 'rgba(110,50,20,0)'); edge.addColorStop(1, 'rgba(110,50,20,0.9)'); x.fillStyle = edge; x.fillRect(0, 430, 512, 82);
+    t.needsUpdate = true;
+  };
+  for (const q of [tW, tR]) { const old = q.onUpdate; q.onUpdate = () => { old?.(); draw(); }; }
+  const iv = setInterval(() => { if (tW.image?.width && tR.image?.width) { clearInterval(iv); draw(); } }, 200);
+  const white = new THREE.MeshStandardMaterial({ map: t, roughness: 0.7, side: THREE.DoubleSide });
+  const rustM = new THREE.MeshStandardMaterial({ map: tex('sc_rustbox', true), roughness: 0.95, side: THREE.DoubleSide });
+  const black = new THREE.MeshStandardMaterial({ color: '#1a1a1a', roughness: 0.8 });
+  const Rw = 0.19, xF = 0.6, xR = -0.55;
+  scooterWheel(g, xF, Rw, '#8a7a68'); scooterWheel(g, xR, Rw, '#6a5040', true);
+  // leg shield (dented: pushed in on one side) and the big front fender, both with torn rusty edges
+  const ls = legShield(white); ls.position.x = 0.22; ls.scale.set(1.2, 1, 1.08); g.add(ls);
+  const lp = ls.geometry.attributes.position; for (let i = 0; i < lp.count; i++) { const z = lp.getZ(i), y = lp.getY(i); if (z > 0.05 && y < 0.6) lp.setX(i, lp.getX(i) - 0.04 * Math.sin((y - 0.27) * 9) * (z - 0.05) * 8); } ls.geometry.computeVertexNormals();
+  const ff = new THREE.Mesh(new THREE.SphereGeometry(1, 28, 14, 0, Math.PI * 2, 0, Math.PI / 2), white); ff.scale.set(0.26, 0.2, 0.13); ff.rotation.z = -0.25; ff.position.set(xF + 0.02, Rw + 0.06, 0); ff.castShadow = true; g.add(ff);
+  // frame: floor rails, the open rust tank box on the spine, stays down to the rear wheel
+  const frame = new THREE.MeshStandardMaterial({ color: '#b8b4ac', roughness: 0.8 });
+  box(0.5, 0.03, 0.3, white, -0.02, 0.26, 0, g);
+  for (const z of [-0.12, 0.12]) tube(new THREE.Vector3(0.22, 0.28, z), new THREE.Vector3(-0.6, 0.5, z * 0.6), 0.018, frame, g);
+  const tank = new THREE.Group(); tank.position.set(-0.32, 0.6, 0); tank.rotation.z = 0.08; g.add(tank);
+  box(0.4, 0.25, 0.3, rustM, 0, 0, 0, tank);
+  box(0.42, 0.02, 0.32, white, 0, 0.13, 0, tank);
+  for (const [px, pz] of [[-0.1, 0.06], [0.1, -0.05]]) { const h = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.03, 16), black); h.position.set(px, 0.135, pz); tank.add(h); }
+  box(0.36, 0.12, 0.26, rustM, -0.42, -0.08, 0, tank);
+  tube(new THREE.Vector3(-0.6, 0.48, 0.1), new THREE.Vector3(xR, Rw, 0.08), 0.02, rustM, g);
+  // bent, rusted handlebars poking up, one white grip left
+  tube(new THREE.Vector3(0.22, 0.9, 0), new THREE.Vector3(0.18, 1.0, 0), 0.025, rustM, g);
+  tube(new THREE.Vector3(0.18, 1.0, 0), new THREE.Vector3(0.12, 1.06, -0.32), 0.015, rustM, g);
+  tube(new THREE.Vector3(0.18, 1.0, 0), new THREE.Vector3(0.2, 0.97, 0.28), 0.015, rustM, g);
+  tube(new THREE.Vector3(0.2, 0.97, 0.28), new THREE.Vector3(0.21, 0.96, 0.38), 0.02, new THREE.MeshStandardMaterial({ color: '#e0e0dc', roughness: 0.6 }), g);
+  // the empty headlamp ring, hanging cable
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.06, 0.012, 8, 20), rustM); ring.rotation.y = Math.PI / 2; ring.position.set(0.31, 0.88, 0); g.add(ring);
+  const cab = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(0.2, 1.0, 0.05), new THREE.Vector3(0.24, 0.8, 0.12), new THREE.Vector3(0.18, 0.62, 0.08)]), 20, 0.005, 5), black); g.add(cab);
+  g.rotation.x = -0.05;
+  return g;
+}

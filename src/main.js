@@ -5,7 +5,7 @@
 // napkin dispensers, the framed poster, the slatted fence and wall globes outside.
 import * as THREE from 'three';
 import { shrinkCanvases } from './texcache.js';
-import { makeKeiTruck, makeCoachBus, makeScoutTruck, makeWorkVan, makeCommuterTrain, makeTrainPlatform, PLAT_Y } from './models/vehicles36.js';
+import { makeKeiTruck, makeCoachBus, makeScoutTruck, makeWorkVan, makeCommuterTrain, makeTrainPlatform, PLAT_Y, makeVintageScooter, makeRustedScooter } from './models/vehicles36.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
@@ -1131,6 +1131,10 @@ rect(KT.x - 0.78, KT.x + 0.78, KT.z - 1.75, KT.z + 1.75);
 const KV = { x: -22.8, z: 39.7, rot: -Math.PI / 2 };
 const workVan = makeWorkVan(); workVan.position.set(KV.x, 0, KV.z); workVan.rotation.y = KV.rot; add(workVan);
 rect(KV.x - 0.78, KV.x + 0.78, KV.z - 1.7, KV.z + 1.7);
+// the orange vintage scooter and the rusted-out one beside it, nosed in on the sidewalk past the truck
+const vs = makeVintageScooter(); vs.position.set(-20.9, 0.12, 48.4); vs.rotation.y = Math.PI; add(vs);
+const rs = makeRustedScooter(); rs.position.set(-20.95, 0.12, 49.35); rs.rotation.y = Math.PI + 0.12; add(rs);
+rect(-21.95, -20.0, 47.9, 49.8);
 // the commuter train waiting at a platform behind the station gate
 const TP = { x: -28, z: 75.6 };
 const platform = makeTrainPlatform(26); platform.position.set(TP.x, 0, TP.z); add(platform);
@@ -1339,6 +1343,7 @@ const VIEWS = {
   knotbar: { pos: [16.5, 1.6, 69.6], target: [20.2, 1.4, 69.6] },
   keitruck: { pos: [-26.2, 1.9, 48.9], target: [-22.75, 0.9, 44.5] },
   coach: { pos: [-24.5, 2.4, 27.5], target: [-29.7, 1.6, 36] },
+  scooters: { pos: [-23.6, 1.5, 50.4], target: [-20.9, 0.5, 48.8] },
   train: { pos: [-12.5, 2.6, 71.0], target: [-17.5, 2.0, 77.2] },
   workvan: { pos: [-26.0, 1.7, 36.2], target: [-22.8, 0.9, 39.9] },
   scout: { pos: [36.4, 1.7, -5.4], target: [39.9, 0.8, -0.6] },

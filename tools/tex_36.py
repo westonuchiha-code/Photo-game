@@ -141,3 +141,18 @@ glass6 = np.minimum(glass6, dark + 12)
 front = (front.astype(np.float32) * (1 - wm6) + glass6 * wm6).clip(0, 255).astype(np.uint8)
 cv2.imwrite(os.path.join(OUT, "tr_front.png"), front)
 print("wrote tr_front")
+
+# ---- scooters (orange-scooter-rusty-scooter.jpg, 1400-px thumb): paint patches mirrored into seamless tiles
+im7 = load_cv("orange-scooter-rusty-scooter.jpg"); k7 = im7.shape[1] / 1400
+def tile(box, name, size=256):
+    # seamless by cross-fading the patch with itself rolled half a tile (no mirror-kaleidoscope look)
+    x0, y0, x1, y1 = [int(v * k7) for v in box]
+    p = cv2.resize(im7[y0:y1, x0:x1], (size, size), interpolation=cv2.INTER_AREA).astype(np.float32)
+    r = np.roll(np.roll(p, size // 2, 0), size // 2, 1)
+    w = np.minimum(np.minimum(np.arange(size), size - 1 - np.arange(size)) / (size / 2), 1)
+    m = np.minimum(w[:, None], w[None, :])[:, :, None] ** 0.7
+    cv2.imwrite(os.path.join(OUT, name), (p * m + r * (1 - m)).clip(0, 255).astype(np.uint8))
+tile((612, 560, 650, 630), "sc_orange.png")          # leg shield paint, soft sheen
+tile((890, 572, 935, 622), "sc_rustwhite.png")     # dirty white panel paint
+tile((762, 575, 792, 635), "sc_rustbox.png")         # scaly bare rust
+print("wrote sc_orange, sc_rustwhite, sc_rustbox")
