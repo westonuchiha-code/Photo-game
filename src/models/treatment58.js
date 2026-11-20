@@ -1,7 +1,7 @@
 // Dentist treatment rooms (queue item 58, photos/dentist/operatory01..09), behind the waiting room's
 // "TREATMENT ROOMS" door at Brightwater Dental. Surfaces from the photos (tools/tex_58.py): light-wood plank floor,
-// taupe chair upholstery, tan stool leather, the tool chest's butcher-block top, the trees through the window and the
-// steel tray with its instrument cassette.
+// taupe chair upholstery, tan stool leather, the tool chest's butcher-block top and the trees through the window.
+// The tray's instruments are modelled from operatory06.
 //   makeTreatmentWing()  same local frame as makeDentistOffice (waiting-room partition at z = 0.3): a hallway along
 //     the partition (z -2.0..0.3), operatory 1 (x -11..-7.4) fully dressed from the photos, operatory 2
 //     (x -7.4..-3.8) with a second chair. userData: colliders (local rects), areas (local rects)
@@ -27,35 +27,46 @@ const WHITE = () => std({ color: '#f2f2ee', roughness: 0.35 });
 // five-star caster base (stools, mayo stand)
 function starBase(p, r = 0.3, y = 0.06) { const c = chrome(), blk = std({ color: '#1a1a1a' }); for (let i = 0; i < 5; i++) { const a = i / 5 * 6.283; rod(V(0, y + 0.02, 0), V(Math.cos(a) * r, y, Math.sin(a) * r), 0.016, c, p); cyl(0.025, 0.025, 0.03, blk, Math.cos(a) * r, 0.025, Math.sin(a) * r, p, 10).rotation.z = Math.PI / 2; } }
 
-// ---- the dental chair: white pedestal on a dark floor plate, lift arm, taupe upholstered couch (back reclined, seat,
-// long leg rest sloping to a rounded foot end in a clear plastic sleeve), armrests, headrest on an articulating arm
-// in a plastic sleeve, foot control on a coiled cable. Head toward -z, foot toward +z.
+// ---- the dental chair: one continuous upholstered couch (headrest -> reclined back -> seat -> leg rest sloping to a
+// rounded foot end) built from a side profile and given its width, so every part is joined; white pedestal on a
+// floor plate under the seat, chrome-stalk armrests, a clear sleeve over the foot end, the headrest pad in a plastic
+// bag, the round foot control on a coiled cable, a floor power box. Head toward -z, foot toward +z.
 export function makeDentalChair() {
   const g = new THREE.Group(); g.name = 'dental_chair';
-  const wht = WHITE(), plate = std({ color: '#3a3c40', roughness: 0.5, metalness: 0.3 }), up = std({ map: tex('op_leather', 0.8, 0.8), roughness: 0.45 });
+  const wht = WHITE(), plate = std({ color: '#3a3c40', roughness: 0.5, metalness: 0.3 }), up = std({ map: tex('op_leather', 2.2, 2.2), roughness: 0.45 });
   const clear = std({ color: '#e8eef0', transparent: true, opacity: 0.25, roughness: 0.05, depthWrite: false });
-  rbox(0.62, 0.04, 1.3, 0.02, plate, 0, 0.02, 0.1, g);                                  // floor plate
-  rbox(0.4, 0.42, 0.55, 0.06, wht, 0, 0.25, -0.15, g);                                  // pedestal
-  const arm = rbox(0.3, 0.12, 0.7, 0.05, wht, 0, 0.47, 0.05, g); arm.rotation.x = -0.15;   // lift arm
-  // couch: seat, reclined back, leg rest
-  rbox(0.56, 0.12, 0.55, 0.05, up, 0, 0.6, 0.05, g);
-  const back = rbox(0.56, 0.12, 0.78, 0.06, up, 0, 0.8, -0.55, g); back.rotation.x = -0.45;
-  for (const s of [-1, 1]) { const bol = rbox(0.1, 0.16, 0.72, 0.05, up, s * 0.27, 0.84, -0.55, g); bol.rotation.x = -0.45; }
-  const leg = rbox(0.5, 0.1, 0.82, 0.05, up, 0, 0.52, 0.72, g); leg.rotation.x = 0.16;
-  const sleeve = rbox(0.53, 0.13, 0.3, 0.05, clear, 0, 0.47, 1.0, g); sleeve.rotation.x = 0.16; sleeve.castShadow = false;
-  // headrest: chrome bar out of the backrest top, a pad in a clear bag
-  rod(V(0, 1.02, -0.88), V(0, 1.1, -1.02), 0.02, chrome(), g);
-  const head = rbox(0.28, 0.07, 0.2, 0.03, up, 0, 1.12, -1.06, g); head.rotation.x = -0.9;
-  const bag = rbox(0.32, 0.12, 0.26, 0.05, clear, 0, 1.12, -1.07, g); bag.rotation.x = -0.9; bag.castShadow = false;
-  // armrests on chrome stalks
-  for (const s of [-1, 1]) { rod(V(s * 0.3, 0.6, -0.05), V(s * 0.33, 0.78, 0.0), 0.012, chrome(), g); rbox(0.07, 0.04, 0.3, 0.015, std({ color: '#5a4a3a', roughness: 0.4 }), s * 0.33, 0.8, 0.02, g); }
-  // foot control: round black puck with a grey ring, coiled cable back to the base
+  // top-surface centre line along the chair (z, y) and the cushion thickness under it
+  const top = new THREE.CatmullRomCurve3([V(-0.98, 0.93, 0), V(-0.7, 0.82, 0), V(-0.35, 0.68, 0), V(-0.08, 0.6, 0), V(0.2, 0.585, 0), V(0.38, 0.6, 0), V(0.75, 0.52, 0), V(1.08, 0.44, 0)]);
+  const pts = top.getPoints(40), TH = 0.12, sh = new THREE.Shape();
+  const nrm = (k) => { const a = pts[Math.max(0, k - 1)], b = pts[Math.min(pts.length - 1, k + 1)], dx = b.x - a.x, dy = b.y - a.y, l = Math.hypot(dx, dy); return [dy / l, -dx / l]; };   // downward normal
+  pts.forEach((q, k) => (k ? sh.lineTo(q.x, q.y) : sh.moveTo(q.x, q.y)));
+  const last = pts[pts.length - 1], [lnx, lny] = nrm(pts.length - 1);
+  sh.quadraticCurveTo(last.x + 0.09, last.y - TH / 2, last.x + lnx * TH, last.y + lny * TH);                 // rounded foot end
+  for (let k = pts.length - 1; k >= 0; k--) { const [nx, ny] = nrm(k); sh.lineTo(pts[k].x + nx * TH, pts[k].y + ny * TH); }
+  sh.quadraticCurveTo(pts[0].x - 0.06, pts[0].y - TH / 2, pts[0].x, pts[0].y);
+  const W = 0.54, geo = new THREE.ExtrudeGeometry(sh, { depth: W - 0.08, bevelEnabled: true, bevelThickness: 0.04, bevelSize: 0.035, bevelSegments: 4, curveSegments: 12 });
+  geo.translate(0, 0, -(W - 0.08) / 2); geo.rotateY(-Math.PI / 2);   // profile x -> chair z, extrusion -> across the chair
+  // the wider shoulders of the backrest: push the side faces out a little where z < -0.25
+  const gp = geo.attributes.position; for (let k = 0; k < gp.count; k++) { const z = gp.getZ(k), x = gp.getX(k); if (z < -0.25) gp.setX(k, x * (1 + 0.12 * Math.min(1, (-0.25 - z) / 0.3))); }
+  geo.computeVertexNormals();
+  const couch = new THREE.Mesh(geo, up); couch.castShadow = true; couch.receiveShadow = true; g.add(couch);
+  // headrest: a pad sitting on the top end of the back, joined to it, in a plastic bag
+  const head = rbox(0.3, 0.08, 0.24, 0.035, up, 0, 0.97, -1.02, g); head.rotation.x = 0.35;
+  const bag = rbox(0.34, 0.13, 0.3, 0.05, clear, 0, 0.97, -1.03, g); bag.rotation.x = 0.35; bag.castShadow = false;
+  // pedestal + lift arm meeting the underside of the seat
+  rbox(0.62, 0.04, 1.3, 0.02, plate, 0, 0.02, 0.1, g);
+  rbox(0.4, 0.44, 0.55, 0.06, wht, 0, 0.24, -0.05, g);
+  rbox(0.34, 0.08, 0.62, 0.035, wht, 0, 0.46, 0.08, g);
+  // armrests on chrome stalks rising from the seat sides
+  for (const s of [-1, 1]) { rod(V(s * 0.28, 0.55, 0.0), V(s * 0.33, 0.76, -0.02), 0.012, chrome(), g); rbox(0.07, 0.04, 0.32, 0.015, std({ color: '#5a4a3a', roughness: 0.4 }), s * 0.33, 0.78, -0.02, g); }
+  // clear sleeve over the foot end, following the leg-rest slope
+  const sleeve = rbox(W + 0.04, 0.17, 0.32, 0.05, clear, 0, 0.42, 0.98, g); sleeve.rotation.x = 0.24; sleeve.castShadow = false;
+  // foot control on its coiled cable
   const fc = new THREE.Group(); fc.position.set(0.55, 0, 0.75); g.add(fc);
   cyl(0.15, 0.17, 0.05, std({ color: '#141414', roughness: 0.5 }), 0, 0.025, 0, fc, 28); cyl(0.07, 0.07, 0.02, std({ color: '#9a9ea0', metalness: 0.5 }), 0, 0.06, 0, fc, 20);
   const cable = std({ color: '#c8c8c4', roughness: 0.5 }); const cp = [];
-  for (let i = 0; i <= 50; i++) { const t = i / 50, a = t * 6.283 * 2.5; cp.push(V(0.55 - t * 0.45 + Math.cos(a) * 0.1 * (1 - t), 0.015, 0.75 - t * 0.6 + Math.sin(a) * 0.1 * (1 - t))); }
+  for (let k = 0; k <= 50; k++) { const t = k / 50, a = t * 6.283 * 2.5; cp.push(V(0.55 - t * 0.4 + Math.cos(a) * 0.1 * (1 - t), 0.015, 0.75 - t * 0.6 + Math.sin(a) * 0.1 * (1 - t))); }
   tube(cp, 0.008, cable, g, 120);
-  // floor power box beside the base
   rbox(0.18, 0.12, 0.26, 0.02, wht, -0.36, 0.06, -0.2, g);
   g.userData.collider = [-0.4, 0.4, -1.15, 1.2];
   return g;
@@ -131,7 +142,7 @@ export function makeDeskFan() {
   const grille = new THREE.Mesh(new THREE.CircleGeometry(0.06, 20), std({ color: '#2a2a2c', side: THREE.DoubleSide })); grille.position.y = 0.17; g.add(grille);
   return g;
 }
-// mayo stand: chrome pole on a five-star base, an L arm holding a steel tray with the instrument cassette (photo)
+// mayo stand: chrome pole on a five-star base, an L arm holding a steel tray with the instrument cassette
 export function makeMayoStand() {
   const g = new THREE.Group(); g.name = 'mayo_stand';
   starBase(g, 0.28); const c = chrome();
@@ -139,7 +150,26 @@ export function makeMayoStand() {
   const tray = new THREE.Group(); tray.position.set(0, 0.94, 0.32); g.add(tray);
   const steel = std({ color: '#b8bcc0', metalness: 0.7, roughness: 0.35 });
   box(0.46, 0.008, 0.33, steel, 0, 0, 0, tray); for (const [w, d, x, z] of [[0.46, 0.012, 0, 0.165], [0.46, 0.012, 0, -0.165], [0.012, 0.33, 0.23, 0], [0.012, 0.33, -0.23, 0]]) box(w, 0.035, d, steel, x, 0.016, z, tray);
-  const pic = new THREE.Mesh(new THREE.PlaneGeometry(0.44, 0.31), std({ map: tex('op_tray'), roughness: 0.5 })); pic.rotation.x = -Math.PI / 2; pic.position.y = 0.006; tray.add(pic);
+  // what's on the tray (as in the photo): a paper liner, a steel instrument cassette with colour-banded handles,
+  // loose instruments, a white suction tip, cotton rolls and gauze squares
+  const liner = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.27), std({ color: '#e6d9b8', roughness: 0.9 })); liner.rotation.x = -Math.PI / 2; liner.position.y = 0.006; tray.add(liner);
+  const cas = new THREE.Group(); cas.position.set(-0.04, 0.007, -0.05); tray.add(cas);
+  const perf = canvasT(128, 96, (x, w, h) => { x.fillStyle = '#c8ccd0'; x.fillRect(0, 0, w, h); x.fillStyle = '#5a5e62'; for (let i = 4; i < w; i += 8) for (let j = 4; j < h; j += 8) { x.beginPath(); x.arc(i, j, 2, 0, 7); x.fill(); } });
+  box(0.26, 0.004, 0.16, std({ map: perf, metalness: 0.6, roughness: 0.35 }), 0, 0.002, 0, cas);
+  const st = std({ color: '#c8ccd0', metalness: 0.85, roughness: 0.25 });
+  for (const zz of [-0.08, 0.08]) box(0.26, 0.022, 0.004, st, 0, 0.011, zz, cas);
+  for (const xx of [-0.13, 0.13]) box(0.004, 0.022, 0.16, st, xx, 0.011, 0, cas);
+  for (const xx of [-0.08, 0.08]) box(0.006, 0.012, 0.16, st, xx, 0.016, 0, cas);   // the clip racks
+  ['#f2c21a', '#f2c21a', '#f08a1a', '#e8402a', '#3ac85a', '#9a5ad8', '#2a8ad8'].forEach((c, k) => {
+    const z = -0.06 + k * 0.02, h = cyl(0.0048, 0.0048, 0.13, std({ color: c, roughness: 0.4 }), 0, 0.012, z, cas, 10); h.rotation.z = Math.PI / 2;
+    for (const sd of [-1, 1]) { const tip = cyl(0.0012, 0.003, 0.03, st, sd * 0.08, 0.012, z, cas, 6); tip.rotation.z = sd * Math.PI / 2; }
+  });
+  const loose = [[0.13, 0.07, 0.3, '#b8bcc0'], [0.12, 0.1, -0.2, '#9a5ad8'], [0.07, 0.12, 0.1, '#b8bcc0']];
+  loose.forEach(([x, z, r, c]) => { const h = cyl(0.0045, 0.0045, 0.14, std({ color: c, metalness: c === '#b8bcc0' ? 0.85 : 0, roughness: 0.3 }), x - 0.06, 0.011, z, tray, 10); h.rotation.set(0, r, Math.PI / 2); });
+  const mir = cyl(0.011, 0.011, 0.003, std({ color: '#dfe6ea', metalness: 0.3, roughness: 0.15 }), 0.13, 0.012, 0.03, tray, 16); mir.rotation.x = 0.2;
+  tube([V(0.03, 0.012, 0.11), V(0.1, 0.012, 0.115), V(0.16, 0.02, 0.1), V(0.17, 0.035, 0.07)], 0.004, std({ color: '#f4f4f2', roughness: 0.4 }), tray, 16);   // suction tip
+  for (let k = 0; k < 3; k++) { const cr = cyl(0.005, 0.005, 0.035, std({ color: '#fbfbf8', roughness: 1 }), 0.15 + k * 0.012, 0.011, -0.1, tray, 8); cr.rotation.x = Math.PI / 2; }
+  for (let k = 0; k < 2; k++) { const gz = box(0.05, 0.003, 0.05, std({ color: '#fbfbf8', roughness: 1 }), -0.17 + k * 0.02, 0.009 + k * 0.003, 0.09 - k * 0.01, tray); gz.rotation.y = 0.3 * k; }
   const bib = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.12), std({ color: '#a8d8f0', roughness: 0.8 })); bib.rotation.set(-1.2, 0, 0); bib.position.set(0, -0.04, 0.2); tray.add(bib);
   g.userData.collider = [-0.3, 0.3, -0.3, 0.5];
   return g;
@@ -153,16 +183,19 @@ export function makeSaddleStool() {
   g.userData.collider = [-0.32, 0.32, -0.32, 0.32];
   return g;
 }
-// tan leather bucket stool on a black sled frame (the corner chair in the photo)
+// tan leather bucket stool on a black sled frame (the corner chair in the photo): seat + one curved back shell
 export function makeBucketStool() {
   const g = new THREE.Group(); g.name = 'bucket_stool';
-  const fr = std({ color: '#141416', metalness: 0.5, roughness: 0.4 }), lea = std({ map: tex('op_tan', 1.2, 1.2), roughness: 0.45 });
-  for (const s of [-1, 1]) { const x = s * 0.2; rod(V(x, 0.01, 0.22), V(x, 0.01, -0.22), 0.009, fr, g); rod(V(x, 0.01, 0.22), V(x * 0.9, 0.62, 0.15), 0.009, fr, g); rod(V(x, 0.01, -0.22), V(x * 0.9, 0.62, -0.15), 0.009, fr, g); }
-  rod(V(-0.2, 0.25, 0.2), V(0.2, 0.25, 0.2), 0.008, fr, g);
-  rbox(0.44, 0.05, 0.42, 0.02, lea, 0, 0.66, 0.0, g);
-  const bk = rbox(0.44, 0.34, 0.04, 0.02, lea, 0, 0.86, -0.22, g); bk.rotation.x = -0.25;
-  for (const s of [-1, 1]) { const w = rbox(0.04, 0.26, 0.24, 0.015, lea, s * 0.22, 0.8, -0.1, g); w.rotation.y = s * 0.3; }
-  g.userData.collider = [-0.25, 0.25, -0.27, 0.25];
+  const fr = std({ color: '#141416', metalness: 0.5, roughness: 0.4 }), lea = std({ map: tex('op_tan', 1.2, 1.2), roughness: 0.45, side: THREE.DoubleSide });
+  const SY = 0.64;
+  for (const s of [-1, 1]) { const x = s * 0.18; rod(V(x, 0.01, 0.2), V(x, 0.01, -0.2), 0.009, fr, g); rod(V(x, 0.01, 0.2), V(x, SY - 0.03, 0.16), 0.009, fr, g); rod(V(x, 0.01, -0.2), V(x, SY - 0.03, -0.16), 0.009, fr, g); rod(V(x, SY - 0.03, 0.16), V(x, SY - 0.03, -0.16), 0.009, fr, g); }
+  rod(V(-0.18, 0.24, 0.185), V(0.18, 0.24, 0.185), 0.009, fr, g);                         // foot bar
+  rbox(0.42, 0.05, 0.4, 0.02, lea, 0, SY, 0.0, g);
+  // back shell: a half-cylinder wrapping the back of the seat, leaning back a little
+  const sh = new THREE.Mesh(new THREE.CylinderGeometry(0.21, 0.2, 0.34, 28, 1, true, Math.PI * 0.5, Math.PI), lea);
+  sh.scale.set(1, 1, 0.85); sh.position.set(0, SY + 0.19, -0.02); sh.rotation.x = -0.12; sh.castShadow = true; g.add(sh);
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(0.205, 0.012, 6, 28, Math.PI), lea); rim.rotation.set(Math.PI / 2, 0, Math.PI); rim.scale.set(1, 0.85, 1); rim.position.set(0, SY + 0.36, -0.04); g.add(rim);
+  g.userData.collider = [-0.25, 0.25, -0.25, 0.25];
   return g;
 }
 
