@@ -1526,6 +1526,7 @@ function frame() {
   soupPots.forEach((p) => p.userData.update(t));
   puffCup.userData.update(t);
   creep.userData.update(t);
+  (alley.userData.anim || []).forEach((a) => a.userData.update(t));
   cart.userData.update(t);
   {
     const near = mode === 'walk' && Math.abs(walk.position.x - GS.x) < 2.2 && Math.abs(walk.position.z - (GS.z + 6)) < 2.6;
