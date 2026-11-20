@@ -757,14 +757,14 @@ function legShield(mat) {
   // convex in plan, narrower at the top: a lofted strip of arcs from y 0.27 to 0.95
   const pos = [], uv = [], idx = [], NY = 14, NA = 20;
   for (let i = 0; i <= NY; i++) {
-    const t = i / NY, y = 0.27 + t * 0.66, hwid = 0.25 - 0.09 * t + 0.02 * Math.sin(t * Math.PI), bulge = 0.15 - 0.06 * t;
+    const t = i / NY, y = 0.27 + t * 0.66, e = THREE.MathUtils.smoothstep(t, 0, 0.22), hwid = (0.25 - 0.09 * t + 0.02 * Math.sin(t * Math.PI)) * (0.66 + 0.34 * e), bulge = (0.15 - 0.06 * t) * (0.25 + 0.75 * e);
     for (let j = 0; j <= NA; j++) { const u = j / NA, z = (u - 0.5) * 2 * hwid, xx = bulge * (1 - ((u - 0.5) * 2) ** 2) - 0.02 * t; pos.push(xx, y, z); uv.push(u * 0.5, t * 0.7); }
   }
   for (let i = 0; i < NY; i++) for (let j = 0; j < NA; j++) { const a = i * (NA + 1) + j, b = a + NA + 1; idx.push(a, a + 1, b, b, a + 1, b + 1); }
   const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); geo.setIndex(idx); geo.computeVertexNormals();
   const m = new THREE.Mesh(geo, mat); m.castShadow = true;
   // the rubber edging round the sides and top (same surface function)
-  const P = (t, u) => { const y = 0.27 + t * 0.66, hwid = 0.25 - 0.09 * t + 0.02 * Math.sin(t * Math.PI), bulge = 0.15 - 0.06 * t, w = (u - 0.5) * 2; return new THREE.Vector3(bulge * (1 - w * w) - 0.02 * t, y, w * hwid); };
+  const P = (t, u) => { const y = 0.27 + t * 0.66, e = THREE.MathUtils.smoothstep(t, 0, 0.22), hwid = (0.25 - 0.09 * t + 0.02 * Math.sin(t * Math.PI)) * (0.66 + 0.34 * e), bulge = (0.15 - 0.06 * t) * (0.25 + 0.75 * e), w = (u - 0.5) * 2; return new THREE.Vector3(bulge * (1 - w * w) - 0.02 * t, y, w * hwid); };
   const edge = []; for (let i = 0; i <= 14; i++) edge.push(P(i / 14, 0)); for (let j = 1; j < 20; j++) edge.push(P(1, j / 20)); for (let i = 14; i >= 0; i--) edge.push(P(i / 14, 1));
   m.userData.edge = edge; m.userData.P = P; return m;
 }
@@ -774,12 +774,12 @@ export function makeVintageScooter() {
   const paint = new THREE.MeshStandardMaterial({ map: ot, roughness: 0.32, metalness: 0.05, side: THREE.DoubleSide });
   const black = new THREE.MeshStandardMaterial({ color: '#141414', roughness: 0.7 });
   const chrome = new THREE.MeshStandardMaterial({ color: '#d0d4d8', roughness: 0.15, metalness: 0.9 });
-  const Rw = 0.2, xF = 0.56, xR = -0.6;
+  const Rw = 0.2, xF = 0.47, xR = -0.6;
   scooterWheel(g, xF, Rw, '#c8ccd0'); scooterWheel(g, xR, Rw, '#c8ccd0');
   // leg shield + horn cover + indicators
   const ls = legShield(paint); ls.position.x = 0.2; g.add(ls);
   const pip = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(ls.userData.edge), 120, 0.009, 6), black); pip.position.x = 0.2; g.add(pip);
-  const onShield = (y, z = 0, out = 0.004) => { const t = (y - 0.27) / 0.66, P = ls.userData.P(t, 0.5); const hw2 = 0.25 - 0.09 * t + 0.02 * Math.sin(t * Math.PI), w = z / hw2; return 0.2 + (0.15 - 0.06 * t) * (1 - w * w) - 0.02 * t + out + 0 * P.x; };
+  const onShield = (y, z = 0, out = 0.004) => { const t = (y - 0.27) / 0.66, P = ls.userData.P(t, 0.5); const hw2 = 0.25 - 0.09 * t + 0.02 * Math.sin(t * Math.PI), w = z / hw2; return 0.2 + P.x * 0 + ls.userData.P(t, 0.5 + w / 2).x + out; };
   const hc = document.createElement('canvas'); hc.width = 128; hc.height = 96; const hx = hc.getContext('2d');
   hx.fillStyle = '#e07a2c'; hx.fillRect(0, 0, 128, 96); hx.fillStyle = '#7a3a10'; for (let i = 0; i < 7; i++) hx.fillRect(10, 8 + i * 11, 108, 5);
   hx.fillStyle = '#3a78c0'; hx.beginPath(); hx.arc(64, 48, 14, 0, 7); hx.fill(); hx.fillStyle = '#fff'; hx.font = `bold 14px ${F.label}`; hx.textAlign = 'center'; hx.fillText('Z', 64, 53);
@@ -811,12 +811,17 @@ export function makeVintageScooter() {
   const ff = shell(0.17, 0.12, 0.085, paint, Math.PI); ff.rotation.x = Math.PI / 2; ff.rotation.z = 0; ff.position.set(xF, Rw + 0.05, 0);
   ff.geometry = new THREE.SphereGeometry(1, 28, 14, 0, Math.PI * 2, 0, Math.PI / 2); ff.rotation.set(0, 0, -0.15); ff.scale.set(0.2, 0.17, 0.085); ff.position.set(xF - 0.02, Rw + 0.08, 0); g.add(ff);
   const crest = new THREE.Mesh(new THREE.CapsuleGeometry(0.009, 0.11, 4, 8), chrome); crest.rotation.z = -0.95; crest.position.set(xF + 0.1, Rw + 0.215, 0); g.add(crest);
-  tube(new THREE.Vector3(xF - 0.04, Rw, 0.06), new THREE.Vector3(0.24, 0.5, 0.05), 0.02, black, g);
+  const fork = new THREE.MeshStandardMaterial({ color: '#2a2a2c', roughness: 0.5, metalness: 0.4 });
+  // single-sided front link like the photo's: axle stub on the left, a short trailing arm, the damper, and the
+  // fork leg rising into the fender, the steering column hidden behind the leg shield
+  tube(new THREE.Vector3(xF, Rw, -0.065), new THREE.Vector3(xF - 0.11, Rw + 0.05, -0.065), 0.018, fork, g);
+  tube(new THREE.Vector3(xF - 0.11, Rw + 0.05, -0.065), new THREE.Vector3(xF - 0.13, Rw + 0.2, -0.04), 0.024, fork, g);
+  tube(new THREE.Vector3(xF - 0.13, Rw + 0.2, -0.02), new THREE.Vector3(0.2, 0.9, 0), 0.03, fork, g);
   // floorboard with ribbed runners, the centre tunnel
-  box(0.55, 0.035, 0.32, paint, -0.02, 0.26, 0, g);
+  box(0.5, 0.035, 0.32, paint, -0.05, 0.26, 0, g);
   const alu = new THREE.MeshStandardMaterial({ color: '#9a9ea2', roughness: 0.5, metalness: 0.6 });
-  for (let i = -2; i <= 2; i++) { box(0.5, 0.006, 0.05, black, -0.02, 0.28, i * 0.06, g); box(0.5, 0.01, 0.008, alu, -0.02, 0.283, i * 0.06 + 0.03, g); }
-  for (const z of [-1, 1]) box(0.55, 0.02, 0.012, chrome, -0.02, 0.27, z * 0.165, g);
+  for (let i = -2; i <= 2; i++) { box(0.46, 0.006, 0.05, black, -0.05, 0.28, i * 0.06, g); box(0.46, 0.01, 0.008, alu, -0.05, 0.283, i * 0.06 + 0.03, g); }
+  for (const z of [-1, 1]) box(0.5, 0.02, 0.012, chrome, -0.05, 0.27, z * 0.165, g);
   // rear body: tunnel + two side cowls with black piping
   const rb = shell(0.36, 0.28, 0.12, paint, Math.PI * 2); rb.position.set(-0.48, 0.45, 0); g.add(rb);
   for (const z of [-1, 1]) {
