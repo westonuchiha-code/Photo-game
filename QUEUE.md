@@ -526,6 +526,11 @@ Rules (from you):
     Also textures: vertically brushed bronze/dark-gold metal (elevator doors, trim), pink-tinted broom-finish concrete
     with a few dark drips, grey exposed-aggregate concrete with a long hairline crack and oil spots. And a glossy white
     plastic ball (small seam dimple) resting on a black steel slatted bench (curved flat bars, sand-cast texture).
+    Also: a folded yellow A-frame CAUTION / WET FLOOR sign lying flat on a cracked sidewalk (handle cut-outs, hinge
+    tabs, slip-figure triangle; drop the brand logo), with a fat grey concrete bollard.
+    Also: a laundry aisle of bleach jugs (white gallon jugs with blue caps and handles, made-up brands and labels:
+    blue swoosh, lavender, low-splash, a store brand) and laundry-sanitizer bottles with blue/green/purple caps on
+    pegboard gondola shelves with e-ink price strips; and a spangled hot-dip galvanized zinc surface (texture).
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"
