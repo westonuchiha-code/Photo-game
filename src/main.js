@@ -14,6 +14,7 @@ import { makeDentistOffice } from './models/dentist57.js';
 import { makeTreatmentWing } from './models/treatment58.js';
 import { makeUtilityLot } from './models/utility59.js';
 import { makeCoupe } from './models/coupe61.js';
+import { makeStorageRow } from './models/storage62.js';
 import { makeGunShop } from './models/gunshop41.js';
 import { makePosterCase } from './models/posters42.js';
 import { makeSchoolBus } from './models/bus44.js';
@@ -1301,6 +1302,12 @@ const ulArea = (() => { const a = ulot.userData.area; return { minX: UL.x + a.mi
 // vacant lot downtown (lot D, its fence on the z = -7 side)
 const coupe = makeCoupe(); coupe.position.set(UL.x + 7.7, 0.025, UL.z + 4.85); add(coupe); rect(UL.x + 5.4, UL.x + 9.95, UL.z + 3.95, UL.z + 5.75);
 const wreck = makeCoupe({ crashed: true }); wreck.position.set(223, 0.02, -9.3); wreck.rotation.y = -Math.PI / 2 + 0.12; add(wreck); rect(221.9, 224.1, -12.2, -7.2);
+// 62 self storage on lot C: a row of orange roll-up doors facing the cross street (z = 84), two units open
+const SS = { x: 176, z: 96 };
+const storage = makeStorageRow(); storage.position.set(SS.x, 0.02, SS.z); add(storage);
+for (const [x0, x1, z0, z1] of storage.userData.colliders) rect(SS.x + x0, SS.x + x1, SS.z + z0, SS.z + z1);
+const stAreas = storage.userData.areas.map((a) => ({ minX: SS.x + a.minX, maxX: SS.x + a.maxX, minZ: SS.z + a.minZ, maxZ: SS.z + a.maxZ }));
+stAreas.push({ minX: 176, maxX: 194, minZ: 90.5, maxZ: 92.2 });   // from the sidewalk onto the apron
 const dnAreas = [...dentist.userData.areas, ...wing.userData.areas].map((a) => { const [minX, maxX, minZ, maxZ] = dnW([a.minX, a.maxX, a.minZ, a.maxZ]); return { minX, maxX, minZ, maxZ }; });
 
 const walk = new WalkControls(camera, renderer.domElement, {
@@ -1332,6 +1339,7 @@ const walk = new WalkControls(camera, renderer.domElement, {
     ...district.userData.areas, // the district's streets + sidewalks
     ...dnAreas, // the dentist's waiting room + its door
     ulArea, // the utility + parking lot
+    ...stAreas, // the storage row's apron + the two open units
   ],
   colliders,
 });
@@ -1454,6 +1462,9 @@ const VIEWS = {
   dentist2: { pos: [84.3, 1.8, 34.5], target: [93.5, 1.0, 38.6] },
   operatory: { pos: [97.25, 1.85, 30.1], target: [100.6, 0.95, 29.8] },
   operatory2: { pos: [99.6, 1.8, 28.6], target: [97.6, 0.9, 30.4] },
+  storage: { pos: [181, 1.7, 88.6], target: [186, 1.3, 96] },
+  storageunit: { pos: [181.0, 1.65, 94.6], target: [181.0, 0.9, 98.8] },
+  canwall: { pos: [189.0, 1.25, 96.6], target: [189.0, 0.9, 98.7] },
   coupe: { pos: [96.0, 1.5, -31.6], target: [100.6, 0.6, -35.2] },
   coupewreck: { pos: [226.8, 1.6, -3.6], target: [222.6, 0.6, -8.8] },
   parkinglot: { pos: [86.5, 2.4, -46.5], target: [102, 1.0, -40] },

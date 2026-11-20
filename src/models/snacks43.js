@@ -19,6 +19,14 @@ const outline = (x, t, cx, cy, mw, sz, font, fill, stroke, lw, o = {}) => { x.li
 
 // ---- bag art (front, back shares the colour field)
 const BAGS = {
+  // gold foil airline-style snack pack (photos/storage/snack-pack-gold): ornate damask on gold, a bowl of peas,
+  // crackers and puffs, the made-up name in navy
+  peas: (x, w, h) => { const g = x.createLinearGradient(0, 0, w, h); g.addColorStop(0, '#c89a2a'); g.addColorStop(0.5, '#e8c45a'); g.addColorStop(1, '#a8781a'); x.fillStyle = g; x.fillRect(0, 0, w, h);
+    x.strokeStyle = 'rgba(120,80,10,0.35)'; x.lineWidth = 3; for (let i = 0; i < 7; i++) for (let j = 0; j < 9; j++) { const cx = 30 + i * 60, cy = 30 + j * 70; x.beginPath(); x.ellipse(cx, cy, 18, 26, 0, 0, 7); x.stroke(); x.beginPath(); x.moveTo(cx - 18, cy); x.quadraticCurveTo(cx, cy - 40, cx + 18, cy); x.stroke(); }
+    x.fillStyle = 'rgba(255,240,200,0.5)'; x.beginPath(); x.ellipse(200, 220, 150, 70, 0, 0, 7); x.fill();
+    [['#e8a02a', 120, 210, 34], ['#f2c84a', 170, 190, 30], ['#7ab83a', 215, 225, 18], ['#8ac84a', 240, 205, 16], ['#e8b85a', 270, 190, 28], ['#d8702a', 300, 220, 26], ['#f0d890', 160, 240, 22], ['#7ab83a', 200, 250, 15]].forEach(([c, cx, cy, rr]) => { x.fillStyle = c; x.beginPath(); x.arc(cx, cy, rr, 0, 7); x.fill(); x.fillStyle = 'rgba(255,255,255,0.35)'; x.beginPath(); x.arc(cx - rr * 0.3, cy - rr * 0.3, rr * 0.3, 0, 7); x.fill(); });
+    x.fillStyle = '#1e2a6a'; fitText(x, 'PEAS &', w / 2, 360, w - 60, 70, F.heavy); fitText(x, 'CRISPS', w / 2, 430, w - 50, 80, F.heavy);
+    x.fillStyle = '#1e2a6a'; x.beginPath(); x.moveTo(w - 70, h - 110); x.quadraticCurveTo(w - 30, h - 140, w - 40, h - 80); x.quadraticCurveTo(w - 60, h - 100, w - 70, h - 110); x.fill(); },
   pizza: (x, w, h) => { x.fillStyle = '#f2c21a'; x.fillRect(0, 0, w, h); x.fillStyle = '#c81e28'; x.fillRect(0, 0, w, 70); x.fillStyle = '#fff'; fitText(x, 'POTATO CHIPS', w / 2, 36, w - 40, 32, F.label, { spacing: 4 }); outline(x, 'ピザポテ', w / 2, 150, w - 30, 92, F.antique, '#c81e28', '#fff', 10);
     for (let i = 0; i < 9; i++) { x.fillStyle = '#e8b04a'; x.beginPath(); x.ellipse(70 + (i % 3) * 110, 290 + Math.floor(i / 3) * 80, 52, 34, i, 0, 7); x.fill(); x.fillStyle = '#c84a2a'; x.beginPath(); x.arc(70 + (i % 3) * 110, 290 + Math.floor(i / 3) * 80, 9, 0, 7); x.fill(); }
     x.fillStyle = '#c81e28'; fitText(x, 'PIZZA FLAVOUR', w / 2, h - 40, w - 60, 34, F.heavy); },
