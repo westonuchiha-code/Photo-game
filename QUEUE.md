@@ -87,7 +87,8 @@ Rules (from you):
 - Town expansion: city district east of the old town (approved)
 - 57 Dentist waiting room (approved)
 - 58 Dentist treatment room (approved)
-- 59 Utility + parking decoration (in review)
+- 59 Utility + parking decoration (approved)
+- 60 Texture library (in review)
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text

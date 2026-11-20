@@ -37,6 +37,8 @@ const FACADES = [
   ['wall_olive_stucco', 1.5, 1.5, true], ['wall_teal_stucco', 1.5, 1.5, true], ['wall_red_sandstone', 1.6, 2.0, true],
   ['hs_brick', 1.0, 0.7, false], ['hs_ybrick', 1.0, 0.7, false], ['sg_darkbrick', 1.0, 0.7, false], ['ab_stucco', 1.6, 1.6, false],
   ['th_plaster', 1.6, 1.6, false], ['hs_siding', 1.6, 1.2, false], ['cy_brick', 1.0, 0.7, false], ['concrete_cracked', 2.2, 2.2, false],
+  // texture library (item 60): tan stucco, stacked-stone veneer, white ribbed metal panels (normal maps named <file>_n)
+  ['tx_stucco', 1.8, 1.8, 'tx_stucco_n'], ['tx_stone', 1.0, 2.0, 'tx_stone_n'], ['tx_fins', 1.2, 1.2, 'tx_fins_n'],
 ];
 
 // ---- geometry helpers: quads / boxes with world-metre UVs, collected per material ------------------------------
@@ -257,7 +259,7 @@ export function makeDistrict() {
   // with a gate gap, and a lease board
   for (const L of LOTS) {
     if (L.built) continue;
-    bin.push('lot', flatQuad(L.x0, L.x1, L.z0, L.z1, 0.02, 3, 3));
+    bin.push('lot', flatQuad(L.x0, L.x1, L.z0, L.z1, 0.02, 2.4, 2.4));
     const [ax, az, bx, bz] = { w: [L.x0, L.z0, L.x0, L.z1], e: [L.x1, L.z1, L.x1, L.z0], n: [L.x1, L.z0, L.x0, L.z0], s: [L.x0, L.z1, L.x1, L.z1] }[L.face];
     const len = Math.hypot(bx - ax, bz - az), dx = (bx - ax) / len, dz = (bz - az) / len;
     for (const [u0, u1] of [[0, len / 2 - 2], [len / 2 + 2, len]]) {
@@ -286,7 +288,7 @@ export function makeDistrict() {
   hills.translate(180, 0, 0); hills.computeVertexNormals();
 
   // ---- materials + merge
-  const facMats = FACADES.map(([file, , , n]) => new THREE.MeshStandardMaterial({ map: tex(file), normalMap: n ? tex(file + '_normal', false) : null, normalScale: new THREE.Vector2(0.6, 0.6), roughness: 0.9 }));
+  const facMats = FACADES.map(([file, , , n]) => new THREE.MeshStandardMaterial({ map: tex(file), normalMap: n ? tex(typeof n === 'string' ? n : file + '_normal', false) : null, normalScale: new THREE.Vector2(0.6, 0.6), roughness: 0.9 }));
   const win = new THREE.MeshStandardMaterial({ map: tex('city_windows'), emissiveMap: tex('city_windows_e'), emissive: '#ffffff', emissiveIntensity: 0.9, roughness: 0.25, metalness: 0.1 });
   const sa = shopAtlas();
   const MATS = {
@@ -304,7 +306,7 @@ export function makeDistrict() {
   facMats.forEach((m, i) => { MATS['f' + i] = m; });
   const chain = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'); x.strokeStyle = '#b8bcbc'; x.lineWidth = 3; x.beginPath(); x.moveTo(0, 32); x.lineTo(32, 0); x.lineTo(64, 32); x.lineTo(32, 64); x.closePath(); x.stroke(); const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; return t; })();
   const leaseT = (() => { const c = document.createElement('canvas'); c.width = 512; c.height = 256; const x = c.getContext('2d'); const draw = () => { x.fillStyle = '#f2efe6'; x.fillRect(0, 0, 512, 256); x.fillStyle = '#1d4a2a'; x.fillRect(0, 0, 512, 70); x.fillStyle = '#f2ead0'; fitText(x, 'MAPLE CREEK PROPERTIES', 256, 38, 470, 34, F.roman, { spacing: 3 }); x.fillStyle = '#c81e28'; fitText(x, 'LOT FOR LEASE', 256, 130, 470, 70, F.heavy); x.fillStyle = '#222'; fitText(x, 'build to suit · (555) 018-3365', 256, 205, 440, 32, F.label); }; draw(); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; if (document.fonts) document.fonts.ready.then(() => { draw(); t.needsUpdate = true; }); return t; })();
-  MATS.lot = new THREE.MeshStandardMaterial({ map: tex('lot_concrete'), color: '#8a8880', roughness: 0.95 });
+  MATS.lot = new THREE.MeshStandardMaterial({ map: tex('tx_drygrass'), normalMap: tex('tx_drygrass_n', false), color: '#c8b494', roughness: 1 });   // vacant lots: patchy dry grass on sandy dirt (item 60)
   MATS.fence = new THREE.MeshStandardMaterial({ map: chain, alphaTest: 0.4, transparent: false, metalness: 0.5, roughness: 0.5 });
   MATS.post = new THREE.MeshStandardMaterial({ color: '#9a9e9e', metalness: 0.6, roughness: 0.4 });
   MATS.lease = new THREE.MeshStandardMaterial({ map: leaseT, roughness: 0.6 });

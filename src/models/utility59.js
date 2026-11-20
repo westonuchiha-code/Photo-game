@@ -17,6 +17,7 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { F, fitText } from '../fonts.js';
+import { libMat, makeStuccoWall, makeMulchPlanter } from './library60.js';
 
 const _L = new THREE.TextureLoader(); const _T = {};
 function tex(name, rx = 1, ry = 1) { const k = `${name}|${rx}|${ry}`; if (_T[k]) return _T[k]; const t = _L.load(`assets/textures/${name}.png`); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx, ry); t.anisotropy = 8; return (_T[k] = t); }
@@ -277,9 +278,12 @@ export function makeUtilityLot() {
   // the sand/grass strip at the front, a curb between it and the asphalt
   const sand = new THREE.Mesh(new THREE.PlaneGeometry(SX - X0, Z1 - Z0), std({ map: tex('pk_sand', (SX - X0) / 0.7, (Z1 - Z0) / 0.7), roughness: 1 })); sand.rotation.x = -Math.PI / 2; sand.position.set((X0 + SX) / 2, 0.03, 0); sand.receiveShadow = true; g.add(sand);
   box(0.15, 0.15, Z1 - Z0, std({ color: '#b8b4aa', roughness: 0.9 }), SX, 0.075, 0, g);
-  const grassT = canvasT(128, 128, (x, w, h) => { x.fillStyle = '#3e5a2a'; x.fillRect(0, 0, w, h); for (let i = 0; i < 1600; i++) { x.fillStyle = ['#4a6a32', '#324a22', '#56703a', '#6a6a3a'][i % 4]; x.fillRect(Math.random() * w, Math.random() * h, 1, 3 + Math.random() * 4); } });
-  grassT.wrapS = grassT.wrapT = THREE.RepeatWrapping; grassT.repeat.set(3, 8);
-  const grass = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 12), std({ map: grassT, roughness: 1 })); grass.rotation.x = -Math.PI / 2; grass.position.set(X0 + 1.4, 0.032, 2.5); g.add(grass);
+  // the dry-grass patch (texture library, item 60) and a mulch planter with flowering shrubs at the front corner
+  const grass = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 6), libMat('tx_drygrass', 1.6, 1.6, { roughness: 1, color: '#e0cca8' })); grass.geometry.attributes.uv.array.forEach((v, k, arr) => { arr[k] = v * (k % 2 ? 6 : 2.6); }); grass.rotation.x = -Math.PI / 2; grass.position.set(X0 + 1.5, 0.032, 0.4); grass.receiveShadow = true; g.add(grass);
+  const planter = makeMulchPlanter(5.6, 2.6, 3, 7); planter.position.set(X0 + 1.9, 0.03, 6.7); planter.rotation.y = Math.PI / 2; g.add(planter);
+  // a low tan-stucco screen wall with the stacked-stone band + cap along the sidewalk, a gap for the driveway
+  const wA = makeStuccoWall(6.6); wA.position.set(X0 + 0.2, 0.03, -6.6); wA.rotation.y = Math.PI / 2; g.add(wA);
+  const wB = makeStuccoWall(2.8); wB.position.set(X0 + 0.2, 0.03, 8.5); wB.rotation.y = Math.PI / 2; g.add(wB);
   // the back wall: split-face block with a stacked-stone column (the sign + the sprinkler connection) and a cap
   const WH = 6.5;
   const blockW = new THREE.Mesh(new THREE.PlaneGeometry(Z1 - Z0, WH), std({ map: tex('pk_block', (Z1 - Z0) / 3.2, WH / 1.6), roughness: 0.92 }));
@@ -310,7 +314,7 @@ export function makeUtilityLot() {
   const lamp = new THREE.PointLight('#ffe8c0', 14, 22, 1.6); lamp.position.set(-6.3, 6.6, 8.6); g.add(lamp);
   // colliders (local rects) + the walkable area
   const T = (o, c) => { const [a, b, c0, c1] = c, q = Math.round(o.rotation.y / (Math.PI / 2)) & 3; let r; if (q === 0) r = [a, b, c0, c1]; else if (q === 2) r = [-b, -a, -c1, -c0]; else if (q === 1) r = [c0, c1, -b, -a]; else r = [-c1, -c0, a, b]; return [o.position.x + r[0], o.position.x + r[1], o.position.z + r[2], o.position.z + r[3]]; };
-  g.userData.colliders = [T(tf, tf.userData.collider), T(ped, ped.userData.collider), T(cabs, cabs.userData.collider), T(ps, ps.userData.collider), [X1 - 0.2, X1 + 0.3, Z0, Z1], [-6.75, -6.45, 8.45, 8.75]];
+  g.userData.colliders = [T(wA, wA.userData.collider), T(wB, wB.userData.collider), T(planter, planter.userData.collider), T(tf, tf.userData.collider), T(ped, ped.userData.collider), T(cabs, cabs.userData.collider), T(ps, ps.userData.collider), [X1 - 0.2, X1 + 0.3, Z0, Z1], [-6.75, -6.45, 8.45, 8.75]];
   g.userData.area = { minX: X0 + 0.2, maxX: X1 - 0.25, minZ: Z0 + 0.2, maxZ: Z1 - 0.2 };
   return g;
 }
