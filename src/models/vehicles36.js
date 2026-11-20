@@ -963,7 +963,21 @@ export function makeRustedScooter() {
 export function makeKeiHatch() {
   const g = new THREE.Group(); g.name = 'kei_hatch';
   const WB = 2.36, R = 0.285, AR = 0.33, Wd = 1.475, hw = Wd / 2, PPM = 400, X0 = -0.62, YT = 1.46, IW = 1504, IH = 584;
-  const OFF = WB / 2 - 0.25;                                     // shift so the car is centred on the origin
+  const OFF = WB / 2 - 0.25;
+  // the car's own paint (a seamless patch of the photo's door) for everything the photo doesn't show
+  const PAINT = new Image(); PAINT.src = 'assets/textures/kc_paint.png';
+  const paintReady = new Promise((res) => { PAINT.onload = res; PAINT.onerror = res; });
+  const PCOL = '#8d96a1';
+  const paintFill = (x, x0, y0, w, h, scale = 1) => {
+    x.save(); x.beginPath(); x.rect(x0, y0, w, h); x.clip();
+    if (PAINT.naturalWidth) { const pat = x.createPattern(PAINT, 'repeat'); pat.setTransform(new DOMMatrix().scale(scale)); x.fillStyle = pat; } else x.fillStyle = PCOL;
+    x.fillRect(x0, y0, w, h); x.restore();
+  };
+  // the photo's light: brighter toward the top, grime and road dust toward the bottom
+  const shade = (x, w, h, yTop, yBot) => {
+    const g = x.createLinearGradient(0, yTop, 0, yBot); g.addColorStop(0, 'rgba(255,255,255,0.06)'); g.addColorStop(0.6, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(60,50,40,0.28)');
+    x.fillStyle = g; x.fillRect(0, yTop, w, yBot - yTop);
+  };                                     // shift so the car is centred on the origin
   const TOP = [[-0.44, 0.32], [-0.47, 0.55], [-0.45, 0.9], [-0.36, 1.27], [-0.22, 1.38], [0.1, 1.41], [1.5, 1.42], [1.76, 1.39], [2.3, 0.98], [2.75, 0.87], [3.0, 0.78], [3.05, 0.6], [3.02, 0.32]];
   const xT = -0.44, xN = 3.05, SILL = 0.24;
   const lerp = (pts, x) => { for (let i = 1; i < pts.length; i++) if ((x - pts[i - 1][0]) * (x - pts[i][0]) <= 0 && pts[i][0] !== pts[i - 1][0]) { const [a, b] = pts[i - 1], [c, d] = pts[i]; return b + (d - b) * (x - a) / (c - a); } return null; };
@@ -1003,25 +1017,27 @@ export function makeKeiHatch() {
   // then the original stripe livery
   const sideTex = (flip) => {
     const c = document.createElement('canvas'); c.width = IW; c.height = IH; const x = c.getContext('2d');
-    x.fillStyle = '#c4c4c6'; x.fillRect(0, 0, IW, IH);
+    x.fillStyle = PCOL; x.fillRect(0, 0, IW, IH);
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
     const PX = (m) => (m - X0) * PPM, PY = (m) => (YT - m) * PPM;
     const img = new Image();
-    img.onload = () => {
+    img.onload = () => paintReady.then(() => {
       x.drawImage(img, 0, 0);
-      const gr = x.createLinearGradient(PX(2.45), 0, PX(2.7), 0); gr.addColorStop(0, 'rgba(198,198,200,0)'); gr.addColorStop(1, 'rgba(198,198,200,1)');
-      x.fillStyle = gr; x.fillRect(PX(2.45), PY(0.97), PX(3.2) - PX(2.45), PY(0.28) - PY(0.97));
-      x.fillStyle = '#c6c6c8'; x.fillRect(PX(-0.62), PY(1.46), PX(-0.2) - PX(-0.62), PY(0.3) - PY(1.46));
-      const g2 = x.createLinearGradient(PX(-0.2), 0, PX(0.12), 0); g2.addColorStop(0, '#c6c6c8'); g2.addColorStop(1, 'rgba(198,198,200,0)'); x.fillStyle = g2; x.fillRect(PX(-0.2), PY(1.46), PX(0.12) - PX(-0.2), PY(1.0) - PY(1.46));
+      // nose end: the photo there shows the car's front, so it fades into the real paint
+      const pc = document.createElement('canvas'); pc.width = IW; pc.height = IH; const px = pc.getContext('2d'); paintFill(px, 0, 0, IW, IH, 1.6); shade(px, IW, IH, PY(1.0), PY(0.25));
+      const fade = (x0, x1, y0, y1, dir) => { x.save(); const m = document.createElement('canvas'); m.width = IW; m.height = IH; const mx = m.getContext('2d'); const gg = mx.createLinearGradient(x0, 0, x1, 0); gg.addColorStop(0, dir > 0 ? 'rgba(0,0,0,0)' : '#000'); gg.addColorStop(1, dir > 0 ? '#000' : 'rgba(0,0,0,0)'); mx.fillStyle = gg; mx.fillRect(Math.min(x0, x1), y0, Math.abs(x1 - x0) + (dir > 0 ? IW : 0) * 0 + (dir > 0 ? IW - x1 : 0), y1 - y0); if (dir < 0) mx.fillRect(0, y0, x0, y1 - y0); mx.globalCompositeOperation = 'source-in'; mx.drawImage(pc, 0, 0); x.drawImage(m, 0, 0); x.restore(); };
+      fade(PX(2.45), PX(2.72), PY(0.97), PY(0.28), 1);
+      fade(PX(-0.2), PX(0.12), PY(1.46), PY(0.3), -1);
+      const g2 = 'rgba(0,0,0,0)'; x.fillStyle = g2; x.fillRect(PX(-0.2), PY(1.46), PX(0.12) - PX(-0.2), PY(1.0) - PY(1.46));
       // rear quarter: silver C-pillar with a small dark quarter window, the same black surround as the doors
-      x.fillStyle = '#c4c5c7'; x.beginPath(); x.moveTo(PX(-0.62), PY(1.46)); x.lineTo(PX(0.11), PY(1.46)); x.lineTo(PX(0.11), PY(0.95)); x.lineTo(PX(-0.62), PY(0.95)); x.fill();
+      x.save(); x.beginPath(); x.moveTo(PX(-0.62), PY(1.46)); x.lineTo(PX(0.11), PY(1.46)); x.lineTo(PX(0.11), PY(0.95)); x.lineTo(PX(-0.62), PY(0.95)); x.clip(); x.drawImage(pc, 0, 0); x.restore();
       x.fillStyle = '#18191b'; x.beginPath(); x.moveTo(PX(-0.02), PY(1.3)); x.lineTo(PX(-0.2), PY(1.3)); x.lineTo(PX(-0.36), PY(1.02)); x.lineTo(PX(-0.02), PY(0.99)); x.closePath(); x.fill();
       const qg = x.createLinearGradient(0, PY(1.28), 0, PY(1.0)); qg.addColorStop(0, '#4a5258'); qg.addColorStop(1, '#22272b'); x.fillStyle = qg;
       x.beginPath(); x.moveTo(PX(-0.04), PY(1.27)); x.lineTo(PX(-0.19), PY(1.27)); x.lineTo(PX(-0.32), PY(1.04)); x.lineTo(PX(-0.04), PY(1.02)); x.closePath(); x.fill();
-      x.fillStyle = '#c4c5c7'; x.fillRect(PX(-0.62), PY(1.46), PX(0.55) - PX(-0.62), PY(1.345) - PY(1.46));
+      x.save(); x.beginPath(); x.rect(PX(-0.62), PY(1.46), PX(0.55) - PX(-0.62), PY(1.345) - PY(1.46)); x.clip(); x.drawImage(pc, 0, 0); x.restore();
       // lower doors: clean silver where the old livery was painted out, a dark sill strip at the bottom
-      const sg2 = x.createLinearGradient(0, PY(0.4), 0, PY(0.24)); sg2.addColorStop(0, '#c2c3c5'); sg2.addColorStop(1, '#a6a7a9');
-      x.fillStyle = sg2; x.fillRect(PX(0.33), PY(0.4), PX(2.03) - PX(0.33), PY(0.25) - PY(0.4));
+      x.save(); x.beginPath(); x.rect(PX(0.33), PY(0.41), PX(2.03) - PX(0.33), PY(0.25) - PY(0.41)); x.clip(); x.drawImage(pc, 0, 0); x.restore();
+      const sb = x.createLinearGradient(0, PY(0.46), 0, PY(0.4)); sb.addColorStop(0, 'rgba(0,0,0,0)'); sb.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = sb;
       x.fillStyle = '#2a2b2d'; x.fillRect(PX(0.33), PY(0.27), PX(2.03) - PX(0.33), PY(0.24) - PY(0.27));
       x.strokeStyle = 'rgba(40,40,44,0.6)'; x.lineWidth = 2; x.beginPath(); x.moveTo(PX(1.05), PY(0.4)); x.lineTo(PX(1.05), PY(0.27)); x.stroke();   // door shut line carried down
       x.save();
@@ -1039,11 +1055,11 @@ export function makeKeiHatch() {
       x.save(); x.translate(flip ? IW - PX(1.2) : PX(1.2), PY(0.53)); x.rotate(flip ? 0.03 : -0.03);
       x.fillStyle = '#1d2f6a'; fitText(x, 'Kestrel', 0, 0, 0.5 * PPM, 0.12 * PPM, F.script); x.fillStyle = '#e8742a'; fitText(x, 'SPORT', 0.32 * PPM, 0.035 * PPM, 0.2 * PPM, 0.05 * PPM, F.heavy, { spacing: 3 });
       x.restore(); t.needsUpdate = true;
-    };
+    });
     img.src = 'assets/textures/kc_side.png';
     return t;
   };
-  const silver = new THREE.MeshStandardMaterial({ color: '#c8c9cb', roughness: 0.35, metalness: 0.35 });
+  const silver = new THREE.MeshStandardMaterial({ color: PCOL, roughness: 0.35, metalness: 0.25 });
   const under = new THREE.MeshStandardMaterial({ color: '#1e1e1e', roughness: 0.9 });
   const body = new THREE.Mesh(geo, [new THREE.MeshStandardMaterial({ map: sideTex(true), roughness: 0.35, metalness: 0.25 }), new THREE.MeshStandardMaterial({ map: sideTex(false), roughness: 0.35, metalness: 0.25 }), silver, under]);
   body.castShadow = true; body.receiveShadow = true; g.add(body);
@@ -1053,7 +1069,7 @@ export function makeKeiHatch() {
   const fc = document.createElement('canvas'); fc.width = 512; fc.height = Math.round(512 * (y1 - y0) / (2 * zm)); const fx2 = fc.getContext('2d');
   const FH = fc.height, FY = (m) => FH - (m - y0) / (y1 - y0) * FH;
   const FX = (m) => 256 - m / zm * 256;
-  const fg = fx2.createLinearGradient(0, 0, 0, FH); fg.addColorStop(0, '#d2d3d5'); fg.addColorStop(1, '#b0b1b3'); fx2.fillStyle = fg; fx2.fillRect(0, 0, 512, FH);
+  shade(fx2, 512, FH, 0, FH);
   // hood shut line across the top, the bumper split line below the lamps
   fx2.strokeStyle = 'rgba(30,30,34,0.7)'; fx2.lineWidth = 3; fx2.beginPath(); fx2.moveTo(0, FY(0.79)); fx2.quadraticCurveTo(256, FY(0.81), 512, FY(0.79)); fx2.stroke();
   fx2.beginPath(); fx2.moveTo(0, FY(0.56)); fx2.lineTo(512, FY(0.56)); fx2.stroke();
@@ -1087,7 +1103,9 @@ export function makeKeiHatch() {
   const cs = new THREE.Shape(); for (let j = 0; j < M; j++) j ? cs.lineTo(zs[j], ys[j]) : cs.moveTo(zs[j], ys[j]);
   const cg = new THREE.ShapeGeometry(cs), cp = cg.attributes.position, cu = cg.attributes.uv;
   for (let k = 0; k < cp.count; k++) cu.setXY(k, 0.5 - cp.getX(k) / (2 * zm), (cp.getY(k) - y0) / (y1 - y0));
-  const nose = new THREE.Mesh(cg, new THREE.MeshStandardMaterial({ map: ft, roughness: 0.35, metalness: 0.2, side: THREE.DoubleSide })); nose.rotation.y = Math.PI / 2; nose.position.x = xN - OFF + 0.001; g.add(nose);
+  const ptex = (rx2, ry2) => { const t = tex('kc_paint', true); t.repeat.set(rx2, ry2); return new THREE.MeshStandardMaterial({ map: t, roughness: 0.35, metalness: 0.25, side: THREE.DoubleSide }); };
+  const overlay = (map) => new THREE.MeshStandardMaterial({ map, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, roughness: 0.3, metalness: 0.25, side: THREE.DoubleSide });
+  for (const [m, d] of [[ptex(2.4, 1), 0.001], [overlay(ft), 0.002]]) { const n2 = new THREE.Mesh(cg, m); n2.rotation.y = Math.PI / 2; n2.position.x = xN - OFF + d; g.add(n2); }
   box(0.06, 0.018, Wd - 0.3, new THREE.MeshStandardMaterial({ color: '#202020', roughness: 0.7 }), xN - OFF - 0.06, 0.3, 0, g);
   // tail: a proper hatch face drawn onto the exact tail section: big glass with a black surround and the
   // de-mister lines, a rear wiper, tall tail-lamp clusters (red / amber / clear), the hatch shut lines, a
@@ -1096,7 +1114,7 @@ export function makeKeiHatch() {
   const ty0 = Math.min(...tys), ty1 = Math.max(...tys), tzm = Math.max(...tzs);
   const rc = document.createElement('canvas'); rc.width = 512; rc.height = Math.round(512 * (ty1 - ty0) / (2 * tzm)); const rx = rc.getContext('2d');
   const RH = rc.height, RY = (m) => RH - (m - ty0) / (ty1 - ty0) * RH, RX = (m) => 256 + m / tzm * 256;
-  const rg = rx.createLinearGradient(0, 0, 0, RH); rg.addColorStop(0, '#d0d1d3'); rg.addColorStop(1, '#b4b5b7'); rx.fillStyle = rg; rx.fillRect(0, 0, 512, RH);
+  shade(rx, 512, RH, 0, RH);
   rx.fillStyle = '#141516'; rx.beginPath(); rx.roundRect(RX(-0.56), RY(1.17), RX(0.56) - RX(-0.56), RY(0.84) - RY(1.17), 18); rx.fill();
   const hg = rx.createLinearGradient(0, RY(1.15), 0, RY(0.86)); hg.addColorStop(0, '#56606a'); hg.addColorStop(0.5, '#2c3236'); hg.addColorStop(1, '#1c2023'); rx.fillStyle = hg;
   rx.beginPath(); rx.roundRect(RX(-0.5), RY(1.14), RX(0.5) - RX(-0.5), RY(0.87) - RY(1.14), 12); rx.fill();
@@ -1123,7 +1141,7 @@ export function makeKeiHatch() {
   const ts = new THREE.Shape(); for (let j = 0; j < M; j++) j ? ts.lineTo(tzs[j], tys[j]) : ts.moveTo(tzs[j], tys[j]);
   const tsg = new THREE.ShapeGeometry(ts), tsp = tsg.attributes.position, tsu = tsg.attributes.uv;
   for (let k = 0; k < tsp.count; k++) tsu.setXY(k, 0.5 + tsp.getX(k) / (2 * tzm), (tsp.getY(k) - ty0) / (ty1 - ty0));
-  const tg = new THREE.Mesh(tsg, new THREE.MeshStandardMaterial({ map: rtx, roughness: 0.3, metalness: 0.25, side: THREE.DoubleSide })); tg.rotation.y = -Math.PI / 2; tg.position.x = xT - OFF - 0.001; g.add(tg);
+  for (const [m, d] of [[ptex(2.4, 1.6), 0.001], [overlay(rtx), 0.002]]) { const t2 = new THREE.Mesh(tsg, m); t2.rotation.y = -Math.PI / 2; t2.position.x = xT - OFF - d; g.add(t2); }
   const blkP = new THREE.MeshStandardMaterial({ color: '#141414', roughness: 0.5 });
   // roof spoiler over the hatch glass, rear wiper, exhaust tip, the hatch's top hinge line
   const spo = new THREE.Shape(); spo.moveTo(0, 0); spo.lineTo(0.09, 0); spo.lineTo(0.12, 0.025); spo.lineTo(0.01, 0.035); spo.closePath();

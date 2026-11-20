@@ -184,3 +184,12 @@ wh8 = warpc([(643, 400), (735, 400), (735, 506), (643, 506)], (512, 512)); wh8 =
 wm8 = np.zeros((512, 512), np.uint8); cv2.circle(wm8, (256, 256), 250, 255, -1); wh8[:, :, 3] = wm8
 cv2.imwrite(os.path.join(OUT, "kc_wheel.png"), wh8)
 print("wrote kc_side, kc_lamp, kc_wheel", side8.shape)
+# the car's real paint: a flat patch of the rear door (soft reflections, grain), made seamless, for the
+# surfaces the photo doesn't show
+pp = side8[272:364, 368:568].astype(np.float32); pp = cv2.resize(pp, (256, 256))
+rr = np.roll(np.roll(pp, 128, 0), 128, 1)
+ww = np.minimum(np.minimum(np.arange(256), 255 - np.arange(256)) / 128, 1); mm = np.minimum(ww[:, None], ww[None, :])[:, :, None] ** 0.7
+paint8 = pp * mm + rr * (1 - mm)
+cv2.imwrite(os.path.join(OUT, "kc_paint.png"), paint8.clip(0, 255).astype(np.uint8))
+med = np.median(side8[272:364, 368:568].reshape(-1, 3), 0)
+print("kc paint median rgb", '#%02x%02x%02x' % (int(med[2]), int(med[1]), int(med[0])))
