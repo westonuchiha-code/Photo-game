@@ -1479,6 +1479,7 @@ const VIEWS = {
   dentist2: { pos: [84.3, 1.8, 34.5], target: [93.5, 1.0, 38.6] },
   operatory: { pos: [97.25, 1.85, 30.1], target: [100.6, 0.95, 29.8] },
   operatory2: { pos: [99.6, 1.8, 28.6], target: [97.6, 0.9, 30.4] },
+  sushi: { pos: [181.0, 1.7, -11.6], target: [183.2, 0.95, -14.3] },
   cafesigns: { pos: [198.6, 1.6, -2.2], target: [198.2, 1.0, -6.4] },
   cornerstore: { pos: [163.5, 1.7, -1.5], target: [172, 2.2, -8] },
   policecar: { pos: [185.6, 1.4, -0.9], target: [181, 0.7, -3.7] },

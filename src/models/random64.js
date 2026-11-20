@@ -13,6 +13,7 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { F, fitText } from '../fonts.js';
+import { makeSushiCase, makeGroceryEndcap, makeCounterThings } from './grocery66.js';
 
 const _L = new THREE.TextureLoader(); const _T = {};
 function tex(name, rx = 1, ry = 1) { const k = name + rx + '|' + ry; if (_T[k]) return _T[k]; const t = _L.load(`assets/textures/${name}.png`); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx, ry); t.anisotropy = 8; return (_T[k] = t); }
@@ -124,7 +125,12 @@ export function makeCornerStore() {
   const pc = document.createElement('canvas'); pc.width = pc.height = 128; const px = pc.getContext('2d'); const gr = px.createRadialGradient(64, 64, 0, 64, 64, 64); gr.addColorStop(0, 'rgba(230,240,255,0.5)'); gr.addColorStop(1, 'rgba(230,240,255,0)'); px.fillStyle = gr; px.fillRect(0, 0, 128, 128);
   const pool = new THREE.Mesh(new THREE.PlaneGeometry(W, 6), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(pc), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); pool.rotation.x = -Math.PI / 2; pool.position.set(0, 0.03, Z1 + 2.2); g.add(pool);
   const spill = new THREE.PointLight('#e8f0ff', 3.5, 10, 1.6); spill.position.set(0, 2.0, Z1 + 1.2); g.add(spill);
-  g.userData.colliders = [[X0, X0 + 1.7, Z1 - 1.7, Z1], [X1 - 0.8, X1 + 0.1, Z1 - 0.8, Z1], [X0 + 1.7, X0 + 2.3, Z1 - 0.2, Z1], [X0 + 4.1, X1 - 0.8, Z1 - 0.2, Z1], [X0, X0 + 0.2, Z0, Z1 - 1.7], [X0, X1, Z0 - 0.1, Z0 + 0.8], [X1 - 0.1, X1 + 0.1, Z0, Z1], [-4.7, -0.5, -1.85, -1.15], [0.3, 4.5, -1.85, -1.15], [-4.7, -0.5, 1.05, 1.75], [X1 - 4.3, X1, 2.2, 3.05], [X0 + 0.35, X0 + 0.75, -4, 2.8], [X0 - 0.8, X0 - 0.2, Z0 + 0.8, Z0 + 1.2]];
+  // grocery 2 (item 66): open sushi case on the right wall, a ginger + pizza end-cap, someone's glasses, wallet and
+  // sake carton left on the counter
+  const sc = makeSushiCase(); sc.position.set(X1 - 0.55, 0, -2.4); sc.rotation.y = -Math.PI / 2; g.add(sc);
+  const ec = makeGroceryEndcap(); ec.position.set(5.4, 0, -1.55); g.add(ec);
+  const ct = makeCounterThings(); ct.position.set(X1 - 3.6, 1.04, 2.5); ct.rotation.y = 0.2; g.add(ct);
+  g.userData.colliders = [[X0, X0 + 1.7, Z1 - 1.7, Z1], [X1 - 0.8, X1 + 0.1, Z1 - 0.8, Z1], [X0 + 1.7, X0 + 2.3, Z1 - 0.2, Z1], [X0 + 4.1, X1 - 0.8, Z1 - 0.2, Z1], [X0, X0 + 0.2, Z0, Z1 - 1.7], [X0, X1, Z0 - 0.1, Z0 + 0.8], [X1 - 0.1, X1 + 0.1, Z0, Z1], [-4.7, -0.5, -1.85, -1.15], [0.3, 4.5, -1.85, -1.15], [-4.7, -0.5, 1.05, 1.75], [X1 - 4.3, X1, 2.2, 3.05], [X0 + 0.35, X0 + 0.75, -4, 2.8], [X0 - 0.8, X0 - 0.2, Z0 + 0.8, Z0 + 1.2], [X1 - 1.05, X1, -3.6, -1.2], [4.8, 6.0, -2.05, -1.25]];
   g.userData.areas = [{ minX: X0 + 0.4, maxX: X1 - 0.3, minZ: Z0 + 0.9, maxZ: Z1 - 0.25 }, { minX: X0 + 2.35, maxX: X0 + 4.05, minZ: Z1 - 0.4, maxZ: Z1 + 0.6 }];
   return g;
 }
