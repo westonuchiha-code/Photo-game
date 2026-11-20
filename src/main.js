@@ -14,6 +14,7 @@ import { makeStickerBox, makeMoldySign } from './models/graffiti45.js';
 import { makeBurlKiosk } from './models/burl46.js';
 import { makeDriedRose, makePropPistol, makeWhitePC } from './models/misc48.js';
 import { makeFoldingEbike, makeWaveRack, makePourGrid } from './models/misc49.js';
+import { makeCompactCorner } from './models/badparker50.js';
 import { makeKeiTruck, makeCoachBus, makeScoutTruck, makeWorkVan, makeCommuterTrain, makeTrainPlatform, PLAT_Y, makeVintageScooter, makeRustedScooter, makeKeiHatch } from './models/vehicles36.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
@@ -1156,6 +1157,11 @@ rect(TP.x - 13, TP.x + 13, TP.z + 0.05, TP.z + 4.6);                            
 const pSt = platform.userData.stairs;
 rect(TP.x - 13, TP.x + pSt.x0 - 0.05, TP.z - 3.05, TP.z - 2.9); rect(TP.x + pSt.x1 + 0.05, TP.x + 13, TP.z - 3.05, TP.z - 2.9);   // platform back edge
 rect(TP.x - 13.2, TP.x - 13, TP.z - 3, TP.z); rect(TP.x + 13, TP.x + 13.2, TP.z - 3, TP.z);
+// 50 Bad-parker easter egg: a compact-spaces corner on the west side of the grocery lot, the red pickup
+// crooked across two spaces under the NO TRUCKS sign (wall along x, facing east)
+const BP = { x: 13.6, z: -29.6 };
+const bpc = makeCompactCorner(); bpc.position.set(BP.x, 0, BP.z); bpc.rotation.y = Math.PI / 2; add(bpc);
+for (const [x0, x1, z0, z1] of bpc.userData.colliders) colliders.push({ type: 'box', minX: BP.x + z0, maxX: BP.x + z1, minZ: BP.z - x1, maxZ: BP.z - x0 });
 // 49 Misc 2: the folding e-bike locked to a wave rack on the old-town sidewalk; the user's pour-painting grid
 // and confetti watercolour hung on the pawn shop's north wall (art for sale)
 { const wr = makeWaveRack(); wr.position.set(-20.6, 0.12, 41.5); wr.rotation.y = Math.PI / 2; add(wr); rect(-20.75, -20.45, 40.4, 41.5);
@@ -1369,12 +1375,6 @@ const VIEWS = {
   vendinglow: { pos: [-0.8, 0.95, 10.75], target: [-0.85, 0.7, 11.7] },
   junkshop: { pos: [6.8, 1.8, 13.2], target: [1.5, 1.0, 20.5] },
   junkfront: { pos: [3.5, 2.2, 5.8], target: [3.5, 2.0, 12.2] },
-  ebike: { pos: [-20.4, 1.5, 44.2], target: [-20.9, 0.5, 41.0] },
-  pawnart: { pos: [58.4, 1.6, -27.4], target: [58.4, 1.6, -30] },
-  rose: { pos: [3.6, 1.4, Z0 + 1.1], target: [3.2, 1.25, Z0 + 0.3] },
-  decor: { pos: [1.4, 1.6, 16.2], target: [-0.6, 1.1, 14.4] },
-  pachinko: { pos: [5.6, 1.5, 16.0], target: [7.6, 1.15, 14.4] },
-  burl: { pos: [MALL.x + 0.2, -2.6, MALL.z - 4.6], target: [MALL.x - 2.6, -3.3, MALL.z - 7.2], lookUp: true },
   graffiti: { pos: [-15.2, 1.9, 7.0], target: [-15.5, 1.9, 12.1] },
   arcade: { pos: [-11.6, 1.6, 9.8], target: [-12.2, 1.3, 11.4] },
   trike: { pos: [-18.6, 1.5, 5.2], target: [-19.2, 0.7, 8.6] },
@@ -1392,7 +1392,7 @@ const VIEWS = {
   foodtable: { pos: [-5.0, 1.25, 51.6], target: [-5.65, 0.75, 50.62] },
   foodclose: { pos: [-5.45, 0.98, 51.0], target: [-5.75, 0.76, 50.6] },
   pizzadisplay: { pos: [-6.6, 1.5, 51.4], target: [-7.7, 0.85, 50.1] },
-  vending: { pos: [-1.6, 1.4, 51.2], target: [-1.15, 1.2, 49.4] },
+  drinkvending: { pos: [-1.6, 1.4, 51.2], target: [-1.15, 1.2, 49.4] },
   abfront: { pos: [12.4, 1.7, 66.5], target: [12.4, 1.8, 74] },
   abroom: { pos: [11.2, 1.6, 74.4], target: [13.7, 1.2, 79.4] },
   abceiling: { pos: [11.4, 1.4, 75.0], target: [12.8, 2.7, 77.6], lookUp: true },
@@ -1402,13 +1402,14 @@ const VIEWS = {
   knotbar: { pos: [16.5, 1.6, 69.6], target: [20.2, 1.4, 69.6] },
   keitruck: { pos: [-26.2, 1.9, 48.9], target: [-22.75, 0.9, 44.5] },
   coach: { pos: [-24.5, 2.4, 27.5], target: [-29.7, 1.6, 36] },
+  badparker: { pos: [BP.x + 9.0, 2.0, BP.z - 4.6], target: [BP.x + 3.0, 1.0, BP.z - 1.6] },
   ebike: { pos: [-20.4, 1.5, 44.2], target: [-20.9, 0.5, 41.0] },
   pawnart: { pos: [58.4, 1.6, -27.4], target: [58.4, 1.6, -30] },
   rose: { pos: [3.6, 1.4, Z0 + 1.1], target: [3.2, 1.25, Z0 + 0.3] },
   decor: { pos: [1.4, 1.6, 16.2], target: [-0.6, 1.1, 14.4] },
   pachinko: { pos: [5.6, 1.5, 16.0], target: [7.6, 1.15, 14.4] },
   burl: { pos: [MALL.x + 0.2, -2.6, MALL.z - 4.6], target: [MALL.x - 2.6, -3.3, MALL.z - 7.2], lookUp: true },
-  graffiti: { pos: [-22.0, 1.6, 7.6], target: [-22.2, 1.4, 10.7] },
+  stickerbox: { pos: [-22.0, 1.6, 7.6], target: [-22.2, 1.4, 10.7] },
   schoolbus: { pos: [-26.6, 1.9, 15.8], target: [-29.7, 1.4, 22.5] },
   snacks: { pos: [-74.5, 1.3, -36.0], target: [-75.8, 0.3, -37.4] },
   snackshelf: { pos: [20.6, 1.5, -38.2], target: [22.25, 1.2, -38.8] },

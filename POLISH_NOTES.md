@@ -189,3 +189,7 @@ This is a running list, added to as models get built. Nothing here is urgent.
 - 49 still unbuilt (moved on at the user's request): dusty doodle kei car, walk-in dairy cooler, loading dock + trailer,
   bread aisle, pet aisle, stockroom pallets, iced-tea packs, breakfast sub, pizza slice + soda, dairy tub cart,
   cardboard bale at the dock door, smashed shopping cart.
+- 50 Bad parker: truck is box-built (could be a lofted body like the kei cars); the NO TRUCKS sign is hidden behind
+  the truck from the main view; asphalt wet sheen is just low roughness (no puddle reflections).
+- Camera views: removed accidental duplicate view keys; the 28d graffiti-front view is back, the sticker box view is
+  now "stickerbox", the noodle-forecourt drink machine view is "drinkvending".
