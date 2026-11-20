@@ -32,6 +32,9 @@ export const LOTS = [
   { id: 'izakaya', x0: 112, x1: 121, z0: -15, z1: -7, face: 's', built: true },    // old izakaya (item 70)
   { id: 'ruins', x0: 122, x1: 154, z0: -22, z1: -7, face: 's', built: true },      // aqueduct garden + plaza (item 70)
   { id: 'pinkhouse', x0: 168, x1: 182, z0: 63, z1: 77, face: 's', built: true },   // pink bungalow (item 71)
+  { id: 'arcade', x0: 336, x1: 368, z0: 91, z1: 112, face: 'n', built: true },   // Pixel Den arcade + shutter stall (item 72)
+  { id: 'temple', x0: 378, x1: 408, z0: -40, z1: -7, face: 's', built: true },   // lantern temple (item 72)
+  { id: 'fair', x0: 176, x1: 236, z0: 128, z1: 161, face: 's', built: true },   // fairgrounds (item 72)
   { id: 'lotD', x0: 210, x1: 236, z0: -31, z1: -7, face: 's', built: true },   // canal walkway park (item 67)
 ];
 

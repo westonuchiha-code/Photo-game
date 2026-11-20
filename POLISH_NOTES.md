@@ -222,3 +222,12 @@ This is a running list, added to as models get built. Nothing here is urgent.
 - Pink house: hip roof is a scaled cone (fine from the street); a proper hipped roof with fascia + gutters would be
   nicer. The orange full moon photo is not used yet (could be an optional "harvest moon" sky state).
 - Parked sedans share the police car body; a second body style (hatchback / SUV) would add variety.
+
+## 72 Inspiration 7
+- Pixel Den arcade: cabinets are static; screens could animate (scrolling canvas), the air hockey could be playable.
+- Temple: the lantern walls are instanced and lit by one point light; lantern flicker + a night-only glow would help.
+  The hip roofs are lofted panels; add ridge tiles and hanging eave bells.
+- Jet trainer: the black anti-glare nose panel on the wrapped skin texture does not read; paint it as a separate
+  mesh. Add intake covers / "REMOVE BEFORE FLIGHT" tags.
+- Ride trailers: the rides sit still; a slow loop of the dragon train around its oval when the fair is "open".
+- Not used yet from inspo7: the foggy lakeshore stump and snowy pine forest (sky/backdrop ideas for a winter mode).

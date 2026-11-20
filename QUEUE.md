@@ -99,7 +99,8 @@ Rules (from you):
 - 68 Inspiration 3 (approved)
 - 69 Inspiration 4 (approved)
 - 70 Inspiration 5 (approved)
-- 71 Inspiration 6 (in review)
+- 71 Inspiration 6 (approved)
+- 72 Inspiration 7 (in review)
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text

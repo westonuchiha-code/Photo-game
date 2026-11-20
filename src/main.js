@@ -20,6 +20,7 @@ import { makeCafeFrontage } from './models/signs65.js';
 import { makeCanalPark } from './models/misc67.js';
 import { makeArtGallery } from './models/inspo68.js';
 import { makeWarehouseStore } from './models/inspo69.js';
+import { makeArcade, makeShutterShop as makeShutterStall, makeStreetDrum, makeTempleFront, makeFairground, makeCairn } from './models/inspo72.js';
 import { makeBackroomCorner, makeGameShelf, makeBinShelf, makePinkHouse } from './models/inspo71.js';
 import { makeAqueductGarden, makeIzakaya, makePotteryGallery, makeBarrelPlanter, makeCurvedBench, makeWifiStand, makeWeepingMaple, makePizzaAFrame, makeComicVending, makeStickerPost, makeMural as makeRainbowMural } from './models/inspo70.js';
 import { makeGunShop } from './models/gunshop41.js';
@@ -1373,6 +1374,24 @@ const pink = makePinkHouse(); pink.position.set(PH.x, 0.02, PH.z); add(pink);
 for (const [x0, x1, z0, z1] of pink.userData.colliders) rect(PH.x + x0, PH.x + x1, PH.z + z0, PH.z + z1);
 { const s1 = makeSedan('#26282c', 1); s1.position.set(170.5, 0.012, 80.4); add(s1); rect(168, 173, 79.45, 81.35);
   const s2 = makeSedan('#eef0f0', 2); s2.position.set(179.0, 0.012, 80.4); add(s2); rect(176.5, 181.5, 79.45, 81.35); }
+// 72 Inspiration 7: the Pixel Den arcade (lounge + game room behind a black arch) with a shuttered yakitori stall and
+// street props beside it on the z = 84 street; a temple front with lantern walls on the main street; the county
+// fairgrounds (jet trainer, picnic shelter, parked ride trailers) on the z = 168 street; a cairn on the nature trail
+const piMap = (X, Z, c) => [X - c[1], X - c[0], Z - c[3], Z - c[2]];   // local rect -> world for a group turned by pi
+const AR = { x: 348, z: 101 };
+const arcade = makeArcade(); arcade.position.set(AR.x, 0.14, AR.z); arcade.rotation.y = Math.PI; add(arcade);
+for (const c of arcade.userData.colliders) rect(...piMap(AR.x, AR.z, c));
+const arAreas = arcade.userData.areas.map((a) => { const [minX, maxX, minZ, maxZ] = piMap(AR.x, AR.z, [a.minX, a.maxX, a.minZ, a.maxZ]); return { minX, maxX, minZ, maxZ }; });
+{ const sh = makeShutterStall(); sh.position.set(362.6, 0.14, 93.0); sh.rotation.y = Math.PI; add(sh); rect(...piMap(362.6, 93.0, sh.userData.collider));
+  const dr = makeStreetDrum(); dr.position.set(366.4, 0.14, 91.9); dr.rotation.y = Math.PI; add(dr); rect(...piMap(366.4, 91.9, dr.userData.collider)); }
+const TM = { x: 393, z: -7 };
+const temple = makeTempleFront(); temple.position.set(TM.x, 0.02, TM.z); add(temple);
+for (const [x0, x1, z0, z1] of temple.userData.colliders) rect(TM.x + x0, TM.x + x1, TM.z + z0, TM.z + z1);
+const tmSt = temple.userData.stairs;
+const FG = { x: 206, z: 144.5 };
+const fair = makeFairground(); fair.position.set(FG.x, 0, FG.z); add(fair);
+for (const [x0, x1, z0, z1] of fair.userData.colliders) rect(FG.x + x0, FG.x + x1, FG.z + z0, FG.z + z1);
+{ const cx = TRL.x - 22.6, cz = TRL.z - 11.9; const cy = trail.userData.floorY(cx - TRL.x, cz - TRL.z) ?? 0; const cn = makeCairn(); cn.position.set(cx, cy, cz); add(cn); rect(cx - 0.45, cx + 0.45, cz - 0.4, cz + 0.4); }
 const dnAreas = [...dentist.userData.areas, ...wing.userData.areas].map((a) => { const [minX, maxX, minZ, maxZ] = dnW([a.minX, a.maxX, a.minZ, a.maxZ]); return { minX, maxX, minZ, maxZ }; });
 
 const walk = new WalkControls(camera, renderer.domElement, {
@@ -1410,6 +1429,9 @@ const walk = new WalkControls(camera, renderer.domElement, {
     ...agAreas, // the art gallery
     ...whAreas, // the warehouse store
     ...i5Areas, // the pottery gallery, the aqueduct garden + plaza
+    ...arAreas, // the arcade
+    { minX: TM.x - 13, maxX: TM.x + 13, minZ: TM.z - 26.6, maxZ: TM.z + 0.3 }, // the temple plaza, stairs + platform top
+    { minX: FG.x - 29.6, maxX: FG.x + 29.6, minZ: FG.z - 16.2, maxZ: FG.z + 16.8 }, // the fairgrounds
     { minX: 221.6, maxX: 224.4, minZ: -7.6, maxZ: -4.9 }, // its steps down to the sidewalk
   ],
   colliders,
@@ -1430,6 +1452,10 @@ walk.ground = (x, z, prevY) => {
   if (x > 337 && x < 351 && z > 7.9 && z < 18) return 0.14;   // the gallery floor
   if (x > 266 && x < 306 && z > 90 && z < 123) return 0.14;   // the warehouse floor + entrance apron
   if (x > 100.5 && x < 110.5 && z > -14.5 && z < -7) return 0.14;   // the pottery gallery floor
+  if (x > 338 && x < 358 && z > 92 && z < 109.5) return 0.14;   // the arcade floor
+  if (x > TM.x + tmSt.x0 && x < TM.x + tmSt.x1 && z > TM.z + tmSt.front && z < TM.z + tmSt.z1) {   // the temple stairs + platform top
+    const zz = z - TM.z; return 0.02 + (zz <= tmSt.zTop ? tmSt.top : tmSt.top * (tmSt.z1 - zz) / (tmSt.z1 - tmSt.zTop)); }
+  if (x > TM.x - 13 && x < TM.x + 13 && z > TM.z - 18 && z < TM.z) return 0.06;   // the temple plaza
   const dy = district.userData.floorY(x, z);
   if (dy !== null) return dy;
   if (x > 81.3 && x < 108 && z > 28 && z < 50) return 0.14;   // the dentist office floor
@@ -1532,6 +1558,15 @@ const VIEWS = {
   binshelf: { pos: [292.0, 1.5, 107.5], target: [292.0, 0.9, 109.6] },
   pinkhouse: { pos: [181.5, 1.7, 84.5], target: [175, 1.5, 74] },
   pinktv: { pos: [177.7, 1.5, 76.0], target: [177.9, 1.0, 73.2] },
+  pixelden: { pos: [353, 2.2, 82.5], target: [348, 2.6, 93] },
+  arcadein: { pos: [352.5, 1.7, 94.5], target: [347, 1.2, 99.5] },
+  gameroom: { pos: [348, 1.7, 100.5], target: [348, 1.4, 108.6] },
+  shutter: { pos: [362.4, 1.6, 87.8], target: [362.6, 1.5, 93] },
+  temple: { pos: [391.5, 1.7, -8.0], target: [393, 3.6, -25] },
+  jetpark: { pos: [201.5, 1.8, 160.5], target: [193, 2.0, 150.5] },
+  rides: { pos: [228, 2.2, 145.5], target: [220, 2.5, 136.5] },
+  newart: { pos: [344, 1.6, 8.7], target: [344, 1.5, 11.3] },
+  cairn: { pos: [-69.2, 1.5, -29.6], target: [-66.6, 0.5, -25.9] },
   stationplaza: { pos: [146.0, 1.7, -6.2], target: [148, 1.2, -16] },
   warehouse: { pos: [-33.0, 2.4, -1.0], target: [-44.0, 4.5, -3.0] },
   ovalbuilding: { pos: [-25.5, 2.4, 1.5], target: [-25.5, 4.5, -14.0] },
