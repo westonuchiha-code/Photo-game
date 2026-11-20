@@ -166,3 +166,4 @@ This is a running list, added to as models get built. Nothing here is urgent.
 - Work van / coach: the front and back faces are drawn, not from photos.
 - River boat (futuristic-river-boat*) skipped at the user's request.
 - 37: sound card daughterboard still shows faint acrylic glare streaks (from the photo).
+- 36 Kei hatch: streaky texture on the lower rear corners; model bounding box reads 1.74 m tall (something pokes above the 1.425 m roof); compare the rear slant with more photos if any turn up.
