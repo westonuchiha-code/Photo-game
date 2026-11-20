@@ -9,6 +9,7 @@ import { shrinkCanvases } from './texcache.js';
 import { makeTrail } from './models/trail40.js';
 import { makeMossCreature, makeMossMound } from './models/creature55.js';
 import { makeThriftCorner } from './models/fabrics56.js';
+import { makeDistrict } from './models/district.js';
 import { makeGunShop } from './models/gunshop41.js';
 import { makePosterCase } from './models/posters42.js';
 import { makeSchoolBus } from './models/bus44.js';
@@ -92,7 +93,9 @@ document.getElementById('app').appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color('#0b1018');
-const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.05, 900);
+// night haze: far streets, towers and hills fade into the horizon instead of ending at a hard edge
+scene.fog = new THREE.Fog('#20232c', 140, 1900);
+const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.05, 3200);
 const mats = makeMaterials();
 
 // ------------------------------------------------------------------ shell
@@ -1270,6 +1273,13 @@ const mallAreas = mall.userData.areas.map((a) => ({ ...a, minX: a.minX + MALL.x,
   const d = makeDeliveryBag(); d.position.set(49.6, 0, 6.0); d.rotation.y = -0.8; add(d);
 }
 
+// ------------------------------------------------------------------ city district (town expansion)
+// A street grid east of the old town (Cedar Avenue at x 75, cross streets every 84 m), generated buildings in the
+// wall photos, lit windows + made-up shopfronts, lamps and street trees; far towers and hills all round.
+const district = makeDistrict(); add(district);
+for (const [x, z] of district.userData.lampPosts) circle(x, z, 0.18);
+for (const [x, z] of district.userData.treePosts) circle(x, z, 0.25);
+
 const walk = new WalkControls(camera, renderer.domElement, {
   bounds: null,
   areas: [
@@ -1296,6 +1306,7 @@ const walk = new WalkControls(camera, renderer.domElement, {
     { minX: -19.6, maxX: -9.2, minZ: 48.0, maxZ: 52.0 }, // strip in front of the realty window
     gshArea, // the pawn & sport shop
     { minX: TP.x - 12.8, maxX: TP.x + 12.8, minZ: TP.z - 5.2, maxZ: TP.z - 0.3 }, // train platform + its stairs
+    ...district.userData.areas, // the district's streets + sidewalks
   ],
   colliders,
 });
@@ -1310,6 +1321,8 @@ walk.ground = (x, z, prevY) => {
   if (ty !== null) return ty;
   const mh = moundY(x, z);
   if (mh > 0) return mh;
+  const dy = district.userData.floorY(x, z);
+  if (dy !== null) return dy;
   const ay = apt.userData.floorY(z - AP.z, AP.x - x, prevY);
   return ay !== null ? ay : rampFloorY(x, z);
 };
@@ -1411,6 +1424,9 @@ const VIEWS = {
   vendingclose: { pos: [-0.75, 1.55, 10.85], target: [-0.85, 1.45, 11.7] },
   vendinglow: { pos: [-0.8, 0.95, 10.75], target: [-0.85, 0.7, 11.7] },
   junkshop: { pos: [6.8, 1.8, 13.2], target: [1.5, 1.0, 20.5] },
+  avenue: { pos: [71.5, 1.8, -12], target: [78, 4, 60] },
+  downtown: { pos: [241, 1.8, -30], target: [247, 6, 60] },
+  cityair: { pos: [30, 70, -110], target: [210, 0, 20] },
   thrift: { pos: [4.6, 1.7, 7.4], target: [6.6, 1.0, 10.9] },
   junkfront: { pos: [3.5, 2.2, 5.8], target: [3.5, 2.0, 12.2] },
   graffiti: { pos: [-15.2, 1.9, 7.0], target: [-15.5, 1.9, 12.1] },
@@ -1516,6 +1532,8 @@ function setMode(m, view = 'room') {
     orbit.maxPolarAngle = v.lookUp ? Math.PI * 0.97 : Math.PI * 0.49;
     camera.position.set(...v.pos);
     orbit.target.set(...v.target);
+    // wide views (the city from above, long streets) need to zoom out further than the room views
+    orbit.maxDistance = Math.max(12, camera.position.distanceTo(orbit.target) * 1.3);
     orbit.update();
   } else {
     walk.apply();

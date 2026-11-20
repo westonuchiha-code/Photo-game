@@ -84,7 +84,8 @@ Rules (from you):
 - 54 Cleaning robot (approved)
 - 55 Moss creature (approved)
 - 56 Fabrics + thrift rack (approved)
-- 57 Dentist waiting room (in review)
+- Town expansion: city district east of the old town (in review)
+- 57 Dentist waiting room (next, on the reserved lot on Cedar Avenue)
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text

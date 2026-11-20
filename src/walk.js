@@ -101,7 +101,7 @@ export class WalkControls {
     if (k.has('KeyA') || k.has('ArrowLeft')) s -= 1;
     const len = Math.hypot(f, s);
     if (len > 1) { f /= len; s /= len; }
-    const sp = SPEED * (k.has('ShiftLeft') || k.has('ShiftRight') ? 1.8 : 1) * dt;
+    const sp = SPEED * (k.has('ShiftLeft') || k.has('ShiftRight') ? 2.6 : 1) * dt;
     const sin = Math.sin(this.yaw), cos = Math.cos(this.yaw);
     const ox = this.position.x, oz = this.position.z;
     this.position.x += (-sin * f + cos * s) * sp;
