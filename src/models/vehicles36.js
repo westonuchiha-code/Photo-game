@@ -774,70 +774,125 @@ export function makeVintageScooter() {
   const paint = new THREE.MeshStandardMaterial({ map: ot, roughness: 0.32, metalness: 0.05, side: THREE.DoubleSide });
   const black = new THREE.MeshStandardMaterial({ color: '#141414', roughness: 0.7 });
   const chrome = new THREE.MeshStandardMaterial({ color: '#d0d4d8', roughness: 0.15, metalness: 0.9 });
-  const Rw = 0.2, xF = 0.47, xR = -0.6;
+  const loft = (fn, NA, NB) => {
+    const pos = [], uv = [], idx = [];
+    for (let i = 0; i <= NA; i++) for (let j = 0; j <= NB; j++) { const p = fn(i / NA, j / NB); pos.push(p.x, p.y, p.z); uv.push(j / NB * 0.6, i / NA * 0.8); }
+    for (let i = 0; i < NA; i++) for (let j = 0; j < NB; j++) { const a = i * (NB + 1) + j, b = a + NB + 1; idx.push(a, a + 1, b, b, a + 1, b + 1); }
+    const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); geo.setIndex(idx); geo.computeVertexNormals();
+    const m = new THREE.Mesh(geo, paint); m.castShadow = true; return m;
+  };
+  const Rw = 0.2, xF = 0.47, xR = -0.62;
   scooterWheel(g, xF, Rw, '#c8ccd0'); scooterWheel(g, xR, Rw, '#c8ccd0');
-  // leg shield + horn cover + indicators
-  const ls = legShield(paint); ls.position.x = 0.2; g.add(ls);
-  const pip = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(ls.userData.edge), 120, 0.009, 6), black); pip.position.x = 0.2; g.add(pip);
-  const onShield = (y, z = 0, out = 0.004) => { const t = (y - 0.27) / 0.66, P = ls.userData.P(t, 0.5); const hw2 = 0.25 - 0.09 * t + 0.02 * Math.sin(t * Math.PI), w = z / hw2; return 0.2 + P.x * 0 + ls.userData.P(t, 0.5 + w / 2).x + out; };
+
+  // ---- leg shield (as in the photo): broad, slightly wider at the foot, rounded top corners, gently convex,
+  // the sides wrapping back round the rider's legs, a raised spine down the middle that ends at the horn grille
+  const SH = (t, u) => {
+    const w = u * 2 - 1, hwid = 0.235 - 0.035 * t;
+    const top = 0.63 - 0.075 * Math.pow(Math.abs(w), 6);
+    const y = 0.26 + t * top;
+    const spine = 0.022 * Math.exp(-((w / 0.13) ** 2)) * THREE.MathUtils.smoothstep(t, 0.12, 0.3);
+    const x = 0.24 + 0.045 * (1 - w * w) + spine - 0.07 * Math.pow(Math.abs(w), 5) - 0.07 * t;
+    return new THREE.Vector3(x, y, w * hwid);
+  };
+  g.add(loft(SH, 24, 30));
+  const edge = []; for (let i = 0; i <= 24; i++) edge.push(SH(i / 24, 0)); for (let j = 1; j < 30; j++) edge.push(SH(1, j / 30)); for (let i = 24; i >= 0; i--) edge.push(SH(i / 24, 1));
+  g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(edge), 160, 0.008, 6), black));
+  const onSH = (t, u, out = 0.004) => SH(t, u).add(new THREE.Vector3(out, 0, 0));
+  // horn grille at the foot of the spine, with a small blue roundel
   const hc = document.createElement('canvas'); hc.width = 128; hc.height = 96; const hx = hc.getContext('2d');
-  hx.fillStyle = '#e07a2c'; hx.fillRect(0, 0, 128, 96); hx.fillStyle = '#7a3a10'; for (let i = 0; i < 7; i++) hx.fillRect(10, 8 + i * 11, 108, 5);
-  hx.fillStyle = '#3a78c0'; hx.beginPath(); hx.arc(64, 48, 14, 0, 7); hx.fill(); hx.fillStyle = '#fff'; hx.font = `bold 14px ${F.label}`; hx.textAlign = 'center'; hx.fillText('Z', 64, 53);
+  hx.fillStyle = '#e07a2c'; hx.fillRect(0, 0, 128, 96); hx.fillStyle = '#7a3a10'; for (let i = 0; i < 7; i++) hx.fillRect(8, 8 + i * 11, 70, 5);
+  hx.fillStyle = '#3a78c0'; hx.beginPath(); hx.arc(100, 48, 16, 0, 7); hx.fill(); hx.strokeStyle = '#ddd'; hx.lineWidth = 3; hx.stroke();
   const ht = new THREE.CanvasTexture(hc); ht.colorSpace = THREE.SRGBColorSpace;
-  const horn = new THREE.Mesh(new THREE.PlaneGeometry(0.1, 0.075), new THREE.MeshStandardMaterial({ map: ht, roughness: 0.4 })); horn.rotation.y = Math.PI / 2; horn.position.set(onShield(0.46), 0.46, 0); g.add(horn);
-  for (const z of [-1, 1]) { const ind = box(0.03, 0.08, 0.05, new THREE.MeshStandardMaterial({ color: '#f0a020', roughness: 0.2, emissive: '#5a3000', emissiveIntensity: 0.4, transparent: true, opacity: 0.9 }), onShield(0.55, z * 0.19, 0.01), 0.55, z * 0.19, g); ind.rotation.y = z * 0.6; }
-  // made-up script badge + top nameplate
-  const bc = document.createElement('canvas'); bc.width = 256; bc.height = 80; const bx2 = bc.getContext('2d');
-  bx2.fillStyle = '#e8eaec'; bx2.strokeStyle = '#5a5c60'; bx2.lineWidth = 3; fitText(bx2, 'Zefira', 128, 42, 230, 64, F.script, { stroke: 1 });
-  const bt = new THREE.CanvasTexture(bc); bt.colorSpace = THREE.SRGBColorSpace;
-  const badge = new THREE.Mesh(new THREE.PlaneGeometry(0.12, 0.037), new THREE.MeshStandardMaterial({ map: bt, transparent: true, metalness: 0.6, roughness: 0.25 }));
-  badge.rotation.y = Math.PI / 2; badge.position.set(onShield(0.66, -0.035), 0.66, -0.035); badge.rotation.z = 0.02; g.add(badge);
+  const horn = new THREE.Mesh(new THREE.PlaneGeometry(0.11, 0.07), new THREE.MeshStandardMaterial({ map: ht, roughness: 0.4 }));
+  horn.rotation.y = Math.PI / 2; horn.rotation.x = 0; horn.position.copy(onSH(0.27, 0.5, 0.026)); g.add(horn);
+  // indicators set into the shield's outer edges at mid height (flush amber lenses)
+  for (const u of [0.02, 0.98]) {
+    const p = onSH(0.42, u, 0.0); const ind = box(0.035, 0.075, 0.03, new THREE.MeshStandardMaterial({ color: '#f0a020', roughness: 0.2, emissive: '#5a3000', emissiveIntensity: 0.4 }), p.x - 0.01, p.y, p.z, g); ind.rotation.y = u < 0.5 ? 0.9 : -0.9;
+  }
+  // made-up badges: nameplate under the top edge, script on the left panel
   const pc = document.createElement('canvas'); pc.width = 256; pc.height = 48; const px = pc.getContext('2d');
   px.fillStyle = '#1a1a1a'; px.fillRect(0, 0, 256, 48); px.strokeStyle = '#c8ccd0'; px.lineWidth = 4; px.strokeRect(2, 2, 252, 44); px.fillStyle = '#e8eaec'; fitText(px, 'ATELIER', 128, 25, 220, 30, F.engraved, { spacing: 6 });
   const pt = new THREE.CanvasTexture(pc); pt.colorSpace = THREE.SRGBColorSpace;
-  const plate = new THREE.Mesh(new THREE.PlaneGeometry(0.08, 0.015), new THREE.MeshStandardMaterial({ map: pt, roughness: 0.3 })); plate.rotation.y = Math.PI / 2; plate.position.set(onShield(0.85), 0.85, 0); g.add(plate);
-  // steering column, handlebar casting with the round headlight, grips, mirror
-  tube(new THREE.Vector3(0.2, 0.9, 0), new THREE.Vector3(0.16, 1.02, 0), 0.03, paint, g);
-  const head = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.07, 0.12, 24), paint); head.rotation.z = Math.PI / 2; head.position.set(0.18, 1.06, 0); g.add(head);
-  const lens = new THREE.Mesh(new THREE.CircleGeometry(0.068, 24), new THREE.MeshStandardMaterial({ color: '#e8eae6', roughness: 0.1, metalness: 0.3, emissive: '#303028' })); lens.rotation.y = Math.PI / 2; lens.position.set(0.245, 1.06, 0); g.add(lens);
-  const bezel = new THREE.Mesh(new THREE.TorusGeometry(0.07, 0.008, 8, 24), chrome); bezel.rotation.y = Math.PI / 2; bezel.position.set(0.243, 1.06, 0); g.add(bezel);
+  const plate = new THREE.Mesh(new THREE.PlaneGeometry(0.085, 0.016), new THREE.MeshStandardMaterial({ map: pt, roughness: 0.3 })); plate.rotation.y = Math.PI / 2; plate.position.copy(onSH(0.93, 0.5, 0.004)); plate.rotation.z = 0.07; g.add(plate);
+  const bc = document.createElement('canvas'); bc.width = 256; bc.height = 80; const bx2 = bc.getContext('2d');
+  bx2.fillStyle = '#e8eaec'; bx2.strokeStyle = '#5a5c60'; bx2.lineWidth = 3; fitText(bx2, 'Zefira', 128, 42, 230, 64, F.script, { stroke: 1 });
+  const bt = new THREE.CanvasTexture(bc); bt.colorSpace = THREE.SRGBColorSpace;
+  const badge = new THREE.Mesh(new THREE.PlaneGeometry(0.11, 0.034), new THREE.MeshStandardMaterial({ map: bt, transparent: true, metalness: 0.6, roughness: 0.25 }));
+  badge.rotation.y = Math.PI / 2; badge.rotation.z = 0.07; badge.position.copy(onSH(0.7, 0.33, 0.006)); g.add(badge);
+
+  // ---- handlebar casting sitting right on top of the shield: headlight nacelle in the middle, covered bars
+  // tapering out to black grips, round mirror on a stalk (the photo's left side)
+  const top = SH(1, 0.5), hy = top.y + 0.07, hxp = top.x - 0.02;
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 0.08, 16), paint); neck.position.set(hxp - 0.02, top.y + 0.03, 0); g.add(neck);
+  const nac = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 16), paint); nac.scale.set(0.1, 0.085, 0.1); nac.position.set(hxp, hy, 0); g.add(nac);
+  const lamp = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.08, 0.06, 28), paint); lamp.rotation.z = Math.PI / 2; lamp.position.set(hxp + 0.07, hy + 0.005, 0); g.add(lamp);
+  const lens = new THREE.Mesh(new THREE.CircleGeometry(0.066, 28), new THREE.MeshStandardMaterial({ color: '#e8eae6', roughness: 0.1, metalness: 0.3, emissive: '#303028' })); lens.rotation.y = Math.PI / 2; lens.position.set(hxp + 0.101, hy + 0.005, 0); g.add(lens);
+  const bez = new THREE.Mesh(new THREE.TorusGeometry(0.069, 0.007, 8, 28), chrome); bez.rotation.y = Math.PI / 2; bez.position.set(hxp + 0.1, hy + 0.005, 0); g.add(bez);
   for (const z of [-1, 1]) {
-    tube(new THREE.Vector3(0.15, 1.08, 0), new THREE.Vector3(0.12, 1.1, z * 0.3), 0.022, paint, g);
-    tube(new THREE.Vector3(0.12, 1.1, z * 0.3), new THREE.Vector3(0.11, 1.105, z * 0.4), 0.019, black, g);
+    const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.045, 0.24, 14), paint); arm.rotation.x = Math.PI / 2; arm.position.set(hxp - 0.01, hy + 0.01, z * 0.17); g.add(arm);
+    const grip = new THREE.Mesh(new THREE.CylinderGeometry(0.019, 0.019, 0.12, 12), black); grip.rotation.x = Math.PI / 2; grip.position.set(hxp - 0.01, hy + 0.012, z * 0.345); g.add(grip);
+    tube(new THREE.Vector3(hxp - 0.02, hy + 0.03, z * 0.27), new THREE.Vector3(hxp - 0.06, hy + 0.04, z * 0.3), 0.005, chrome, g);   // levers
   }
-  tube(new THREE.Vector3(0.12, 1.1, -0.26), new THREE.Vector3(0.1, 1.3, -0.33), 0.006, chrome, g);
-  const mir = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.015, 20), chrome); mir.rotation.z = Math.PI / 2; mir.rotation.y = 0.3; mir.position.set(0.1, 1.33, -0.34); g.add(mir);
-  // front fender with chrome crest, fork link
-  const ff = shell(0.17, 0.12, 0.085, paint, Math.PI); ff.rotation.x = Math.PI / 2; ff.rotation.z = 0; ff.position.set(xF, Rw + 0.05, 0);
-  ff.geometry = new THREE.SphereGeometry(1, 28, 14, 0, Math.PI * 2, 0, Math.PI / 2); ff.rotation.set(0, 0, -0.15); ff.scale.set(0.2, 0.17, 0.085); ff.position.set(xF - 0.02, Rw + 0.08, 0); g.add(ff);
-  const crest = new THREE.Mesh(new THREE.CapsuleGeometry(0.009, 0.11, 4, 8), chrome); crest.rotation.z = -0.95; crest.position.set(xF + 0.1, Rw + 0.215, 0); g.add(crest);
+  tube(new THREE.Vector3(hxp - 0.02, hy + 0.02, -0.26), new THREE.Vector3(hxp - 0.04, hy + 0.17, -0.31), 0.006, chrome, g);
+  const mir = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.014, 22), chrome); mir.rotation.z = Math.PI / 2; mir.rotation.y = 0.3; mir.position.set(hxp - 0.04, hy + 0.2, -0.315); g.add(mir);
+
+  // ---- front fender: deep rounded helmet shape tucked straight under the shield (no fork in sight), wider
+  // than the tyre, front dipping low, chrome crest strip on each side
+  const FD = (t, u) => {                                                     // t: front->back over the wheel, u: across
+    const a = Math.PI * (0.12 + 0.8 * t), w = u * 2 - 1;
+    const r = 0.235 + 0.015 * Math.sin(Math.PI * t);
+    const hwid = 0.115 - 0.02 * t, crown = Math.sqrt(Math.max(0, 1 - Math.pow(Math.abs(w), 3.2)));
+    const rr = r * (0.55 + 0.45 * crown);
+    return new THREE.Vector3(xF + Math.cos(a) * rr - 0.01, Rw + 0.02 + Math.sin(a) * rr * 0.92, w * hwid);
+  };
+  g.add(loft(FD, 26, 20));
+  for (const z of [-1, 1]) {
+    const pts = []; for (let i = 0; i <= 12; i++) { const p = FD(0.1 + i * 0.022, z > 0 ? 0.9 : 0.1); p.z += z * 0.004; pts.push(p); }
+    g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 24, 0.008, 6), chrome));
+  }
+  // the single-sided front link on the left, mostly hidden under the fender
   const fork = new THREE.MeshStandardMaterial({ color: '#2a2a2c', roughness: 0.5, metalness: 0.4 });
-  // single-sided front link like the photo's: axle stub on the left, a short trailing arm, the damper, and the
-  // fork leg rising into the fender, the steering column hidden behind the leg shield
-  tube(new THREE.Vector3(xF, Rw, -0.065), new THREE.Vector3(xF - 0.11, Rw + 0.05, -0.065), 0.018, fork, g);
-  tube(new THREE.Vector3(xF - 0.11, Rw + 0.05, -0.065), new THREE.Vector3(xF - 0.13, Rw + 0.2, -0.04), 0.024, fork, g);
-  tube(new THREE.Vector3(xF - 0.13, Rw + 0.2, -0.02), new THREE.Vector3(0.2, 0.9, 0), 0.03, fork, g);
-  // floorboard with ribbed runners, the centre tunnel
-  box(0.5, 0.035, 0.32, paint, -0.05, 0.26, 0, g);
+  tube(new THREE.Vector3(xF, Rw, -0.07), new THREE.Vector3(xF - 0.12, Rw + 0.05, -0.07), 0.018, fork, g);
+  tube(new THREE.Vector3(xF - 0.12, Rw + 0.05, -0.07), new THREE.Vector3(xF - 0.14, Rw + 0.2, -0.05), 0.024, fork, g);
+
+  // ---- floorboard: orange pan, black rubber runners with aluminium strips, edge trims
+  box(0.5, 0.03, 0.4, paint, -0.03, 0.26, 0, g);
   const alu = new THREE.MeshStandardMaterial({ color: '#9a9ea2', roughness: 0.5, metalness: 0.6 });
-  for (let i = -2; i <= 2; i++) { box(0.46, 0.006, 0.05, black, -0.05, 0.28, i * 0.06, g); box(0.46, 0.01, 0.008, alu, -0.05, 0.283, i * 0.06 + 0.03, g); }
-  for (const z of [-1, 1]) box(0.5, 0.02, 0.012, chrome, -0.05, 0.27, z * 0.165, g);
-  // rear body: tunnel + two side cowls with black piping
-  const rb = shell(0.36, 0.28, 0.12, paint, Math.PI * 2); rb.position.set(-0.48, 0.45, 0); g.add(rb);
+  for (let i = -2; i <= 2; i++) { box(0.46, 0.006, 0.05, black, -0.03, 0.278, i * 0.07, g); box(0.46, 0.01, 0.008, alu, -0.03, 0.281, i * 0.07 + 0.035, g); }
+  for (const z of [-1, 1]) box(0.5, 0.025, 0.014, black, -0.03, 0.27, z * 0.2, g);
+
+  // ---- rear body: one smooth monocoque swelling out into the two side cowls and tapering to the tail
+  const X0 = -0.24, X1 = -0.98;
+  const RB = (t, v) => {
+    const x = X0 + (X1 - X0) * t;
+    const hw = (0.15 + 0.16 * Math.pow(Math.sin(Math.PI * Math.min(1, t / 0.92)), 0.7)) * (1 - 0.6 * THREE.MathUtils.smoothstep(t, 0.9, 1));
+    const yb = 0.25 + 0.15 * t * t, yt = 0.58 + 0.13 * Math.sin(Math.PI * Math.min(1, t * 1.05)) + 0.02 * t;
+    const yc = (yb + yt) / 2, ry = (yt - yb) / 2, a = v * Math.PI * 2, n = 2.8;
+    const c = Math.cos(a), s = Math.sin(a);
+    return new THREE.Vector3(x, yc + ry * Math.sign(s) * Math.pow(Math.abs(s), 2 / n), hw * Math.sign(c) * Math.pow(Math.abs(c), 2 / n));
+  };
+  g.add(loft(RB, 30, 40));
+  // front + tail caps
+  for (const t of [0, 1]) { const cs = new THREE.Shape(); for (let j = 0; j <= 40; j++) { const p = RB(t, j / 40); j ? cs.lineTo(p.z, p.y) : cs.moveTo(p.z, p.y); } const cap = new THREE.Mesh(new THREE.ShapeGeometry(cs), paint); cap.rotation.y = t ? -Math.PI / 2 : Math.PI / 2; cap.position.x = RB(t, 0).x; g.add(cap); }
+  // cowl outlines (black piping) on each side, lying on the surface
   for (const z of [-1, 1]) {
-    const cw = shell(0.3, 0.2, 0.13, paint, Math.PI * 2); cw.position.set(-0.47, 0.45, z * 0.13); g.add(cw);
-    const pts = []; for (let i = 0; i <= 40; i++) { const a = i / 40 * Math.PI * 2; pts.push(new THREE.Vector3(-0.47 + Math.cos(a) * 0.3, 0.45 + Math.sin(a) * 0.2, z * 0.13)); }
-    g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts, true), 60, 0.008, 6, true), black));
+    const pts = [];
+    for (let i = 0; i <= 48; i++) {
+      const a = i / 48 * Math.PI * 2, t = 0.47 + 0.36 * Math.cos(a), yy = 0.47 + 0.14 * Math.sin(a);
+      let best = null; for (let k = 0; k <= 80; k++) { const p = RB(t, (z > 0 ? -0.25 : 0.25) + k / 160 * (z > 0 ? 1 : -1)); if (!best || Math.abs(p.y - yy) < Math.abs(best.y - yy)) best = p; }
+      best.z += z * 0.004; pts.push(best);
+    }
+    g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts, true), 120, 0.007, 6, true), black));
   }
-  // seat (rounded black pad), grab rail, tail lamp, kickstand
-  const sg = new THREE.Shape(); sg.moveTo(-0.3, 0); sg.lineTo(0.28, 0); sg.quadraticCurveTo(0.33, 0, 0.3, 0.08); sg.quadraticCurveTo(0.1, 0.11, -0.3, 0.1); sg.quadraticCurveTo(-0.36, 0.05, -0.3, 0);
+  // seat on top, chrome grab rail round the back, tail lamp, side stand
+  const sg = new THREE.Shape(); sg.moveTo(-0.3, 0); sg.lineTo(0.28, 0); sg.quadraticCurveTo(0.33, 0, 0.3, 0.07); sg.quadraticCurveTo(0.1, 0.1, -0.3, 0.09); sg.quadraticCurveTo(-0.36, 0.05, -0.3, 0);
   const seatG = new THREE.ExtrudeGeometry(sg, { depth: 0.22, bevelEnabled: true, bevelThickness: 0.03, bevelSize: 0.03, bevelSegments: 4 }); seatG.translate(0, 0, -0.11);
-  const seat = new THREE.Mesh(seatG, new THREE.MeshStandardMaterial({ color: '#1d1e22', roughness: 0.55 })); seat.position.set(-0.4, 0.7, 0); seat.castShadow = true; g.add(seat);
-  const rail = []; for (let i = 0; i <= 20; i++) { const a = i / 20 * Math.PI; rail.push(new THREE.Vector3(-0.72 - Math.sin(a) * 0.1, 0.78, Math.cos(a) * 0.14)); }
+  const seat = new THREE.Mesh(seatG, new THREE.MeshStandardMaterial({ color: '#1d1e22', roughness: 0.55 })); seat.position.set(-0.55, 0.7, 0); seat.castShadow = true; g.add(seat);
+  const rail = []; for (let i = 0; i <= 20; i++) { const a = i / 20 * Math.PI; rail.push(new THREE.Vector3(-0.85 - Math.sin(a) * 0.1, 0.75, Math.cos(a) * 0.15)); }
   g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(rail), 30, 0.01, 6), chrome));
-  box(0.03, 0.05, 0.1, new THREE.MeshStandardMaterial({ color: '#a01818', roughness: 0.3, emissive: '#300000' }), -0.84, 0.55, 0, g);
-  tube(new THREE.Vector3(-0.2, 0.25, -0.1), new THREE.Vector3(-0.28, 0, -0.16), 0.012, black, g);
-  g.rotation.x = 0.06;                                                          // leaning on its side stand
+  box(0.03, 0.05, 0.1, new THREE.MeshStandardMaterial({ color: '#a01818', roughness: 0.3, emissive: '#300000' }), X1 - 0.01, 0.56, 0, g);
+  tube(new THREE.Vector3(-0.2, 0.25, -0.12), new THREE.Vector3(-0.28, 0, -0.2), 0.012, black, g);
+  g.rotation.x = 0.06;
   return g;
 }
 export function makeRustedScooter() {
