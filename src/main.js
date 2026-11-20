@@ -1469,7 +1469,7 @@ const VIEWS = {
   coupewreck: { pos: [226.8, 1.6, -3.6], target: [222.6, 0.6, -8.8] },
   parkinglot: { pos: [86.5, 2.4, -46.5], target: [102, 1.0, -40] },
   stall: { pos: [96.0, 1.75, -40.55], target: [100.5, 0.0, -40.55] },
-  signs: { pos: [100.3, 1.7, -44.2], target: [104, 1.3, -44.4] },
+  parksigns: { pos: [100.3, 1.7, -44.2], target: [104, 1.3, -44.4] },
   utility: { pos: [98.5, 1.7, -38.0], target: [103.6, 1.4, -35.4] },
   transformer: { pos: [87.6, 1.7, -42.4], target: [83.8, 0.9, -46.2] },
   dentistfront: { pos: [72, 2.2, 39], target: [83, 3.0, 39] },

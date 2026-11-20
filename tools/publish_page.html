@@ -1,0 +1,256 @@
+<title>Photo Bar Room</title>
+  <style>
+    :root { --fg: #1c1c1c; --panel: rgba(255, 255, 255, 0.82); --accent: #c9a231; }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) { --fg: #f1f1ef; --panel: rgba(28, 28, 30, 0.8); }
+    }
+    :root[data-theme="dark"] { --fg: #f1f1ef; --panel: rgba(28, 28, 30, 0.8); }
+    html, body { margin: 0; height: 100%; overflow: hidden; background: #d9d6cf; font: 14px/1.4 system-ui, sans-serif; }
+    #app canvas { display: block; touch-action: none; }
+    .hud { position: fixed; left: max(16px, env(safe-area-inset-left, 0px)); top: calc(16px + env(safe-area-inset-top, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-start; pointer-events: none; }
+    .hud > * { pointer-events: auto; }
+    .card { background: var(--panel); color: var(--fg); backdrop-filter: blur(8px); border-radius: 10px; padding: 8px 12px; max-width: 340px; }
+    .card b { color: var(--accent); }
+    button { font: inherit; border: 0; border-radius: 10px; padding: 8px 12px; background: var(--panel); color: var(--fg); backdrop-filter: blur(8px); cursor: pointer; }
+    button:hover { outline: 2px solid var(--accent); }
+    .views { display: flex; gap: 6px; flex-wrap: wrap; }
+    .help-touch { display: none; }
+    @media (pointer: coarse) { .help-mouse { display: none; } .help-touch { display: inline; } }
+    body[data-mode="orbit"] .walk-only { display: none; }
+    body[data-mode="walk"] .orbit-only { display: none; }
+    #use { position: fixed; left: 50%; bottom: calc(28px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); font-weight: 600; padding: 12px 18px; }
+    #stick { position: fixed; width: 100px; height: 100px; margin: -50px 0 0 -50px; border-radius: 50%; border: 2px solid rgba(255,255,255,.7); background: rgba(0,0,0,.15); display: none; pointer-events: none; }
+    #stick.on { display: block; }
+    #stick .knob { position: absolute; left: 30px; top: 30px; width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,.85); }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "./vendor/three/three.module.js",
+        "three/addons/": "./vendor/three/addons/"
+      }
+    }
+  </script>
+<script>document.body.dataset.mode="walk"</script>
+<div id="loader"><div class="box"><div class="title">Photo Town</div><div class="bar"><i></i></div><div class="status">Building the world…</div><div class="hint">Loading every texture first so the world runs smoothly. This can take a minute on a slow connection.</div></div></div>
+<style>
+#loader { position: fixed; inset: 0; z-index: 9999; display: grid; place-items: center; background: #0f1114; color: #e8e6e0; font: 15px/1.4 system-ui, sans-serif; transition: opacity .6s; }
+#loader.done { opacity: 0; pointer-events: none; }
+#loader .box { width: min(360px, 86vw); text-align: center; }
+#loader .title { font-size: 28px; letter-spacing: .08em; margin-bottom: 18px; }
+#loader .bar { height: 8px; border-radius: 4px; background: #2a2d33; overflow: hidden; }
+#loader .bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #d8a840, #f2d27a); transition: width .25s; }
+#loader .status { margin-top: 12px; color: #c8c4b8; }
+#loader .hint { margin-top: 18px; font-size: 13px; color: #8a8a86; }
+</style>
+
+
+  <div id="app"></div>
+  <div class="hud">
+    <div class="card">
+      <span class="walk-only">
+        <span class="help-mouse"><b>WASD</b> move · <b>drag</b> look · double-click locks mouse · Shift run</span>
+        <span class="help-touch"><b>Left thumb</b> move · <b>right thumb</b> look</span>
+      </span>
+      <span class="orbit-only">Drag to orbit · scroll/pinch to zoom · right-drag to pan</span>
+    </div>
+    <button id="mode">Inspect (orbit)</button>
+    <a href="viewer.html" style="text-decoration:none"><button>Model viewer</button></a>
+    <span class="views orbit-only">
+      <button data-view="room">Whole room</button>
+      <button data-view="bar">Bar</button>
+      <button data-view="booth">Booths</button>
+      <button data-view="tables">Tables</button>
+      <button data-view="neon">Neon sign</button>
+      <button data-view="entrance">Entrance</button>
+      <button data-view="signs">Signs</button>
+      <button data-view="abandoned">Boarded-up shop</button>
+      <button data-view="tireshop">Tire shop</button>
+      <button data-view="pole">Rusty pole</button>
+      <button data-view="streetrow">Street row</button>
+      <button data-view="rocks">Rocks & grass</button>
+      <button data-view="curb">Curb leaves</button>
+      <button data-view="pavers">Pavers</button>
+      <button data-view="crosswalk">Crosswalk</button>
+      <button data-view="cracks">Cracked sidewalk</button>
+      <button data-view="dirtlot">Dirt lot</button>
+      <button data-view="sky">Sky & moon</button>
+      <button data-view="walksignal">Walk signal</button>
+      <button data-view="spruce">Spruce & cherry</button>
+      <button data-view="streettrees">Street trees</button>
+      <button data-view="ramp">Parking ramp</button>
+      <button data-view="tealshop">Teal shop</button>
+      <button data-view="rabbit">Rabbit</button>
+      <button data-view="newsbox">News box</button>
+      <button data-view="canvases">Paintings</button>
+      <button data-view="mural">Mural</button>
+      <button data-view="apartment">Apartments</button>
+      <button data-view="aptside">Apartment side + AC</button>
+      <button data-view="aptback">Apartment back</button>
+      <button data-view="apthall">Apartment hallway</button>
+      <button data-view="apthall2">Upstairs hall</button>
+      <button data-view="aptgarden">Garden-level hall</button>
+      <button data-view="aptgardenunit">Garden-level unit</button>
+      <button data-view="aptunit">Unit (kitchen)</button>
+      <button data-view="aptunit2">Unit (upstairs)</button>
+      <button data-view="alien">Alien rocks</button>
+      <button data-view="doortree">Door tree</button>
+      <button data-view="soup">Soup pot</button>
+      <button data-view="scooter">Scooter</button>
+      <button data-view="scooterseat">Scooter seat</button>
+      <button data-view="batteries">Batteries</button>
+      <button data-view="creep">Hoodie figure</button>
+      <button data-view="police">Police</button>
+      <button data-view="policefront">Police scooter</button>
+      <button data-view="grocery">Grocery</button>
+      <button data-view="dairy">Dairy coolers</button>
+      <button data-view="walkin">Walk-in cooler</button>
+      <button data-view="eggs">Egg case</button>
+      <button data-view="walkinshelf">Walk-in shelves</button>
+      <button data-view="stockroom">Stockroom</button>
+      <button data-view="stockroom2">Stockroom pallets</button>
+      <button data-view="shrines">Shrines</button>
+      <button data-view="shrineA">Statue shrine</button>
+      <button data-view="shrineB">Stone shrine</button>
+      <button data-view="tirewheel">Tire + wheel</button>
+      <button data-view="tiredisplay">Tire display</button>
+      <button data-view="livingroom">Living room</button>
+      <button data-view="bookshelves">Bookshelves</button>
+      <button data-view="lamptable">Lamp table</button>
+      <button data-view="houses">House row</button>
+      <button data-view="housesouth">Houses (stone, tan)</button>
+      <button data-view="porchhouse">Porch house</button>
+      <button data-view="deliveries">Deliveries</button>
+      <button data-view="deliveries2">Deliveries 2</button>
+      <button data-view="bluehouse">Blue house</button>
+      <button data-view="cats">Cats</button>
+      <button data-view="kitten">Kitten</button>
+      <button data-view="dumpsite">Dirt site</button>
+      <button data-view="dumptruck">Dump truck</button>
+      <button data-view="pickup">Pickup zone</button>
+      <button data-view="pastewall">Paste-up wall</button>
+      <button data-view="plywood">Plywood</button>
+      <button data-view="glass">Broken glass</button>
+      <button data-view="plaza">City plaza</button>
+      <button data-view="warehouse">Brick warehouse</button>
+      <button data-view="ovalbuilding">Oval-window building</button>
+      <button data-view="oldtown">Old-town street</button>
+      <button data-view="oldtownshops">Old-town shops</button>
+      <button data-view="monkey">Monkey statue</button>
+      <button data-view="shutters">Shutter shop</button>
+      <button data-view="vending">Noodle vending</button>
+      <button data-view="vendingclose">Vending close-up</button>
+      <button data-view="vendinglow">Vending lower half</button>
+      <button data-view="junkfront">Junk shop front</button>
+      <button data-view="thrift">Thrift rack</button>
+      <button data-view="avenue">Cedar Avenue</button>
+      <button data-view="downtown">Downtown</button>
+      <button data-view="cityair">City from above</button>
+      <button data-view="dentistfront">Dentist front</button>
+      <button data-view="dentist">Dentist waiting room</button>
+      <button data-view="dentist2">Dentist reception</button>
+      <button data-view="operatory">Treatment room</button>
+      <button data-view="operatory2">Treatment room (tool chest)</button>
+      <button data-view="storage">Self storage</button>
+      <button data-view="storageunit">Storage unit</button>
+      <button data-view="canwall">Can wall</button>
+      <button data-view="coupe">Sport coupe</button>
+      <button data-view="coupewreck">Crashed coupe</button>
+      <button data-view="parkinglot">Parking lot</button>
+      <button data-view="parksigns">Parking signs</button>
+      <button data-view="stall">Accessible stall</button>
+      <button data-view="utility">Wall cabinets</button>
+      <button data-view="transformer">Transformer</button>
+      <button data-view="junkshop">Junk shop inside</button>
+      <button data-view="graffiti">Graffiti shutters</button>
+      <button data-view="arcade">Arcade cabinet</button>
+      <button data-view="trike">Cargo trike</button>
+      <button data-view="trike2">Covered trike</button>
+      <button data-view="station">Station gateway</button>
+      <button data-view="stationunder">Under the canopy</button>
+      <button data-view="pond">Lotus pond</button>
+      <button data-view="rockdoor">Rock bar door</button>
+      <button data-view="rockdoorside">Rock door (side)</button>
+      <button data-view="forecourt">Rainy forecourt</button>
+      <button data-view="puddles">Puddles</button>
+      <button data-view="mallkiosk">Mall entrance</button>
+      <button data-view="mallstair">Mall stairs</button>
+      <button data-view="mall">Underground mall</button>
+      <button data-view="mallwest">Mall shutters</button>
+      <button data-view="mallpillars">Chrome pillars</button>
+      <button data-view="malleast">Mall deli & café</button>
+      <button data-view="stairent">Go club stairway</button>
+      <button data-view="stairsign">Stairway signs</button>
+      <button data-view="stairdown">Go club stairs (down)</button>
+      <button data-view="alleyentrance">Alley entrance</button>
+      <button data-view="alley">Market alley</button>
+      <button data-view="alleysigns">Alley signs</button>
+      <button data-view="alleyleft">Alley awning + chair</button>
+      <button data-view="alleyprops">Alley props</button>
+      <button data-view="barentrance">Bar alley entrance</button>
+      <button data-view="baralley">Bar alley</button>
+      <button data-view="barsigns">Bar alley signs</button>
+      <button data-view="barizakaya">Izakaya front</button>
+      <button data-view="bartower">Sign tower</button>
+      <button data-view="barstair">Snack bar stair</button>
+      <button data-view="barend">Bar alley end</button>
+      <button data-view="teafront">Teahouse front</button>
+      <button data-view="teaceiling">Painted ceiling</button>
+      <button data-view="tearoom">Teahouse room</button>
+      <button data-view="teabar">Tea bar</button>
+      <button data-view="van">Old van</button>
+      <button data-view="vanside">Van side</button>
+      <button data-view="abfront">Abandoned office</button>
+      <button data-view="abroom">Abandoned room</button>
+      <button data-view="abceiling">Drop ceiling</button>
+      <button data-view="abwash">Washroom alcove</button>
+      <button data-view="knotfront">Knot Room</button>
+      <button data-view="knotroom">Knot Room inside</button>
+      <button data-view="knotbar">Knot Room bar</button>
+      <button data-view="keitruck">Kei truck</button>
+      <button data-view="coach">Coach bus</button>
+      <button data-view="scout">Scout truck</button>
+      <button data-view="workvan">Work van</button>
+      <button data-view="train">Commuter train</button>
+      <button data-view="scooters">Scooters</button>
+      <button data-view="keihatch">Kei hatchback</button>
+      <button data-view="trail">Nature trail</button>
+      <button data-view="trail2">Trail shrine</button>
+      <button data-view="mosscreature">Moss creature</button>
+      <button data-view="pawnfront">Pawn shop</button>
+      <button data-view="pawnshop">Pawn shop inside</button>
+      <button data-view="posters">Gig posters</button>
+      <button data-view="snacks">Snack picnic</button>
+      <button data-view="snackshelf">Clearance shelf</button>
+      <button data-view="schoolbus">School bus</button>
+      <button data-view="stickerbox">Sticker box</button>
+      <button data-view="burl">Burl kiosk</button>
+      <button data-view="decor">Retro shelf + PC</button>
+      <button data-view="pachinko">Pachinko</button>
+      <button data-view="rose">Dried rose</button>
+      <button data-view="ebike">Folding e-bike</button>
+      <button data-view="pawnart">Pour paintings</button>
+      <button data-view="badparker">Bad parker</button>
+      <button data-view="carts">Smashed cart</button>
+      <button data-view="realty">Rental flyers</button>
+      <button data-view="robotvend">Robot vending</button>
+      <button data-view="cleanbot">Cleaning robot</button>
+      <button data-view="knotsconce">Plaster sconce</button>
+      <button data-view="noodleshop">Noodle shop</button>
+      <button data-view="foodtable">Food table</button>
+      <button data-view="foodclose">Food close-up</button>
+      <button data-view="pizzadisplay">Pizza display</button>
+      <button data-view="drinkvending">Drink vending</button>
+      <button data-view="food1">Food 1</button>
+      <button data-view="food2">Food 2</button>
+      <button data-view="food3">Food 3</button>
+      <button data-view="food4">Food 4</button>
+      <button data-view="food6">Food 6</button>
+      <button data-view="snacks1">Snacks 1</button>
+      <button data-view="snacks2">Snacks 2</button>
+      <button data-view="snacks3">Snacks 3</button>
+    </span>
+  </div>
+  <button id="use" hidden>Open</button>
+  <div id="stick"><div class="knob"></div></div>
+  <script type="module" src="src/main.js"></script>

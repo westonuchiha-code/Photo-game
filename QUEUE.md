@@ -459,6 +459,23 @@ Rules (from you):
     logistic posts, trailer number strip, ribbed floor); order-picking handheld at a shelf with a
     "discontinued, pull the tag" screen; blurry concrete floor with joints (skipped as a texture: too
     blurred). All brands, logos, product names and numbers replaced with made-up ones.
+82. Batch 82 (photos/batch82/): diamond-plate (tread plate) metal in two finishes, a purple anodized sheet
+    and a blue-grey one, close-ups with scratches and a dent. Texture-library item: seamless tread-plate tiles
+    with real raised lugs (normal map + geometry where seen up close) for truck beds, steps, ramps, toolboxes.
+    Also: a maroon plastic case covered in worn stickers (redraw generic: a dripping yellow heart with a made-up slogan
+    sticker with peeled corners, no org logos, no cartoon characters), whitewashed scraped wood (texture), and a
+    stack of thick comic/manga volumes seen edge-on (yellowed page edges, coloured cover stripes; made-up titles) on a
+    worn painted wooden box with a coin beside it.
+    Also: a grey-white veined quartz countertop (texture), and a close-up of a pale yellow/peach impasto painting with
+    black flecks (texture + normal map from its raised knife strokes; likely the user's own painting, use as-is).
+    Also: a worn flathead screwdriver (black rubber handle with two white rings, chrome shaft; no brand), an
+    off-white panel with dark pits and rust flecks (texture), and white cabinet doors with brushed-nickel mushroom
+    knobs, paint spatter and a dark gap between the doors.
+    Also textures: grey chenille upholstery fabric, heavy orange-brown rust, a blue pebbled/textured plastic, and dark oak-grain laminate with worn
+    edges.
+    Also the user's paintings (hang/use as-is): a pale blue brushed canvas with a black-line drawing of a strange
+    figure (three-eyed face, antenna-tower head, long neck), plus close-ups of a blue brushed canvas and a grey
+    brushed canvas (canvas-weave textures for painted walls / new canvases).
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"
