@@ -4,6 +4,7 @@
 // teal window trim, subway tile and lime walls, globe pendants, LED strips,
 // napkin dispensers, the framed poster, the slatted fence and wall globes outside.
 import * as THREE from 'three';
+import { finishLoading } from './loading.js';
 import { shrinkCanvases } from './texcache.js';
 import { makeTrail } from './models/trail40.js';
 import { makeGunShop } from './models/gunshop41.js';
@@ -1559,6 +1560,7 @@ function captureMallEnv() {
 }
 captureMallEnv();
 THREE.DefaultLoadingManager.onLoad = () => captureMallEnv();
+finishLoading(renderer, scene, camera);
 
 // ------------------------------------------------------------------ loop
 const clock = new THREE.Clock();

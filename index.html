@@ -38,6 +38,18 @@
   </script>
 </head>
 <body data-mode="walk">
+<div id="loader"><div class="box"><div class="title">Photo Town</div><div class="bar"><i></i></div><div class="status">Building the world…</div><div class="hint">Loading every texture first so the world runs smoothly. This can take a minute on a slow connection.</div></div></div>
+<style>
+#loader { position: fixed; inset: 0; z-index: 9999; display: grid; place-items: center; background: #0f1114; color: #e8e6e0; font: 15px/1.4 system-ui, sans-serif; transition: opacity .6s; }
+#loader.done { opacity: 0; pointer-events: none; }
+#loader .box { width: min(360px, 86vw); text-align: center; }
+#loader .title { font-size: 28px; letter-spacing: .08em; margin-bottom: 18px; }
+#loader .bar { height: 8px; border-radius: 4px; background: #2a2d33; overflow: hidden; }
+#loader .bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #d8a840, #f2d27a); transition: width .25s; }
+#loader .status { margin-top: 12px; color: #c8c4b8; }
+#loader .hint { margin-top: 18px; font-size: 13px; color: #8a8a86; }
+</style>
+
   <div id="app"></div>
   <div class="hud">
     <div class="card">
