@@ -68,7 +68,8 @@ Rules (from you):
 - 38 Bar alley signage (already built as 28i bar alley)
 - 39 Peeling sticker (approved)
 - 40 Nature trail (approved)
-- 41 Gun shop (in review)
+- 41 Gun shop (approved)
+- 42 Gig posters (in review)
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text

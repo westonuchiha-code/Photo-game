@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import { shrinkCanvases } from './texcache.js';
 import { makeTrail } from './models/trail40.js';
 import { makeGunShop } from './models/gunshop41.js';
+import { makePosterCase } from './models/posters42.js';
 import { makeKeiTruck, makeCoachBus, makeScoutTruck, makeWorkVan, makeCommuterTrain, makeTrainPlatform, PLAT_Y, makeVintageScooter, makeRustedScooter, makeKeiHatch } from './models/vehicles36.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
@@ -1149,6 +1150,9 @@ rect(TP.x - 13, TP.x + 13, TP.z + 0.05, TP.z + 4.6);                            
 const pSt = platform.userData.stairs;
 rect(TP.x - 13, TP.x + pSt.x0 - 0.05, TP.z - 3.05, TP.z - 2.9); rect(TP.x + pSt.x1 + 0.05, TP.x + 13, TP.z - 3.05, TP.z - 2.9);   // platform back edge
 rect(TP.x - 13.2, TP.x - 13, TP.z - 3, TP.z); rect(TP.x + 13, TP.x + 13.2, TP.z - 3, TP.z);
+// 42 Gig posters: a venue poster case on the restaurant's blank west wall, facing the plaza
+const posterCase = makePosterCase(); posterCase.position.set(-8.3, 0, 0); posterCase.rotation.y = -Math.PI / 2; add(posterCase);
+rect(-8.65, -8.0, -1.6, 1.6);
 // 41 Pawn & sport shop, east of the grocery lot, door facing west onto the lot
 const GSH = { x: 55.2, z: -25.5 };
 const gunShop = makeGunShop(); gunShop.position.set(GSH.x, 0, GSH.z); add(gunShop);
@@ -1363,6 +1367,7 @@ const VIEWS = {
   knotbar: { pos: [16.5, 1.6, 69.6], target: [20.2, 1.4, 69.6] },
   keitruck: { pos: [-26.2, 1.9, 48.9], target: [-22.75, 0.9, 44.5] },
   coach: { pos: [-24.5, 2.4, 27.5], target: [-29.7, 1.6, 36] },
+  posters: { pos: [-11.8, 1.6, 0.4], target: [-8.3, 1.45, 0] },
   pawnshop: { pos: [56.2, 1.6, -28.4], target: [59.0, 0.9, -25.0] },
   pawnfront: { pos: [49.5, 2.0, -24.0], target: [55.0, 2.2, -25.5] },
   trail: { pos: [-44.5, 1.7, -12.0], target: [-50, 1.4, -17] },
