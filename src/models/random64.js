@@ -188,6 +188,30 @@ function sedanWheel(s) {
   for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2; const sl = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.12, 0.01), std({ color: '#3a3c40' })); sl.position.set(Math.cos(a) * 0.13, Math.sin(a) * 0.13, s * 0.106); sl.rotation.z = a + Math.PI / 2; g.add(sl); }
   return g;
 }
+// a plain sedan in a solid paint (same body as the police car, no markings): parked cars around town
+export function makeSedan(color = '#2a2c30', seed = 1) {
+  const g = new THREE.Group(); g.name = 'sedan';
+  const car = new THREE.Group(); car.position.x = -(SXR + SXF) / 2; g.add(car);
+  const paint = phys({ color, roughness: 0.22, clearcoat: 1, metalness: 0.35 });
+  const glass = phys({ color: '#141a20', roughness: 0.04, metalness: 0.2, transparent: true, opacity: 0.7 });
+  const body = new THREE.Mesh(sedanBody(), [paint, glass]); body.castShadow = true; body.receiveShadow = true; car.add(body);
+  const floor = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.06, 1.5), std({ color: '#0c0c0c' })); floor.position.set(2.45, 0.22, 0); car.add(floor);
+  for (const xa of [SXR, SXF]) for (const s of [-1, 1]) { const w = sedanWheel(s); w.position.set(xa, SWR, s * 0.77); car.add(w); const well = new THREE.Mesh(new THREE.CylinderGeometry(0.39, 0.39, 0.3, 24, 1, true, Math.PI / 2, Math.PI), std({ color: '#0a0a0a', side: THREE.DoubleSide })); well.rotation.x = Math.PI / 2; well.position.set(xa, SWR, s * 0.7); car.add(well); }
+  for (const s of [-1, 1]) {
+    const hl = rbox(0.06, 0.1, 0.36, 0.02, phys({ color: '#f4f8fa', emissive: '#ffffff', emissiveIntensity: 0.3, roughness: 0.05 }), SL - 0.1, 0.76, s * 0.6, car); hl.rotation.y = s * 0.3;
+    rbox(0.05, 0.12, 0.42, 0.02, phys({ color: '#c8101a', emissive: '#6a0008', emissiveIntensity: 0.5, roughness: 0.1 }), 0.03, 0.82, s * 0.6, car);
+    rbox(0.12, 0.09, 0.16, 0.03, std({ color }), 3.32, 1.0, s * 0.96, car);
+    box(0.12, 0.025, 0.02, std({ color: '#c8ccd0', metalness: 0.8 }), 2.55, 0.92, s * (SHW(2.55) + 0.005), car); box(0.12, 0.025, 0.02, std({ color: '#c8ccd0', metalness: 0.8 }), 1.55, 0.93, s * (SHW(1.55) + 0.005), car);
+  }
+  // a chrome-banded black grille, a made-up plate front + back
+  plane(0.95, 0.18, std({ color: '#141414', metalness: 0.5, roughness: 0.3 }), SL - 0.05, 0.6, 0, Math.PI / 2, car); box(0.02, 0.03, 0.95, std({ color: '#d8dce0', metalness: 0.9, roughness: 0.2 }), SL - 0.04, 0.64, 0, car);
+  const num = ['KTR 2210', 'BLV 4417', 'MPL 0952'][seed % 3];
+  const plateT = canvasT(330, 165, (x, w, h) => { x.fillStyle = '#f4f2ea'; x.fillRect(0, 0, w, h); x.fillStyle = '#1a3a8a'; fitText(x, 'ELM COUNTY', w / 2, 24, 220, 20, F.label, { spacing: 3 }); fitText(x, num, w / 2, 96, 290, 76, F.label, { weight: 700 }); });
+  plane(0.33, 0.165, std({ map: plateT }), SL + 0.005, 0.42, 0, Math.PI / 2, car); plane(0.33, 0.165, std({ map: plateT }), -0.005, 0.5, 0, -Math.PI / 2, car);
+  for (const s of [-1, 1]) box(0.5, 0.65, 0.48, std({ color: '#2a2a2c' }), 2.35, 0.75, s * 0.38, car);
+  g.userData.collider = [-SL / 2 - 0.1, SL / 2 + 0.1, -0.95, 0.95];
+  return g;
+}
 export function makePoliceSedan() {
   const g = new THREE.Group(); g.name = 'police_sedan';
   const car = new THREE.Group(); car.position.x = -(SXR + SXF) / 2; g.add(car);

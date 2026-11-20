@@ -31,6 +31,7 @@ export const LOTS = [
   { id: 'pottery', x0: 99, x1: 112, z0: -16, z1: -7, face: 's', built: true },     // Kiln & Co. pottery (item 70)
   { id: 'izakaya', x0: 112, x1: 121, z0: -15, z1: -7, face: 's', built: true },    // old izakaya (item 70)
   { id: 'ruins', x0: 122, x1: 154, z0: -22, z1: -7, face: 's', built: true },      // aqueduct garden + plaza (item 70)
+  { id: 'pinkhouse', x0: 168, x1: 182, z0: 63, z1: 77, face: 's', built: true },   // pink bungalow (item 71)
   { id: 'lotD', x0: 210, x1: 236, z0: -31, z1: -7, face: 's', built: true },   // canal walkway park (item 67)
 ];
 

@@ -15,11 +15,12 @@ import { makeTreatmentWing } from './models/treatment58.js';
 import { makeUtilityLot } from './models/utility59.js';
 import { makeCoupe } from './models/coupe61.js';
 import { makeStorageRow } from './models/storage62.js';
-import { makeCornerStore, makePoliceSedan, makeAircraftCarport } from './models/random64.js';
+import { makeCornerStore, makePoliceSedan, makeSedan, makeAircraftCarport } from './models/random64.js';
 import { makeCafeFrontage } from './models/signs65.js';
 import { makeCanalPark } from './models/misc67.js';
 import { makeArtGallery } from './models/inspo68.js';
 import { makeWarehouseStore } from './models/inspo69.js';
+import { makeBackroomCorner, makeGameShelf, makeBinShelf, makePinkHouse } from './models/inspo71.js';
 import { makeAqueductGarden, makeIzakaya, makePotteryGallery, makeBarrelPlanter, makeCurvedBench, makeWifiStand, makeWeepingMaple, makePizzaAFrame, makeComicVending, makeStickerPost, makeMural as makeRainbowMural } from './models/inspo70.js';
 import { makeGunShop } from './models/gunshop41.js';
 import { makePosterCase } from './models/posters42.js';
@@ -1357,6 +1358,21 @@ for (const [x, z] of [[143.5, -17.5], [150.5, -17.5], [143.5, -11.5]]) placeL(ma
 placeL(makeCurvedBench(), 147, -16.2, Math.PI, 0); placeL(makeCurvedBench(), 147, -12.0, 0, 0);
 placeL(makeWeepingMaple(), 150.5, -11.0, 0, 0); placeL(makeWifiStand(), 152.4, -8.2, 0, 0);
 placeL(makePizzaAFrame(), 101.2, -6.1, 0.3); placeL(makeComicVending(), 110.6, -6.5, 0); placeL(makeStickerPost(), 121.6, -5.6, 0);
+// 71 Inspiration 6: the Bulk Barn staff corner (walk-in egg cooler, baler, bags of plastic, shelf strips, taped notices),
+// a used-games shelf in its electronics corner, a shelf of clear bins + yakisoba; a pink bungalow with a bottle tree
+// on the residential street at z = 84 (pink crown TV in the front room), a dark and a white sedan at the curb
+const whPut = (o, lx, lz, ry = 0) => { o.position.set(lx, 0, lz); o.rotation.y = ry; whs.add(o); const cs = o.userData.colliders || (o.userData.collider ? [o.userData.collider] : []);
+  const q = Math.round(ry / (Math.PI / 2)) & 3;
+  for (const [a, b, c0, c1] of cs) { let r; if (q === 0) r = [a, b, c0, c1]; else if (q === 2) r = [-b, -a, -c1, -c0]; else if (q === 1) r = [c0, c1, -b, -a]; else r = [-c1, -c0, a, b];
+    rect(WH.x - (lx + r[1]), WH.x - (lx + r[0]), WH.z - (lz + r[3]), WH.z - (lz + r[2])); } };
+whPut(makeBackroomCorner(), 15.6, -10.9);
+whPut(makeGameShelf(), -19.6, -6.5, Math.PI / 2);
+whPut(makeBinShelf(), -6, -1.6);
+const PH = { x: 175, z: 74.6 };
+const pink = makePinkHouse(); pink.position.set(PH.x, 0.02, PH.z); add(pink);
+for (const [x0, x1, z0, z1] of pink.userData.colliders) rect(PH.x + x0, PH.x + x1, PH.z + z0, PH.z + z1);
+{ const s1 = makeSedan('#26282c', 1); s1.position.set(170.5, 0.012, 80.4); add(s1); rect(168, 173, 79.45, 81.35);
+  const s2 = makeSedan('#eef0f0', 2); s2.position.set(179.0, 0.012, 80.4); add(s2); rect(176.5, 181.5, 79.45, 81.35); }
 const dnAreas = [...dentist.userData.areas, ...wing.userData.areas].map((a) => { const [minX, maxX, minZ, maxZ] = dnW([a.minX, a.maxX, a.minZ, a.maxZ]); return { minX, maxX, minZ, maxZ }; });
 
 const walk = new WalkControls(camera, renderer.domElement, {
@@ -1511,6 +1527,11 @@ const VIEWS = {
   izakaya: { pos: [114.0, 1.7, -2.6], target: [116.8, 2.6, -7.2] },
   pottery: { pos: [107.5, 1.7, -8.3], target: [103, 1.0, -12.5] },
   aqueduct: { pos: [131.6, 1.6, -6.0], target: [130.8, 1.0, -15] },
+  backroom: { pos: [275.5, 1.7, 112.0], target: [270.5, 1.2, 119.5] },
+  gameshelf: { pos: [304.2, 1.9, 114.0], target: [305.6, 1.3, 114.5] },
+  binshelf: { pos: [292.0, 1.5, 107.5], target: [292.0, 0.9, 109.6] },
+  pinkhouse: { pos: [181.5, 1.7, 84.5], target: [175, 1.5, 74] },
+  pinktv: { pos: [177.7, 1.5, 76.0], target: [177.9, 1.0, 73.2] },
   stationplaza: { pos: [146.0, 1.7, -6.2], target: [148, 1.2, -16] },
   warehouse: { pos: [-33.0, 2.4, -1.0], target: [-44.0, 4.5, -3.0] },
   ovalbuilding: { pos: [-25.5, 2.4, 1.5], target: [-25.5, 4.5, -14.0] },

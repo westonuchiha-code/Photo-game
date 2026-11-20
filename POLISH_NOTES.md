@@ -213,3 +213,12 @@ This is a running list, added to as models get built. Nothing here is urgent.
 - 68 Inspiration 3: the gallery is a single white room (no second room / office); paintings use the photos as-is (some have a little background at the edges); the chip-aisle shelf with tags is represented by the display tower in Corner Mart only; curry is a displaced dome with the photo surface.
 - 69 Inspiration 4 (Bulk Barn warehouse store): shelf goods are printed fronts on the steel runs (not individual boxes); interior walls reuse the exterior brick (photo shows block/ply inside); the console figure is a tiny simple doll; the moon halo is a sprite (the full-moon photo isn't used yet; the sky keeps the user's half moon); donut decorations are generic pixel critters.
 - 70 Inspiration 5: not built — the arcade corridor + overhead arcade balcony views (the mall already covers this look); the izakaya's lettering is a script word cut in gold strokes, boards are boxes; the aqueduct blocks are jittered boxes (could be sculpted with real tool marks + moss geometry); hydrangeas/ferns are simple cards; the weeping maple is instanced leaf cards; sticker post stickers are redrawn generic.
+
+## 71 Inspiration 6
+- Bulk Barn staff corner (walk-in egg cooler, baler, clear plastic bags, shelf-strip box): the cooler could get a
+  working door the player can push, frost on the inside panels, a hum.
+- Used-games shelf: cases are real boxes with an atlas of 32 made-up spines; could add price stickers and let the
+  player pick up the open case.
+- Pink house: hip roof is a scaled cone (fine from the street); a proper hipped roof with fascia + gutters would be
+  nicer. The orange full moon photo is not used yet (could be an optional "harvest moon" sky state).
+- Parked sedans share the police car body; a second body style (hatchback / SUV) would add variety.

@@ -98,7 +98,8 @@ Rules (from you):
 - 67 Misc 3 (approved)
 - 68 Inspiration 3 (approved)
 - 69 Inspiration 4 (approved)
-- 70 Inspiration 5 (in review)
+- 70 Inspiration 5 (approved)
+- 71 Inspiration 6 (in review)
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
@@ -490,6 +491,41 @@ Rules (from you):
     sandy dirt as textures.
     Also textures: sandy dirt with scattered pink/grey granite pebbles (sun-lit, hard shadows) and fine decomposed-
     granite gravel with pine needles (good ground for lots, paths and the trail).
+    Also: a 12 oz red cola can on a broom-finish concrete ledge by a black steel railing (made-up brand, deep
+    red metallic can with a white swirl logo), and a beige rounded-top fibreglass utility pedestal with a peeling
+    orange cable-warning sticker (redrawn generic) in pink/grey crushed-rock landscaping against a concrete wall.
+    Also: a commercial gas meter manifold on a tan/red two-tone brick wall (grey pipe loop, regulators, valves,
+    rusty riser, a grey meter cabinet with a digital readout, two conduits up the wall), juniper shrubs and tall
+    dry ornamental grass in front, a yellow bollard on the sidewalk.
+84. Batch 84 (photos/batch84/): a red dry-barrel fire hydrant (two views) in cracked dry clay with weeds: bonnet
+    with a pentagon operating nut, a bolted flange ring, a big pumper nozzle cap and two hose caps on chains, a cast
+    year on the barrel (keep only a plain number). Model it properly and place a few at curbs.
+    Also textures: tree bark x3 (smooth grey bark scored with sap-bleeding cuts; a split trunk with peeled orange
+    inner bark; shaggy grey bark with rust-brown fibre in the furrows), a cut stump top with rings and cracks in a bed
+    of dry willow leaves and pine needles, tan/brown wire-cut face brick with sandy mortar, and an off-white painted
+    steel panel with scratches and rust along the bottom rail.
+    Also: a bronze wall-pack light (sloped hood, frosted lens, two screws) on tan sand-finish stucco with a raised
+    trim band and control joint above a door; a weathered yellow steel bollard (textures: thick yellow paint peeling to
+    grey primer, blue and orange under-layers, scuffs and pen marks, a rust-eaten base) + a pitted rust close-up.
+    Also: a bakery table of single cake slices in clear clamshells (strawberry with cream-cheese icing + pink crumbs,
+    yellow cake with fudge icing + crunchy chocolate pearls, red velvet with crumbs, caramel, confetti, chocolate);
+    a round pale-blue made-up bakery sticker on each lid, white SELL BY price stickers (made-up prices), a black
+    sign stand, a lower shelf of chocolate slabs. Model the slices (layered cake, combed icing ridges) in the boxes.
+85. Batch 85 (photos/batch85/): a store-front corner: a four-tier pale-blue corrugated cardboard display tower of
+    clamshell packs of frosted sugar cookies with red + chocolate sprinkles, a yellow "$5" shelf tag (made-up shop
+    name and slogan on the tray fronts), next to an oak flyer shelf (rounded sides, three shelves, brass corner
+    caps) stacked with weekly ad flyers, coupon pads and pamphlets (all redrawn: made-up store, prices, items; no
+    real brands, QR codes or phone numbers), under a granite service counter with taped printed notices and a
+    "NOW HIRING" stand-up card (generic).
+    Also park/trail pieces: a brown domed trash can with a pull-handle lid, a cracked "TRASH ONLY" disc, an orange
+    liner held by two straps over a ribbed galvanized can on a concrete pad; a rusted steel barrel with a black liner
+    tied to a weathered square wooden post in dry grass and leaves (cattail field behind); a shallow clear creek over
+    pebbles with pale fallen branches and willow leaves (water + creek-bed texture); and a concrete twin-culvert
+    headwall (two round pipes) where the creek runs under a path, with watercress and dry grass on the banks.
+    Also texture: bright blue pebble-grain moulded plastic with light scuffs (bins, kids' furniture, a slide).
+    Also textures: vertically brushed bronze/dark-gold metal (elevator doors, trim), pink-tinted broom-finish concrete
+    with a few dark drips, grey exposed-aggregate concrete with a long hairline crack and oil spots. And a glossy white
+    plastic ball (small seam dimple) resting on a black steel slatted bench (curved flat bars, sand-cast texture).
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"
