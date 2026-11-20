@@ -5,6 +5,7 @@
 // flour bags, soda can trays, water packs, juice bottles, crates, totes and a yellow dolly.
 // All brand names are made up.
 import * as THREE from 'three';
+import { makeBlueCrate } from './grime39.js';
 
 const std = (o) => new THREE.MeshStandardMaterial({ roughness: 0.7, ...o });
 const _L = new THREE.TextureLoader();
@@ -417,6 +418,10 @@ export function makeStockroom() {
   const d = dolly(); d.position.set(3.0, 0, -10.6); d.rotation.y = 0.4; g.add(d);
   const tray = box(0.5, 0.08, 0.4, M.cardboard, 5.0, 0.04, -11.0); tray.rotation.y = -0.3; g.add(tray);
   wrapAround(g, 0.5, 0.12, 0.4, 5.0, 0, -11.0);
+  // a stack of blue crates of pulled stock with torn labels (item 39)
+  [[1.95, 0, -11.75, 0.05, 'DISCONTINUED', '#ff2bb8'], [1.95, 0.3, -11.75, -0.04, 'CLEARANCE', '#ff7a1a'], [1.95, 0.6, -11.72, 0.08, null], [2.0, 0, -11.25, 0.1, 'SALE', '#ffe01a']].forEach(([cx, cy, cz, ry, lb, lc], i) => {
+    const c = makeBlueCrate({ label: lb, labelCol: lc, seed: i }); c.position.set(cx, cy, cz); c.rotation.y = Math.PI / 2 + ry; g.add(c); });
+  solid(1.7, 2.25, -12.1, -10.9);
   // gallon water jug on the floor
   const jug = bottleCluster(1, 1, '#eef2f4', '#e9e9e9', 0.3, 0.075);
   jug.position.set(6.4, 0, -12.4);

@@ -64,7 +64,9 @@ Rules (from you):
 ## In review
 - 35 Claw hammer (done, parked)
 - 36 Vehicles (approved; river boat skipped)
-- 37 Retro electronics (in review)
+- 37 Retro electronics (approved; steam loco cab skipped)
+- 38 Bar alley signage (already built as 28i bar alley)
+- 39 Peeling sticker (in review)
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
