@@ -80,7 +80,8 @@ Rules (from you):
 - 50 Bad-parker easter egg (approved)
 - 51 Smashed cart (approved)
 - 52 Listing posters (approved)
-- 53 Robot vending (in review)
+- 53 Robot vending (approved)
+- 54 Cleaning robot (in review)
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text

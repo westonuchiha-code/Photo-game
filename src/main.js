@@ -18,6 +18,7 @@ import { makeCompactCorner } from './models/badparker50.js';
 import { makeCartCorral } from './models/cart51.js';
 import { makeRealtyWindow } from './models/listings52.js';
 import { makeRobotVending, makePlainVending } from './models/robotvend53.js';
+import { makeCleanBot } from './models/cleanbot54.js';
 import { makeKeiTruck, makeCoachBus, makeScoutTruck, makeWorkVan, makeCommuterTrain, makeTrainPlatform, PLAT_Y, makeVintageScooter, makeRustedScooter, makeKeiHatch } from './models/vehicles36.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
@@ -1170,6 +1171,9 @@ for (const [x0, x1, z0, z1] of bpc.userData.colliders) colliders.push({ type: 'b
 const RW = { x: -14.4, z: 47.75 };
 { const rw = makeRealtyWindow(); rw.position.set(RW.x, 0, RW.z); add(rw); rect(RW.x - 1.9, RW.x + 1.9, RW.z - 0.3, RW.z + 0.05);
   add(plane(mats.lotConcrete, -19.7, -9.2, 47.4, 51.9, 0.005, 4)); }
+// 54 Cleaning robot: patrols the underground mall hall (a loop around the burl kiosk and down the pillar line)
+const cleanBot = makeCleanBot(); cleanBot.position.y = -4.2; add(cleanBot);
+const cleanBotUpdate = cleanBot.userData.patrol([[MALL.x + 1.2, MALL.z - 12], [MALL.x + 1.2, MALL.z + 10], [MALL.x - 4.5, MALL.z + 10], [MALL.x - 4.5, MALL.z - 12]]);
 // 53 Robot vending machine, beside an ordinary blue and red machine, along the same wall west of the realty window
 { const rv = makeRobotVending(); rv.position.set(-17.85, 0, 48.05); add(rv); rect(-18.7, -17.1, 47.6, 48.7);
   const b = makePlainVending('#1d4aa8'); b.position.set(-16.55, 0, 47.85); add(b); rect(-17.05, -16.05, 47.45, 48.25);
@@ -1417,6 +1421,7 @@ const VIEWS = {
   knotbar: { pos: [16.5, 1.6, 69.6], target: [20.2, 1.4, 69.6] },
   keitruck: { pos: [-26.2, 1.9, 48.9], target: [-22.75, 0.9, 44.5] },
   coach: { pos: [-24.5, 2.4, 27.5], target: [-29.7, 1.6, 36] },
+  cleanbot: { pos: [MALL.x - 1.6, -2.7, MALL.z + 12.5], target: [MALL.x - 1.6, -4.0, MALL.z - 2] },
   robotvend: { pos: [-17.6, 1.6, 51.4], target: [-17.9, 1.2, 48.0] },
   realty: { pos: [RW.x + 0.4, 1.7, RW.z + 3.6], target: [RW.x, 1.8, RW.z] },
   carts: { pos: [14.0, 1.7, -19.6], target: [14.0, 0.5, -22.3] },
@@ -1621,6 +1626,7 @@ function frame() {
   soupPots.forEach((p) => p.userData.update(t));
   puffCup.userData.update(t);
   creep.userData.update(t);
+  cleanBotUpdate(t);
   (alley.userData.anim || []).forEach((a) => a.userData.update(t));
   cart.userData.update(t);
   {
