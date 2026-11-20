@@ -165,3 +165,4 @@ This is a running list, added to as models get built. Nothing here is urgent.
 - Vintage scooter: cowl piping is lumpy (sampled onto the surface), horn grille sits a little off-centre; compare to the photo again.
 - Work van / coach: the front and back faces are drawn, not from photos.
 - River boat (futuristic-river-boat*) skipped at the user's request.
+- 37: sound card daughterboard still shows faint acrylic glare streaks (from the photo).
