@@ -21,7 +21,7 @@ export const GRID = {
 const SW_H = 0.14;                // sidewalk top
 // reserved lots: kept empty of generated buildings (front = the street side)
 export const LOTS = [
-  { id: 'dentist', x0: 82, x1: 108, z0: 28, z1: 50, face: 'w' },
+  { id: 'dentist', x0: 82, x1: 108, z0: 28, z1: 50, face: 'w', built: true },   // Brightwater Dental (item 57)
   { id: 'lotB', x0: 82, x1: 104, z0: -50, z1: -30, face: 'w' },
   { id: 'lotC', x0: 175, x1: 195, z0: 91, z1: 115, face: 'n' },
   { id: 'lotD', x0: 210, x1: 236, z0: -31, z1: -7, face: 's' },
@@ -256,6 +256,7 @@ export function makeDistrict() {
   // ---- reserved lots, for now vacant: cracked concrete pad, a chain-link fence on posts along the street side
   // with a gate gap, and a lease board
   for (const L of LOTS) {
+    if (L.built) continue;
     bin.push('lot', flatQuad(L.x0, L.x1, L.z0, L.z1, 0.02, 3, 3));
     const [ax, az, bx, bz] = { w: [L.x0, L.z0, L.x0, L.z1], e: [L.x1, L.z1, L.x1, L.z0], n: [L.x1, L.z0, L.x0, L.z0], s: [L.x0, L.z1, L.x1, L.z1] }[L.face];
     const len = Math.hypot(bx - ax, bz - az), dx = (bx - ax) / len, dz = (bz - az) / len;

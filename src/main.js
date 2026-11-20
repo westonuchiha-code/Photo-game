@@ -10,6 +10,7 @@ import { makeTrail } from './models/trail40.js';
 import { makeMossCreature, makeMossMound } from './models/creature55.js';
 import { makeThriftCorner } from './models/fabrics56.js';
 import { makeDistrict } from './models/district.js';
+import { makeDentistOffice } from './models/dentist57.js';
 import { makeGunShop } from './models/gunshop41.js';
 import { makePosterCase } from './models/posters42.js';
 import { makeSchoolBus } from './models/bus44.js';
@@ -1279,6 +1280,12 @@ const mallAreas = mall.userData.areas.map((a) => ({ ...a, minX: a.minX + MALL.x,
 const district = makeDistrict(); add(district);
 for (const [x, z] of district.userData.lampPosts) circle(x, z, 0.18);
 for (const [x, z] of district.userData.treePosts) circle(x, z, 0.25);
+// 57 Brightwater Dental: on its lot on Cedar Avenue (local +z = the storefront, facing the avenue, -x)
+const DN = { x: 95, z: 39 };
+const dentist = makeDentistOffice(); dentist.position.set(DN.x, 0.14, DN.z); dentist.rotation.y = -Math.PI / 2; add(dentist);
+const dnW = ([x0, x1, z0, z1]) => [DN.x - z1, DN.x - z0, DN.z + x0, DN.z + x1];   // local rect -> world rect
+for (const c of dentist.userData.colliders) rect(...dnW(c));
+const dnAreas = dentist.userData.areas.map((a) => { const [minX, maxX, minZ, maxZ] = dnW([a.minX, a.maxX, a.minZ, a.maxZ]); return { minX, maxX, minZ, maxZ }; });
 
 const walk = new WalkControls(camera, renderer.domElement, {
   bounds: null,
@@ -1307,6 +1314,7 @@ const walk = new WalkControls(camera, renderer.domElement, {
     gshArea, // the pawn & sport shop
     { minX: TP.x - 12.8, maxX: TP.x + 12.8, minZ: TP.z - 5.2, maxZ: TP.z - 0.3 }, // train platform + its stairs
     ...district.userData.areas, // the district's streets + sidewalks
+    ...dnAreas, // the dentist's waiting room + its door
   ],
   colliders,
 });
@@ -1323,6 +1331,7 @@ walk.ground = (x, z, prevY) => {
   if (mh > 0) return mh;
   const dy = district.userData.floorY(x, z);
   if (dy !== null) return dy;
+  if (x > 81.3 && x < 108 && z > 28 && z < 50) return 0.14;   // the dentist office floor
   const ay = apt.userData.floorY(z - AP.z, AP.x - x, prevY);
   return ay !== null ? ay : rampFloorY(x, z);
 };
@@ -1424,6 +1433,9 @@ const VIEWS = {
   vendingclose: { pos: [-0.75, 1.55, 10.85], target: [-0.85, 1.45, 11.7] },
   vendinglow: { pos: [-0.8, 0.95, 10.75], target: [-0.85, 0.7, 11.7] },
   junkshop: { pos: [6.8, 1.8, 13.2], target: [1.5, 1.0, 20.5] },
+  dentist: { pos: [91.2, 1.75, 40.0], target: [84, 1.1, 31.5] },
+  dentist2: { pos: [84.3, 1.8, 34.5], target: [93.5, 1.0, 38.6] },
+  dentistfront: { pos: [72, 2.2, 39], target: [83, 3.0, 39] },
   avenue: { pos: [71.5, 1.8, -12], target: [78, 4, 60] },
   downtown: { pos: [241, 1.8, -30], target: [247, 6, 60] },
   cityair: { pos: [30, 70, -110], target: [210, 0, 20] },
