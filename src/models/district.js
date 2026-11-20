@@ -22,7 +22,7 @@ const SW_H = 0.14;                // sidewalk top
 // reserved lots: kept empty of generated buildings (front = the street side)
 export const LOTS = [
   { id: 'dentist', x0: 82, x1: 108, z0: 28, z1: 50, face: 'w', built: true },   // Brightwater Dental (item 57)
-  { id: 'lotB', x0: 82, x1: 104, z0: -50, z1: -30, face: 'w' },
+  { id: 'lotB', x0: 82, x1: 104, z0: -50, z1: -30, face: 'w', built: true },   // utility + parking lot (item 59)
   { id: 'lotC', x0: 175, x1: 195, z0: 91, z1: 115, face: 'n' },
   { id: 'lotD', x0: 210, x1: 236, z0: -31, z1: -7, face: 's' },
 ];

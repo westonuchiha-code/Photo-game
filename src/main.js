@@ -12,6 +12,7 @@ import { makeThriftCorner } from './models/fabrics56.js';
 import { makeDistrict } from './models/district.js';
 import { makeDentistOffice } from './models/dentist57.js';
 import { makeTreatmentWing } from './models/treatment58.js';
+import { makeUtilityLot } from './models/utility59.js';
 import { makeGunShop } from './models/gunshop41.js';
 import { makePosterCase } from './models/posters42.js';
 import { makeSchoolBus } from './models/bus44.js';
@@ -1289,6 +1290,12 @@ const dnW = ([x0, x1, z0, z1]) => [DN.x - z1, DN.x - z0, DN.z + x0, DN.z + x1]; 
 const wing = makeTreatmentWing(); dentist.add(wing);
 for (const c of wing.userData.colliders) rect(...dnW(c));
 for (const c of dentist.userData.colliders) rect(...dnW(c));
+// 59 utility + parking lot on Cedar Avenue (lot B): transformer, wall cabinets, telecom pedestal, sprinkler connection,
+// accessible stall + signs, fallen leaves
+const UL = { x: 93, z: -40 };
+const ulot = makeUtilityLot(); ulot.position.set(UL.x, 0, UL.z); add(ulot);
+for (const [x0, x1, z0, z1] of ulot.userData.colliders) rect(UL.x + x0, UL.x + x1, UL.z + z0, UL.z + z1);
+const ulArea = (() => { const a = ulot.userData.area; return { minX: UL.x + a.minX, maxX: UL.x + a.maxX, minZ: UL.z + a.minZ, maxZ: UL.z + a.maxZ }; })();
 const dnAreas = [...dentist.userData.areas, ...wing.userData.areas].map((a) => { const [minX, maxX, minZ, maxZ] = dnW([a.minX, a.maxX, a.minZ, a.maxZ]); return { minX, maxX, minZ, maxZ }; });
 
 const walk = new WalkControls(camera, renderer.domElement, {
@@ -1319,6 +1326,7 @@ const walk = new WalkControls(camera, renderer.domElement, {
     { minX: TP.x - 12.8, maxX: TP.x + 12.8, minZ: TP.z - 5.2, maxZ: TP.z - 0.3 }, // train platform + its stairs
     ...district.userData.areas, // the district's streets + sidewalks
     ...dnAreas, // the dentist's waiting room + its door
+    ulArea, // the utility + parking lot
   ],
   colliders,
 });
@@ -1441,6 +1449,9 @@ const VIEWS = {
   dentist2: { pos: [84.3, 1.8, 34.5], target: [93.5, 1.0, 38.6] },
   operatory: { pos: [97.25, 1.85, 30.1], target: [100.6, 0.95, 29.8] },
   operatory2: { pos: [99.6, 1.8, 28.6], target: [97.6, 0.9, 30.4] },
+  parkinglot: { pos: [86.5, 2.4, -46.5], target: [102, 1.0, -40] },
+  utility: { pos: [98.5, 1.7, -38.0], target: [103.6, 1.4, -35.4] },
+  transformer: { pos: [87.6, 1.7, -42.4], target: [83.8, 0.9, -46.2] },
   dentistfront: { pos: [72, 2.2, 39], target: [83, 3.0, 39] },
   avenue: { pos: [71.5, 1.8, -12], target: [78, 4, 60] },
   downtown: { pos: [241, 1.8, -30], target: [247, 6, 60] },
