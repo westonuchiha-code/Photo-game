@@ -13,6 +13,7 @@ import { makeDistrict } from './models/district.js';
 import { makeDentistOffice } from './models/dentist57.js';
 import { makeTreatmentWing } from './models/treatment58.js';
 import { makeUtilityLot } from './models/utility59.js';
+import { makeCoupe } from './models/coupe61.js';
 import { makeGunShop } from './models/gunshop41.js';
 import { makePosterCase } from './models/posters42.js';
 import { makeSchoolBus } from './models/bus44.js';
@@ -1296,6 +1297,10 @@ const UL = { x: 93, z: -40 };
 const ulot = makeUtilityLot(); ulot.position.set(UL.x, 0, UL.z); add(ulot);
 for (const [x0, x1, z0, z1] of ulot.userData.colliders) rect(UL.x + x0, UL.x + x1, UL.z + z0, UL.z + z1);
 const ulArea = (() => { const a = ulot.userData.area; return { minX: UL.x + a.minX, maxX: UL.x + a.maxX, minZ: UL.z + a.minZ, maxZ: UL.z + a.maxZ }; })();
+// 61 sport coupe: parked nose-in in a regular stall of the utility lot; a crashed one nosed into the fence of the
+// vacant lot downtown (lot D, its fence on the z = -7 side)
+const coupe = makeCoupe(); coupe.position.set(UL.x + 7.7, 0.025, UL.z + 4.85); add(coupe); rect(UL.x + 5.4, UL.x + 9.95, UL.z + 3.95, UL.z + 5.75);
+const wreck = makeCoupe({ crashed: true }); wreck.position.set(223, 0.02, -9.3); wreck.rotation.y = -Math.PI / 2 + 0.12; add(wreck); rect(221.9, 224.1, -12.2, -7.2);
 const dnAreas = [...dentist.userData.areas, ...wing.userData.areas].map((a) => { const [minX, maxX, minZ, maxZ] = dnW([a.minX, a.maxX, a.minZ, a.maxZ]); return { minX, maxX, minZ, maxZ }; });
 
 const walk = new WalkControls(camera, renderer.domElement, {
@@ -1449,6 +1454,8 @@ const VIEWS = {
   dentist2: { pos: [84.3, 1.8, 34.5], target: [93.5, 1.0, 38.6] },
   operatory: { pos: [97.25, 1.85, 30.1], target: [100.6, 0.95, 29.8] },
   operatory2: { pos: [99.6, 1.8, 28.6], target: [97.6, 0.9, 30.4] },
+  coupe: { pos: [96.0, 1.5, -31.6], target: [100.6, 0.6, -35.2] },
+  coupewreck: { pos: [226.8, 1.6, -3.6], target: [222.6, 0.6, -8.8] },
   parkinglot: { pos: [86.5, 2.4, -46.5], target: [102, 1.0, -40] },
   stall: { pos: [96.0, 1.75, -40.55], target: [100.5, 0.0, -40.55] },
   signs: { pos: [100.3, 1.7, -44.2], target: [104, 1.3, -44.4] },

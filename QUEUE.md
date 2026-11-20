@@ -88,7 +88,8 @@ Rules (from you):
 - 57 Dentist waiting room (approved)
 - 58 Dentist treatment room (approved)
 - 59 Utility + parking decoration (approved)
-- 60 Texture library (in review)
+- 60 Texture library (approved)
+- 61 Sport coupe (in review)
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
