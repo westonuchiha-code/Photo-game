@@ -10,6 +10,7 @@ import { F, fitText } from '../fonts.js';
 const _L = new THREE.TextureLoader();
 function tex(name, rep) { const t = _L.load(`assets/textures/${name}.png`); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; if (rep) { t.wrapS = t.wrapT = THREE.RepeatWrapping; } return t; }
 function box(w, h, d, mat, x, y, z, parent) { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat); m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true; parent.add(m); return m; }
+function cyl(r, h, mat, parent, segs = 16) { const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, segs), mat); m.castShadow = true; parent.add(m); return m; }
 function tube(a, b, r, mat, parent) {
   const d = new THREE.Vector3().subVectors(b, a), m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, d.length(), 10), mat);
   m.position.copy(a).addScaledVector(d, 0.5); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize()); m.castShadow = true; parent.add(m); return m;
@@ -967,8 +968,8 @@ export function makeKeiHatch() {
   const xT = -0.44, xN = 3.05, SILL = 0.24;
   const lerp = (pts, x) => { for (let i = 1; i < pts.length; i++) if ((x - pts[i - 1][0]) * (x - pts[i][0]) <= 0 && pts[i][0] !== pts[i - 1][0]) { const [a, b] = pts[i - 1], [c, d] = pts[i]; return b + (d - b) * (x - a) / (c - a); } return null; };
   // top line: walk the outline's upper part (x increasing from the tail top to the nose top)
-  const UP = [[-0.36, 1.27], [-0.22, 1.38], [0.1, 1.41], [1.5, 1.42], [1.76, 1.39], [2.3, 0.98], [2.7, 0.91], [3.05, 0.85]];
-  const topY = (x) => { if (x <= UP[0][0]) return UP[0][1] - (UP[0][0] - x) * 2.4; if (x >= UP[UP.length - 1][0]) return UP[UP.length - 1][1] - (x - UP[UP.length - 1][0]) * 3; return lerp(UP, x); };
+  const UP = [[-0.44, 1.2], [-0.33, 1.36], [-0.15, 1.41], [1.5, 1.42], [1.76, 1.39], [2.3, 0.98], [2.7, 0.91], [3.05, 0.85]];
+  const topY = (x) => { if (x <= UP[0][0]) return UP[0][1]; if (x >= UP[UP.length - 1][0]) return UP[UP.length - 1][1] - (x - UP[UP.length - 1][0]) * 3; return lerp(UP, x); };
   const botY = (x) => {
     let y = SILL + 0.06 * THREE.MathUtils.smoothstep(x, 2.75, 3.03) + 0.06 * (1 - THREE.MathUtils.smoothstep(x, -0.44, -0.2));
     for (const c of [0, WB]) { const d = x - c; if (Math.abs(d) < AR) y = Math.max(y, R + Math.sqrt(AR * AR - d * d)); }
@@ -1012,6 +1013,17 @@ export function makeKeiHatch() {
       x.fillStyle = gr; x.fillRect(PX(2.45), PY(0.97), PX(3.2) - PX(2.45), PY(0.28) - PY(0.97));
       x.fillStyle = '#c6c6c8'; x.fillRect(PX(-0.62), PY(1.46), PX(-0.2) - PX(-0.62), PY(0.3) - PY(1.46));
       const g2 = x.createLinearGradient(PX(-0.2), 0, PX(0.12), 0); g2.addColorStop(0, '#c6c6c8'); g2.addColorStop(1, 'rgba(198,198,200,0)'); x.fillStyle = g2; x.fillRect(PX(-0.2), PY(1.46), PX(0.12) - PX(-0.2), PY(1.0) - PY(1.46));
+      // rear quarter: silver C-pillar with a small dark quarter window, the same black surround as the doors
+      x.fillStyle = '#c4c5c7'; x.beginPath(); x.moveTo(PX(-0.62), PY(1.46)); x.lineTo(PX(0.11), PY(1.46)); x.lineTo(PX(0.11), PY(0.95)); x.lineTo(PX(-0.62), PY(0.95)); x.fill();
+      x.fillStyle = '#18191b'; x.beginPath(); x.moveTo(PX(-0.02), PY(1.3)); x.lineTo(PX(-0.2), PY(1.3)); x.lineTo(PX(-0.36), PY(1.02)); x.lineTo(PX(-0.02), PY(0.99)); x.closePath(); x.fill();
+      const qg = x.createLinearGradient(0, PY(1.28), 0, PY(1.0)); qg.addColorStop(0, '#4a5258'); qg.addColorStop(1, '#22272b'); x.fillStyle = qg;
+      x.beginPath(); x.moveTo(PX(-0.04), PY(1.27)); x.lineTo(PX(-0.19), PY(1.27)); x.lineTo(PX(-0.32), PY(1.04)); x.lineTo(PX(-0.04), PY(1.02)); x.closePath(); x.fill();
+      x.fillStyle = '#c4c5c7'; x.fillRect(PX(-0.62), PY(1.46), PX(0.55) - PX(-0.62), PY(1.345) - PY(1.46));
+      // lower doors: clean silver where the old livery was painted out, a dark sill strip at the bottom
+      const sg2 = x.createLinearGradient(0, PY(0.4), 0, PY(0.24)); sg2.addColorStop(0, '#c2c3c5'); sg2.addColorStop(1, '#a6a7a9');
+      x.fillStyle = sg2; x.fillRect(PX(0.33), PY(0.4), PX(2.03) - PX(0.33), PY(0.25) - PY(0.4));
+      x.fillStyle = '#2a2b2d'; x.fillRect(PX(0.33), PY(0.27), PX(2.03) - PX(0.33), PY(0.24) - PY(0.27));
+      x.strokeStyle = 'rgba(40,40,44,0.6)'; x.lineWidth = 2; x.beginPath(); x.moveTo(PX(1.05), PY(0.4)); x.lineTo(PX(1.05), PY(0.27)); x.stroke();   // door shut line carried down
       x.save();
       const fx = (m) => PX(m);
       // three stripes (orange / teal / navy) rising from the rear wheel arch, running forward along the sills
@@ -1040,34 +1052,105 @@ export function makeKeiHatch() {
   const y0 = Math.min(...ys), y1 = Math.max(...ys), zm = Math.max(...zs);
   const fc = document.createElement('canvas'); fc.width = 512; fc.height = Math.round(512 * (y1 - y0) / (2 * zm)); const fx2 = fc.getContext('2d');
   const FH = fc.height, FY = (m) => FH - (m - y0) / (y1 - y0) * FH;
-  fx2.fillStyle = '#c6c6c8'; fx2.fillRect(0, 0, 512, FH);
-  fx2.fillStyle = '#1a1a1a'; fx2.beginPath(); fx2.roundRect(180, FY(0.73), 152, FY(0.6) - FY(0.73), 8); fx2.fill();
-  fx2.strokeStyle = '#444'; fx2.lineWidth = 2; for (let i = 0; i < 15; i++) { fx2.beginPath(); fx2.moveTo(182 + i * 10, FY(0.74)); fx2.lineTo(192 + i * 10, FY(0.6)); fx2.stroke(); fx2.beginPath(); fx2.moveTo(192 + i * 10, FY(0.74)); fx2.lineTo(182 + i * 10, FY(0.6)); fx2.stroke(); }
-  fx2.fillStyle = '#1a1a1a'; fx2.beginPath(); fx2.roundRect(150, FY(0.42), 212, FY(0.3) - FY(0.42), 10); fx2.fill();
-  for (const s of [-1, 1]) { fx2.fillStyle = '#e8d090'; fx2.beginPath(); fx2.roundRect(256 + s * 175 - 26, FY(0.43), 52, FY(0.35) - FY(0.43), 8); fx2.fill(); }
-  ['#e8742a', '#1f9aa8', '#1d2f6a'].forEach((col, i) => { fx2.fillStyle = col; fx2.fillRect(0, FY(0.47 - i * 0.04), 60, 12); fx2.fillRect(452, FY(0.47 - i * 0.04), 60, 12); });
+  const FX = (m) => 256 - m / zm * 256;
+  const fg = fx2.createLinearGradient(0, 0, 0, FH); fg.addColorStop(0, '#d2d3d5'); fg.addColorStop(1, '#b0b1b3'); fx2.fillStyle = fg; fx2.fillRect(0, 0, 512, FH);
+  // hood shut line across the top, the bumper split line below the lamps
+  fx2.strokeStyle = 'rgba(30,30,34,0.7)'; fx2.lineWidth = 3; fx2.beginPath(); fx2.moveTo(0, FY(0.79)); fx2.quadraticCurveTo(256, FY(0.81), 512, FY(0.79)); fx2.stroke();
+  fx2.beginPath(); fx2.moveTo(0, FY(0.56)); fx2.lineTo(512, FY(0.56)); fx2.stroke();
+  // grille: chrome surround, black honeycomb mesh, a small made-up K roundel
+  const gx0 = FX(0.26), gx1 = FX(-0.26);
+  const cg3 = fx2.createLinearGradient(0, FY(0.76), 0, FY(0.59)); cg3.addColorStop(0, '#f2f4f6'); cg3.addColorStop(1, '#7a7e82');
+  fx2.fillStyle = cg3; fx2.beginPath(); fx2.roundRect(gx0 - 5, FY(0.76), gx1 - gx0 + 10, FY(0.58) - FY(0.76), 12); fx2.fill();
+  fx2.fillStyle = '#0e0e10'; fx2.beginPath(); fx2.roundRect(gx0, FY(0.75), gx1 - gx0, FY(0.595) - FY(0.75), 9); fx2.fill();
+  fx2.strokeStyle = '#3a3a3e'; fx2.lineWidth = 1.5;
+  for (let yy = FY(0.745); yy < FY(0.6); yy += 7) for (let xx = gx0 + ((Math.round(yy) / 7) % 2) * 5; xx < gx1 - 4; xx += 10) { fx2.beginPath(); fx2.moveTo(xx, yy); fx2.lineTo(xx + 4, yy - 3); fx2.lineTo(xx + 8, yy); fx2.lineTo(xx + 4, yy + 3); fx2.closePath(); fx2.stroke(); }
+  fx2.fillStyle = '#c8ccd0'; fx2.beginPath(); fx2.arc(256, FY(0.675), 13, 0, 7); fx2.fill(); fx2.fillStyle = '#c81e28'; fx2.beginPath(); fx2.arc(256, FY(0.675), 10, 0, 7); fx2.fill();
+  fx2.fillStyle = '#fff'; fx2.font = `bold 13px ${F.heavy}`; fx2.textAlign = 'center'; fx2.textBaseline = 'middle'; fx2.fillText('K', 256, FY(0.675) + 1);
+  // headlight housings (the photo's lamp goes inside), amber corner lights
+  for (const sd of [-1, 1]) {
+    fx2.fillStyle = '#1a1b1d'; fx2.beginPath(); fx2.roundRect(256 + sd * 168 - 78, FY(0.775), 156, FY(0.585) - FY(0.775), 16); fx2.fill();
+    fx2.fillStyle = '#f0a020'; fx2.beginPath(); fx2.roundRect(sd > 0 ? 488 : 6, FY(0.74), 18, FY(0.62) - FY(0.74), 4); fx2.fill();
+  }
+  // bumper: big centre intake with mesh, two fog-lamp pods, a lip, the stripes wrapping the corners
+  fx2.fillStyle = '#121214'; fx2.beginPath(); fx2.roundRect(FX(0.3), FY(0.5), FX(-0.3) - FX(0.3), FY(0.36) - FY(0.5), 14); fx2.fill();
+  fx2.strokeStyle = '#2e2e32'; fx2.lineWidth = 1.5; for (let xx = FX(0.29); xx < FX(-0.29); xx += 8) { fx2.beginPath(); fx2.moveTo(xx, FY(0.49)); fx2.lineTo(xx + 6, FY(0.37)); fx2.stroke(); }
+  for (const sd of [-1, 1]) {
+    const cx = 256 + sd * 178;
+    fx2.fillStyle = '#121214'; fx2.beginPath(); fx2.roundRect(cx - 34, FY(0.49), 68, FY(0.38) - FY(0.49), 10); fx2.fill();
+    const fl = fx2.createRadialGradient(cx - 6, FY(0.44) - 4, 2, cx, FY(0.435), 26); fl.addColorStop(0, '#fffbe8'); fl.addColorStop(0.5, '#e8dca0'); fl.addColorStop(1, '#8a7a50');
+    fx2.fillStyle = fl; fx2.beginPath(); fx2.roundRect(cx - 26, FY(0.475), 52, FY(0.395) - FY(0.475), 7); fx2.fill();
+  }
+  fx2.fillStyle = '#1c1c1e'; fx2.fillRect(0, FY(0.33), 512, FH - FY(0.33));
+  ['#e8742a', '#1f9aa8', '#1d2f6a'].forEach((col, i) => { fx2.fillStyle = col; fx2.beginPath(); fx2.moveTo(0, FY(0.53 - i * 0.04)); fx2.lineTo(70 - i * 8, FY(0.53 - i * 0.04)); fx2.lineTo(58 - i * 8, FY(0.505 - i * 0.04)); fx2.lineTo(0, FY(0.505 - i * 0.04)); fx2.fill(); fx2.beginPath(); fx2.moveTo(512, FY(0.53 - i * 0.04)); fx2.lineTo(442 + i * 8, FY(0.53 - i * 0.04)); fx2.lineTo(454 + i * 8, FY(0.505 - i * 0.04)); fx2.lineTo(512, FY(0.505 - i * 0.04)); fx2.fill(); });
   const ft = new THREE.CanvasTexture(fc); ft.colorSpace = THREE.SRGBColorSpace;
-  const li = new Image(); li.onload = () => { for (const s of [-1, 1]) { fx2.save(); fx2.translate(256 + s * 168, FY(0.67)); if (s > 0) fx2.scale(-1, 1); fx2.drawImage(li, -70, -(FY(0.6) - FY(0.74)) / 2, 140, FY(0.6) - FY(0.74)); fx2.restore(); } ft.needsUpdate = true; }; li.src = 'assets/textures/kc_lamp.png';
+  const li = new Image(); li.onload = () => { for (const s of [-1, 1]) { fx2.save(); fx2.translate(256 + s * 168, FY(0.68)); if (s > 0) fx2.scale(-1, 1); fx2.drawImage(li, -72, -(FY(0.595) - FY(0.765)) / 2, 144, FY(0.595) - FY(0.765)); fx2.restore(); } ft.needsUpdate = true; }; li.src = 'assets/textures/kc_lamp.png';
   const cs = new THREE.Shape(); for (let j = 0; j < M; j++) j ? cs.lineTo(zs[j], ys[j]) : cs.moveTo(zs[j], ys[j]);
   const cg = new THREE.ShapeGeometry(cs), cp = cg.attributes.position, cu = cg.attributes.uv;
   for (let k = 0; k < cp.count; k++) cu.setXY(k, 0.5 - cp.getX(k) / (2 * zm), (cp.getY(k) - y0) / (y1 - y0));
   const nose = new THREE.Mesh(cg, new THREE.MeshStandardMaterial({ map: ft, roughness: 0.35, metalness: 0.2, side: THREE.DoubleSide })); nose.rotation.y = Math.PI / 2; nose.position.x = xN - OFF + 0.001; g.add(nose);
   box(0.06, 0.018, Wd - 0.3, new THREE.MeshStandardMaterial({ color: '#202020', roughness: 0.7 }), xN - OFF - 0.06, 0.3, 0, g);
-  // tail: hatch glass, lamps, bumper (drawn)
+  // tail: a proper hatch face drawn onto the exact tail section: big glass with a black surround and the
+  // de-mister lines, a rear wiper, tall tail-lamp clusters (red / amber / clear), the hatch shut lines, a
+  // chrome garnish over a blank plate recess, the bumper with a black valance, reflectors and the stripes
   const tb = 0, tys = [], tzs = []; for (let j = 0; j < M; j++) { tys.push(pos[(tb + j) * 3 + 1]); tzs.push(pos[(tb + j) * 3 + 2]); }
+  const ty0 = Math.min(...tys), ty1 = Math.max(...tys), tzm = Math.max(...tzs);
+  const rc = document.createElement('canvas'); rc.width = 512; rc.height = Math.round(512 * (ty1 - ty0) / (2 * tzm)); const rx = rc.getContext('2d');
+  const RH = rc.height, RY = (m) => RH - (m - ty0) / (ty1 - ty0) * RH, RX = (m) => 256 + m / tzm * 256;
+  const rg = rx.createLinearGradient(0, 0, 0, RH); rg.addColorStop(0, '#d0d1d3'); rg.addColorStop(1, '#b4b5b7'); rx.fillStyle = rg; rx.fillRect(0, 0, 512, RH);
+  rx.fillStyle = '#141516'; rx.beginPath(); rx.roundRect(RX(-0.56), RY(1.17), RX(0.56) - RX(-0.56), RY(0.84) - RY(1.17), 18); rx.fill();
+  const hg = rx.createLinearGradient(0, RY(1.15), 0, RY(0.86)); hg.addColorStop(0, '#56606a'); hg.addColorStop(0.5, '#2c3236'); hg.addColorStop(1, '#1c2023'); rx.fillStyle = hg;
+  rx.beginPath(); rx.roundRect(RX(-0.5), RY(1.14), RX(0.5) - RX(-0.5), RY(0.87) - RY(1.14), 12); rx.fill();
+  rx.strokeStyle = 'rgba(150,90,60,0.35)'; rx.lineWidth = 1.5; for (let i = 0; i < 7; i++) { rx.beginPath(); rx.moveTo(RX(-0.44), RY(0.9 + i * 0.035)); rx.lineTo(RX(0.44), RY(0.9 + i * 0.035)); rx.stroke(); }
+  rx.fillStyle = 'rgba(255,255,255,0.08)'; rx.beginPath(); rx.moveTo(RX(-0.5), RY(1.14)); rx.lineTo(RX(-0.2), RY(1.14)); rx.lineTo(RX(-0.42), RY(0.87)); rx.lineTo(RX(-0.5), RY(0.87)); rx.fill();
+  rx.strokeStyle = 'rgba(30,30,34,0.7)'; rx.lineWidth = 3; rx.beginPath(); rx.moveTo(RX(-0.56), RY(1.19)); rx.lineTo(RX(-0.56), RY(0.5)); rx.lineTo(RX(0.56), RY(0.5)); rx.lineTo(RX(0.56), RY(1.19)); rx.stroke();
+  for (const sd of [-1, 1]) {
+    const lx0 = sd > 0 ? RX(0.575) : RX(-0.715), lw = RX(0.715) - RX(0.575);
+    const lg = rx.createLinearGradient(lx0, 0, lx0 + lw, 0); lg.addColorStop(0, '#8a0c12'); lg.addColorStop(0.5, '#d81c24'); lg.addColorStop(1, '#8a0c12');
+    rx.fillStyle = '#2a0608'; rx.beginPath(); rx.roundRect(lx0 - 3, RY(1.0), lw + 6, RY(0.56) - RY(1.0), 6); rx.fill();
+    rx.fillStyle = lg; rx.fillRect(lx0, RY(0.98), lw, RY(0.78) - RY(0.98));
+    rx.fillStyle = '#f0a020'; rx.fillRect(lx0, RY(0.78), lw, RY(0.68) - RY(0.78));
+    rx.fillStyle = '#e8eef0'; rx.fillRect(lx0, RY(0.68), lw, RY(0.58) - RY(0.68));
+    rx.strokeStyle = 'rgba(0,0,0,0.35)'; rx.lineWidth = 1; for (let k = 0; k < 6; k++) { rx.beginPath(); rx.moveTo(lx0, RY(0.6 + k * 0.065)); rx.lineTo(lx0 + lw, RY(0.6 + k * 0.065)); rx.stroke(); }
+  }
+  const cg2 = rx.createLinearGradient(0, RY(0.82), 0, RY(0.78)); cg2.addColorStop(0, '#f0f2f4'); cg2.addColorStop(1, '#8a8e92'); rx.fillStyle = cg2; rx.fillRect(RX(-0.32), RY(0.82), RX(0.32) - RX(-0.32), RY(0.785) - RY(0.82));
+  rx.fillStyle = '#9a9b9d'; rx.beginPath(); rx.roundRect(RX(-0.2), RY(0.76), RX(0.2) - RX(-0.2), RY(0.6) - RY(0.76), 6); rx.fill();
+  rx.fillStyle = '#1d2f6a'; fitText(rx, 'Kestrel', RX(0.42), RY(0.88) + 2, 70, 18, F.script);
+  rx.fillStyle = 'rgba(30,30,34,0.6)'; rx.fillRect(0, RY(0.5), 512, 3);
+  rx.fillStyle = '#1c1c1e'; rx.fillRect(RX(-0.62), RY(0.4), RX(0.62) - RX(-0.62), RY(ty0) - RY(0.4));
+  for (const sd of [-1, 1]) { rx.fillStyle = '#9a1418'; rx.fillRect(sd > 0 ? RX(0.42) : RX(-0.56), RY(0.46), RX(0.14) - RX(0), RY(0.43) - RY(0.46)); }
+  ['#e8742a', '#1f9aa8', '#1d2f6a'].forEach((col, i) => { rx.fillStyle = col; rx.fillRect(0, RY(0.47 - i * 0.04), 26, 9); rx.fillRect(486, RY(0.47 - i * 0.04), 26, 9); });
+  const rtx = new THREE.CanvasTexture(rc); rtx.colorSpace = THREE.SRGBColorSpace; rtx.anisotropy = 8;
   const ts = new THREE.Shape(); for (let j = 0; j < M; j++) j ? ts.lineTo(tzs[j], tys[j]) : ts.moveTo(tzs[j], tys[j]);
-  const tg = new THREE.Mesh(new THREE.ShapeGeometry(ts), silver); tg.rotation.y = -Math.PI / 2; tg.position.x = xT - OFF - 0.001; g.add(tg);
+  const tsg = new THREE.ShapeGeometry(ts), tsp = tsg.attributes.position, tsu = tsg.attributes.uv;
+  for (let k = 0; k < tsp.count; k++) tsu.setXY(k, 0.5 + tsp.getX(k) / (2 * tzm), (tsp.getY(k) - ty0) / (ty1 - ty0));
+  const tg = new THREE.Mesh(tsg, new THREE.MeshStandardMaterial({ map: rtx, roughness: 0.3, metalness: 0.25, side: THREE.DoubleSide })); tg.rotation.y = -Math.PI / 2; tg.position.x = xT - OFF - 0.001; g.add(tg);
+  const blkP = new THREE.MeshStandardMaterial({ color: '#141414', roughness: 0.5 });
+  // roof spoiler over the hatch glass, rear wiper, exhaust tip, the hatch's top hinge line
+  const spo = new THREE.Shape(); spo.moveTo(0, 0); spo.lineTo(0.09, 0); spo.lineTo(0.12, 0.025); spo.lineTo(0.01, 0.035); spo.closePath();
+  const spg = new THREE.ExtrudeGeometry(spo, { depth: Wd - 0.3, bevelEnabled: true, bevelThickness: 0.01, bevelSize: 0.01, bevelSegments: 2 }); spg.translate(0, 0, -(Wd - 0.3) / 2);
+  const sp = new THREE.Mesh(spg, silver); sp.rotation.y = Math.PI; sp.position.set(xT - OFF + 0.1, 1.2, 0); sp.castShadow = true; g.add(sp);
+  const wip = box(0.012, 0.012, 0.42, blkP, xT - OFF - 0.012, 0.9, 0.05, g); wip.rotation.x = 0.55;
+  const hub2 = cyl(0.018, 0.02, blkP, g, 10); hub2.rotation.z = Math.PI / 2; hub2.position.set(xT - OFF - 0.01, 0.86, 0);
+  const ex = cyl(0.028, 0.12, new THREE.MeshStandardMaterial({ color: '#b8bcc0', metalness: 0.9, roughness: 0.25 }), g, 16); ex.rotation.z = Math.PI / 2; ex.position.set(xT - OFF - 0.02, 0.24, 0.42);
+  const exIn = new THREE.Mesh(new THREE.CircleGeometry(0.022, 16), new THREE.MeshBasicMaterial({ color: '#0a0a0a' })); exIn.rotation.y = -Math.PI / 2; exIn.position.set(xT - OFF - 0.081, 0.24, 0.42); g.add(exIn);
   // glass: windscreen and hatch on their slopes
-  const glass = new THREE.MeshStandardMaterial({ color: '#3a444a', roughness: 0.2, metalness: 0.2 });
+  const wc = document.createElement('canvas'); wc.width = 512; wc.height = 256; const wx = wc.getContext('2d');
+  wx.fillStyle = '#0c0d0e'; wx.fillRect(0, 0, 512, 256);
+  const wgr = wx.createLinearGradient(0, 0, 0, 256); wgr.addColorStop(0, '#2a4a5a'); wgr.addColorStop(0.18, '#3c4c56'); wgr.addColorStop(0.7, '#2a3034'); wgr.addColorStop(1, '#16191b');
+  wx.fillStyle = wgr; wx.beginPath(); wx.roundRect(18, 14, 476, 226, 14); wx.fill();
+  wx.fillStyle = '#121314'; wx.fillRect(18, 196, 476, 44); wx.fillStyle = '#1c1d1f'; wx.fillRect(70, 150, 110, 50); wx.fillRect(330, 150, 110, 50);
+  wx.fillStyle = '#202224'; wx.fillRect(244, 14, 24, 26); wx.fillStyle = 'rgba(255,255,255,0.07)'; wx.beginPath(); wx.moveTo(18, 14); wx.lineTo(200, 14); wx.lineTo(60, 240); wx.lineTo(18, 240); wx.fill();
+  const wtx = new THREE.CanvasTexture(wc); wtx.colorSpace = THREE.SRGBColorSpace;
+  const glass = new THREE.MeshStandardMaterial({ map: wtx, roughness: 0.12, metalness: 0.2 });
   const slopeGlass = (xa, ya, xb, yb, inset, back) => {
     const a = new THREE.Vector2(xa - OFF, ya), b = new THREE.Vector2(xb - OFF, yb), w = 2 * halfW((xa + xb) / 2, (ya + yb) / 2) - inset;
     const m = new THREE.Mesh(new THREE.PlaneGeometry(w, a.distanceTo(b) * 0.9), glass);
     m.rotation.order = 'ZYX'; m.rotation.y = back ? -Math.PI / 2 : Math.PI / 2; m.rotation.z = Math.atan2(a.x - b.x, b.y - a.y) * (back ? 1 : 1);
     m.position.set((a.x + b.x) / 2 + (back ? -0.012 : 0.012), (a.y + b.y) / 2 + 0.01, 0); g.add(m);
   };
-  slopeGlass(2.3, 0.98, 1.76, 1.39, 0.2, false);
-  const hb = new THREE.Mesh(new THREE.PlaneGeometry(1.05, 0.4), glass); hb.position.set(xT - OFF - 0.035, 1.1, 0); hb.rotation.y = -Math.PI / 2; hb.rotation.x = 0; hb.rotateX(-0.22); g.add(hb);
-  for (const s of [-1, 1]) box(0.03, 0.22, 0.1, new THREE.MeshStandardMaterial({ color: '#b01818', roughness: 0.3, emissive: '#300000' }), xT - OFF - 0.02, 0.78, s * (hw - 0.12), g);
+  slopeGlass(2.3, 0.98, 1.76, 1.39, 0.16, false);
+  for (const z of [-0.36, 0.18]) { const wp = box(0.012, 0.012, 0.48, new THREE.MeshStandardMaterial({ color: '#141414', roughness: 0.5 }), 2.27 - OFF, 1.02, z, g); wp.rotation.x = 0.1; wp.rotation.z = 0.6; }
+  box(0.03, 0.012, Wd - 0.35, new THREE.MeshStandardMaterial({ color: '#1a1a1a', roughness: 0.8 }), 2.33 - OFF, 0.985, 0, g);   // cowl vent
   // the real alloy wheels from the photo, black tyres
   const wm = new THREE.MeshStandardMaterial({ map: tex('kc_wheel'), roughness: 0.5, metalness: 0.4, transparent: true, alphaTest: 0.5 });
   const tyre = new THREE.MeshStandardMaterial({ color: '#181818', roughness: 0.9 });
