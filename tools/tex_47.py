@@ -18,6 +18,6 @@ def scrub(im, boxes):
     for x0, y0, x1, y1 in boxes: cv2.rectangle(m, (x0, y0), (x1, y1), 255, -1)
     return cv2.inpaint(im, m, 7, cv2.INPAINT_TELEA)
 # the cooler pump cap and the board's model print carry real brand marks: painted out
-cv2.imwrite(os.path.join(OUT, "dc_galaxy.png"), scrub(warp(g, [(26, 152), (640, 168), (614, 745), (36, 680)], (1024, 900)), [(450, 140, 540, 220), (480, 360, 600, 410), (240, 420, 330, 460)]))
+cv2.imwrite(os.path.join(OUT, "dc_galaxy.png"), scrub(warp(g, [(36, 152), (640, 168), (614, 728), (84, 668)], (1024, 900)), [(450, 140, 540, 220), (480, 360, 600, 410), (240, 420, 330, 460)]))
 cv2.imwrite(os.path.join(OUT, "dc_pcinside.png"), scrub(warp(g, [(68, 205), (385, 222), (390, 600), (106, 560)], (512, 560)), [(320, 70, 400, 140), (380, 190, 500, 235), (130, 255, 230, 300)]))
 print("wrote dc_pachinko, dc_galaxy, dc_pcinside")
