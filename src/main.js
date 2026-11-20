@@ -16,6 +16,7 @@ import { makeDriedRose, makePropPistol, makeWhitePC } from './models/misc48.js';
 import { makeFoldingEbike, makeWaveRack, makePourGrid } from './models/misc49.js';
 import { makeCompactCorner } from './models/badparker50.js';
 import { makeCartCorral } from './models/cart51.js';
+import { makeRealtyWindow } from './models/listings52.js';
 import { makeKeiTruck, makeCoachBus, makeScoutTruck, makeWorkVan, makeCommuterTrain, makeTrainPlatform, PLAT_Y, makeVintageScooter, makeRustedScooter, makeKeiHatch } from './models/vehicles36.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
@@ -1163,6 +1164,11 @@ rect(TP.x - 13.2, TP.x - 13, TP.z - 3, TP.z); rect(TP.x + 13, TP.x + 13.2, TP.z 
 const BP = { x: 13.6, z: -29.6 };
 const bpc = makeCompactCorner(); bpc.position.set(BP.x, 0, BP.z); bpc.rotation.y = Math.PI / 2; add(bpc);
 for (const [x0, x1, z0, z1] of bpc.userData.colliders) colliders.push({ type: 'box', minX: BP.x + z0, maxX: BP.x + z1, minZ: BP.z - x1, maxZ: BP.z - x0 });
+// 52 Listing flyers: a realty office window on the blank south face of the block between the old-town street
+// and the forecourt, facing the station plaza; a paved strip in front so it can be reached
+const RW = { x: -14.4, z: 47.75 };
+{ const rw = makeRealtyWindow(); rw.position.set(RW.x, 0, RW.z); add(rw); rect(RW.x - 1.9, RW.x + 1.9, RW.z - 0.3, RW.z + 0.05);
+  add(plane(mats.lotConcrete, -19.7, -9.2, 47.4, 51.9, 0.005, 4)); }
 // 51 Smashed cart: a cart corral in the grocery lot with the crushed cart jammed against it
 { const cc = makeCartCorral(); cc.position.set(12.6, 0, -22.4); add(cc); const c = cc.userData.collider; rect(12.6 + c[0], 12.6 + c[1], -22.4 + c[2], -22.4 + c[3]); }
 // 49 Misc 2: the folding e-bike locked to a wave rack on the old-town sidewalk; the user's pour-painting grid
@@ -1262,6 +1268,7 @@ const walk = new WalkControls(camera, renderer.domElement, {
     ...aoAreas, // the abandoned office
     ...krAreas, // the Knot Room
     trlArea, // the nature trail
+    { minX: -19.6, maxX: -9.2, minZ: 48.0, maxZ: 52.0 }, // strip in front of the realty window
     gshArea, // the pawn & sport shop
     { minX: TP.x - 12.8, maxX: TP.x + 12.8, minZ: TP.z - 5.2, maxZ: TP.z - 0.3 }, // train platform + its stairs
   ],
@@ -1405,6 +1412,7 @@ const VIEWS = {
   knotbar: { pos: [16.5, 1.6, 69.6], target: [20.2, 1.4, 69.6] },
   keitruck: { pos: [-26.2, 1.9, 48.9], target: [-22.75, 0.9, 44.5] },
   coach: { pos: [-24.5, 2.4, 27.5], target: [-29.7, 1.6, 36] },
+  realty: { pos: [RW.x + 0.4, 1.7, RW.z + 3.6], target: [RW.x, 1.8, RW.z] },
   carts: { pos: [14.0, 1.7, -19.6], target: [14.0, 0.5, -22.3] },
   badparker: { pos: [BP.x + 9.0, 2.0, BP.z - 4.6], target: [BP.x + 3.0, 1.0, BP.z - 1.6] },
   ebike: { pos: [-20.4, 1.5, 44.2], target: [-20.9, 0.5, 41.0] },
