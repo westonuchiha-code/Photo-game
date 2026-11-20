@@ -335,7 +335,7 @@ export function makeDentistOffice() {
   box(W + 0.3, 0.2, 0.35, std({ color: '#d8d4cc' }), 0, BH + 0.1, GZ, g);
   // ---- interior walls: back partition (black accent behind reception), right wall black accent bays
   const PZ = 0.3, PX = 1.6;   // back partition (z) and the side partition to the orthodontics wing (x)
-  plane(W, CH, white, 0, CH / 2, PZ, 0, g);
+  plane(X1 + 7.15, CH, white, (X1 - 7.15) / 2, CH / 2, PZ, 0, g); plane(-6.05 - X0, CH, white, (X0 - 6.05) / 2, CH / 2, PZ, 0, g); plane(1.1, CH - 2.2, white, -6.6, 2.2 + (CH - 2.2) / 2, PZ, 0, g);
   box(4.6, CH, 0.02, blackWall, -0.9, CH / 2, PZ + 0.02, g);                                    // behind reception
   plane(Z1 - PZ, CH, white, PX - 0.01, CH / 2, (Z1 + PZ) / 2, -Math.PI / 2, g);
   plane(Z1 - PZ, CH, white, PX + 0.01, CH / 2, (Z1 + PZ) / 2, Math.PI / 2, g);
@@ -346,9 +346,11 @@ export function makeDentistOffice() {
   box(0.02, CH, 3.8, blackWall, X0 + 0.02, CH / 2, 8.0, g);                                       // the big-TV accent wall
   box(0.6, CH, 1.4, blackWall, X0 + 0.3, CH / 2, 4.1, g);                                         // accent column (pilaster)
   // door to the treatment rooms (item 58): wood door in a black frame, closed
-  box(1.1, 2.2, 0.06, std({ map: tex('dn_walnut', 1, 2), roughness: 0.4 }), -6.6, 1.1, PZ + 0.02, g);
+  // the door stands open into the treatment hallway (item 58)
+  const door = new THREE.Group(); door.position.set(-7.15, 0, PZ); door.rotation.y = 1.45; g.add(door);
+  box(1.1, 2.2, 0.05, std({ map: tex('dn_walnut', 1, 2), roughness: 0.4 }), 0.55, 1.1, -0.03, door);
+  for (const zz of [0.02, -0.08]) cyl(0.012, 0.012, 0.16, std({ color: '#c8ccd0', metalness: 0.9 }), 0.95, 1.05, zz, door, 8).rotation.z = Math.PI / 2;
   box(1.24, 0.08, 0.08, trim, -6.6, 2.24, PZ + 0.03, g); for (const s of [-1, 1]) box(0.08, 2.24, 0.08, trim, -6.6 + s * 0.6, 1.12, PZ + 0.03, g);
-  cyl(0.012, 0.012, 0.16, std({ color: '#c8ccd0', metalness: 0.9 }), -6.22, 1.05, PZ + 0.09, g, 8).rotation.z = Math.PI / 2;
   const tag = canvasT(256, 64, (x, w, h) => { x.fillStyle = '#1c1d20'; x.fillRect(0, 0, w, h); x.fillStyle = '#e8e6e0'; fitText(x, 'TREATMENT ROOMS', w / 2, 33, 230, 26, F.wayfind, { spacing: 3 }); });
   plane(0.5, 0.125, std({ map: tag }), -5.6, 1.55, PZ + 0.03, 0, g);
   // ---- drop ceiling: 2x2 ft tiles, recessed lights, square diffusers, round speakers, a soffit along the glass

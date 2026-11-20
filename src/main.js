@@ -11,6 +11,7 @@ import { makeMossCreature, makeMossMound } from './models/creature55.js';
 import { makeThriftCorner } from './models/fabrics56.js';
 import { makeDistrict } from './models/district.js';
 import { makeDentistOffice } from './models/dentist57.js';
+import { makeTreatmentWing } from './models/treatment58.js';
 import { makeGunShop } from './models/gunshop41.js';
 import { makePosterCase } from './models/posters42.js';
 import { makeSchoolBus } from './models/bus44.js';
@@ -1284,8 +1285,11 @@ for (const [x, z] of district.userData.treePosts) circle(x, z, 0.25);
 const DN = { x: 95, z: 39 };
 const dentist = makeDentistOffice(); dentist.position.set(DN.x, 0.14, DN.z); dentist.rotation.y = -Math.PI / 2; add(dentist);
 const dnW = ([x0, x1, z0, z1]) => [DN.x - z1, DN.x - z0, DN.z + x0, DN.z + x1];   // local rect -> world rect
+// 58 treatment rooms behind the waiting room (same local frame)
+const wing = makeTreatmentWing(); dentist.add(wing);
+for (const c of wing.userData.colliders) rect(...dnW(c));
 for (const c of dentist.userData.colliders) rect(...dnW(c));
-const dnAreas = dentist.userData.areas.map((a) => { const [minX, maxX, minZ, maxZ] = dnW([a.minX, a.maxX, a.minZ, a.maxZ]); return { minX, maxX, minZ, maxZ }; });
+const dnAreas = [...dentist.userData.areas, ...wing.userData.areas].map((a) => { const [minX, maxX, minZ, maxZ] = dnW([a.minX, a.maxX, a.minZ, a.maxZ]); return { minX, maxX, minZ, maxZ }; });
 
 const walk = new WalkControls(camera, renderer.domElement, {
   bounds: null,
@@ -1435,6 +1439,8 @@ const VIEWS = {
   junkshop: { pos: [6.8, 1.8, 13.2], target: [1.5, 1.0, 20.5] },
   dentist: { pos: [91.2, 1.75, 40.0], target: [84, 1.1, 31.5] },
   dentist2: { pos: [84.3, 1.8, 34.5], target: [93.5, 1.0, 38.6] },
+  operatory: { pos: [97.25, 1.85, 30.1], target: [100.6, 0.95, 29.8] },
+  operatory2: { pos: [99.6, 1.8, 28.6], target: [97.6, 0.9, 30.4] },
   dentistfront: { pos: [72, 2.2, 39], target: [83, 3.0, 39] },
   avenue: { pos: [71.5, 1.8, -12], target: [78, 4, 60] },
   downtown: { pos: [241, 1.8, -30], target: [247, 6, 60] },

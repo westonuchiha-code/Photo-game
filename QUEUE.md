@@ -85,7 +85,8 @@ Rules (from you):
 - 55 Moss creature (approved)
 - 56 Fabrics + thrift rack (approved)
 - Town expansion: city district east of the old town (approved)
-- 57 Dentist waiting room (in review)
+- 57 Dentist waiting room (approved)
+- 58 Dentist treatment room (in review)
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
