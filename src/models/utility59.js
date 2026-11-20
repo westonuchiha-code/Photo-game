@@ -164,28 +164,48 @@ export function makeSprinklerFDC() {
 }
 
 // ---- accessible parking sign (redrawn; generic wording) -----------------------------------------------------------
-function isa(x, cx, cy, s, col) {   // the wheelchair symbol, drawn with strokes at scale s around (cx, cy)
-  x.save(); x.translate(cx, cy); x.scale(s, s); x.strokeStyle = col; x.fillStyle = col; x.lineCap = 'round'; x.lineJoin = 'round';
-  x.beginPath(); x.arc(-8, -44, 9, 0, 7); x.fill();
-  x.lineWidth = 11; x.beginPath(); x.moveTo(-12, -30); x.lineTo(-16, 4); x.lineTo(16, 4); x.lineTo(28, 30); x.lineTo(38, 26); x.stroke();
-  x.beginPath(); x.moveTo(-14, -16); x.lineTo(12, -16); x.stroke();
-  x.lineWidth = 8; x.beginPath(); x.arc(-14, 22, 26, -Math.PI * 0.95, Math.PI * 0.55); x.stroke(); x.restore();
+// the international wheelchair symbol, as on the photo's sign: head, upright torso, arm and seat bars to the right,
+// the leg down to a footrest, and the big wheel as an open ring around the lower left. Drawn in a 100-unit box
+// centred on (cx, cy), scale s (units -> px).
+function isa(x, cx, cy, s, col) {
+  x.save(); x.translate(cx - 50 * s, cy - 50 * s); x.scale(s, s); x.fillStyle = col; x.strokeStyle = col; x.lineCap = 'butt'; x.lineJoin = 'miter';
+  x.beginPath(); x.arc(40, 12, 9.5, 0, 7); x.fill();                                 // head
+  x.beginPath(); x.roundRect(33, 25, 13, 40, 6); x.fill();                           // torso
+  x.fillRect(44, 37, 26, 9);                                                         // arm
+  x.fillRect(33, 56, 38, 9);                                                         // seat
+  x.lineWidth = 9; x.beginPath(); x.moveTo(66, 60); x.lineTo(80, 84); x.lineTo(92, 80); x.stroke();   // leg + footrest
+  x.lineWidth = 8; x.beginPath(); x.arc(42, 66, 25, 0.62, 4.2); x.stroke();        // wheel, open at the upper right
+  x.restore();
 }
 export function makeAccessibleSign(onPost = true) {
   const g = new THREE.Group(); g.name = 'accessible_sign';
-  const t = canvasT(300, 450, (x, w, h) => { x.fillStyle = '#ffffff'; x.beginPath(); x.roundRect(0, 0, w, h, 22); x.fill(); x.fillStyle = '#1f3c9a'; x.beginPath(); x.roundRect(8, 8, w - 16, h - 16, 18); x.fill();
-    x.strokeStyle = '#fff'; x.lineWidth = 5; x.strokeRect(40, 36, w - 80, 190); isa(x, w / 2 + 6, 140, 1.7, '#ffffff');
-    x.fillStyle = '#fff'; fitText(x, 'ACCESSIBLE', w / 2, 290, w - 50, 46, F.label, { weight: 700 }); fitText(x, 'PARKING', w / 2, 345, w - 70, 50, F.label, { weight: 700 }); fitText(x, 'permit required', w / 2, 400, w - 90, 24, F.label); });
-  const face = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.45, 0.006), [std({ color: '#cfd2d4', metalness: 0.7 }), std({ color: '#cfd2d4', metalness: 0.7 }), std({ color: '#cfd2d4', metalness: 0.7 }), std({ color: '#cfd2d4', metalness: 0.7 }), std({ map: t, roughness: 0.35 }), std({ color: '#cfd2d4', metalness: 0.7 })]);
-  face.castShadow = true; g.add(face);
-  for (const y of [0.19, -0.19]) cyl(0.009, 0.009, 0.012, std({ color: '#5a6a8a', metalness: 0.7 }), 0, y, 0.006, g, 10).rotation.x = Math.PI / 2;
+  const SW = 0.3, SH = 0.45, RAD = 0.022;
+  const t = canvasT(400, 600, (x, w, h) => {
+    x.fillStyle = '#f4f4ef'; x.fillRect(0, 0, w, h);                                 // white reflective rim
+    x.fillStyle = '#1f3f9e'; x.beginPath(); x.roundRect(9, 9, w - 18, h - 18, 22); x.fill();
+    // faint sheeting texture
+    for (let i = 0; i < 260; i++) { x.fillStyle = `rgba(255,255,255,${Math.random() * 0.05})`; x.fillRect(9 + Math.random() * (w - 18), 9 + Math.random() * (h - 18), 2, 18); }
+    x.strokeStyle = '#f4f4ef'; x.lineWidth = 7; x.beginPath(); x.roundRect(78, 72, 244, 214, 12); x.stroke();   // the symbol's frame
+    isa(x, 205, 182, 1.9, '#f4f4ef');
+    x.fillStyle = '#f4f4ef'; fitText(x, 'HANDICAPPED', w / 2, 390, w - 64, 60, F.label, { weight: 600 }); fitText(x, 'PARKING', w / 2, 470, w - 150, 64, F.label, { weight: 600 });
+    x.fillStyle = 'rgba(244,244,239,0.6)'; fitText(x, 'R7-8', w - 60, h - 26, 60, 12, F.label);
+  });
+  // the plate: a rounded-rectangle aluminum blank, the printed face on the front
+  const shp = new THREE.Shape(); shp.moveTo(-SW / 2 + RAD, -SH / 2); shp.lineTo(SW / 2 - RAD, -SH / 2); shp.quadraticCurveTo(SW / 2, -SH / 2, SW / 2, -SH / 2 + RAD); shp.lineTo(SW / 2, SH / 2 - RAD); shp.quadraticCurveTo(SW / 2, SH / 2, SW / 2 - RAD, SH / 2); shp.lineTo(-SW / 2 + RAD, SH / 2); shp.quadraticCurveTo(-SW / 2, SH / 2, -SW / 2, SH / 2 - RAD); shp.lineTo(-SW / 2, -SH / 2 + RAD); shp.quadraticCurveTo(-SW / 2, -SH / 2, -SW / 2 + RAD, -SH / 2);
+  const alu = std({ color: '#c4c8ca', metalness: 0.5, roughness: 0.4 });
+  const plate = new THREE.Mesh(new THREE.ExtrudeGeometry(shp, { depth: 0.003, bevelEnabled: false, curveSegments: 6 }), alu); plate.position.z = -0.003; plate.castShadow = true;
+  const fg = new THREE.ShapeGeometry(shp, 6); const uv = fg.attributes.uv, fp = fg.attributes.position; for (let k = 0; k < uv.count; k++) uv.setXY(k, fp.getX(k) / SW + 0.5, fp.getY(k) / SH + 0.5);
+  const face = new THREE.Mesh(fg, std({ map: t, roughness: 0.3, metalness: 0.05 })); face.position.z = 0.0005;
+  const sign = new THREE.Group(); sign.add(plate, face); g.add(sign);
+  // two bolts with silver washers through the top and bottom
+  const steel = std({ color: '#d0d4d6', metalness: 0.6, roughness: 0.3 });
+  for (const y of [SH / 2 - 0.035, -SH / 2 + 0.035]) { const w = cyl(0.016, 0.016, 0.003, steel, 0, y, 0.002, sign, 18); w.rotation.x = Math.PI / 2; const b = cyl(0.007, 0.008, 0.006, steel, 0, y, 0.005, sign, 6); b.rotation.x = Math.PI / 2; }
   if (onPost) {
-    face.position.y = 1.85;
-    g.children.slice(1).forEach((c) => { c.position.y += 1.85; });
+    sign.position.y = 1.85;
     // galvanized U-channel post with its row of holes
     const holes = canvasT(32, 256, (x, w, h) => { x.fillStyle = '#b8bcbe'; x.fillRect(0, 0, w, h); x.fillStyle = '#2a2a2a'; for (let y = 6; y < h; y += 12) { x.beginPath(); x.arc(16, y, 3, 0, 7); x.fill(); } });
-    const post = new THREE.Mesh(new THREE.BoxGeometry(0.05, 2.1, 0.035), std({ map: holes, metalness: 0.7, roughness: 0.4 })); post.position.set(0, 1.05, -0.025); post.castShadow = true; g.add(post);
-    for (const s of [-1, 1]) box(0.008, 2.1, 0.04, galv(), s * 0.026, 1.05, -0.03, g);
+    const post = new THREE.Mesh(new THREE.BoxGeometry(0.05, 2.1, 0.012), std({ map: holes, metalness: 0.4, roughness: 0.45 })); post.position.set(0, 1.05, -0.012); post.castShadow = true; g.add(post);
+    for (const s of [-1, 1]) box(0.008, 2.1, 0.035, galv(), s * 0.026, 1.05, -0.03, g);
     g.userData.collider = [-0.15, 0.15, -0.08, 0.05];
   }
   return g;
@@ -228,7 +248,7 @@ export function makeUtilityLot() {
     // accessible stall (z -4.6..-1.9) painted blue with a white border + symbol; access aisle (z -1.9..0.8) striped
     x.fillStyle = '#2a5ac8'; x.fillRect(xa + m(1.6), m(-4.6 - Z0) + m(0.45), m(2.4), m(1.8));
     x.strokeStyle = '#f2f2ec'; x.lineWidth = m(0.1); x.strokeRect(xa + m(1.6), m(-4.6 - Z0) + m(0.45), m(2.4), m(1.8));
-    isa(x, xa + m(2.8), m(-3.25 - Z0), 1.2, '#f2f2ec');
+    isa(x, xa + m(2.8), m(-3.25 - Z0), 0.62, '#f2f2ec');
     x.fillStyle = '#f2f2ec'; x.save(); x.beginPath(); x.rect(xa, m(-1.9 - Z0), m(SD), m(2.7)); x.clip(); x.lineWidth = m(0.1); x.strokeStyle = '#f2f2ec';
     for (let k = -6; k < 10; k++) { x.beginPath(); x.moveTo(xa + k * m(0.9), m(-1.9 - Z0)); x.lineTo(xa + k * m(0.9) + m(2.7), m(0.8 - Z0)); x.stroke(); } x.restore();
     x.strokeRect(xa, m(-1.9 - Z0), m(SD), m(2.7));
@@ -260,7 +280,7 @@ export function makeUtilityLot() {
   for (const z of [3.5, 7.5]) { const wn = new THREE.Group(); wn.position.set(X1 - 0.02, 4.3, z); wn.rotation.y = -Math.PI / 2; g.add(wn); box(1.6, 1.3, 0.06, std({ color: '#e8e8e4' }), 0, 0, 0, wn); plane(1.44, 1.14, std({ color: '#5a7a8a', roughness: 0.05, metalness: 0.4, emissive: '#1a2a3a', emissiveIntensity: 0.4 }), 0, 0, 0.032, 0, wn); box(0.04, 1.14, 0.03, std({ color: '#e8e8e4' }), 0, 0, 0.04, wn); }
   // wall-pack lights over the stalls (dark bronze boxes with a glowing lens) light the wall and its equipment
   for (const z of [-6.0, 1.0, 6.5]) { box(0.28, 0.32, 0.4, std({ color: '#3a3430', metalness: 0.4 }), X1 - 0.2, 3.3, z, g); plane(0.3, 0.2, std({ color: '#fff4dc', emissive: '#ffe8c0', emissiveIntensity: 2.2 }), X1 - 0.41, 3.24, z, -Math.PI / 2, g); const wl = new THREE.PointLight('#ffe8c8', 7, 13, 1.5); wl.position.set(X1 - 0.8, 3.1, z); g.add(wl); }
-  const sign = makeAccessibleSign(false); sign.position.set(X1 - 0.19, 1.85, -3.25); sign.rotation.y = -Math.PI / 2; g.add(sign);
+  const sign = makeAccessibleSign(false); sign.position.set(X1 - 0.185, 1.6, -5.0); sign.rotation.y = -Math.PI / 2; g.add(sign);
   const fdc = makeSprinklerFDC(); fdc.position.set(X1 - 0.18, 0.95, -7.0); fdc.rotation.y = -Math.PI / 2; g.add(fdc);
   const cabs = makeWallCabinets(); cabs.position.set(X1, 0.03, 4.5); cabs.rotation.y = -Math.PI / 2; g.add(cabs);
   // a second accessible sign on a post at the head of the stall
