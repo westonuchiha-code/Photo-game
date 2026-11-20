@@ -5,6 +5,7 @@
 // napkin dispensers, the framed poster, the slatted fence and wall globes outside.
 import * as THREE from 'three';
 import { shrinkCanvases } from './texcache.js';
+import { makeTrail } from './models/trail40.js';
 import { makeKeiTruck, makeCoachBus, makeScoutTruck, makeWorkVan, makeCommuterTrain, makeTrainPlatform, PLAT_Y, makeVintageScooter, makeRustedScooter, makeKeiHatch } from './models/vehicles36.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
@@ -1147,6 +1148,11 @@ rect(TP.x - 13, TP.x + 13, TP.z + 0.05, TP.z + 4.6);                            
 const pSt = platform.userData.stairs;
 rect(TP.x - 13, TP.x + pSt.x0 - 0.05, TP.z - 3.05, TP.z - 2.9); rect(TP.x + pSt.x1 + 0.05, TP.x + 13, TP.z - 3.05, TP.z - 2.9);   // platform back edge
 rect(TP.x - 13.2, TP.x - 13, TP.z - 3, TP.z); rect(TP.x + 13, TP.x + 13.2, TP.z - 3, TP.z);
+// 40 Nature trail: a patch of hillside forest north-west of the city plaza
+const TRL = { x: -44, z: -14 };
+const trail = makeTrail(); trail.position.set(TRL.x, 0, TRL.z); add(trail);
+for (const [x0, x1, z0, z1] of trail.userData.colliders) colliders.push({ type: 'box', minX: TRL.x + x0, maxX: TRL.x + x1, minZ: TRL.z + z0, maxZ: TRL.z + z1 });
+const trlArea = (() => { const a = trail.userData.area; return { minX: TRL.x + a.minX, maxX: TRL.x + a.maxX, minZ: TRL.z + a.minZ, maxZ: TRL.z + a.maxZ }; })();
 const platformY = (x, z) => {
   const lx = x - TP.x, lz = z - TP.z;
   if (lx >= -13 && lx <= 13 && lz >= -3 && lz <= 0) return PLAT_Y;
@@ -1207,6 +1213,7 @@ const walk = new WalkControls(camera, renderer.domElement, {
     ...teaAreas, // the teahouse
     ...aoAreas, // the abandoned office
     ...krAreas, // the Knot Room
+    trlArea, // the nature trail
     { minX: TP.x - 12.8, maxX: TP.x + 12.8, minZ: TP.z - 5.2, maxZ: TP.z - 0.3 }, // train platform + its stairs
   ],
   colliders,
@@ -1218,6 +1225,8 @@ walk.ground = (x, z, prevY) => {
   if (sy !== null) return sy;
   const py = platformY(x, z);
   if (py !== null) return py;
+  const ty = trail.userData.floorY(x - TRL.x, z - TRL.z);
+  if (ty !== null) return ty;
   const ay = apt.userData.floorY(z - AP.z, AP.x - x, prevY);
   return ay !== null ? ay : rampFloorY(x, z);
 };
@@ -1347,6 +1356,8 @@ const VIEWS = {
   knotbar: { pos: [16.5, 1.6, 69.6], target: [20.2, 1.4, 69.6] },
   keitruck: { pos: [-26.2, 1.9, 48.9], target: [-22.75, 0.9, 44.5] },
   coach: { pos: [-24.5, 2.4, 27.5], target: [-29.7, 1.6, 36] },
+  trail: { pos: [-44.5, 1.7, -12.0], target: [-50, 1.4, -17] },
+  trail2: { pos: [-48.5, 1.8, -29.0], target: [-51, 0.8, -35.2] },
   keihatch: { pos: [-26.0, 1.6, 32.0], target: [-22.8, 0.8, 35.4] },
   scooters: { pos: [-23.6, 1.5, 50.4], target: [-20.9, 0.5, 48.8] },
   train: { pos: [-12.5, 2.6, 71.0], target: [-17.5, 2.0, 77.2] },

@@ -66,7 +66,8 @@ Rules (from you):
 - 36 Vehicles (approved; river boat skipped)
 - 37 Retro electronics (approved; steam loco cab skipped)
 - 38 Bar alley signage (already built as 28i bar alley)
-- 39 Peeling sticker (in review)
+- 39 Peeling sticker (approved)
+- 40 Nature trail (in review)
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text

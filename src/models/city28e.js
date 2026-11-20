@@ -238,10 +238,12 @@ export function makeLotusPond(W = 26, D = 30) {
   // skyline: tall towers far behind with lit window grids and red beacons
   const towerTex = (seed) => canvasTex(128, 512, (c, w, h) => { c.fillStyle = '#2a2d33'; c.fillRect(0, 0, w, h); const rr = rng(seed); for (let y = 6; y < h; y += 10) for (let x = 6; x < w - 4; x += 10) { if (rr() < 0.38) { c.fillStyle = rr() < 0.8 ? '#e8c890' : '#cfe0f0'; c.fillRect(x, y, 6, 6); } else { c.fillStyle = '#3a3e46'; c.fillRect(x, y, 6, 6); } } });
   [[-W * 0.45, 46, 7, 1], [-W * 0.3, 34, 6, 2], [-W * 0.12, 52, 7.5, 3], [W * 0.05, 26, 6, 4], [W * 0.3, 30, 7, 5], [-W * 0.6, 40, 6, 6]].forEach(([x, h, w, sd]) => {
-    const t = towerTex(sd); t.repeat.set(1, 1);
-    const tw = box(w, h, w, std({ map: t, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.55, roughness: 0.6 }), x, h / 2 - 1, -D - 40 - sd * 4);
+    const t = towerTex(sd); t.repeat.set(1, 1.7); t.repeat.set(1, 1);
+    // (pushed far back behind the nature trail, and scaled up so they still read over the trees)
+    const tz = -D - 230 - sd * 12; h *= 1.9; w *= 1.8;
+    const tw = box(w, h, w, std({ map: t, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.55, roughness: 0.6 }), x * 3.2, h / 2 - 1, tz);
     g.add(tw);
-    g.add(new THREE.Mesh(new THREE.SphereGeometry(0.4, 8, 6), glow(2.5, 0.3, 0.3)).translateX(x).translateY(h - 0.6).translateZ(-D - 40 - sd * 4));
+    g.add(new THREE.Mesh(new THREE.SphereGeometry(0.4, 8, 6), glow(2.5, 0.3, 0.3)).translateX(x * 3.2).translateY(h - 0.6).translateZ(tz));
   });
   g.userData.colliders = [[-W / 2 - 0.5, W / 2 + 0.5, 0.2, 0.5], [-W / 2 - 0.5, -W / 2, -D, 0.5], [W / 2, W / 2 + 0.5, -D, 0.5], [-W / 2, W / 2, -D, 0.2]];
   return g;
