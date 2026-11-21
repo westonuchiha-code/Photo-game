@@ -107,7 +107,7 @@ function kaijuArt() { return canvasT(1024, 768, (x, w, h) => { x.fillStyle = '#f
   x.fillStyle = '#111'; x.beginPath(); x.moveTo(700, 700); x.lineTo(720, 420); x.bezierCurveTo(700, 300, 760, 200, 820, 180); x.lineTo(900, 150); x.lineTo(880, 210); x.lineTo(930, 230); x.lineTo(860, 250); x.bezierCurveTo(840, 320, 880, 420, 860, 520); x.lineTo(900, 700); x.fill();
   for (let i = 0; i < 7; i++) { x.beginPath(); x.moveTo(740 - i * 4, 230 + i * 60); x.lineTo(690 - i * 6, 250 + i * 60); x.lineTo(730 - i * 4, 270 + i * 60); x.fill(); }
   x.fillStyle = '#fff'; x.beginPath(); x.arc(850, 190, 8, 0, 7); x.fill(); for (let i = 0; i < 4; i++) x.fillRect(870 + i * 12, 212, 5, 10);
-  x.fillStyle = '#d81e1e'; fitText(x, '怪獣大決戦', 520, 420, 260, 100, F.brush); x.fillStyle = '#111'; fitText(x, 'ほしぞら活動写真館', 520, 515, 270, 44, F.antique); x.fillStyle = '#d81e1e'; x.fillRect(400, 552, 240, 40); x.fillStyle = '#fff'; fitText(x, 'OPEN 12:00–20:00', 520, 574, 220, 26, F.label);  /* polish: kept clear of the tail */ }); }
+  x.fillStyle = '#d81e1e'; fitText(x, '怪獣大決戦', 640, 100, 300, 96, F.brush, { stroke: '#111' }); x.fillStyle = '#111'; fitText(x, 'ほしぞら活動写真館', 520, 515, 270, 44, F.antique); x.fillStyle = '#d81e1e'; x.fillRect(400, 552, 240, 40); x.fillStyle = '#fff'; fitText(x, 'OPEN 12:00–20:00', 520, 574, 220, 26, F.label);  /* polish: kept clear of the tail */ }); }
 export function makeKaijuShutter() {
   const g = new THREE.Group(); g.name = 'kaiju_shutter';
   const red = canvasT(256, 512, (x, w, h) => { x.fillStyle = '#c81e28'; x.fillRect(0, 0, w, h); x.fillStyle = 'rgba(0,0,0,0.12)'; for (let i = 0; i < 20; i++) x.fillRect((i * 53) % w, (i * 97) % h, 30, 3); });

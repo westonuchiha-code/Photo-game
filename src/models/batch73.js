@@ -389,8 +389,8 @@ export function makePocketPark() {
   // pines: tall bare trunks with flat clumps of needles; low shrubs and a low stone edging along the paths
   const r = rng(73), bark = b84Mat('b84_bark_shaggy', 1, 6), needles = std({ color: '#2a4a2a', roughness: 0.9, flatShading: true });
   for (const [x, z, h] of [[-6, 3, 8], [-18, 4, 9], [4, 15, 9.5], [-8, 14.5, 7], [18, 13, 8.5], [-3, 12.5, 6]]) { const lean = (r() - 0.5) * 0.4; const top = V(x + lean * 2, h, z + lean); rod(V(x, 0, z), top, 0.18, bark, g, 10); for (let k = 0; k < 4; k++) { const c = sphere(1.6 - k * 0.2, needles, top.x + (r() - 0.5) * 2.4, h - 1.6 + k * 0.7, top.z + (r() - 0.5) * 2.0, g, 8, 5); c.scale.y = 0.35; } cols.push([x - 0.25, x + 0.25, z - 0.25, z + 0.25]); }
-  for (let i = 0; i < 18; i++) { const x = -W / 2 + 1 + r() * (W - 2), z = 1 + r() * (D - 2); if (Math.abs(x) < 2.5 || (z > 7 && z < 10.5) || Math.hypot(x - 9, z - 12.4) < 3.5 || Math.hypot(x + 14.5, z - 13.4) < 3.2 || (x > 13 && x < 18 && z < 9)) continue; const s = sphere(0.5 + r() * 0.4, std({ color: '#3a5a2a', roughness: 0.9 }), x, 0.3, z, g, 10, 6); s.scale.y = 0.6; }
-  put(makeDomedTrashCan(), 3.2, 1.6); put(makeKidsSlide(), -16.5, 3.2, 0.6);  /* polish: blue-plastic slide */ put(makeSlatBench(true), -3.6, 8.75);   // item 85
+  for (let i = 0; i < 18; i++) { const x = -W / 2 + 1 + r() * (W - 2), z = 1 + r() * (D - 2); if (Math.hypot(x + 11.5, z - 3.4) < 2.6 || Math.abs(x) < 2.5 || (z > 7 && z < 10.5) || Math.hypot(x - 9, z - 12.4) < 3.5 || Math.hypot(x + 14.5, z - 13.4) < 3.2 || (x > 13 && x < 18 && z < 9)) continue; const s = sphere(0.5 + r() * 0.4, std({ color: '#3a5a2a', roughness: 0.9 }), x, 0.3, z, g, 10, 6); s.scale.y = 0.6; }
+  put(makeDomedTrashCan(), 3.2, 1.6); put(makeKidsSlide(), -11.5, 2.6, 0.6);  /* polish: blue-plastic slide */ put(makeSlatBench(true), -3.6, 8.75);   // item 85
   put(makeStump(4), -4.5, 5.0); put(makeBarkTree('scored', 2, 6.5), 6.0, 4.6); put(makeBarkTree('split', 5, 5.5), -10.5, 9.0);   // item 84
   const edge = std({ color: '#9a9890' }); for (const s of [-1, 1]) box(0.15, 0.12, D, edge, s * 1.6, 0.06, D / 2, g);
   g.userData.colliders = cols;

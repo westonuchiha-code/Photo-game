@@ -10,6 +10,7 @@ import { F, fitText } from '../fonts.js';
 import { brickMat } from './batch78.js';
 import { libMat82 } from './batch82.js';
 import { makeCakeTable } from './batch84.js';
+import { makeRestroom, makePaperSackPallet, makeFloorScrubber, makeWetFloorStanding, makeStainlessWall, makeDockPlate } from './batch86.js';
 import { makeCookieTower, makeFlyerShelf, makeServiceCounter, makeLaundryGondola } from './batch85.js';
 import { makeEnergyEndcap, makeCakeMixGondola, makeSpiceWall, makeStockingCart, makeDiscontinuedHandheld, makeFoldingEbike, makeWaveRack } from './batch81.js';
 
@@ -194,6 +195,13 @@ export function makeHearthMarket() {
   // online-pickup staging corner, back-left, behind a half wall with a sign
   const pw = std({ color: '#e8e4dc' }); box(0.15, 1.4, 6, pw, -7.2, 0.7, -18.5, g); box(5.5, 1.4, 0.15, pw, -9.95, 0.7, -15.5, g); cols.push([-7.3, -7.1, -21.5, -15.5], [-12.7, -7.2, -15.6, -15.4]);
   const ps = canvasT(512, 128, (x, w, h) => { x.fillStyle = '#1e6ad8'; x.fillRect(0, 0, w, h); x.fillStyle = '#fff'; fitText(x, 'ONLINE PICKUP · STAFF ONLY', w / 2, 66, w - 40, 50, F.heavy); }); plane(3.6, 0.9, glow(ps, 0.5), -10.5, 3.2, -15.4, 0, g);
+  // item 86: the restroom in the back-right corner (door faces the aisle), stainless panels on the corridor wall beside
+  // it, the standing wet-floor sign at its door; in the pickup corner a floor-scrubber robot, a paper-sack case pallet
+  // on a green tread-plate dock plate
+  { const rr = makeRestroom(3.0, 3.4); rr.position.set(9.6, 0, -18.4); g.add(rr); for (const [a, b, c0, c1] of rr.userData.colliders) cols.push([9.6 + a, 9.6 + b, -18.4 + c0, -18.4 + c1]); g.userData.restroomAreas = rr.userData.areas.map((q) => ({ minX: q.minX + 9.6, maxX: q.maxX + 9.6, minZ: q.minZ - 18.4, maxZ: q.maxZ - 18.4 })); }
+  put(makeStainlessWall(2.4, 2.4), 6.85, -20.0, Math.PI / 2); put(makeWetFloorStanding(), 9.3, -17.6, 0.3);
+  put(makeFloorScrubber(), -11.7, -16.6, Math.PI / 2);
+  { const dp = makeDockPlate(1.6, 1.3); dp.position.set(-8.3, 0.0, -19.8); g.add(dp); } put(makePaperSackPallet(), -8.3, -19.8, 0.05);
   put(makeWrappedTotePallet(3), -12.6, -20.6); put(makeToteStacks(), -10.9, -20.6); put(makeToteStacks(), -9.2, -20.6, 0.0);
   const cl1 = makeCaseLabelBox(5); put(cl1, -8.2, -17.0, -0.3); const cl2 = makeCaseLabelBox(6); cl2.scale.setScalar(1); put(cl2, -8.3, -16.9, 0.2, 0.4); cl2.userData.collider = null;
   const hs = makeHandheldScanner(); hs.position.set(-9.5, 0.145 + 0.32 * 6 + 0.02, -20.81); hs.rotation.set(-Math.PI / 2 + 0.05, 0, 0.3); g.add(hs);
