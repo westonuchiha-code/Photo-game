@@ -303,3 +303,11 @@ This is a running list, added to as models get built. Nothing here is urgent.
 - Bleach aisle: the jug handles are generic loops; mould them into the jug shoulder.
 - Unused from batch 85: brushed bronze (only on the flyer shelf caps) and blue pebbled plastic (could be a slide /
   kids' play set in the pocket park).
+
+## Streaming (in progress)
+- Step 1 done: size-based distance culling (src/stream.js) + per-building static mesh merge. Hearth view draw calls
+  ~93k -> ~1.6k, fairgrounds ~77k -> ~0.5k. Old town still ~4-6k (interactables make merging risky there).
+- Step 2a done: texture zones. Core packs (72 MB) before start, district packs (38 MB) stream in afterwards.
+  Re-run tools/record_zones.js whenever new district content adds textures (else they ride in the core packs).
+- Next: 2b lazy-build district sites (needed once the map grows; today the district's JS build is only ~2 s),
+  split the old town into zones too (it's most of the 72 MB), drop textures/geometry of far sites from GPU memory.
