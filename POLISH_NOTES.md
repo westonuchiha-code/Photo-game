@@ -248,3 +248,9 @@ This is a running list, added to as models get built. Nothing here is urgent.
   (the kaiju shutter's "Hoshizora" picture house).
 - The kaiju shutter's red title runs into the monster's tail; nudge the lettering left.
 - The CRT console TV could show a static/attract screen when switched on.
+
+## 76 Batch 76
+- Kei car: the glasshouse is a squashed rounded box; a proper lofted cabin with A-pillar curves, door gaps, a bench
+  seat and dash would make it hold up close. The mirror stalks render as black discs (no env map for chrome).
+- Walk-in freezer: no frost/vapour; add breath fog + a cold blue tint inside, and frost on the evaporators.
+- The camp stove is a plain box; add knobs, a gas canister.

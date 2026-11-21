@@ -14,6 +14,7 @@
 //   makeWarehouseStore()  the store building: two-tone brick (photo) with a downpipe and the slatted bin outside,
 //                         a roll-up dock door, the interior aisles with all of the above, a break table with food
 import * as THREE from 'three';
+import { makeWalkInFreezer, makeCardboardCoolerRow } from './batch76.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { F, fitText } from '../fonts.js';
 
@@ -302,6 +303,11 @@ export function makeWarehouseStore() {
     const aisle = canvasT(256, 128, (x, w, h) => { x.fillStyle = '#1e4ab8'; x.fillRect(0, 0, w, h); x.fillStyle = '#f2c21a'; fitText(x, `AISLE ${seed}`, w / 2, 44, w - 30, 46, F.heavy); x.fillStyle = '#fff'; fitText(x, ['paper · cleaning', 'snacks · drinks', 'pantry · canned', 'home · seasonal'][seed - 1], w / 2, 98, w - 30, 26, F.label); });
     const hs = plane(1.4, 0.7, std({ map: aisle, side: THREE.DoubleSide }), -3 + L / 2 + 0.2, 4.2, z, Math.PI / 2, g); void hs;
   }
+  // item 76: a walk-in freezer of roll-cage carts on the right wall (its door faces the aisle) and a reach-in cooler
+  // row with two doors patched in cardboard
+  const fz = makeWalkInFreezer(); fz.position.set(X1 - 2.2, 0, 1.4); fz.rotation.y = -Math.PI / 2; g.add(fz);
+  for (const [a, b, c0, c1] of fz.userData.colliders) cols.push([X1 - 2.2 - c1, X1 - 2.2 - c0, 1.4 + a, 1.4 + b]);   // quarter turn: local z -> -x, local x -> z
+  put(makeCardboardCoolerRow(4, [1, 2]), X1 - 1.0, 6.3, -Math.PI / 2);
   // break table near the entrance with the food from this batch
   const brk = new THREE.Group(); brk.position.set(10, 0, 9); g.add(brk);
   box(1.8, 0.05, 0.9, std({ color: '#e8e4dc' }), 0, 0.74, 0, brk); for (const sx of [-1, 1]) for (const sz of [-1, 1]) box(0.05, 0.74, 0.05, std({ color: '#5a5c60', metalness: 0.5 }), sx * 0.82, 0.37, sz * 0.38, brk);

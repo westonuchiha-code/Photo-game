@@ -20,6 +20,7 @@ import { makeCafeFrontage } from './models/signs65.js';
 import { makeCanalPark } from './models/misc67.js';
 import { makeArtGallery } from './models/inspo68.js';
 import { makeWarehouseStore } from './models/inspo69.js';
+import { makeKeiGarage } from './models/batch76.js';
 import { makeMallPassage } from './models/batch75.js';
 import { makeQueueCard, makeEnergyCan74, makeAppAdPost, makeStickerPole, makeStickerPillar } from './models/batch74.js';
 import { makeOldTownRow, makePocketPark, makeGyudonBowl, makeSickle } from './models/batch73.js';
@@ -1417,6 +1418,12 @@ const NM = { x: 259, z: -77 };
 const nmall = makeMallPassage(); nmall.position.set(NM.x, 0.14, NM.z); nmall.rotation.y = Math.PI; add(nmall);
 for (const c of nmall.userData.colliders) rect(...piMap(NM.x, NM.z, c));
 const nmAreas = nmall.userData.areas.map((a) => { const [minX, maxX, minZ, maxZ] = piMap(NM.x, NM.z, [a.minX, a.maxX, a.minZ, a.maxZ]); return { minX, maxX, minZ, maxZ }; });
+// 76 batch 76: the dusty kei car in its own garage next to the pink house (with a camp-stove breakfast); the walk-in
+// freezer + cardboard-patched coolers are inside Bulk Barn (inspo69); the PLEASE LAY FLAT painting is in the gallery
+const KG = { x: 186.5, z: 77 };
+const kgar = makeKeiGarage(); kgar.position.set(KG.x, 0.02, KG.z); add(kgar);
+for (const [x0, x1, z0, z1] of kgar.userData.colliders) rect(KG.x + x0, KG.x + x1, KG.z + z0, KG.z + z1);
+const kgAreas = kgar.userData.areas.map((a) => ({ minX: a.minX + KG.x, maxX: a.maxX + KG.x, minZ: a.minZ + KG.z, maxZ: a.maxZ + KG.z }));
 const dnAreas = [...dentist.userData.areas, ...wing.userData.areas].map((a) => { const [minX, maxX, minZ, maxZ] = dnW([a.minX, a.maxX, a.minZ, a.maxZ]); return { minX, maxX, minZ, maxZ }; });
 
 const walk = new WalkControls(camera, renderer.domElement, {
@@ -1457,6 +1464,7 @@ const walk = new WalkControls(camera, renderer.domElement, {
     ...arAreas, // the arcade
     ...otAreas, // inside Club Nova
     ...nmAreas, // the Nakamachi Arcade passage
+    ...kgAreas, // the kei car garage
     { minX: PP.x - 19.8, maxX: PP.x + 19.8, minZ: PP.z, maxZ: PP.z + 16.8 }, // the pocket park
     { minX: TM.x - 13, maxX: TM.x + 13, minZ: TM.z - 26.6, maxZ: TM.z + 0.3 }, // the temple plaza, stairs + platform top
     { minX: FG.x - 29.6, maxX: FG.x + 29.6, minZ: FG.z - 16.2, maxZ: FG.z + 16.8 }, // the fairgrounds
@@ -1609,6 +1617,12 @@ const VIEWS = {
   lakeshutter: { pos: [257.6, 1.8, -72.8], target: [261.1, 1.7, -72.8] },
   kaijushutter: { pos: [260.6, 1.8, -69.2], target: [256.9, 1.9, -69.2] },
   gamestall: { pos: [259.2, 1.6, -65.8], target: [259.2, 1.1, -62.3] },
+  keicar: { pos: [187.4, 1.3, 78.6], target: [186.1, 0.75, 75.6] },
+  breakfast: { pos: [186.9, 1.45, 76.9], target: [187.65, 0.75, 76.0] },
+  freezer: { pos: [272.4, 1.7, 107.3], target: [267.0, 1.2, 107.3] },
+  cardboardcooler: { pos: [271.8, 1.5, 101.7], target: [267.0, 1.1, 101.7] },
+  padlock: { pos: [270.95, 1.3, 105.75], target: [270.4, 1.2, 105.72] },
+  layflat: { pos: [345.0, 1.6, 13.9], target: [345.05, 1.6, 11.3] },
   pixelden: { pos: [353, 2.2, 82.5], target: [348, 2.6, 93] },
   arcadein: { pos: [352.5, 1.7, 94.5], target: [347, 1.2, 99.5] },
   gameroom: { pos: [348, 1.7, 100.5], target: [348, 1.4, 108.6] },
