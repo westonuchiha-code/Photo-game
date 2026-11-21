@@ -1,9 +1,12 @@
 """Converts assets/textures/* into WebP and packs them for the published build (tools/build_web.mjs).
   python3 tools/pack_textures.py <textures dir> <out dir>
 Quality policy (the PNGs in the repo stay the masters):
-  - lossless WebP for normal maps (*_n, *_normal), anything with real transparency, and small flat graphics (< 40 KB PNG)
-  - every other image lossy at quality 94; it is decoded again and compared with the PNG, and if the error is above a
-    visually-transparent level (PSNR < 44 dB) it is re-encoded at 98, then losslessly
+  - photos / colour maps: lossy WebP q88; normal maps: lossy q90; images with transparency: lossy colour + lossless
+    alpha (cut-out edges stay exact). Game textures are seen at a distance, under lighting, mip-mapped: at these
+    qualities the difference is invisible in play and the download is ~3.5x smaller than the old q94/lossless policy
+  - safety net: if an image decodes with a big error (PSNR < 32 dB: flat graphics, pixel art, sharp lettering) it is
+    re-encoded at q96, then losslessly
+  - small flat graphics (< 40 KB PNG, not normal maps) stay lossless
   - non-image files (json) are packed as they are
 Writes <out>/pack<N>.wasm (8 core + 6 district hash buckets, see below; a served binary type on the artifact host, raw bytes, not WebAssembly) and <out>/packs.json: { "assets/textures/<name>": [pack, offset, length, mime] }
 """
@@ -27,16 +30,16 @@ def encode(name):
     rgba = im.convert('RGBA'); has_alpha = np.asarray(rgba)[:, :, 3].min() < 255
     src = rgba if has_alpha else im.convert('RGB')
     stem = os.path.splitext(name)[0]
-    lossless = has_alpha or stem.endswith('_n') or stem.endswith('_normal') or os.path.getsize(p) < 40_000
+    normal = stem.endswith('_n') or stem.endswith('_normal')
     def enc(**kw):
         b = io.BytesIO(); src.save(b, 'WEBP', **kw); return b.getvalue()
-    if lossless:
+    if os.path.getsize(p) < 40_000 and not normal:
         data, how = enc(lossless=True, quality=100, method=5), 'lossless'
     else:
         ref = np.asarray(src)
-        for q in (94, 98):
-            data = enc(quality=q, method=6)
-            if psnr(ref, np.asarray(Image.open(io.BytesIO(data)).convert(src.mode))) >= 44: how = f'q{q}'; break
+        for q in ((90, 96) if normal else (88, 96)):
+            data = enc(quality=q, method=6, alpha_quality=100)
+            if psnr(ref, np.asarray(Image.open(io.BytesIO(data)).convert(src.mode))) >= 32: how = f'q{q}'; break
         else:
             data, how = enc(lossless=True, quality=100, method=5), 'lossless'
     if len(data) >= os.path.getsize(p):          # never ship something bigger than the PNG: keep the PNG bytes then
@@ -63,7 +66,10 @@ if __name__ == '__main__':
         k = NC + zlib.crc32(name.encode()) % ND if name in district else zlib.crc32(name.encode()) % NC
         index['assets/textures/' + name] = [k, len(packs[k]), len(data), mime]; packs[k] += data
     for i, b in enumerate(packs): open(os.path.join(OUT, f'pack{i}.wasm'), 'wb').write(b)
-    json.dump({'packs': [len(b) for b in packs], 'core': list(range(NC)), 'files': index}, open(os.path.join(OUT, 'packs.json'), 'w'))
+    # a short content hash per pack: the boot script caches packs in the browser under it, so a repeat visit only
+    # downloads the packs that changed
+    import hashlib
+    json.dump({'packs': [len(b) for b in packs], 'hashes': [hashlib.sha1(b).hexdigest()[:12] for b in packs], 'core': list(range(NC)), 'files': index}, open(os.path.join(OUT, 'packs.json'), 'w'))
     tot = sum(os.path.getsize(os.path.join(SRC, n)) for n in names)
     kinds = {}
     for _, _, _, how in res: kinds[how] = kinds.get(how, 0) + 1

@@ -2057,6 +2057,7 @@ neon.traverse((o) => { if (o.isMesh && o.material.isMeshBasicMaterial && o.mater
 // polish pass: anything with userData.tick(t, dt) animates (message boards, creek water, arcade screens...)
 let tickers = null;
 function frame() {
+  if (window.__loadingHold) { clock.getDelta(); requestAnimationFrame(frame); return; }   // (loading screen up: see loading.js)
   const dt = Math.min(clock.getDelta(), 0.05);
   t += dt;
   if (!tickers) { tickers = []; scene.traverse((o) => { if (o.userData && typeof o.userData.tick === 'function') tickers.push(o); }); }

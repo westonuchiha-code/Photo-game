@@ -350,3 +350,13 @@ This is a running list, added to as models get built. Nothing here is urgent.
 - Jumps (drive.js): ramps are a height field; the car rides them, and if the ground falls away while it's climbing it
   flies (gravity, slight air-steer, nose follows the arc, landing thump). A ramp's side or back is a wall.
 - Views: elmloop, loopeast, jumplot, jumpramps.
+
+## Loading times (pass 2)
+- Texture encoding (tools/pack_textures.py): colour maps WebP q88, normal maps lossy q90, transparency = lossy colour +
+  lossless alpha; PSNR < 32 dB falls back to q96 / lossless; small flat graphics stay lossless. PNG masters unchanged.
+  Startup (core) packs 72 MB -> 25 MB, all packs 110 MB -> 42 MB. Rendered frames old vs new: PSNR 51-60 dB.
+- Boot (tools/boot.js): the world builds while the core packs download (texture loads wait on their pack); the
+  loading bar shows MB. Packs are cached in the browser (Cache Storage, keyed by a per-pack content hash in
+  packs.json), so repeat visits load from disk and only changed packs download again.
+- loading.js: only textures within ~70 m of the start are uploaded before the world shows; the other ~3000 go up in
+  6 ms batches afterwards.
