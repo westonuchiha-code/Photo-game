@@ -114,7 +114,8 @@ Rules (from you):
 - 83 Batch 83 (approved)
 - 84 Batch 84 (approved)
 - 85 Batch 85 (approved)
-- Polish pass (in progress; batch 86 queued after round 1)
+- Polish pass round 1 (in review)
+- 86 Batch 86 (in review)
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
