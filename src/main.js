@@ -1720,6 +1720,7 @@ const VIEWS = {
   benchball: { pos: [284.4, 1.25, -70.2], target: [284.6, 0.55, -68.25] },
   culvert: { pos: [179.9, 1.4, 143.6], target: [179.8, 0.35, 139.9] },
   creek: { pos: [179.8, 2.2, 129.0], target: [179.8, 0.3, 138.0] },
+  kidsslide: { pos: [267.0, 1.8, -71.0], target: [271.5, 0.8, -73.0] },
   pixelden: { pos: [353, 2.2, 82.5], target: [348, 2.6, 93] },
   arcadein: { pos: [352.5, 1.7, 94.5], target: [347, 1.2, 99.5] },
   gameroom: { pos: [348, 1.7, 100.5], target: [348, 1.4, 108.6] },
@@ -1999,9 +2000,13 @@ useBtn.addEventListener('click', useNearest);
 addEventListener('keydown', (e) => { if (e.code === 'KeyE') useNearest(); });
 const amberMats = new Set();
 neon.traverse((o) => { if (o.isMesh && o.material.isMeshBasicMaterial && o.material.color.r > 1.9 && o.material.color.b === 0) amberMats.add(o.material); });
+// polish pass: anything with userData.tick(t, dt) animates (message boards, creek water, arcade screens...)
+let tickers = null;
 function frame() {
   const dt = Math.min(clock.getDelta(), 0.05);
   t += dt;
+  if (!tickers) { tickers = []; scene.traverse((o) => { if (o.userData && typeof o.userData.tick === 'function') tickers.push(o); }); }
+  for (const o of tickers) o.userData.tick(t, dt);
   if (mode === 'walk') walk.update(dt);
   else if (!window.__lock) orbit.update();
   sky.userData.update(camera, t);

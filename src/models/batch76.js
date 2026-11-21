@@ -50,7 +50,7 @@ export function makeKeiCar() {
   const nose = L / 2;
   const grille = canvasT(256, 96, (x, w, h) => { x.fillStyle = '#d8d4c8'; x.fillRect(0, 0, w, h); x.fillStyle = '#2a2a2a'; for (let j = 0; j < 5; j++) for (let i = 0; i < 26; i++) { x.beginPath(); const cx = 6 + i * 9.6 + (j % 2) * 4.8, cy = 10 + j * 17; for (let k = 0; k < 6; k++) x.lineTo(cx + Math.cos(k * Math.PI / 3) * 4, cy + Math.sin(k * Math.PI / 3) * 4); x.fill(); } x.fillStyle = 'rgba(200,190,170,0.5)'; x.fillRect(0, 0, w, h); });
   plane(0.72, 0.22, std({ map: grille, roughness: 0.6 }), 0, 0.62, nose + 0.002, 0, g);
-  const chrome = std({ color: '#c8ccd0', metalness: 0.9, roughness: 0.35 }), dustyChrome = std({ color: '#b8b4a8', metalness: 0.6, roughness: 0.6 });
+  const chrome = std({ color: '#c8ccd0', metalness: 0.3, roughness: 0.3 }), dustyChrome = std({ color: '#b8b4a8', metalness: 0.6, roughness: 0.6 });
   for (const s of [-1, 1]) { const rim = cyl(0.095, 0.095, 0.05, dustyChrome, s * 0.48, 0.62, nose - 0.005, g, 24); rim.rotation.x = Math.PI / 2; const lens = sphere(0.085, phys({ color: '#e8eef0', roughness: 0.25, transparent: true, opacity: 0.8 }), s * 0.48, 0.62, nose + 0.01, g, 20, 10); lens.scale.z = 0.35;
     const ind = box(0.12, 0.05, 0.03, std({ color: '#e88a2a', emissive: '#6a3a0a', emissiveIntensity: 0.3 }), s * 0.47, 0.34, nose + 0.01, g); void ind;
     // round mirrors on stalks out on the front wings

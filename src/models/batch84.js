@@ -107,7 +107,7 @@ export function makeCakeSlice(kind = 'strawberry', seed = 1) {
   if (c.pearls) for (let i = 0; i < 9; i++) sphere(0.004, phys({ color: i % 3 ? '#f4ece0' : '#5a2a14', roughness: 0.25, clearcoat: 1 }), (r() - 0.5) * W * 0.8, H + 0.013, (r() - 0.5) * D * 0.8, g, 8, 6);
   if (c.sprinkles) for (let i = 0; i < 30; i++) { const s = box(0.005, 0.0015, 0.0015, std({ color: ['#e8402a', '#2a8ad8', '#f2c21a', '#3ab84a', '#f28ab8'][i % 5] }), (r() - 0.5) * W * 0.9, H + 0.011, (r() - 0.5) * D * 0.9, g); s.rotation.y = r() * 3; }
   // the clamshell: a clear base tray + a hinged domed lid (rounded boxes), a bakery sticker + a SELL BY label on the lid
-  const clear = phys({ color: '#ffffff', transparent: true, opacity: 0.16, roughness: 0.04, clearcoat: 1, depthWrite: false, side: THREE.DoubleSide });
+  const clear = phys({ color: '#ffffff', transparent: true, opacity: 0.07, roughness: 0.03, clearcoat: 1, depthWrite: false, side: THREE.FrontSide });
   const base = new THREE.Mesh(new RoundedBoxGeometry(W + 0.03, 0.03, D + 0.03, 3, 0.008), clear); base.position.y = 0.015; g.add(base);
   const lid = new THREE.Mesh(new RoundedBoxGeometry(W + 0.034, H + 0.025, D + 0.034, 3, 0.015), clear); lid.position.y = 0.03 + (H + 0.025) / 2; lid.renderOrder = 2; g.add(lid);
   const st = canvasT(128, 128, (x, w, h) => { x.fillStyle = '#c8e8ec'; x.beginPath(); x.arc(64, 64, 62, 0, 7); x.fill(); x.strokeStyle = '#3a5a60'; x.lineWidth = 3; x.beginPath(); x.arc(64, 64, 54, 0, 7); x.stroke(); x.fillStyle = '#3a5a60'; fitText(x, 'SUGARLEAF', 64, 50, 96, 18, F.label); fitText(x, 'BAKERY', 64, 72, 80, 16, F.label); fitText(x, '♥', 64, 94, 20, 18, F.label); });

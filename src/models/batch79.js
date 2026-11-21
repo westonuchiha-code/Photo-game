@@ -20,8 +20,8 @@ const decal = (t) => std({ map: t, transparent: true, alphaTest: 0.05, polygonOf
 function windowDoor(p, w, h, y, z, paper, frameM) {
   box(w + 0.04, h + 0.04, 0.02, frameM, 0, y, z, p);
   const pg = canvasT(256, 320, (x, cw, ch) => { x.fillStyle = '#ece8dc'; x.fillRect(0, 0, cw, ch); x.fillStyle = '#111'; fitText(x, paper, cw / 2, 36, cw - 20, 34, F.engraved); x.fillRect(12, 56, cw - 24, 3); x.fillStyle = '#6a6a6a'; x.fillRect(14, 70, 130, 110); x.fillStyle = '#333'; for (let i = 0; i < 12; i++) x.fillRect(154, 70 + i * 10, 88, 4); for (let i = 0; i < 9; i++) x.fillRect(14, 196 + i * 12, cw - 28, 4); });
-  plane(w - 0.02, h - 0.02, std({ map: pg, roughness: 0.9 }), 0, y, z + 0.005, 0, p);
-  plane(w, h, phys({ color: '#d8e4ea', transparent: true, opacity: 0.25, roughness: 0.08, depthWrite: false }), 0, y, z + 0.016, 0, p);
+  plane(w - 0.02, h - 0.02, std({ map: pg, roughness: 0.9, emissive: '#ffffff', emissiveMap: pg, emissiveIntensity: 0.25 }), 0, y, z + 0.005, 0, p);
+  plane(w, h, phys({ color: '#d8e4ea', transparent: true, opacity: 0.12, roughness: 0.08, depthWrite: false }), 0, y, z + 0.016, 0, p);
   box(0.12, 0.025, 0.03, frameM, 0, y - h / 2 - 0.03, z + 0.02, p);
 }
 function stickers(p, w, y0, y1, z, seed, n = 7) { const r = rng(seed); for (let i = 0; i < n; i++) { const kind = i % 5; const t = canvasT(128, 128, (x, cw, ch) => { x.clearRect(0, 0, cw, ch);

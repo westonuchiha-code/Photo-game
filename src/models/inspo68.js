@@ -115,7 +115,7 @@ export function makeArtGallery() {
   const tbl = new THREE.Group(); tbl.position.set(4.6, 0, 3.0); g.add(tbl); cyl(0.42, 0.42, 0.03, std({ color: '#e8e4dc' }), 0, 0.75, 0, tbl, 32); cyl(0.04, 0.04, 0.75, blk, 0, 0.375, 0, tbl, 12); cyl(0.25, 0.25, 0.02, blk, 0, 0.01, 0, tbl, 24);
   const cp = makeCurryPlate(); cp.position.y = 0.766; tbl.add(cp);
   for (const s of [-1, 1]) { const ch = new THREE.Group(); ch.position.set(4.6 + s * 0.65, 0, 3.0); ch.rotation.y = s * Math.PI / 2; g.add(ch); box(0.42, 0.04, 0.42, blk, 0, 0.45, 0, ch); box(0.42, 0.45, 0.04, blk, 0, 0.7, -0.2, ch); for (const a of [-1, 1]) for (const b of [-1, 1]) box(0.03, 0.45, 0.03, blk, a * 0.18, 0.225, b * 0.18, ch); }
-  { const pc = makePrimedCanvases(); pc.position.set(X1 - 0.6, 0, Z0 + 0.35); g.add(pc); }   // item 82: two primed canvases in the corner
+  { const pc = makePrimedCanvases(); pc.position.set(X1 - 0.6, 0, Z0 + 0.35); g.add(pc); const sp = new THREE.SpotLight('#fff1dc', 5, 5, 0.5, 0.6, 1.5); sp.position.set(X1 - 1.6, H - 0.3, Z0 + 1.6); sp.target.position.set(X1 - 0.6, 0.4, Z0 + 0.4); g.add(sp, sp.target); }   // item 82: two primed canvases in the corner
   const fill = new THREE.PointLight('#fff4e8', 5, 12, 1.4); fill.position.set(0, H - 0.4, 3.3); g.add(fill);
   g.userData.colliders = [[X0 - 0.2, X0 + 0.1, Z0, Z1], [X1 - 0.1, X1 + 0.2, Z0, Z1], [X0, X1, Z0 - 0.2, Z0 + 0.1], [X0, -1.1, Z1 - 0.15, Z1 + 0.15], [1.1, X1, Z1 - 0.15, Z1 + 0.15], [-1.0, 1.0, -0.75, -0.25], [3.85, 5.35, 2.4, 3.6], [-2.2, 2.2, 1.72, 1.88]];
   g.userData.areas = [{ minX: X0 + 0.3, maxX: X1 - 0.3, minZ: Z0 + 0.3, maxZ: Z1 - 0.2 }, { minX: -1.05, maxX: 1.05, minZ: Z1 - 0.4, maxZ: Z1 + 0.6 }];

@@ -166,7 +166,9 @@ export function makeSlatBench(withBall = true) {
 export function makeCreekCrossing(Lz = 30) {
   const g = new THREE.Group(); g.name = 'creek_crossing'; const W = 2.0, BH = 0.55, BW = 1.0, r = rng(85), HALF = 1.4;
   const bed = new THREE.Mesh(new THREE.PlaneGeometry(W, Lz), b85Mat('b85_creekbed', 1, Lz / 2)); bed.rotation.x = -Math.PI / 2; bed.position.y = 0.02; bed.receiveShadow = true; g.add(bed);
-  const water = new THREE.Mesh(new THREE.PlaneGeometry(W, Lz), phys({ color: '#6a8a7a', transparent: true, opacity: 0.35, roughness: 0.04, clearcoat: 1, depthWrite: false })); water.rotation.x = -Math.PI / 2; water.position.y = 0.09; g.add(water);
+  const ripN = tex('b85_creekbed_n', 1.5, Lz / 1.5, false).clone(); ripN.needsUpdate = true; ripN.repeat.set(1.5, Lz / 1.5);
+  const water = new THREE.Mesh(new THREE.PlaneGeometry(W, Lz), phys({ color: '#6a8a7a', transparent: true, opacity: 0.38, roughness: 0.06, clearcoat: 1, normalMap: ripN, normalScale: new THREE.Vector2(0.35, 0.35), depthWrite: false })); water.rotation.x = -Math.PI / 2; water.position.y = 0.09; g.add(water);
+  g.userData.tick = (t) => { ripN.offset.set(Math.sin(t * 0.3) * 0.02, -t * 0.12); };   // polish pass: the creek flows
   // berms: a trapezoid cross-section extruded along z, split at the crossing
   const bermM = b85Mat('b83_sandydirt', 1, 6, { color: '#a89878' });
   for (const s of [-1, 1]) for (const [z0, z1] of [[-Lz / 2, -HALF], [HALF, Lz / 2]]) {
@@ -189,5 +191,24 @@ export function makeCreekCrossing(Lz = 30) {
   for (let i = 0; i < 6; i++) { const z = (r() - 0.5) * (Lz - 6); if (Math.abs(z) < 2.5) continue; rod(V(-0.8 + r() * 0.2, 0.06, z), V(0.7 + r() * 0.2, 0.14, z + (r() - 0.5) * 1.5), 0.025, std({ color: '#d8d0c0', roughness: 0.9 }), g, 6); }
   g.userData.colliders = [[-HW, HW, -Lz / 2, -HALF], [-HW, HW, HALF, Lz / 2]];
   g.userData.crossing = { halfDeck: HW, ramp: 2.0, height: 0.66, halfWidth: 1.2 };
+  return g;
+}
+
+// polish pass: a kids' slide in the blue pebbled plastic (the unused batch-85 texture): a ladder, a little deck with
+// rails, and a curved chute
+export function makeKidsSlide() {
+  const g = new THREE.Group(); g.name = 'kids_slide'; const blue = b85Mat('b85_blueplastic', 1, 2, { roughness: 0.5 }), yel = std({ color: '#f2c21a', roughness: 0.5 }), steel = std({ color: '#c8ccd0', metalness: 0.6, roughness: 0.4 });
+  for (const s of [-1, 1]) { rod(V(s * 0.3, 0, -0.9), V(s * 0.3, 1.2, -0.5), 0.03, steel, g); rod(V(s * 0.3, 1.2, -0.5), V(s * 0.3, 1.85, -0.5), 0.025, steel, g); }
+  for (let k = 0; k < 5; k++) { const t = (k + 0.5) / 5; rod(V(-0.3, t * 1.2, -0.9 + t * 0.4), V(0.3, t * 1.2, -0.9 + t * 0.4), 0.02, yel, g); }
+  box(0.7, 0.06, 0.6, yel, 0, 1.2, -0.2, g); for (const s of [-1, 1]) box(0.04, 0.5, 0.6, blue, s * 0.35, 1.45, -0.2, g);
+  // chute: a U-section swept down a curve
+  const path = new THREE.CatmullRomCurve3([V(0, 1.22, 0.1), V(0, 0.9, 0.7), V(0, 0.45, 1.4), V(0, 0.28, 2.0)]); const N = 40, pos = [], idx = [];
+  for (let i = 0; i <= N; i++) { const p = path.getPoint(i / N); for (let j = 0; j <= 10; j++) { const a = Math.PI * (j / 10); pos.push(-Math.cos(a) * 0.28, p.y + 0.18 - Math.sin(a) * 0.18, p.z); } }
+  for (let i = 0; i < N; i++) for (let j = 0; j < 10; j++) { const k = i * 11 + j; idx.push(k, k + 11, k + 1, k + 1, k + 11, k + 12); }
+  const cg = new THREE.BufferGeometry(); cg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); const uv = []; for (let i = 0; i <= N; i++) for (let j = 0; j <= 10; j++) uv.push(j / 10, i / N * 3); cg.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); cg.setIndex(idx); cg.computeVertexNormals();
+  const ch = new THREE.Mesh(cg, Object.assign(blue, { side: THREE.DoubleSide })); ch.castShadow = true; g.add(ch);
+  for (const s of [-1, 1]) rod(V(s * 0.28, 0, 1.9), V(s * 0.28, 0.42, 1.9), 0.03, steel, g);
+  const mulch = new THREE.Mesh(new THREE.CircleGeometry(2.0, 28), std({ color: '#8a5a32', roughness: 1 })); mulch.rotation.x = -Math.PI / 2; mulch.position.set(0, 0.018, 0.5); mulch.receiveShadow = true; g.add(mulch);
+  g.userData.collider = [-0.45, 0.45, -1.0, 2.1];
   return g;
 }

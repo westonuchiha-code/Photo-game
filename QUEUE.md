@@ -113,7 +113,8 @@ Rules (from you):
 - 82 Batch 82 (approved)
 - 83 Batch 83 (approved)
 - 84 Batch 84 (approved)
-- 85 Batch 85 (in review)
+- 85 Batch 85 (approved)
+- Polish pass (in progress; batch 86 queued after round 1)
 
 ## Old review notes
 1. Rental pole sign: the weathered panel from the Two Rivers photo, with made-up text
@@ -545,6 +546,22 @@ Rules (from you):
     Also: a laundry aisle of bleach jugs (white gallon jugs with blue caps and handles, made-up brands and labels:
     blue swoosh, lavender, low-splash, a store brand) and laundry-sanitizer bottles with blue/green/purple caps on
     pegboard gondola shelves with e-ink price strips; and a spangled hot-dip galvanized zinc surface (texture).
+
+86. Batch 86 (photos/batch86/): a small public restroom, to build as one walk-in room (behind Hearth Market's service
+    desk): beige marbled wall tile and warm travertine-look floor tile (textures), a floor drain with a radial grate,
+    a tan steel door with a louvred vent panel (dented slats), lever handle and an overhead closer; a solid-surface
+    vanity with an undermount sink, sensor faucet, a round waste chute and a tall backsplash, a brown domed bin; a
+    grey access panel with a keyhole; three framed sports-ball wall plaques (soccer, football, baseball) in black
+    steel frames; a white push soap dispenser; a stainless jumbo toilet-paper dispenser with grab bars; a wall-mounted
+    sharps container (generic labels); a fold-down baby-changing station (generic, no brand); a flush-valve toilet
+    with an open-front seat (modelled clean). All brands and phone numbers replaced with made-up ones.
+    Also: dark green painted tread plate (leaf-shaped lugs in a herringbone, scuffed paint, a torn label) in three
+    views: a texture with real lug normals for steps / a dumpster lid / a loading-dock plate.
+    Also a store back room: a pallet of brown paper-sack cases (half shrink-wrapped, white case labels with a made-up
+    store name, a marker number), a ride-on autonomous floor scrubber (teal + grey body, sensor mast, amber beacon,
+    black seat, side brush, a spray bottle taped on; generic, no brands), a standing yellow CAUTION / WET FLOOR A-frame
+    (bilingual), and brushed stainless wall panels reflecting coloured light (texture), one with a stapled seam and
+    one torn and taped over. (The five bollard close-ups sent with these are the same as #84's and are already used.)
 
 ## Notes for later passes
 - Swap the real text in earlier pieces for made-up text: the boarded-up shop's "1402"

@@ -122,7 +122,7 @@ export function makeFortuneCookies() {
   for (const [x, ry] of [[-0.03, 0.4], [0.035, -0.8]]) { const c = new THREE.Group(); c.position.set(x, 0.018, 0); c.rotation.y = ry; g.add(c);
     // a folded disc: a half-torus-ish shell made from a bent sphere slice
     const s = new THREE.Mesh(new THREE.SphereGeometry(0.035, 18, 10, 0, Math.PI * 2, 0, Math.PI / 2), std({ color: '#e8c088', roughness: 0.6, side: THREE.DoubleSide })); const p = s.geometry.attributes.position; for (let i = 0; i < p.count; i++) { const px = p.getX(i), pz = p.getZ(i); p.setY(i, p.getY(i) * 0.9 - Math.abs(px) * 0.4); p.setZ(i, pz * (1 - Math.abs(px) * 6)); } s.geometry.computeVertexNormals(); s.rotation.x = -Math.PI / 2; c.add(s);
-    const paper = box(0.012, 0.004, 0.03, std({ color: '#f4f4f0' }), 0.03, 0.0, 0, c); void paper; void ck; }
+    const paper = box(0.03, 0.002, 0.008, std({ color: '#fbfbf8' }), 0.038, 0.004, 0.004, c); paper.rotation.y = 0.3; void ck; }   // (polish: the slip pokes out)
   const bag = new THREE.Mesh(new RoundedBoxGeometry(0.15, 0.04, 0.11, 3, 0.015), phys({ color: '#ffffff', transparent: true, opacity: 0.22, roughness: 0.1, clearcoat: 1, depthWrite: false })); bag.position.y = 0.02; g.add(bag);
   return g;
 }

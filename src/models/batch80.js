@@ -59,13 +59,18 @@ export function makeMessageTrailer(lines = ['ELM ST', 'CLOSING', '11/04']) {
   const sol = canvasT(256, 160, (x, w, h) => { x.fillStyle = '#1a2a4a'; x.fillRect(0, 0, w, h); x.strokeStyle = '#8aa0c8'; x.lineWidth = 2; for (let i = 0; i <= 8; i++) { x.beginPath(); x.moveTo(i * w / 8, 0); x.lineTo(i * w / 8, h); x.stroke(); } for (let j = 0; j <= 5; j++) { x.beginPath(); x.moveTo(0, j * h / 5); x.lineTo(w, j * h / 5); x.stroke(); } });
   const sp = box(1.4, 0.04, 0.9, [blk, blk, std({ map: sol, metalness: 0.4, roughness: 0.25 }), blk, blk, blk], 0, 3.3, -0.1, g); sp.rotation.x = -0.35;
   // the dot-matrix board: dark face, amber LED dots for the three lines (drawn as a dot grid)
-  // the board: 3 lines of up to 8 characters in the 5x7 font, 1 dot between characters, 2 between lines
+  // the board: 3 lines of up to 8 characters in the 5x7 font, 1 dot between characters, 2 between lines. It cycles
+  // through a few messages (polish pass), redrawing the canvas every 3 s
   const BW = 2.2, BH = 1.3, cols = 8 * 6 + 1, rows = 3 * 9 + 1;
-  const grid = Array.from({ length: rows }, () => new Array(cols).fill(0));
-  lines.forEach((l, li) => { const txt = l.toUpperCase().slice(0, 8), x0 = Math.floor((cols - (txt.length * 6 - 1)) / 2), y0 = 1 + li * 9;
-    [...txt].forEach((ch, ci) => { const gl = DOT[ch] || DOT[' ']; gl.forEach((row, ry) => [...row].forEach((bit, rx) => { if (bit === '1') grid[y0 + ry][x0 + ci * 6 + rx] = 1; })); }); });
-  const led = canvasT(980, 560, (x, w, h) => { x.fillStyle = '#0c0c0c'; x.fillRect(0, 0, w, h); const cw = w / cols, ch = h / rows;
-    for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) { const on = grid[j][i]; x.fillStyle = on ? '#ffc21a' : '#2a2410'; x.beginPath(); x.arc((i + 0.5) * cw, (j + 0.5) * ch, Math.min(cw, ch) * 0.38, 0, 7); x.fill(); } });
+  const MSGS = [lines, ['DETOUR', 'USE', 'OAK AVE'], ['EXPECT', 'DELAYS', '7AM-5PM']];
+  let cur = 0;
+  const drawMsg = (x, w, h, msg) => { const grid = Array.from({ length: rows }, () => new Array(cols).fill(0));
+    msg.forEach((l, li) => { const txt = l.toUpperCase().slice(0, 8), x0 = Math.floor((cols - (txt.length * 6 - 1)) / 2), y0 = 1 + li * 9;
+      [...txt].forEach((ch, ci) => { const gl = DOT[ch] || DOT[' ']; gl.forEach((row, ry) => [...row].forEach((bit, rx) => { if (bit === '1') grid[y0 + ry][x0 + ci * 6 + rx] = 1; })); }); });
+    x.fillStyle = '#0c0c0c'; x.fillRect(0, 0, w, h); const cw = w / cols, ch = h / rows;
+    for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) { x.fillStyle = grid[j][i] ? '#ffc21a' : '#2a2410'; x.beginPath(); x.arc((i + 0.5) * cw, (j + 0.5) * ch, Math.min(cw, ch) * 0.38, 0, 7); x.fill(); } };
+  const led = canvasT(980, 560, (x, w, h) => drawMsg(x, w, h, MSGS[cur]));
+  g.userData.tick = (t) => { const k = Math.floor(t / 3) % MSGS.length; if (k !== cur) { cur = k; drawMsg(led.image.getContext('2d'), led.image.width, led.image.height, MSGS[cur]); led.needsUpdate = true; } };
   const board = new THREE.Group(); board.position.set(0, 2.2, 0.0); g.add(board);
   box(BW + 0.12, BH + 0.12, 0.25, blk, 0, 0, -0.05, board);
   plane(BW, BH, std({ map: led, emissive: '#ffffff', emissiveMap: led, emissiveIntensity: 1.6, roughness: 0.5 }), 0, 0, 0.076, 0, board);

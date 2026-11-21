@@ -106,8 +106,8 @@ export function makeUtilityCorner() {
   const og = makeOrnamentalGrass(5); og.position.set(-1.95, 0, 0.55); g.add(og);
   const tp = makeTelecomPedestal83(); tp.position.set(1.9, 0.02, 0.4); tp.rotation.y = -0.2; g.add(tp);
   const bl = makeWornBollard(3); bl.position.set(2.85, 0, 1.0); g.add(bl);   // item 84: the worn bollard
-  const ec = makeEnergyCan16(true); ec.position.set(1.0, 0.1, 1.6); g.add(ec);
-  const cc = makeColaCan(false); cc.position.set(-1.2, 0.1, 1.6); cc.rotation.y = 0.5; g.add(cc);
+  const ec = makeEnergyCan16(true); ec.position.set(1.0, 0.1, 1.6); ec.rotation.y = Math.PI / 2; g.add(ec);
+  const cc = makeColaCan(false); cc.position.set(-1.2, 0.1, 1.6); cc.rotation.y = Math.PI / 2 - 0.3; g.add(cc);
   g.userData.colliders = [[-1.2, 0.5, 0, 0.35], [1.68, 2.12, 0.22, 0.58], [2.73, 2.97, 0.88, 1.12]];
   return g;
 }

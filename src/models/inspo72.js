@@ -280,13 +280,16 @@ export function makeArcade() {
   put(makeAirHockey(), -1.0, 4.4, 0.08);
   put(makeBoardGameTable(), -6.2, 4.0);
   put(makeConsoleStack(), 6.8, AZ + 0.55);
-  const sofa = new THREE.Group(); const sm = libMat82('b82_chenille', 2, 1, { color: '#8a78c8', roughness: 0.95 });   // item 82: chenille upholstery rbox(2.2, 0.42, 0.9, 0.1, sm, 0, 0.21, 0, sofa); rbox(2.2, 0.5, 0.25, 0.1, sm, 0, 0.55, -0.33, sofa); for (const sx of [-1, 1]) rbox(0.25, 0.6, 0.9, 0.1, sm, sx * 1.0, 0.3, 0, sofa); sofa.userData.collider = [-1.1, 1.1, -0.45, 0.45];
+  const sofa = new THREE.Group(); const sm = libMat82('b82_chenille', 2, 1, { color: '#8a78c8', roughness: 0.95 });  /* item 82: chenille upholstery */ rbox(2.2, 0.42, 0.9, 0.1, sm, 0, 0.21, 0, sofa); rbox(2.2, 0.5, 0.25, 0.1, sm, 0, 0.55, -0.33, sofa); for (const sx of [-1, 1]) rbox(0.25, 0.6, 0.9, 0.1, sm, sx * 1.0, 0.3, 0, sofa); sofa.userData.collider = [-1.1, 1.1, -0.45, 0.45];
   put(sofa, 6.8, 3.6, Math.PI);
   const bt = new THREE.Group(); cyl(0.32, 0.32, 0.03, std({ color: '#141416', roughness: 0.2 }), 0, 1.05, 0, bt, 28); cyl(0.03, 0.03, 1.05, std({ color: '#c8ccd0', metalness: 0.9 }), 0, 0.525, 0, bt, 10); cyl(0.25, 0.25, 0.02, std({ color: '#c8ccd0', metalness: 0.9 }), 0, 0.01, 0, bt, 24); bt.userData.collider = [-0.32, 0.32, -0.32, 0.32];
   put(bt, -3.6, 6.4);
   // lights: two in the game room (coloured), one warm in the lounge
   for (const [x, z, c, i] of [[-5, -4, '#b89aff', 28], [5, -4, '#8af2d8', 28], [0, -4, '#ffffff', 18], [-5, 4.5, '#ffe8d0', 26], [5, 4.5, '#ffe8d0', 26]]) { const p = new THREE.PointLight(c, i, 14, 1.4); p.position.set(x, H - 0.6, z); g.add(p); }
   cols.push([X0 - 0.3, X0, Z0, Z1], [X1, X1 + 0.3, Z0, Z1], [X0, X1, Z0 - 0.3, Z0], [X0, -1.25, Z1 - 0.2, Z1 + 0.2], [1.25, X1, Z1 - 0.2, Z1 + 0.2]);
+  // polish pass: the screens flicker (each screen material gets its own phase) and the attract images scroll a little
+  const screens = []; g.traverse((o) => { if (o.isMesh && o.material && o.material.emissiveMap && o.material.emissiveIntensity >= 0.85 && o.material.emissiveIntensity <= 1.0) screens.push([o.material, Math.random() * 6]); });
+  g.userData.tick = (t) => { for (const [m, ph] of screens) { m.emissiveIntensity = 0.85 + 0.1 * Math.sin(t * 9 + ph) + 0.05 * Math.sin(t * 31 + ph * 2); m.map.offset.x = Math.floor(t * 2 + ph) % 4 === 0 ? 0.004 : 0; } };
   g.userData.colliders = cols;
   g.userData.areas = [{ minX: X0 + 0.3, maxX: X1 - 0.3, minZ: Z0 + 0.3, maxZ: Z1 - 0.2 }, { minX: -1.2, maxX: 1.2, minZ: Z1 - 0.4, maxZ: Z1 + 1.5 }];
   return g;
@@ -472,6 +475,12 @@ export function makeJetTrainer() {
     x.fillStyle = '#333'; x.font = `20px ${F.small}`; x.fillText('NO STEP', w * 0.6, h * 0.22); x.fillText('RESCUE', w * 0.72, h * 0.12); x.fillStyle = '#f2c21a'; x.fillRect(w * 0.7, h * 0.1, 30, 30); });
   skin.wrapS = THREE.ClampToEdgeWrapping;
   const body = new THREE.Mesh(fg, phys({ map: skin, roughness: 0.35, clearcoat: 0.6 })); body.castShadow = true; body.receiveShadow = true; g.add(body);
+  { // polish pass: the black anti-glare panel as its own shell over the nose (top ~110 degrees, x 10.6 .. tip)
+    const ps = [], pi = []; const NA = 12, NX = 16;
+    for (let i = 0; i <= NX; i++) { const x = 10.6 + (i / NX) * (L - 10.62), [w, h, cy] = lerp(x); for (let j = 0; j <= NA; j++) { const a = Math.PI / 2 + (j / NA - 0.5) * 1.9; ps.push(x - L / 2, cy + Math.sin(a) * h * 1.012, Math.cos(a) * w * 1.012); } }
+    for (let i = 0; i < NX; i++) for (let j = 0; j < NA; j++) { const k = i * (NA + 1) + j; pi.push(k, k + NA + 1, k + 1, k + 1, k + NA + 1, k + NA + 2); }
+    const ng = new THREE.BufferGeometry(); ng.setAttribute('position', new THREE.Float32BufferAttribute(ps, 3)); ng.setIndex(pi); ng.computeVertexNormals();
+    g.add(new THREE.Mesh(ng, std({ color: '#141414', roughness: 0.5, side: THREE.DoubleSide }))); }
   // intakes beside the rear cockpit, the twin exhausts
   for (const s of [-1, 1]) { const ik = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.24, 2.2, 20, 1, true), white); ik.rotation.z = Math.PI / 2; ik.position.set(2.2, 1.78, s * 0.62); ik.scale.set(1, 1, 0.75); g.add(ik); const lip = new THREE.Mesh(new THREE.TorusGeometry(0.27, 0.04, 8, 20), grey); lip.rotation.y = Math.PI / 2; lip.position.set(3.3, 1.78, s * 0.62); lip.scale.set(1, 1, 0.75); g.add(lip); cyl(0.26, 0.26, 0.05, black, 3.28, 1.78, s * 0.62, g, 20).rotation.z = Math.PI / 2; }
   for (const s of [-1, 1]) { const ex = cyl(0.22, 0.24, 0.5, std({ color: '#3a3430', metalness: 0.8, roughness: 0.5 }), -L / 2 + 0.1, 1.85, s * 0.22, g, 20); ex.rotation.z = Math.PI / 2; cyl(0.18, 0.18, 0.02, black, -L / 2 - 0.15, 1.85, s * 0.22, g, 20).rotation.z = Math.PI / 2; }
