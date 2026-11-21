@@ -15,6 +15,7 @@
 //   makeNoodleShop()     a small soba shop front: lattice doors, half-curtain, white lanterns, the illustrated
 //                        menu board, a drink vending machine (dashi bottles + cans) and a bench table
 import * as THREE from 'three';
+import { afterStart } from '../defer.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { F, fitText } from '../fonts.js';
 import { surfaceNets, noise3 } from './cat.js';
@@ -51,7 +52,14 @@ const fbm3 = (x, y, z, o = 3) => { let a = 0, f = 1, w = 1, t = 0; for (let i = 
 
 // sculpt: mesh an SDF in a box and colour each vertex with colourFn(x, y, z) -> [r, g, b] (linear 0..1)
 const _geoCache = new Map();
+// (the meshing runs after the world is on screen: the mesh is placed now, empty + hidden, and filled in then)
 function sculpt(key, fn, min, max, step, colourFn, matOpts = {}) {
+  const m = new THREE.Mesh(new THREE.BufferGeometry(), std({ vertexColors: true, roughness: 0.8, ...matOpts }));
+  m.castShadow = m.receiveShadow = true; m.visible = false; m.userData.noMerge = true;
+  afterStart(() => { m.geometry = sculptGeo(key, fn, min, max, step, colourFn); m.visible = true; });
+  return m;
+}
+function sculptGeo(key, fn, min, max, step, colourFn) {
   let geo = _geoCache.get(key);
   if (!geo) {
     const { pos, idx } = surfaceNets(fn, min, max, step);
@@ -78,9 +86,7 @@ function sculpt(key, fn, min, max, step, colourFn, matOpts = {}) {
     geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
     _geoCache.set(key, geo);
   }
-  const m = new THREE.Mesh(geo, std({ vertexColors: true, roughness: 0.8, ...matOpts }));
-  m.castShadow = m.receiveShadow = true;
-  return m;
+  return geo;
 }
 // linear colour helper: sRGB hex -> linear rgb (vertex colours are linear)
 const lin = (h) => { const c = new THREE.Color(h); return [c.r, c.g, c.b]; };

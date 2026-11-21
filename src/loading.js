@@ -62,7 +62,7 @@ export async function finishLoading(renderer, scene, camera) {
   console.log('T textures-uploaded', Math.round(performance.now()), near.size, 'now,', later.size, 'after the start');
   const queue = [...later];
   const drip = () => { const t0 = performance.now(); while (queue.length && performance.now() - t0 < 6) { try { renderer.initTexture(queue.shift()); } catch (e) { /* ignore */ } } if (queue.length) setTimeout(drip, 30); else console.log('T textures-all', Math.round(performance.now())); };
-  setTimeout(drip, 1500);
+  setTimeout(drip, 2500);
   // compile all shaders, including objects currently off screen
   try { if (renderer.compileAsync) await renderer.compileAsync(scene, camera); else renderer.compile(scene, camera); } catch (e) { /* ignore */ }
   console.log('T shaders', Math.round(performance.now()));

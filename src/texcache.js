@@ -11,7 +11,34 @@ export const LITE = matchMedia('(pointer: coarse)').matches || new URLSearchPara
 const CANVAS_MAX = LITE ? 256 : 1024;
 
 const base = new Map();
-const origLoad = THREE.TextureLoader.prototype.load;
+const imgLoad = THREE.TextureLoader.prototype.load;
+// 4. Images are decoded off the main thread: fetched and turned into ImageBitmaps (createImageBitmap decodes in the
+//    background), instead of <img> elements, which the browser decodes on the main thread the moment WebGL uploads
+//    them (seconds of stall at the start for ~1000 textures). WebGL ignores flipY for bitmaps, so they're created
+//    already flipped (same result on screen). Phones get the 512 px downscale done in the same off-thread step.
+//    Falls back to the plain image loader if anything about it fails.
+const canBitmap = typeof createImageBitmap === 'function' && typeof fetch === 'function' && !new URLSearchParams(location.search).has('imgdecode');
+// (checked once: a browser that ignores imageOrientation would give upside-down textures -> use images there)
+const flipWorks = !canBitmap ? Promise.resolve(false) : (async () => {
+  const c = document.createElement('canvas'); c.width = 1; c.height = 2; const x = c.getContext('2d'); x.fillStyle = '#f00'; x.fillRect(0, 0, 1, 1); x.fillStyle = '#00f'; x.fillRect(0, 1, 1, 1);
+  const b = await createImageBitmap(c, { imageOrientation: 'flipY' }); const d = document.createElement('canvas'); d.width = 1; d.height = 2; const y = d.getContext('2d', { willReadFrequently: true }); y.drawImage(b, 0, 0);
+  return y.getImageData(0, 0, 1, 1).data[2] > 200;
+})().catch(() => false);
+function origLoad(url, onLoad, onProgress, onError) {
+  if (!canBitmap || !/\.(png|jpe?g|webp)(\?|$)/i.test(url)) return imgLoad.call(this, url, onLoad, onProgress, onError);
+  const mgr = this.manager || THREE.DefaultLoadingManager, full = mgr.resolveURL((this.path || '') + url), tex = new THREE.Texture(), self = this;
+  mgr.itemStart(full);
+  (async () => {
+    if (!(await flipWorks)) throw new Error('no flipped bitmaps');
+    const blob = await (await fetch(full)).blob();
+    let bmp = await createImageBitmap(blob, { imageOrientation: 'flipY', premultiplyAlpha: 'none' });
+    if (LITE && Math.max(bmp.width, bmp.height) > 512) { const k = 512 / Math.max(bmp.width, bmp.height); const w = Math.round(bmp.width * k), h = Math.round(bmp.height * k); bmp.close(); bmp = await createImageBitmap(blob, { imageOrientation: 'flipY', premultiplyAlpha: 'none', resizeWidth: w, resizeHeight: h, resizeQuality: 'high' }); }
+    tex.image = bmp; tex.needsUpdate = true; if (onLoad) onLoad(tex); mgr.itemEnd(full);
+  })().catch(() => {   // not decodable as a bitmap here: the ordinary image path
+    imgLoad.call(self, url, (t) => { tex.image = t.image; tex.needsUpdate = true; if (onLoad) onLoad(tex); mgr.itemEnd(full); }, onProgress, () => { mgr.itemError(full); mgr.itemEnd(full); if (onError) onError(); });
+  });
+  return tex;
+}
 THREE.TextureLoader.prototype.load = function (url, onLoad, onProgress, onError) {
   const key = (this.path || '') + url;
   let e = base.get(key);
@@ -19,7 +46,7 @@ THREE.TextureLoader.prototype.load = function (url, onLoad, onProgress, onError)
     e = { tex: null, clones: [], loaded: false, waiting: [] };
     base.set(key, e);
     e.tex = origLoad.call(this, url, (t) => {
-      if (LITE) { const im = t.image, m = Math.max(im.width, im.height); if (m > 512) { const k = 512 / m, cv = document.createElement('canvas'); cv.width = Math.round(im.width * k); cv.height = Math.round(im.height * k); cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height); t.image = cv; } }
+      if (LITE && !(t.image instanceof ImageBitmap)) { const im = t.image, m = Math.max(im.width, im.height); if (m > 512) { const k = 512 / m, cv = document.createElement('canvas'); cv.width = Math.round(im.width * k); cv.height = Math.round(im.height * k); cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height); t.image = cv; } }
       e.loaded = true;
       for (const c of e.clones) { c.image = t.image; c.needsUpdate = true; }
       for (const [c, cb] of e.waiting) cb(c);

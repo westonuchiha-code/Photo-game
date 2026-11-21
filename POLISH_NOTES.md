@@ -360,3 +360,11 @@ This is a running list, added to as models get built. Nothing here is urgent.
   packs.json), so repeat visits load from disk and only changed packs download again.
 - loading.js: only textures within ~70 m of the start are uploaded before the world shows; the other ~3000 go up in
   6 ms batches afterwards.
+- Off-thread decoding (texcache.js): textures load as ImageBitmaps (fetch + createImageBitmap, flipped at decode
+  because WebGL ignores flipY for bitmaps; a 1x2 probe checks the browser really flips, else plain images). Phones
+  get the 512 px downscale in the same step. ?imgdecode forces the old path.
+- After-start jobs (src/defer.js): the cats' fur bodies and the food sculpts (SDF surface nets) are meshed once the
+  world is on screen; the mall's reflection capture runs once, 3 s after the start, instead of twice during loading.
+- Headless test (software GL, 4 cores, 40 Mbit/s): loading screen lifts at 19 s first visit / 17 s repeat visit,
+  was 81 s. (The headless box then spends a while drawing first frames; a real GPU doesn't.)
+- Not done (diminishing returns now): lazy district build, splitting the old town's textures by area.

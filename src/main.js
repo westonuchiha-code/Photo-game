@@ -2038,9 +2038,8 @@ function captureMallEnv() {
   pm.dispose(); rt.dispose(); scene.remove(cc);
   camera.position.copy(saved); updateLightBudget();
 }
-captureMallEnv();
-THREE.DefaultLoadingManager.onLoad = () => captureMallEnv();
-finishLoading(renderer, scene, camera);
+// (captured once, right after the loading screen: its textures are in by then, and it stays off the loading path)
+finishLoading(renderer, scene, camera).then(() => setTimeout(captureMallEnv, 3000));
 
 // ------------------------------------------------------------------ loop
 const clock = new THREE.Clock();

@@ -7,6 +7,7 @@
 // Eyes, nose and whiskers are separate small meshes. Local axes: cat faces +x, y up, feet at y=0.
 //   makeCat(kind = 'tabby' | 'tortie', pose = 'sit' | 'lie', scale = 1)
 import * as THREE from 'three';
+import { afterStart } from '../defer.js';
 
 // ---------------------------------------------------------------- SDF helpers
 const v3 = (x, y, z) => new THREE.Vector3(x, y, z);
@@ -239,15 +240,22 @@ function catGeometry(kind, pose, kitten) {
   return geoCache[key];
 }
 
+// the fur body (surface nets over the SDF, ~1 s of CPU for the three cats) is built once the world is on screen, one
+// cat at a time, so it never holds up the loading; the eyes, nose, whiskers are placed straight away from the SDF
 export function makeCat(kind = 'tabby', pose = 'sit', scale = 1) {
   const kitten = scale < 0.85;
-  const { geo, spec, f } = catGeometry(kind, pose, kitten);
+  const key = `${kind}|${pose}|${kitten}`;
+  const spec = geoCache[key] ? geoCache[key].spec : catSDF(pose, kitten);
+  const ev0 = evaluator(spec), f = (x, y, z) => ev0(x, y, z)[0];
+  const geo = new THREE.BufferGeometry();
   // march in from the front along -x to find the face surface at (y, z)
   const onFace = (y, z, inset) => { let x = spec.H.x + 0.15; while (x > spec.H.x - 0.05 && f(x, y, z) > 0) x -= 0.0007; return x - inset; };
   const g = new THREE.Group();
   const body = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95 }));
   body.castShadow = true; body.receiveShadow = true;
   g.add(body);
+  body.visible = false;
+  afterStart(() => { body.geometry = catGeometry(kind, pose, kitten).geo; body.visible = true; });
   const H = spec.H, s = spec.hs;
   // eyes: glossy iris with a vertical slit pupil, set into the face
   const iris = new THREE.MeshStandardMaterial({ color: kind === 'tortie' ? '#d6a62a' : '#9ab04a', emissive: kind === 'tortie' ? '#3a2804' : '#22300a', roughness: 0.15 });
