@@ -5,6 +5,7 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { F, fitText } from '../fonts.js';
+import { makeFortuneCookies } from './batch81.js';
 
 const _L = new THREE.TextureLoader(); const _T = {};
 function tex(name, rx = 1, ry = 1) { const k = name + rx + '|' + ry; if (_T[k]) return _T[k]; const t = _L.load(`assets/textures/${name}.png`); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx, ry); t.anisotropy = 8; return (_T[k] = t); }
@@ -139,6 +140,7 @@ export function makeTakeoutShop() {
   box(4.6, 1.0, 0.7, std({ color: '#c81e1e', roughness: 0.5 }), 0, 0.5, 0, ctr); box(4.7, 0.06, 0.8, std({ color: '#141414', roughness: 0.4 }), 0, 1.03, 0, ctr); box(4.6, 0.12, 0.72, std({ color: '#141414' }), 0, 0.06, 0, ctr);
   for (let i = 0; i < 5; i++) box(0.04, 0.9, 0.01, std({ color: '#141414' }), -2 + i, 0.5, 0.356, ctr);
   rbox(0.35, 0.25, 0.3, 0.03, std({ color: '#2a2a2c' }), -1.2, 1.18, 0.0, ctr); box(0.3, 0.2, 0.02, std({ color: '#0a1a2a', emissive: '#1a4a8a', emissiveIntensity: 0.6 }), -1.2, 1.4, 0.0, ctr).rotation.x = -0.4;
+  const fc = makeFortuneCookies(); fc.position.set(-0.4, 1.06, 0.15); fc.rotation.y = 0.3; ctr.add(fc);   // item 81
   cols.push([0.5 - 2.35, 0.5 + 2.35, -6.6, -5.8]);
   const menu = canvasT(1024, 384, (x, w, h) => { x.fillStyle = '#141414'; x.fillRect(0, 0, w, h); x.fillStyle = '#ece4d0'; fitText(x, 'CALZONE KID', w / 2, 50, w - 200, 56, F.slab); const items = [['The Classic', '9.49'], ['Pepperoni Rush', '10.49'], ['Garden Fold', '9.99'], ['Meatball Sub', '8.99'], ['Breakfast Sub', '7.49'], ['Iced Tea / Lemonade', '2.79']]; x.font = `30px ${F.label}`; items.forEach(([n, p], i) => { const cx = i < 3 ? 60 : 540, cy = 140 + (i % 3) * 70; x.fillStyle = '#ece4d0'; x.fillText(n, cx, cy); x.fillStyle = '#f2c21a'; x.fillText(p, cx + 330, cy); }); });
   plane(3.6, 1.35, std({ map: menu, emissive: '#ffffff', emissiveMap: menu, emissiveIntensity: 0.6 }), 0.5, 2.55, -D + 0.02, 0, g);

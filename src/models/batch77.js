@@ -8,6 +8,7 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { F, fitText } from '../fonts.js';
 import { brickMat } from './batch78.js';
+import { makeEnergyEndcap, makeCakeMixGondola, makeSpiceWall, makeStockingCart, makeDiscontinuedHandheld, makeFoldingEbike, makeWaveRack } from './batch81.js';
 
 const _L = new THREE.TextureLoader(); const _T = {};
 function tex(name, rx = 1, ry = 1) { const k = name + rx + '|' + ry; if (_T[k]) return _T[k]; const t = _L.load(`assets/textures/${name}.png`); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx, ry); t.anisotropy = 8; return (_T[k] = t); }
@@ -161,7 +162,14 @@ export function makeHearthMarket() {
   put(makeOpenDairyCase(16, 4), X1 - 1.05, -10, -Math.PI / 2);
   put(makeDrinkCaseCube(2), X1 - 0.6, -1.3, 0);
   // gondolas in the middle
-  for (let i = 0; i < 3; i++) put(gondola(10, i + 1), -1.5, -6 - i * 4.2);
+  for (let i = 0; i < 3; i++) if (i !== 1) put(gondola(10, i + 1), -1.5, -6 - i * 4.2);
+  // item 81: the baking aisle (cake mixes on the +z face) with a handheld on its shelf edge, an energy-drink end-cap,
+  // a spice wall on the back wall with a stocking cart in front, an e-bike locked to a wave rack outside
+  const cake = put(makeCakeMixGondola(10), -1.5, -10.2);
+  const dh = makeDiscontinuedHandheld(); dh.position.set(1.6, 1.1, -10.2 + 0.47); dh.rotation.set(-0.3, 0, 0.05); g.add(dh);
+  put(makeEnergyEndcap(), 4.25, -6, Math.PI / 2);
+  put(makeSpiceWall(7), 2.5, -21.55); put(makeStockingCart(), 3.4, -19.6, Math.PI / 2 + 0.15);
+  put(makeWaveRack(), 8.5, 1.3); const eb = makeFoldingEbike(); eb.position.set(8.5, 0, 1.55); g.add(eb); cols.push([7.65, 9.35, 1.25, 1.85]);
   // front: glass, doors, the sign
   const gl = new THREE.MeshPhysicalMaterial({ color: '#c8d8e0', transparent: true, opacity: 0.2, roughness: 0.04, depthWrite: false, side: THREE.DoubleSide });
   for (const [x0, x1] of [[X0 + 0.6, -1.6], [1.6, X1 - 0.6]]) { plane(x1 - x0, 3.2, gl, (x0 + x1) / 2, 1.6, 0, 0, g); box(x1 - x0, 0.4, 0.3, brick, (x0 + x1) / 2, 0.2, 0, g); box(x1 - x0, H - 3.2 + 1, 0.3, brick, (x0 + x1) / 2, 3.2 + (H + 1 - 3.2) / 2, 0, g); cols.push([x0, x1, -0.2, 0.2]); }

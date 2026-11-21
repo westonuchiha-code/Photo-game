@@ -10,6 +10,7 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { F, fitText } from '../fonts.js';
+import { makeBoxTrailer } from './batch81.js';
 
 const _L = new THREE.TextureLoader(); const _T = {};
 function tex(name, rx = 1, ry = 1) { const k = name + rx + '|' + ry; if (_T[k]) return _T[k]; const t = _L.load(`assets/textures/${name}.png`); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx, ry); t.anisotropy = 8; return (_T[k] = t); }
@@ -608,6 +609,7 @@ export function makeFairground() {
   for (const [x, z, l, ry] of [[0, -D / 2 + 0.3, W - 1, 0], [-W / 2 + 0.3, 0, D - 1, Math.PI / 2], [W / 2 - 0.3, 0, D - 1, Math.PI / 2]]) { const f = chainLink(l); f.position.set(x, 0, z); f.rotation.y = ry; g.add(f); cols.push(ry ? [x - 0.08, x + 0.08, -l / 2, l / 2] : [-l / 2, l / 2, z - 0.08, z + 0.08]); }
   // the ride trailers, parked in the gravel yard on the east side
   const yard = new THREE.Mesh(new THREE.PlaneGeometry(26, 16), std({ map: tex('tr_gravel', 6, 4), color: '#9a948a', roughness: 1 })); yard.rotation.x = -Math.PI / 2; yard.position.set(15, 0.022, -6.5); g.add(yard);
+  put(makeBoxTrailer(), -20, -2.5, 0);   // item 81: a 53 ft van with its rear doors open (the fair's supply trailer)
   put(makeRideTrailer('dragon'), 13, -10.5, 0); put(makeRideTrailer('train'), 14, -3.5, Math.PI);
   // the entrance arch + name
   const nm = canvasT(1024, 192, (x, w, h) => { x.fillStyle = '#1e4a2a'; x.fillRect(0, 0, w, h); x.strokeStyle = '#f2c21a'; x.lineWidth = 8; x.strokeRect(10, 10, w - 20, h - 20); x.fillStyle = '#f2c21a'; fitText(x, 'ELM COUNTY FAIRGROUNDS', w / 2, 86, w - 80, 90, F.slab); x.fillStyle = '#fff'; fitText(x, 'air park · picnic shelter · summer fair', w / 2, 152, w - 160, 32, F.label); });

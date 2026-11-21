@@ -270,3 +270,8 @@ This is a running list, added to as models get built. Nothing here is urgent.
 ## 80 Batch 80
 - Message trailer: the board could cycle through 2-3 messages (the 5x7 font in batch80.js makes that easy).
 - Calzone Kid: no kitchen behind the counter yet (an oven + prep table would fill the back), the menu board is flat.
+
+## 81 Batch 81
+- Cake-mix aisle: frosting tubs were planned on shelf 2 but only the boxes went in; add the tubs + a few tipped boxes.
+- Fortune cookies read as a lump at a distance; a crisper fold with a visible paper slip would help.
+- Box trailer: add a dock plate/ramp and a few pallets inside.
