@@ -38,7 +38,7 @@ function mats() {
   const tread = canvasT(64, 256, (x, w, h) => { x.fillStyle = '#18181a'; x.fillRect(0, 0, w, h); x.fillStyle = '#0a0a0b'; for (let i = 0; i < h; i += 16) { x.fillRect(6, i, 22, 9); x.fillRect(36, i + 8, 22, 9); } x.fillRect(30, 0, 4, h); });
   tread.wrapS = tread.wrapT = THREE.RepeatWrapping; tread.repeat.set(1, 6);
   MATS.tread = new THREE.MeshStandardMaterial({ map: tread, roughness: 0.92 });
-  MATS.rubber = new THREE.MeshStandardMaterial({ color: '#1a1a1c', roughness: 0.88 });
+  MATS.rubber = new THREE.MeshStandardMaterial({ color: '#1a1a1c', roughness: 0.88, side: THREE.DoubleSide });
   return MATS;
 }
 
@@ -101,7 +101,7 @@ function makeWheel(R, tw, side, rimStyle, rimMat) {
   const m = mats(); const pivot = new THREE.Group(), spin = new THREE.Group(); pivot.add(spin);
   const rr = R * 0.62;   // rim radius
   const prof = [[rr, -tw / 2], [rr * 1.04, -tw / 2 - 0.004], [R * 0.93, -tw / 2], [R, -tw / 2 + 0.03], [R, tw / 2 - 0.03], [R * 0.93, tw / 2], [rr * 1.04, tw / 2 + 0.004], [rr, tw / 2]].map(([r, y]) => new THREE.Vector2(r, y));
-  const tyre = new THREE.Mesh(new THREE.LatheGeometry(prof, 36), [m.rubber]); tyre.rotation.z = Math.PI / 2; spin.add(tyre);
+  const tyre = new THREE.Mesh(new THREE.LatheGeometry(prof, 36), m.rubber); tyre.rotation.z = Math.PI / 2; spin.add(tyre);
   const band = new THREE.Mesh(new THREE.CylinderGeometry(R * 1.002, R * 1.002, tw - 0.06, 36, 1, true), m.tread); band.rotation.z = Math.PI / 2; spin.add(band);
   // rim: a dished barrel + 5 spokes + hub + nuts, on the outer face
   const out = side;   // +1 left wheel faces +x, -1 right wheel faces -x
