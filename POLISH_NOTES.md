@@ -294,3 +294,12 @@ This is a running list, added to as models get built. Nothing here is urgent.
   quality yet (layered leaf cards would). The pocket park pines now carry the shaggy bark.
 - Cake slices read as white boxes from above at a distance; tint the clamshell lids less / add a reflection.
 - The steel door's photo texture is lit flat; a small normal map from it would show the dents.
+
+## 85 Batch 85
+- Creek: built at grade between raised berms (the district ground plane can't be cut); the water is still. A gentle
+  normal-map scroll on the water and a trickle sound would bring it alive.
+- Flyer shelf + service counter: the counter has no back side / staff area; add a register and the printed notice
+  board from the photo behind it.
+- Bleach aisle: the jug handles are generic loops; mould them into the jug shoulder.
+- Unused from batch 85: brushed bronze (only on the flyer shelf caps) and blue pebbled plastic (could be a slide /
+  kids' play set in the pocket park).

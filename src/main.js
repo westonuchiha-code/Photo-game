@@ -20,6 +20,7 @@ import { makeCafeFrontage } from './models/signs65.js';
 import { makeCanalPark } from './models/misc67.js';
 import { makeArtGallery } from './models/inspo68.js';
 import { makeWarehouseStore } from './models/inspo69.js';
+import { makeWetFloorFolded, makeConcreteBollard } from './models/batch85.js';
 import { makeFireHydrant as makeDryHydrant, makeWallPack, makeSteelDoor, makeWornBollard } from './models/batch84.js';
 import { makeUtilityCorner, b83Mat } from './models/batch83.js';
 import { makeYellowFreeBox, makeMessageTrailer, makeTakeoutShop } from './models/batch80.js';
@@ -1462,6 +1463,10 @@ const ckAreas = ckShop.userData.areas.map((a) => ({ minX: a.minX + CK.x, maxX: a
   const sd = makeSteelDoor(); sd.position.set(288.22, 0.14, 154.6); sd.rotation.y = Math.PI / 2; add(sd);
   const wp = makeWallPack(); wp.position.set(288.22, 2.75, 154.6); wp.rotation.y = Math.PI / 2; add(wp);
   for (const x of [301.6, 310.4]) { const b = makeWornBollard(Math.round(x)); b.position.set(x, 0.14, 162.9); add(b); rect(x - 0.13, x + 0.13, 162.77, 163.03); } }
+// 85 batch 85: a folded wet-floor sign and a fat concrete bollard on Hearth Market's sidewalk (the service-desk corner,
+// laundry aisle, park trash cans, bench + ball, creek + culvert are placed in their modules)
+{ const wf = makeWetFloorFolded(); wf.position.set(279.6, 0.142, 162.3); add(wf);
+  const cb = makeConcreteBollard(); cb.position.set(281.0, 0.14, 162.7); add(cb); rect(280.75, 281.25, 162.45, 162.95); }
 const dnAreas = [...dentist.userData.areas, ...wing.userData.areas].map((a) => { const [minX, maxX, minZ, maxZ] = dnW([a.minX, a.maxX, a.minZ, a.maxZ]); return { minX, maxX, minZ, maxZ }; });
 
 const walk = new WalkControls(camera, renderer.domElement, {
@@ -1529,6 +1534,7 @@ walk.ground = (x, z, prevY) => {
   if (x > 266 && x < 306 && z > 90 && z < 123) return 0.14;   // the warehouse floor + entrance apron
   if (x > 100.5 && x < 110.5 && z > -14.5 && z < -7) return 0.14;   // the pottery gallery floor
   if (x > 338 && x < 358 && z > 92 && z < 109.5) return 0.14;   // the arcade floor
+  if (z > 137.3 && z < 139.7 && x > 175.8 && x < 183.8) { const dx = Math.abs(x - 179.8); return dx < 2.0 ? 0.66 : 0.66 * Math.max(0, 1 - (dx - 2.0) / 2.0); }   // the creek culvert deck + its ramps (item 85)
   if (x > 252 && x < 322 && z > -101 && z < -91) return 0.14;   // the old-town row (Club Nova floor)
   if (x > 268 && x < 308 && z > -77 && z < -60) return 0;   // the pocket park
   if (x > 252.5 && x < 265.5 && z > -77.4 && z < -61) return 0.14;
@@ -1688,12 +1694,12 @@ const VIEWS = {
   spicewall: { pos: [278.5, 1.6, 145.0], target: [276.5, 1.0, 140.6] },
   ebike81: { pos: [284.5, 1.4, 164.4], target: [282.5, 0.6, 162.4] },
   fortune: { pos: [306.0, 1.42, 155.35], target: [306.1, 1.2, 154.95] },
-  boxtrailer: { pos: [197.4, 2.6, 142.0], target: [184, 2.0, 142.0] },
+  boxtrailer: { pos: [233.0, 2.6, 153.5], target: [220, 2.0, 153.5] },
   toolbox82: { pos: [186.4, 1.6, 73.6], target: [185.5, 0.9, 71.9] },
   screwdriver: { pos: [187.95, 1.15, 76.4], target: [187.9, 0.9, 76.25] },
   stickercase: { pos: [186.5, 0.85, 72.9], target: [186.25, 0.2, 71.65] },
   comics: { pos: [260.9, 1.1, -63.7], target: [260.82, 0.55, -62.3] },
-  treadramp: { pos: [198.2, 1.6, 139.3], target: [195.0, 0.7, 142.0] },
+  treadramp: { pos: [233.6, 1.6, 150.8], target: [230.6, 0.7, 153.5] },
   tower: { pos: [340.4, 1.6, 16.8], target: [337.05, 1.6, 16.8] },
   butterlight: { pos: [347.6, 1.6, 13.1], target: [350.95, 1.6, 13.1] },
   gasmeter: { pos: [291.6, 1.6, 150.6], target: [288.2, 1.0, 150.4] },
@@ -1706,6 +1712,14 @@ const VIEWS = {
   stump: { pos: [282.2, 1.6, -70.0], target: [283.5, 0.1, -72.0] },
   barktree: { pos: [287.5, 1.7, -80.5], target: [294.0, 3.8, -72.4] },
   calzonebrick: { pos: [314.0, 1.8, 158.0], target: [311.2, 2.0, 155.0] },
+  servicedesk: { pos: [280.0, 1.7, 160.2], target: [281.8, 1.0, 158.0] },
+  cookietower: { pos: [281.7, 1.5, 160.3], target: [282.35, 1.0, 158.6] },
+  bleachaisle: { pos: [277.5, 1.5, 148.6], target: [273.0, 1.0, 147.0] },
+  wetfloor: { pos: [280.4, 1.3, 164.2], target: [280.0, 0.3, 162.5] },
+  parkbin: { pos: [289.6, 1.4, -79.5], target: [291.2, 0.8, -75.4] },
+  benchball: { pos: [284.4, 1.25, -70.2], target: [284.6, 0.55, -68.25] },
+  culvert: { pos: [179.9, 1.4, 143.6], target: [179.8, 0.35, 139.9] },
+  creek: { pos: [179.8, 2.2, 129.0], target: [179.8, 0.3, 138.0] },
   pixelden: { pos: [353, 2.2, 82.5], target: [348, 2.6, 93] },
   arcadein: { pos: [352.5, 1.7, 94.5], target: [347, 1.2, 99.5] },
   gameroom: { pos: [348, 1.7, 100.5], target: [348, 1.4, 108.6] },

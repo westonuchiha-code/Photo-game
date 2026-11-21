@@ -12,6 +12,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { F, fitText } from '../fonts.js';
 import { makeBoxTrailer } from './batch81.js';
 import { makeTreadRamp, libMat82 } from './batch82.js';
+import { makeBarrelTrashPost, makeCreekCrossing, b85Mat } from './batch85.js';
 
 const _L = new THREE.TextureLoader(); const _T = {};
 function tex(name, rx = 1, ry = 1) { const k = name + rx + '|' + ry; if (_T[k]) return _T[k]; const t = _L.load(`assets/textures/${name}.png`); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx, ry); t.anisotropy = 8; return (_T[k] = t); }
@@ -596,22 +597,24 @@ function chainLink(len, h = 1.8) {
 export function makeFairground() {
   const g = new THREE.Group(); g.name = 'fairground';
   const W = 60, D = 33, cols = [], put = placer(g, cols);
-  const grass = new THREE.Mesh(new THREE.PlaneGeometry(W, D), std({ map: tex('hs_grass', W / 4, D / 4), roughness: 0.95 })); grass.rotation.x = -Math.PI / 2; grass.position.y = 0.012; grass.receiveShadow = true; g.add(grass);
-  const conc = std({ map: tex('lot_concrete', 1, 6), color: '#c8c4bc' });
+  for (const [x0, x1] of [[-W / 2, W / 2]]) { const gm = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, D), std({ map: tex('hs_grass', (x1 - x0) / 4, D / 4), roughness: 0.95 })); gm.rotation.x = -Math.PI / 2; gm.position.set((x0 + x1) / 2, 0.012, 0); gm.receiveShadow = true; g.add(gm); }
+  const conc = b85Mat('b85_pinkconc', 1, 6);   // item 85: pink broom-finish concrete
   const path = (x0, x1, z0, z1) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, z1 - z0), conc); m.rotation.x = -Math.PI / 2; m.position.set((x0 + x1) / 2, 0.02, (z0 + z1) / 2); m.receiveShadow = true; g.add(m); };
-  path(-1.2, 1.2, -6, D / 2); path(-26, 26, -7.2, -4.8);
+  path(-1.2, 1.2, -6, D / 2); path(-29.5, 26, -7.2, -4.8);
+  // item 85: a creek runs along the west fence under the cross path (twin culvert), a barrel trash can on a post by it
+  { const ck = put(makeCreekCrossing(30), -26.2, -6.0); void ck; put(makeBarrelTrashPost(), -23.4, -3.4, 0.3); }
   // the jet on a gravel bed with a concrete border, angled toward the street; info plaque
   const bed = new THREE.Mesh(new THREE.CircleGeometry(1, 6), std({ map: tex('gravel', 4, 4), color: '#d8cab8' })); bed.rotation.x = -Math.PI / 2; bed.scale.set(9.5, 6.5, 1); bed.position.set(-13, 0.025, 6); g.add(bed);
   put(makeJetTrainer(), -13, 6, 0.45);
   const pq = new THREE.Group(); const pt = canvasT(512, 320, (x, w, h) => { x.fillStyle = '#2a3a2a'; x.fillRect(0, 0, w, h); x.fillStyle = '#e8e4d8'; fitText(x, 'TWO-SEAT JET TRAINER', w / 2, 50, w - 40, 40, F.label); ['flew with the Elm County Air Guard', 'trainer squadron, retired here', 'length 14.1 m · span 7.7 m', 'top speed about Mach 1.3'].forEach((l, i) => fitText(x, l, w / 2, 120 + i * 46, w - 60, 28, F.small)); });
   box(0.08, 0.9, 0.08, std({ color: '#2a2a2c' }), 0, 0.45, 0, pq); const pp = box(0.9, 0.56, 0.05, std({ map: pt }), 0, 1.05, 0.03, pq); pp.rotation.x = -0.4; pq.userData.collider = [-0.45, 0.45, -0.1, 0.1]; put(pq, -6.5, 11.5, 0.2);
   // the picnic shelter + fence at the back
-  put(makePicnicShelter(), -21, -12);
+  put(makePicnicShelter(), -18.2, -12);   // (moved east off the creek bank, item 85)
   for (const [x, z, l, ry] of [[0, -D / 2 + 0.3, W - 1, 0], [-W / 2 + 0.3, 0, D - 1, Math.PI / 2], [W / 2 - 0.3, 0, D - 1, Math.PI / 2]]) { const f = chainLink(l); f.position.set(x, 0, z); f.rotation.y = ry; g.add(f); cols.push(ry ? [x - 0.08, x + 0.08, -l / 2, l / 2] : [-l / 2, l / 2, z - 0.08, z + 0.08]); }
   // the ride trailers, parked in the gravel yard on the east side
   const yard = new THREE.Mesh(new THREE.PlaneGeometry(26, 16), std({ map: tex('tr_gravel', 6, 4), color: '#9a948a', roughness: 1 })); yard.rotation.x = -Math.PI / 2; yard.position.set(15, 0.022, -6.5); g.add(yard);
-  put(makeBoxTrailer(), -20, -2.5, 0);
-  { const rp = makeTreadRamp(2.6, 1.2, 1.4); rp.position.set(-11.92 + 2.6, 0, -2.5); rp.rotation.y = Math.PI; g.add(rp); }   // item 82: tread-plate ramp up into it   // item 81: a 53 ft van with its rear doors open (the fair's supply trailer)
+  put(makeBoxTrailer(), 14, 9, 0);
+  { const rp = makeTreadRamp(2.6, 1.2, 1.4); rp.position.set(14 + 8.08 + 2.6, 0, 9); rp.rotation.y = Math.PI; g.add(rp); }   // item 82: tread-plate ramp up into it   // item 81: a 53 ft van with its rear doors open (the fair's supply trailer)
   put(makeRideTrailer('dragon'), 13, -10.5, 0); put(makeRideTrailer('train'), 14, -3.5, Math.PI);
   // the entrance arch + name
   const nm = canvasT(1024, 192, (x, w, h) => { x.fillStyle = '#1e4a2a'; x.fillRect(0, 0, w, h); x.strokeStyle = '#f2c21a'; x.lineWidth = 8; x.strokeRect(10, 10, w - 20, h - 20); x.fillStyle = '#f2c21a'; fitText(x, 'ELM COUNTY FAIRGROUNDS', w / 2, 86, w - 80, 90, F.slab); x.fillStyle = '#fff'; fitText(x, 'air park · picnic shelter · summer fair', w / 2, 152, w - 160, 32, F.label); });
