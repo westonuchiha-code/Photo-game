@@ -20,6 +20,7 @@ import { makeCafeFrontage } from './models/signs65.js';
 import { makeCanalPark } from './models/misc67.js';
 import { makeArtGallery } from './models/inspo68.js';
 import { makeWarehouseStore } from './models/inspo69.js';
+import { makeUtilityCorner, b83Mat } from './models/batch83.js';
 import { makeYellowFreeBox, makeMessageTrailer, makeTakeoutShop } from './models/batch80.js';
 import { makeFreePaperCorner } from './models/batch79.js';
 import { makeBrickPillar, makeParkGateway } from './models/batch78.js';
@@ -1449,6 +1450,11 @@ const CK = { x: 306, z: 161 };
 const ckShop = makeTakeoutShop(); ckShop.position.set(CK.x, 0.14, CK.z); add(ckShop);
 for (const [x0, x1, z0, z1] of ckShop.userData.colliders) rect(CK.x + x0, CK.x + x1, CK.z + z0, CK.z + z1);
 const ckAreas = ckShop.userData.areas.map((a) => ({ minX: a.minX + CK.x, maxX: a.maxX + CK.x, minZ: a.minZ + CK.z, maxZ: a.maxZ + CK.z }));
+// 83 batch 83: a utility corner on Hearth Market's east wall (gas meter manifold, crushed-rock bed, junipers, grass, the
+// beige telecom pedestal, a bollard and the two cans on the curb); the fine-gravel texture now surfaces the pocket
+// park's paths and sandy dirt its open ground
+{ const uc = makeUtilityCorner(); uc.position.set(288.12, 0.14, 150.0); uc.rotation.y = Math.PI / 2; add(uc);
+  for (const [x0, x1, z0, z1] of uc.userData.colliders) rect(288.12 + z0, 288.12 + z1, 150.0 - x1, 150.0 - x0); }
 const dnAreas = [...dentist.userData.areas, ...wing.userData.areas].map((a) => { const [minX, maxX, minZ, maxZ] = dnW([a.minX, a.maxX, a.minZ, a.maxZ]); return { minX, maxX, minZ, maxZ }; });
 
 const walk = new WalkControls(camera, renderer.domElement, {
@@ -1683,6 +1689,9 @@ const VIEWS = {
   treadramp: { pos: [198.2, 1.6, 139.3], target: [195.0, 0.7, 142.0] },
   tower: { pos: [340.4, 1.6, 16.8], target: [337.05, 1.6, 16.8] },
   butterlight: { pos: [347.6, 1.6, 13.1], target: [350.95, 1.6, 13.1] },
+  gasmeter: { pos: [291.6, 1.6, 150.6], target: [288.2, 1.0, 150.4] },
+  telecom83: { pos: [290.3, 1.2, 146.9], target: [288.5, 0.55, 148.1] },
+  cans83: { pos: [290.15, 0.45, 148.6], target: [289.72, 0.24, 149.0] },
   pixelden: { pos: [353, 2.2, 82.5], target: [348, 2.6, 93] },
   arcadein: { pos: [352.5, 1.7, 94.5], target: [347, 1.2, 99.5] },
   gameroom: { pos: [348, 1.7, 100.5], target: [348, 1.4, 108.6] },

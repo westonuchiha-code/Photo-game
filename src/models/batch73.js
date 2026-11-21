@@ -6,6 +6,7 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { F, fitText } from '../fonts.js';
+import { b83Mat } from './batch83.js';
 
 const _L = new THREE.TextureLoader(); const _T = {};
 function tex(name, rx = 1, ry = 1) { const k = name + rx + '|' + ry; if (_T[k]) return _T[k]; const t = _L.load(`assets/textures/${name}.png`); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx, ry); t.anisotropy = 8; return (_T[k] = t); }
@@ -376,9 +377,9 @@ export function makeOldTownRow() {
 export function makePocketPark() {
   const g = new THREE.Group(); g.name = 'pocket_park'; const cols = [], put = placer(g, cols);
   const W = 40, D = 17;
-  const gr = new THREE.Mesh(new THREE.PlaneGeometry(W, D), std({ map: tex('hs_grass', W / 4, D / 4), color: '#c8b890', roughness: 1 })); gr.rotation.x = -Math.PI / 2; gr.position.set(0, 0.015, D / 2); gr.receiveShadow = true; g.add(gr);
+  const gr = new THREE.Mesh(new THREE.PlaneGeometry(W, D), b83Mat('b83_sandydirt', W / 3, D / 3)); /* item 83: sandy dirt with pebbles */ gr.rotation.x = -Math.PI / 2; gr.position.set(0, 0.015, D / 2); gr.receiveShadow = true; g.add(gr);
   const path = (x0, x1, z0, z1, m) => { const p = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, z1 - z0), m); p.rotation.x = -Math.PI / 2; p.position.set((x0 + x1) / 2, 0.025, (z0 + z1) / 2); p.receiveShadow = true; g.add(p); };
-  const dirt = std({ map: tex('tr_gravel', 2, 6), color: '#b8a890', roughness: 1 }), slabs = std({ map: tex('i5_paving', 1, 4), roughness: 0.85 });
+  const dirt = b83Mat('b83_gravel', 2, 12) /* item 83: fine decomposed-granite gravel */, slabs = std({ map: tex('i5_paving', 1, 4), roughness: 0.85 });
   path(-1.5, 1.5, 0, D, dirt); path(-W / 2, W / 2, 7.5, 10, dirt); path(-15.4, -13.6, 10, 15.2, slabs);
   put(makeDomeBurner(), 9, 12.4, Math.PI);
   put(makeDomeShed(), -14.5, 13.4, Math.PI);

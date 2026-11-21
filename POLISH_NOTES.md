@@ -283,3 +283,8 @@ This is a running list, added to as models get built. Nothing here is urgent.
   Not yet used in the world: rust, blue pebbled plastic, impasto texture (the painting is hung).
 - The two primed canvases in the gallery corner sit in shadow; give them a spot.
 - Older textures (i5_*, i7_*, tx_*) still use the one-pass crossfade; re-run them through seamless_vp.
+
+## 83 Batch 83
+- Utility corner: the gas meter is small against the wall; a second regulator run + a bigger meter body would read
+  better. The cans face sideways in the close view (rotate the wordmark toward the path).
+- The sandy-dirt pocket-park ground streaks at grazing angles; raise its anisotropy or add a detail layer.
