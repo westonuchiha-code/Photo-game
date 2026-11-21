@@ -17,6 +17,7 @@ export const GRID = {
   xs: [75, 161, 245, 329, 413],   // N-S street centre lines (75 = the avenue next to the old town)
   zs: [-168, -84, 0, 84, 168],    // E-W street centre lines
   road: 5, walk: 7,               // half-widths: road, road + sidewalk
+  ring: { n: 212, s: -212, e: 462, hw: 9 },   // Elm Loop, the boulevard round the district (see roads.js): centre lines + half-width
 };
 const SW_H = 0.14;                // sidewalk top
 // reserved lots: kept empty of generated buildings (front = the street side)
@@ -236,9 +237,11 @@ export function makeDistrict() {
   for (let i = 0; i < xs.length - 1; i++) for (let j = 0; j < zs.length - 1; j++)
     fillBlock(bin, r, xs[i] + WH, xs[i + 1] - WH, zs[j] + WH, zs[j + 1] - WH, ['n', 's', 'w', 'e'], 1 + 0.4 * (i === 1 || i === 2 ? 1 : 0));
   // ---- outer rows facing in: past the east street, beyond the north/south edge streets, and the avenue's west side
-  fillBlock(bin, r, XMAX, XMAX + 16, ZMIN, ZMAX, ['w'], 0.6);
-  fillBlock(bin, r, XMIN, XMAX, ZMIN - 16, ZMIN, ['s'], 0.6);
-  fillBlock(bin, r, XMIN, XMAX, ZMAX, ZMAX + 16, ['n'], 0.6);
+  // (the outer rows stop either side of every street, which runs on through them to Elm Loop)
+  const spans = (a, b, cuts) => { const out = []; let p = a; for (const c of cuts) { if (c - WH - p > 8) out.push([p, c - WH]); p = Math.max(p, c + WH); } if (b - p > 8) out.push([p, b]); return out; };
+  for (const [a, b] of spans(ZMIN, ZMAX, zs)) fillBlock(bin, r, XMAX, XMAX + 16, a, b, ['w'], 0.6);
+  for (const [a, b] of spans(XMIN, XMAX, xs)) fillBlock(bin, r, a, b, ZMIN - 16, ZMIN, ['s'], 0.6);
+  for (const [a, b] of spans(XMIN, XMAX, xs)) fillBlock(bin, r, a, b, ZMAX, ZMAX + 16, ['n'], 0.6);
   fillBlock(bin, r, 50, XMIN, ZMIN, -70, ['e'], 0.6);
   fillBlock(bin, r, 50, XMIN, 14, ZMAX, ['e'], 0.6);
 
@@ -249,6 +252,10 @@ export function makeDistrict() {
   for (const x of xs) for (const z of zs) segs.push([x - RH, x + RH, z - RH, z + RH]);
   // the E-W main street at z = 0 also runs west from the avenue into the old town's road
   segs.push([62.4, xs[0] - RH, -RH, RH]);
+  // connectors out to Elm Loop: each N-S street north + south, each E-W street east
+  const RG = GRID.ring, cut = (list, a, b, gaps, w) => { let p = a; for (const g0 of gaps) { if (g0 - w > p) list.push([p, g0 - w]); p = g0 + w; } if (b > p) list.push([p, b]); };
+  for (const x of xs) { segs.push([x - RH, x + RH, ZMAX - 2, RG.n - RG.hw + 0.05]); segs.push([x - RH, x + RH, RG.s + RG.hw - 0.05, ZMIN + 2]); }
+  for (const z of zs) segs.push([XMAX - 2, RG.e - RG.hw + 0.05, z - RH, z + RH]);
   for (const [a, b, c, d] of segs) bin.push('asphalt', flatQuad(a, b, c, d, 0.012, 3, 3));
   // sidewalk rings around every block + outer strips, as raised slabs with a concrete curb face
   const walks = [];
@@ -256,7 +263,11 @@ export function makeDistrict() {
     const bx0 = xs[i] + RH, bx1 = xs[i + 1] - RH, bz0 = zs[j] + RH, bz1 = zs[j + 1] - RH, w = WH - RH;
     walks.push([bx0, bx1, bz0, bz0 + w], [bx0, bx1, bz1 - w, bz1], [bx0, bx0 + w, bz0 + w, bz1 - w], [bx1 - w, bx1, bz0 + w, bz1 - w]);
   }
-  walks.push([XMAX - 2, XMAX, ZMIN, ZMAX], [XMIN, XMAX, ZMIN, ZMIN + 2], [XMIN, XMAX, ZMAX - 2, ZMAX]);
+  { const ew = [], ns = [], ss = []; cut(ew, ZMIN, ZMAX, zs, RH); cut(ns, XMIN, XMAX, xs, RH); cut(ss, XMIN, XMAX, xs, RH);
+    for (const [a, b] of ew) walks.push([XMAX - 2, XMAX, a, b]); for (const [a, b] of ss) walks.push([a, b, ZMIN, ZMIN + 2]); for (const [a, b] of ns) walks.push([a, b, ZMAX - 2, ZMAX]);
+    // sidewalks along the connectors, through the outer rows
+    for (const x of xs) for (const sd of [-1, 1]) { const a = x + sd * RH, b = x + sd * WH; walks.push([Math.min(a, b), Math.max(a, b), ZMAX, ZMAX + 16], [Math.min(a, b), Math.max(a, b), ZMIN - 16, ZMIN]); }
+    for (const z of zs) for (const sd of [-1, 1]) { const a = z + sd * RH, b = z + sd * WH; walks.push([XMAX, XMAX + 16, Math.min(a, b), Math.max(a, b)]); } }
   walks.push([XMIN, XMIN + 2, ZMIN + 2, -RH], [XMIN, XMIN + 2, RH, ZMAX - 2]);   // avenue west sidewalk (gap where the main street comes in)
   for (const [a, b, c, d] of walks) { bin.push('walk', flatQuad(a, b, c, d, SW_H, 2, 2)); bin.push('curb', boxGeo(a, b, 0, SW_H - 0.005, c, d, 1, 1)); }
   // lane markings: dashed centre lines, stop bars and zebra crosswalks at every intersection
@@ -294,7 +305,7 @@ export function makeDistrict() {
   const far = [];
   for (let k = 0; k < 900 && far.length < 260; k++) {
     const a = r() * Math.PI * 2, d = 300 + r() * 650, cx = 180 + Math.cos(a) * d, cz = Math.sin(a) * d;
-    if (cx > -100 && cx < XMAX + 30 && cz > ZMIN - 30 && cz < ZMAX + 30) continue;   // keep out of the town + its rows
+    if (cx > -100 && cx < 660 && cz > GRID.ring.s - 40 && cz < GRID.ring.n + 40) continue;   // keep out of the town, its rows, Elm Loop + the stunt lot
     if (cx > -110 && cx < 80 && cz > -90 && cz < 100) continue;                       // and the old town
     const w = 14 + r() * 26, dd = 14 + r() * 26, h = 14 + r() * r() * 95;
     const fg = boxGeo(cx - w / 2, cx + w / 2, 0, h, cz - dd / 2, cz + dd / 2, 16, 16); const fu = fg.attributes.uv, ou = r(), ov = r(); for (let q = 0; q < fu.count; q++) fu.setXY(q, fu.getX(q) + ou, fu.getY(q) + ov); far.push(fg);
@@ -369,7 +380,10 @@ export function makeDistrict() {
   const areas = [];
   for (const x of xs) areas.push({ minX: x - WH + 0.3, maxX: x + WH - 0.3, minZ: ZMIN + 0.3, maxZ: ZMAX - 0.3 });
   for (const z of zs) areas.push({ minX: XMIN + 0.3, maxX: XMAX - 0.3, minZ: z - WH + 0.3, maxZ: z + WH - 0.3 });
-  areas.push({ minX: 60, maxX: XMIN + 1, minZ: -47.5, maxZ: 11.7 });   // the old town's east edge opens onto the avenue
+  areas.push({ minX: 60, maxX: XMIN + 1, minZ: -47.5, maxZ: 11.7 });
+  { const RG = GRID.ring;   // the connectors out to Elm Loop
+    for (const x of xs) { areas.push({ minX: x - WH + 0.3, maxX: x + WH - 0.3, minZ: ZMAX - 1, maxZ: RG.n - RG.hw + 0.5 }, { minX: x - WH + 0.3, maxX: x + WH - 0.3, minZ: RG.s + RG.hw - 0.5, maxZ: ZMIN + 1 }); }
+    for (const z of zs) areas.push({ minX: XMAX - 1, maxX: RG.e - RG.hw + 0.5, minZ: z - WH + 0.3, maxZ: z + WH - 0.3 }); }   // the old town's east edge opens onto the avenue
   g.userData = {
     areas, lots: LOTS,
     lampPosts: lampPts.map(([x, z]) => [x, z]), treePosts: treePts,

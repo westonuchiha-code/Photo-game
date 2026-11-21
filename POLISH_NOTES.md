@@ -336,3 +336,17 @@ This is a running list, added to as models get built. Nothing here is urgent.
   BIG-RIG 1 red pickup (compact corner), olive scout 4x4 (flat tyre, brush guard), white kit coupe, police car,
   black + white sedans, the dusty blue kei car in the garage. The crashed coupe is a generator wreck (static).
 - Kept as-is (not cars): school bus, coach, dump truck, train, scooters.
+
+## Driving (round 3): roads
+- Elm Loop (src/models/roads.js): 4-lane boulevard (2 x 3.5 m each way, 2 m planted median, 1 m shoulders) round the
+  north, east and south of the district (~1.6 km), meeting the avenue on the west. Every district street now runs on
+  through the outer building rows to it (district.js: outer rows split at the streets, connector roads + sidewalks).
+  Median trees + double-arm lamps with light pools, lane dashes / edge / median lines, stop bars, W-beam guardrail,
+  grass verges, a pine treeline, green ELM LOOP signs at every connector. Far towers kept clear of it.
+- Loop Jump Lot (east, through the rail gap): fenced 130 x 128 m asphalt pad, floodlight masts (4 point lights in the
+  light budget), big kicker (1.9 m), two table-tops, twin small kickers, a rolling hump, cone slalom, tyre stacks,
+  a painted donut ring, LOOP JUMP LOT arch.
+- Boost pads: scrolling chevrons on the Loop's straights both ways + in the lot; driving over one = a shove.
+- Jumps (drive.js): ramps are a height field; the car rides them, and if the ground falls away while it's climbing it
+  flies (gravity, slight air-steer, nose follows the arc, landing thump). A ramp's side or back is a wall.
+- Views: elmloop, loopeast, jumplot, jumpramps.

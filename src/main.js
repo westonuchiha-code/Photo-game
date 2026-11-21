@@ -13,6 +13,7 @@ import { makeTrail } from './models/trail40.js';
 import { makeMossCreature, makeMossMound } from './models/creature55.js';
 import { makeThriftCorner } from './models/fabrics56.js';
 import { makeDistrict } from './models/district.js';
+import { makeRoads } from './models/roads.js';
 import { makeDentistOffice } from './models/dentist57.js';
 import { makeTreatmentWing } from './models/treatment58.js';
 import { makeUtilityLot } from './models/utility59.js';
@@ -1307,6 +1308,8 @@ console.log('T oldtown', Math.round(performance.now()));
 const district = makeDistrict(); add(district);
 for (const [x, z] of district.userData.lampPosts) circle(x, z, 0.18);
 for (const [x, z] of district.userData.treePosts) circle(x, z, 0.25);
+// driving round 3: Elm Loop round the district + the Loop Jump Lot (ramps, boost pads)
+const roads = makeRoads(); add(roads); colliders.push(...roads.userData.colliders);
 console.log('T districtgrid', Math.round(performance.now()));
 window.__texPhase = 'district';   // (tools/record_zones.js: textures first requested from here are district-only)
 const DISTRICT_FROM = room.children.length;   // (streaming: everything added from here on is static district content)
@@ -1507,6 +1510,7 @@ const walk = new WalkControls(camera, renderer.domElement, {
     gshArea, // the pawn & sport shop
     { minX: TP.x - 12.8, maxX: TP.x + 12.8, minZ: TP.z - 5.2, maxZ: TP.z - 0.3 }, // train platform + its stairs
     ...district.userData.areas, // the district's streets + sidewalks
+    ...roads.userData.areas, // Elm Loop + the stunt lot
     ...dnAreas, // the dentist's waiting room + its door
     ulArea, // the utility + parking lot
     ...stAreas, // the storage row's apron + the two open units
@@ -1529,7 +1533,7 @@ const walk = new WalkControls(camera, renderer.domElement, {
   colliders,
 });
 // ---- driving: modelled, drivable cars parked on the district streets (third-person; see drive.js + vehicle/carbody.js)
-const drive = makeDriver({ scene, camera, areas: walk.areas, colliders, ground: (x, z) => district.userData.floorY(x, z) ?? 0 });
+const drive = makeDriver({ scene, camera, areas: walk.areas, colliders, pads: roads.userData.pads, ground: (x, z) => roads.userData.groundY(x, z) ?? district.userData.floorY(x, z) ?? 0 });
 carEnv(renderer);
 for (const [type, opt, x, z, h] of [
   ['hatch', { color: '#b3242a', name: 'red hatch', plate: 'ELM 2K7' }, 71.4, 14.5, 0],
@@ -1565,6 +1569,8 @@ walk.ground = (x, z, prevY) => {
   if (x > TM.x + tmSt.x0 && x < TM.x + tmSt.x1 && z > TM.z + tmSt.front && z < TM.z + tmSt.z1) {   // the temple stairs + platform top
     const zz = z - TM.z; return 0.02 + (zz <= tmSt.zTop ? tmSt.top : tmSt.top * (tmSt.z1 - zz) / (tmSt.z1 - tmSt.zTop)); }
   if (x > TM.x - 13 && x < TM.x + 13 && z > TM.z - 18 && z < TM.z) return 0.06;   // the temple plaza
+  const ry = roads.userData.groundY(x, z);   // the stunt lot's ramps
+  if (ry !== null) return ry;
   const dy = district.userData.floorY(x, z);
   if (dy !== null) return dy;
   if (x > 81.3 && x < 108 && z > 28 && z < 50) return 0.14;   // the dentist office floor
@@ -1857,6 +1863,10 @@ const VIEWS = {
   train: { pos: [-12.5, 2.6, 71.0], target: [-17.5, 2.0, 77.2] },
   workvan: { pos: [-26.0, 1.7, 36.2], target: [-22.8, 0.9, 39.9] },
   scout: { pos: [36.4, 1.7, -5.4], target: [39.9, 0.8, -0.6] },
+  elmloop: { pos: [300, 20, 236], target: [345, 0, 208] },
+  loopeast: { pos: [440, 10, -110], target: [462, 0, -70] },
+  jumplot: { pos: [478, 18, -46], target: [520, 1, 0] },
+  jumpramps: { pos: [496, 6, -16], target: [512, 1, 2] },
   knotsconce: { pos: [16.6, 1.7, 68.0], target: [18.6, 1.9, 66.3] },
   forecourt: { pos: [10, 2.0, 66], target: [-1, 0, 58] },
   puddles: { pos: [6.5, 1.6, 52.5], target: [3.5, 0, 56.5] },

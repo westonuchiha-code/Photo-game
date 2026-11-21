@@ -12,7 +12,7 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const damp = (a, b, k, dt) => a + (b - a) * (1 - Math.exp(-k * dt));
 const wrapA = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 
-export function makeDriver({ scene, camera, areas, colliders, ground }) {
+export function makeDriver({ scene, camera, areas, colliders, ground, pads = [] }) {
   const cars = []; let car = null;           // the car being driven
   const keys = new Set();
   addEventListener('keydown', (e) => { keys.add(e.code); if (api.active && ['Space', 'ArrowUp', 'ArrowDown'].includes(e.code)) e.preventDefault(); });
@@ -86,6 +86,7 @@ export function makeDriver({ scene, camera, areas, colliders, ground }) {
 
   // ---- driver state
   const S = { x: 0, z: 0, h: 0, vx: 0, vz: 0, r: 0, steer: 0, y: 0, roll: 0, rollV: 0, pitch: 0, pitchV: 0, hop: 0, hopV: 0,
+    air: false, vy: 0, vyG: 0, lastG: 0,
     drift: 0, driftDir: 0, charge: 0, boost: 0, spin: 0, camH: 0, camD: 6.4, camMode: 0, shake: 0, aLong: 0, aLat: 0, gear: 1 };
   let headLight = null;
 
@@ -127,6 +128,11 @@ export function makeDriver({ scene, camera, areas, colliders, ground }) {
     const sp = car.userData.spec; const m = sp.mass;
     const fx = Math.sin(S.h), fz = Math.cos(S.h), lx = Math.cos(S.h), lz = -Math.sin(S.h);   // forward + left
     let vF = S.vx * fx + S.vz * fz, vL = S.vx * lx + S.vz * lz; const spd = Math.hypot(S.vx, S.vz);
+    if (S.air) {   // airborne: no traction; a little air-steer, drag only, momentum carries
+      S.r = damp(S.r, inp.steer * 0.9, 2, dt); S.h += S.r * dt; S.steer = damp(S.steer, inp.steer * 0.3, 4, dt);
+      S.vx *= 1 - 0.0045 * Math.hypot(S.vx, S.vz) * dt; S.vz *= 1 - 0.0045 * Math.hypot(S.vx, S.vz) * dt;
+      if (S.boost > 0) S.boost -= dt; S.aLong = 0; S.aLat = 0; S.slip = 0; S.drift = 0;
+    } else {
     // power: P / v caps acceleration at speed (a heavy car pulls hard from rest, then fades), boost adds a shove
     const vmax = (sp.vmax || (20 + sp.power * 0.16)) * (S.boost > 0 ? 1.25 : 1);
     const aEng = Math.min(sp.grip0 || 5.2, (sp.power * 1000 * 0.85) / (m * Math.max(4, Math.abs(vF)))) * (1 - clamp(vF / vmax, 0, 1) ** 2);
@@ -171,10 +177,16 @@ export function makeDriver({ scene, camera, areas, colliders, ground }) {
     S.vx = fx2 * nF + lx2 * nL; S.vz = fz2 * nF + lz2 * nL;
     S.aLong = aF; S.aLat = vF * S.r;
     S.slip = Math.abs(nL) + (inp.brake && vF > 8 ? 2 : 0) + (inp.gas && vF < 6 && aEng > 4.5 ? 1.5 : 0);
+    }
     // move + collide (sub-stepped by the caller)
     const ox = S.x, oz = S.z;
     S.x += S.vx * dt; S.z += S.vz * dt;
     const hit = collide(); if (hit) bump(hit.nx, hit.nz, hit.pen > 0.05);
+    // the side or back of a ramp is a wall: ground rising more than ~half a metre in one go stops you
+    // (steepness just past the bumper: ramps top out near 0.3, a ramp's side or back is a sheer face)
+    const dirS = Math.sign(S.vx * Math.sin(S.h) + S.vz * Math.cos(S.h)) || 1, zB = dirS > 0 ? car.userData.half.zF : car.userData.half.zR, fxS = Math.sin(S.h), fzS = Math.cos(S.h);
+    if (!S.air && ground(S.x + fxS * (zB + dirS * 0.4), S.z + fzS * (zB + dirS * 0.4)) - ground(S.x + fxS * zB * 0.9, S.z + fzS * zB * 0.9) > 0.25) {
+      S.x = ox; S.z = oz; const v = Math.hypot(S.vx, S.vz) || 1; bump(-S.vx / v, -S.vz / v, true); }
     // stay on the streets: every corner must stand on a drivable area; otherwise slide or bounce off the edge
     const ok = (x, z) => corners(x, z, S.h, car.userData).every(([a, b]) => inArea(a, b));
     if (!ok(S.x, S.z) && ok(ox, oz)) {   // (a car parked half off the map can still drive back onto it)
@@ -190,8 +202,21 @@ export function makeDriver({ scene, camera, areas, colliders, ground }) {
     // height difference plus the spring response to braking / cornering
     const s = Math.sin(S.h), c = Math.cos(S.h); const gh = u.wheels.map((w) => { const p = w.pivot.position; const lx = p.x, lz = p.z; return ground(S.x + lx * c + lz * s, S.z - lx * s + lz * c); });
     const yF = (gh[0] + gh[1]) / 2, yR = (gh[2] + gh[3]) / 2, yLft = (gh[1] + gh[3]) / 2, yRgt = (gh[0] + gh[2]) / 2;
-    const yT = (yF + yR) / 2; S.y = damp(S.y, yT, 18, dt);
-    const tp = Math.atan2(yR - yF, u.axF - u.axR), tr = Math.atan2(yLft - yRgt, 2 * Math.abs(u.wheels[0].pivot.position.x));
+    const yT = (yF + yR) / 2;
+    // ground vs air: on the ground the car rides the surface (its climb rate is remembered); if the surface drops away
+    // while it's climbing (a ramp lip) it flies with that vertical speed, under gravity, until it lands
+    if (S.air) {
+      S.vy -= 9.8 * 1.35 * dt; S.y += S.vy * dt;
+      if (S.y <= yT) { if (S.vy < -3) { S.shake = Math.min(1, -S.vy * 0.07); S.pitchV -= S.vy * 0.25; if (au) { const t = au.ctx.currentTime; au.sq.gain.setValueAtTime(0.05, t); au.sq.gain.setTargetAtTime(0, t, 0.08); } }
+        S.y = yT; S.air = false; S.vy = 0; S.vyG = 0; }
+    } else {
+      if (yT < S.y - 0.12 && S.vyG > 1.2) { S.air = true; S.vy = S.vyG * 1.05; }
+      else { S.vyG = damp(S.vyG, clamp((yT - S.lastG) / Math.max(dt, 1e-3), -20, 20), 20, dt); S.y = damp(S.y, yT, 18, dt); }
+    }
+    S.lastG = yT;
+    if (headLight) headLight.visible = !S.air;   // (the beams are painted on the road: hide them mid-jump)
+    const spdH = Math.hypot(S.vx, S.vz);
+    const tp = S.air ? -Math.atan2(S.vy, Math.max(6, spdH)) * 0.8 : Math.atan2(yR - yF, u.axF - u.axR), tr = S.air ? 0 : Math.atan2(yLft - yRgt, 2 * Math.abs(u.wheels[0].pivot.position.x));
     // springs (critically-ish damped): pitch from longitudinal accel, roll from lateral
     const k = 60, d = 9;
     const pT = clamp(-S.aLong * 0.006, -0.05, 0.05), rT = clamp(S.aLat * 0.0055 * (sp.rollK || 1), -0.07, 0.07);
@@ -204,7 +229,7 @@ export function makeDriver({ scene, camera, areas, colliders, ground }) {
     // wheels: steer the fronts, spin all by distance travelled, follow the ground
     const vF = S.vx * Math.sin(S.h) + S.vz * Math.cos(S.h);
     S.spin += (vF / sp.R) * dt * (S.drift ? 1.15 : 1);
-    u.wheels.forEach((w, i) => { if (!w.knocked) w.pivot.rotation.y = w.front ? S.steer * (S.drift ? 1.3 : 1) : 0; w.spin.rotation.x = S.spin; w.pivot.position.y = u.axY + (w.yOff || 0) + clamp(gh[i] - S.y, -0.08, 0.12); });
+    u.wheels.forEach((w, i) => { if (!w.knocked) w.pivot.rotation.y = w.front ? S.steer * (S.drift ? 1.3 : 1) : 0; w.spin.rotation.x = S.spin; w.pivot.position.y = u.axY + (w.yOff || 0) + (S.air ? -0.09 : clamp(gh[i] - S.y, -0.08, 0.12)); });
     // lamps: brakes glow
     const braking = input().brake > 0;
     for (const t of u.lamps.tail) t.material.emissiveIntensity = braking ? 3.2 : 0.8;
@@ -232,7 +257,7 @@ export function makeDriver({ scene, camera, areas, colliders, ground }) {
   function fx(dt) {
     const u = car.userData, s = Math.sin(S.h), c = Math.cos(S.h);
     const rear = u.wheels.filter((w) => !w.front);
-    if (S.slip > 2.2 || S.drift) rear.forEach((w, i) => { const p = w.pivot.position; skid(i, S.x + p.x * c + p.z * s, S.z - p.x * s + p.z * c, S.y); }); else lastSk[0] = lastSk[1] = null;
+    if (!S.air && (S.slip > 2.2 || S.drift)) rear.forEach((w, i) => { const p = w.pivot.position; skid(i, S.x + p.x * c + p.z * s, S.z - p.x * s + p.z * c, S.y); }); else lastSk[0] = lastSk[1] = null;
     const col = S.charge > 2.4 ? '#ff5ad2' : S.charge > 1.5 ? '#ffa030' : '#4ab0ff';
     if (S.drift && S.charge > 0.8) for (const w of rear) { const p = w.pivot.position; _p.set(S.x + (p.x * 1.05) * c + (p.z - 0.3) * s, S.y + 0.1, S.z - (p.x * 1.05) * s + (p.z - 0.3) * c); spark(_p, col, new THREE.Vector3((Math.random() - 0.5) * 2, 1.5 + Math.random(), (Math.random() - 0.5) * 2)); }
     if (S.boost > 0) { const zR = u.half.zR; _p.set(S.x + (-u.half.x * 0.6) * c + (zR - 0.1) * s, S.y + u.spec.clr + 0.06, S.z - (-u.half.x * 0.6) * s + (zR - 0.1) * c); spark(_p, '#ffb040', new THREE.Vector3(-s * 3, 0.3, -c * 3)); }
@@ -257,7 +282,7 @@ export function makeDriver({ scene, camera, areas, colliders, ground }) {
       for (const k of u.cols) { for (const l of grid.values()) { const j = l.indexOf(k); if (j >= 0) l.splice(j, 1); } const key = cellKey(Math.floor(k.x / CELL), Math.floor(k.z / CELL)); for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) { const kk = cellKey(Math.floor(k.x / CELL) + i, Math.floor(k.z / CELL) + j); if (!grid.has(kk)) grid.set(kk, []); grid.get(kk).push(k); } } },
     nearest(p) { let best = null, bd = 3.6; for (const g of cars) { const d = Math.hypot(p.x - g.position.x, p.z - g.position.z) - g.userData.half.x; if (d < bd) { bd = d; best = g; } } return best; },
     enter(g) {
-      car = g; api.active = true; S.x = g.position.x; S.z = g.position.z; S.h = g.rotation.y; S.vx = S.vz = S.r = S.steer = 0; S.y = g.position.y; S.drift = S.boost = S.charge = 0; S.camMode = 0;
+      car = g; api.active = true; S.x = g.position.x; S.z = g.position.z; S.h = g.rotation.y; S.vx = S.vz = S.r = S.steer = 0; S.y = g.position.y; S.drift = S.boost = S.charge = 0; S.camMode = 0; S.air = false; S.vy = S.vyG = 0; S.lastG = S.y;
       for (const k of g.userData.cols) k.active = false;
       g.userData.lamps.head.forEach((h) => (h.material.emissiveIntensity = 2.4));
       // headlight beams: two soft additive pools projected on the road ahead (a real light would glint on the glass)
@@ -286,6 +311,8 @@ export function makeDriver({ scene, camera, areas, colliders, ground }) {
     update(dt) {
       if (!car) return;
       const inp = input(); const n = 4;
+      // boost pads: driving over one gives a shove (kart-style)
+      if (!S.air) for (const p of pads) if (S.x > p.minX && S.x < p.maxX && S.z > p.minZ && S.z < p.maxZ) { if (S.boost < 0.9) S.shake = Math.max(S.shake, 0.25); S.boost = Math.max(S.boost, 1.2); }
       for (let i = 0; i < n; i++) step(dt / n, inp);
       pose(dt); chase(dt, false); fx(dt);
     },
