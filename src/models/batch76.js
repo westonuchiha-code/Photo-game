@@ -100,14 +100,15 @@ export function makeEggBaconSub() {
 // ---- the garage ---------------------------------------------------------------------------------------------------------
 // a narrow concrete-block garage (3.4 x 5.6 m), open front at z = 0 facing +z, shutter rolled up; the dusty car nose out,
 // a steel shelf at the back with junk, a folding table with a camp stove, the pan and the sub on a plate
-export function makeKeiGarage() {
+export function makeKeiGarage({ car = true } = {}) {
   const g = new THREE.Group(); g.name = 'kei_garage'; const cols = [], put = placer(g, cols);
   const W = 3.4, D = 5.6, H = 2.5, block = std({ map: tex('lot_concrete', 2, 1.4), color: '#b8b8b2', roughness: 0.9 });
   for (const s of [-1, 1]) box(0.2, H, D, block, s * (W / 2 - 0.1), H / 2, -D / 2, g); box(W, H, 0.2, block, 0, H / 2, -D + 0.1, g); box(W + 0.3, 0.2, D + 0.3, std({ color: '#5a5c60', metalness: 0.4 }), 0, H + 0.1, -D / 2, g);
   box(W, 0.35, 0.35, std({ color: '#8a8c90', metalness: 0.5 }), 0, H - 0.2, -0.1, g);   // the rolled-up shutter box
   const fl = new THREE.Mesh(new THREE.PlaneGeometry(W - 0.4, D - 0.2), std({ map: tex('lot_concrete', 1.5, 2), color: '#a8a49c', roughness: 0.95 })); fl.rotation.x = -Math.PI / 2; fl.position.set(0, 0.012, -D / 2); fl.receiveShadow = true; g.add(fl);
   const lt = new THREE.PointLight('#fff0d8', 3, 7, 1.5); lt.position.set(0, H - 0.3, -2.5); g.add(lt); box(0.6, 0.05, 0.1, std({ emissive: '#ffffff', emissiveIntensity: 1.5 }), 0, H - 0.05, -2.5, g);
-  put(makeKeiCar(), -0.35, -2.7);
+  if (car) put(makeKeiCar(), -0.35, -2.7);   // (car: false -> the town builds a drivable one at carPose)
+  g.userData_carPose = { x: -0.35, z: -2.7 };
   // back shelf with tins, a fan heater, a kettle
   const sh = std({ color: '#3a5a8a', metalness: 0.4 }); for (let k = 0; k < 3; k++) box(1.2, 0.03, 0.4, sh, 0.9, 0.4 + k * 0.6, -D + 0.45, g); for (const sx of [0.3, 1.5]) box(0.04, 1.8, 0.4, sh, sx, 0.9, -D + 0.45, g); cols.push([0.28, 1.52, -D + 0.2, -D + 0.68]);
   const r = rng(6); for (let i = 0; i < 9; i++) { const c = cyl(0.06, 0.06, 0.12 + r() * 0.08, std({ color: ['#c81e28', '#2a6ad8', '#f2c21a', '#8a8c90'][i % 4], metalness: 0.5 }), 0.4 + (i % 3) * 0.35, 0.47 + Math.floor(i / 3) * 0.6 + 0.04, -D + 0.45, g, 14); void c; }
@@ -124,7 +125,7 @@ export function makeKeiGarage() {
   const sd = makeScrewdriver(); sd.position.set(1.4, 0.76, -0.75); sd.rotation.y = 0.6; g.add(sd);
   const sc = makeStickerCase(); sc.position.set(-0.25, 0.012, -D + 0.25); sc.rotation.y = 0.2; g.add(sc);
   cols.push([-W / 2, -W / 2 + 0.2, -D, 0], [W / 2 - 0.2, W / 2, -D, 0], [-W / 2, W / 2, -D, -D + 0.2]);
-  g.userData.colliders = cols;
+  g.userData.colliders = cols; g.userData.carPose = g.userData_carPose; delete g.userData_carPose;
   g.userData.areas = [{ minX: -W / 2 + 0.25, maxX: W / 2 - 0.25, minZ: -D + 0.25, maxZ: 0.3 }];
   return g;
 }

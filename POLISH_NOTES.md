@@ -325,3 +325,14 @@ This is a running list, added to as models get built. Nothing here is urgent.
   Touch pads on phones. E to get in/out, hold C to look back. ?drive=N starts in car N.
 - Next: round 2 rebuild every parked vehicle with the generator (drivable); round 3 roads (ring road, wider avenue,
   ramps, a route out to the fairground / Hearth Market).
+
+## Driving (round 2): every town car rebuilt + drivable
+- Generator gained: colour bands by height (two-tone, stripe liveries; ring cut points keep edges crisp), side
+  lettering decals, proper load beds (ribbed floor, walls, tailgate, headboard, rope hooks, cab guard on kei trucks),
+  cab-over vans/trucks, boxy 4x4 sections, wing / roof / lip spoilers, black body kit, fog lamps, round sealed-beam
+  lamps, tube brush guard, dust (matte, faded paint), rim colours, a flat tyre, crash damage (crumpled nose, lost
+  headlight, snapped wing, wheel knocked in). Paint/glass split decided per quad on exact roof stations (no zig-zags).
+- Replaced (same spots, now drivable): old two-tone van, kei truck, Hataraku Shokai work van, Kestrel Sport kei hatch,
+  BIG-RIG 1 red pickup (compact corner), olive scout 4x4 (flat tyre, brush guard), white kit coupe, police car,
+  black + white sedans, the dusty blue kei car in the garage. The crashed coupe is a generator wreck (static).
+- Kept as-is (not cars): school bus, coach, dump truck, train, scooters.

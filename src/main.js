@@ -105,7 +105,7 @@ import { makeTunaCan } from './models/tuna34.js';
 import { makeKnotRoom } from './models/knotroom30.js';
 import { makeCornDog, makePorkBun, makeMelonBread, makeKatsuCurry, makeCheeseSticks, makeYogurtDrink, makeEnergyCan, makeUmeSour, makeCocoCan, makeCandyPack, makePizzaDisplay, makeNoodleShop } from './models/food16.js';
 import { WalkControls } from './walk.js';
-import { fontsReady } from './fonts.js';
+import { fontsReady, F, fitText } from './fonts.js';
 await fontsReady;   // sign fonts must be loaded before any canvas sign is drawn
 
 // ------------------------------------------------------------------ renderer
@@ -304,6 +304,9 @@ function makePendant() {
 
 // ------------------------------------------------------------------ furniture
 const colliders = [];
+// the town's cars: rebuilt with the car generator and made drivable once the driver exists (see 'driving' below)
+const townCars = [];   // [type, opts, x, z, heading(+z nose)]
+const H90 = Math.PI / 2;   // old models point their nose along +x; generator cars along +z
 const circle = (x, z, r) => colliders.push({ type: 'circle', x, z, r });
 const rect = (x0, x1, z0, z1) => colliders.push({ type: 'box', minX: x0, maxX: x1, minZ: z0, maxZ: z1 });
 
@@ -686,11 +689,8 @@ onTable(makeDarkSodaCan(), 0.08, twoZ, -1.4);
 onTable(makeDarkSodaCan(), 0.17, twoZ + 0.04, -1.8);
 
 // ------------------------------------------------------------------ junked van behind the tire shop (old-van photo)
-const van = makeOldVan();
-van.position.set(21.5, 0, -26.5);
-van.rotation.y = 0.35;
-add(van);
-rect(20.2, 22.8, -28.8, -24.2);
+townCars.push(['oldvan', { name: 'old van', color: '#8a857a', roofColor: '#a9ad9f', dust: 0.7, rim: 'steel', plate: 'ELM 1977',
+  bands: [[0, 0.66, '#4a3a33'], [0.93, 0.955, '#6b4a3a'], [0.985, 1.005, '#9a7e74']] }, 21.5, -26.5, 0.35 + H90]);
 
 // ------------------------------------------------------------------ tree with a door (tree-door photos)
 // In the gravel + leaf patch by the rental sign, door facing the sidewalk.
@@ -1173,16 +1173,16 @@ for (const [x0, x1, z0, z1] of knot.userData.colliders) colliders.push({ type: '
 const krAreas = knot.userData.areas.map((a) => ({ minX: KR.x - a.maxZ, maxX: KR.x - a.minZ, minZ: KR.z + a.minX, maxZ: KR.z + a.maxX, y0: -0.5, y1: 0.6 }));
 // 36 Vehicles: the kei mini-truck on its recycling round, parked at the kerb of the west street
 const KT = { x: -22.75, z: 44.5, rot: -Math.PI / 2 };
-const keiTruck = makeKeiTruck(); keiTruck.position.set(KT.x, 0, KT.z); keiTruck.rotation.y = KT.rot; add(keiTruck);
-rect(KT.x - 0.78, KT.x + 0.78, KT.z - 1.75, KT.z + 1.75);
+townCars.push(['keitruck', { name: 'kei truck', color: '#e4e4e0', rim: 'steel', metal: 0.1, plate: 'ELM 480' }, KT.x, KT.z, KT.rot + H90]);
 // the outfitter's white work van, parked nose-to-tail behind the truck
 const KV = { x: -22.8, z: 39.7, rot: -Math.PI / 2 };
-const workVan = makeWorkVan(); workVan.position.set(KV.x, 0, KV.z); workVan.rotation.y = KV.rot; add(workVan);
-rect(KV.x - 0.78, KV.x + 0.78, KV.z - 1.7, KV.z + 1.7);
+townCars.push(['keivan', { name: 'work van', color: '#eeeeea', rim: 'steel', metal: 0.1, plate: 'ELM 3W1', bands: [[0.6, 0.7, '#e8742a']],
+  decals: [{ w: 1.7, h: 0.26, y: 0.86, z: -0.35, draw: (x, w, h) => { x.clearRect(0, 0, w, h); x.fillStyle = '#1d2f6a'; fitText(x, 'Hataraku Shokai', w / 2, h * 0.42, w * 0.94, h * 0.5, F.heavy); x.fillStyle = '#3a3c40'; fitText(x, 'work clothes · work goods · 555-0148', w / 2, h * 0.84, w * 0.9, h * 0.2, F.label); } }] }, KV.x, KV.z, KV.rot + H90]);
 // the silver kei hot hatch with its stripe livery, next in the row
 const KH = { x: -22.8, z: 35.4, rot: -Math.PI / 2 };
-const keiHatch = makeKeiHatch(); keiHatch.position.set(KH.x, 0, KH.z); keiHatch.rotation.y = KH.rot; add(keiHatch);
-rect(KH.x - 0.78, KH.x + 0.78, KH.z - 1.8, KH.z + 1.8);
+townCars.push(['keisport', { name: 'kei hot hatch', color: '#b8bcc0', metal: 0.7, rim: 'alloy', lip: true, fog: true, roofSpoiler: true, plate: 'ELM K5T',
+  bands: [[0.2, 0.27, '#2a2b2d'], [0.35, 0.38, '#e8742a'], [0.395, 0.425, '#1f9aa8'], [0.44, 0.47, '#1d2f6a']],
+  decals: [{ w: 0.9, h: 0.22, y: 0.62, z: 0.25, draw: (x, w, h) => { x.clearRect(0, 0, w, h); x.fillStyle = '#1d2f6a'; fitText(x, 'Kestrel Sport', w / 2, h * 0.62, w * 0.95, h * 0.8, F.script || F.heavy); } }] }, KH.x, KH.z, KH.rot + H90]);
 // the orange vintage scooter and the rusted-out one beside it, nosed in on the sidewalk past the truck
 const vs = makeVintageScooter(); vs.position.set(-20.9, 0.12, 48.4); vs.rotation.y = Math.PI; add(vs);
 const rs = makeRustedScooter(); rs.position.set(-20.95, 0.12, 49.35); rs.rotation.y = Math.PI + 0.12; add(rs);
@@ -1198,7 +1198,8 @@ rect(TP.x - 13.2, TP.x - 13, TP.z - 3, TP.z); rect(TP.x + 13, TP.x + 13.2, TP.z 
 // 50 Bad-parker easter egg: a compact-spaces corner on the west side of the grocery lot, the red pickup
 // crooked across two spaces under the NO TRUCKS sign (wall along x, facing east)
 const BP = { x: 13.6, z: -29.6 };
-const bpc = makeCompactCorner(); bpc.position.set(BP.x, 0, BP.z); bpc.rotation.y = Math.PI / 2; add(bpc);
+const bpc = makeCompactCorner({ truck: false }); bpc.position.set(BP.x, 0, BP.z); bpc.rotation.y = Math.PI / 2; add(bpc);
+{ const tp = bpc.userData.truckPose; townCars.push(['bigtruck', { name: 'big red pickup', color: '#8e1a1e', chromeGrille: true, plate: 'BIG-RIG 1', rim: 'alloy' }, BP.x + tp.z, BP.z - tp.x, tp.ry + Math.PI / 2 + H90]); }
 for (const [x0, x1, z0, z1] of bpc.userData.colliders) colliders.push({ type: 'box', minX: BP.x + z0, maxX: BP.x + z1, minZ: BP.z - x1, maxZ: BP.z - x0 });
 // 52 Listing flyers: a realty office window on the blank south face of the block between the old-town street
 // and the forecourt, facing the station plaza; a paved strip in front so it can be reached
@@ -1274,8 +1275,7 @@ const coach = makeCoachBus(); coach.position.set(CBP.x, 0, CBP.z); coach.rotatio
 rect(CBP.x - 1.3, CBP.x + 1.3, CBP.z - 6.1, CBP.z + 6.1);
 // the dusty olive scout truck, left to rot in the dirt lot (front right tyre flat)
 const ST = { x: 39.9, z: -0.6, rot: Math.PI / 2 + 0.04 };
-const scout = makeScoutTruck(); scout.position.set(ST.x, 0, ST.z); scout.rotation.y = ST.rot; add(scout);
-circle(ST.x, ST.z - 1.1, 1.05); circle(ST.x, ST.z + 1.1, 1.05);
+townCars.push(['scout', { name: 'scout truck', color: '#4f5636', roofColor: '#a9aca4', dust: 0.5, rimColor: '#c8641e', rim: 'steel', roundLamps: true, brushGuard: true, flat: 0, plate: 'ELM 70S' }, ST.x, ST.z, ST.rot + H90]);
 const mallAreas = mall.userData.areas.map((a) => ({ ...a, minX: a.minX + MALL.x, maxX: a.maxX + MALL.x, minZ: a.minZ + MALL.z, maxZ: a.maxZ + MALL.z }));
 {
   // forecourt: rain-soaked concrete slabs with puddles (rainy-plaza photo, 28k), cut around the stair well
@@ -1326,8 +1326,10 @@ for (const [x0, x1, z0, z1] of ulot.userData.colliders) rect(UL.x + x0, UL.x + x
 const ulArea = (() => { const a = ulot.userData.area; return { minX: UL.x + a.minX, maxX: UL.x + a.maxX, minZ: UL.z + a.minZ, maxZ: UL.z + a.maxZ }; })();
 // 61 sport coupe: parked nose-in in a regular stall of the utility lot; a crashed one nosed into the fence of the
 // vacant lot downtown (lot D, its fence on the z = -7 side)
-const coupe = makeCoupe(); coupe.position.set(UL.x + 7.7, 0.025, UL.z + 4.85); add(coupe); rect(UL.x + 5.4, UL.x + 9.95, UL.z + 3.95, UL.z + 5.75);
-const wreck = makeCoupe({ crashed: true }); wreck.position.set(229.5, 0.02, -5.0); wreck.rotation.y = -Math.PI / 2 + 0.12; add(wreck); rect(228.4, 230.6, -7.4, -2.8);
+const COUPE61 = { type: 'coupe', L: 4.385, W: 1.745, H: 1.295, WB: 2.51, color: '#f2f2ee', roofColor: '#141416', kit: true, wing: true, bigExhaust: true, rim: 'alloy', plate: 'PTW 4417' };
+townCars.push(['coupe', { ...COUPE61, name: 'white coupe' }, UL.x + 7.7, UL.z + 4.85, H90]);
+// the crashed twin stays a wreck (not drivable): crumpled nose, a headlight gone, wing snapped, a wheel knocked in
+const wreck = makeCar({ ...COUPE61, crash: true, plate: 'PTW 4471', name: 'wreck' }); wreck.position.set(229.5, 0.02, -5.0); wreck.rotation.y = -Math.PI / 2 + 0.12 + H90; add(wreck); rect(228.4, 230.6, -7.4, -2.8);
 // 62 self storage on lot C: a row of orange roll-up doors facing the cross street (z = 84), two units open
 const SS = { x: 176, z: 96 };
 const storage = makeStorageRow(); storage.position.set(SS.x, 0.02, SS.z); add(storage);
@@ -1340,7 +1342,7 @@ const CS = { x: 176, z: -12 };
 const cstore = makeCornerStore(); cstore.position.set(CS.x, 0.14, CS.z); add(cstore);
 for (const [x0, x1, z0, z1] of cstore.userData.colliders) rect(CS.x + x0, CS.x + x1, CS.z + z0, CS.z + z1);
 const csAreas = cstore.userData.areas.map((a) => ({ minX: CS.x + a.minX, maxX: CS.x + a.maxX, minZ: CS.z + a.minZ, maxZ: CS.z + a.maxZ }));
-const cop = makePoliceSedan(); cop.position.set(181, 0.012, -3.7); cop.rotation.y = Math.PI; add(cop); rect(178.4, 183.6, -4.7, -2.7);
+townCars.push(['sedan', { name: 'police car', color: '#f4f4f2', livery: LIVERIES.police, plate: 'ELM P07', rim: 'steel', bands: [[0.15, 0.55, '#16181c']] }, 181, -3.7, Math.PI + H90]);
 const AC = { x: 259, z: 14 };
 const acp = makeAircraftCarport(); acp.position.set(AC.x, 0.14, AC.z); acp.rotation.y = Math.PI; add(acp);
 for (const [x0, x1, z0, z1] of acp.userData.colliders) rect(AC.x - x1, AC.x - x0, AC.z - z1, AC.z - z0);
@@ -1390,8 +1392,7 @@ whPut(makeBinShelf(), -6, -1.6);
 const PH = { x: 175, z: 74.6 };
 const pink = makePinkHouse(); pink.position.set(PH.x, 0.02, PH.z); add(pink);
 for (const [x0, x1, z0, z1] of pink.userData.colliders) rect(PH.x + x0, PH.x + x1, PH.z + z0, PH.z + z1);
-{ const s1 = makeSedan('#26282c', 1); s1.position.set(170.5, 0.012, 80.4); add(s1); rect(168, 173, 79.45, 81.35);
-  const s2 = makeSedan('#eef0f0', 2); s2.position.set(179.0, 0.012, 80.4); add(s2); rect(176.5, 181.5, 79.45, 81.35); }
+townCars.push(['sedan', { name: 'black sedan', color: '#26282c', plate: 'KTR 2210' }, 170.5, 80.4, H90], ['sedan', { name: 'white sedan', color: '#eef0f0', plate: 'BLV 4417', chromeGrille: true }, 179.0, 80.4, H90]);
 // 72 Inspiration 7: the Pixel Den arcade (lounge + game room behind a black arch) with a shuttered yakitori stall and
 // street props beside it on the z = 84 street; a temple front with lantern walls on the main street; the county
 // fairgrounds (jet trainer, picnic shelter, parked ride trailers) on the z = 168 street; a cairn on the nature trail
@@ -1435,7 +1436,8 @@ const nmAreas = nmall.userData.areas.map((a) => { const [minX, maxX, minZ, maxZ]
 // 76 batch 76: the dusty kei car in its own garage next to the pink house (with a camp-stove breakfast); the walk-in
 // freezer + cardboard-patched coolers are inside Bulk Barn (inspo69); the PLEASE LAY FLAT painting is in the gallery
 const KG = { x: 186.5, z: 77 };
-const kgar = makeKeiGarage(); kgar.position.set(KG.x, 0.02, KG.z); add(kgar);
+const kgar = makeKeiGarage({ car: false }); kgar.position.set(KG.x, 0.02, KG.z); add(kgar);
+townCars.push(['keiold', { name: 'dusty kei car', color: '#4a78b8', dust: 0.9, rim: 'steel', plate: 'ELM 360' }, KG.x + kgar.userData.carPose.x, KG.z + kgar.userData.carPose.z, 0]);
 for (const [x0, x1, z0, z1] of kgar.userData.colliders) rect(KG.x + x0, KG.x + x1, KG.z + z0, KG.z + z1);
 const kgAreas = kgar.userData.areas.map((a) => ({ minX: a.minX + KG.x, maxX: a.maxX + KG.x, minZ: a.minZ + KG.z, maxZ: a.maxZ + KG.z }));
 // 77 batch 77: Hearth Market (dairy aisle under the blue scroll mural, deli corn dogs, online-pickup staging) on the
@@ -1535,6 +1537,7 @@ for (const [type, opt, x, z, h] of [
   ['coupe', { color: '#1b3a78', rim: 'black', name: 'blue coupe', plate: 'ELM 9C3' }, 71.4, 27.0, 0],
   ['sedan', { color: '#f0c41c', rim: 'steel', name: 'cab', plate: 'ELM T41', livery: LIVERIES.taxi, metal: 0.15 }, 92.0, 3.7, Math.PI / 2],
   ['pickup', { color: '#5e6e52', rim: 'alloy', name: 'pickup', plate: 'ELM 7P8', chromeGrille: true }, 104.0, -3.6, -Math.PI / 2],
+  ...townCars,
 ]) { const c = makeCar({ type, ...opt }); c.position.set(x, 0, z); c.rotation.y = h; scene.add(c); drive.addCar(c, { name: opt.name }); }
 walk.ground = (x, z, prevY) => {
   const my = mall.userData.floorY(x - MALL.x, z - MALL.z, prevY);

@@ -177,7 +177,7 @@ export function makeDriver({ scene, camera, areas, colliders, ground }) {
     const hit = collide(); if (hit) bump(hit.nx, hit.nz, hit.pen > 0.05);
     // stay on the streets: every corner must stand on a drivable area; otherwise slide or bounce off the edge
     const ok = (x, z) => corners(x, z, S.h, car.userData).every(([a, b]) => inArea(a, b));
-    if (!ok(S.x, S.z)) {
+    if (!ok(S.x, S.z) && ok(ox, oz)) {   // (a car parked half off the map can still drive back onto it)
       if (ok(S.x, oz)) { S.z = oz; bump(0, Math.sign(S.vz) * -1, true); }
       else if (ok(ox, S.z)) { S.x = ox; bump(Math.sign(S.vx) * -1, 0, true); }
       else { S.x = ox; S.z = oz; S.h -= S.r * dt; S.r *= -0.3; S.vx *= -0.3; S.vz *= -0.3; S.shake = Math.min(1, S.shake + 0.3); S.drift = 0; }
@@ -204,7 +204,7 @@ export function makeDriver({ scene, camera, areas, colliders, ground }) {
     // wheels: steer the fronts, spin all by distance travelled, follow the ground
     const vF = S.vx * Math.sin(S.h) + S.vz * Math.cos(S.h);
     S.spin += (vF / sp.R) * dt * (S.drift ? 1.15 : 1);
-    u.wheels.forEach((w, i) => { w.pivot.rotation.y = w.front ? S.steer * (S.drift ? 1.3 : 1) : 0; w.spin.rotation.x = S.spin; w.pivot.position.y = u.axY + clamp(gh[i] - S.y, -0.08, 0.12); });
+    u.wheels.forEach((w, i) => { if (!w.knocked) w.pivot.rotation.y = w.front ? S.steer * (S.drift ? 1.3 : 1) : 0; w.spin.rotation.x = S.spin; w.pivot.position.y = u.axY + (w.yOff || 0) + clamp(gh[i] - S.y, -0.08, 0.12); });
     // lamps: brakes glow
     const braking = input().brake > 0;
     for (const t of u.lamps.tail) t.material.emissiveIntensity = braking ? 3.2 : 0.8;
@@ -260,8 +260,12 @@ export function makeDriver({ scene, camera, areas, colliders, ground }) {
       car = g; api.active = true; S.x = g.position.x; S.z = g.position.z; S.h = g.rotation.y; S.vx = S.vz = S.r = S.steer = 0; S.y = g.position.y; S.drift = S.boost = S.charge = 0; S.camMode = 0;
       for (const k of g.userData.cols) k.active = false;
       g.userData.lamps.head.forEach((h) => (h.material.emissiveIntensity = 2.4));
-      if (!headLight) { headLight = new THREE.SpotLight('#fff4e0', 40, 45, 0.55, 0.5, 1.6); headLight.userData.drive = true; }
-      g.userData.body.add(headLight); headLight.position.set(0, g.userData.spec.nose + 0.05, g.userData.half.zF + 0.6); g.userData.body.add(headLight.target); headLight.target.position.set(0, 0, g.userData.half.zF + 14);
+      // headlight beams: two soft additive pools projected on the road ahead (a real light would glint on the glass)
+      if (!headLight) { const c = document.createElement('canvas'); c.width = 128; c.height = 256; const x = c.getContext('2d');
+        const gr = x.createRadialGradient(64, 250, 4, 64, 200, 200); gr.addColorStop(0, 'rgba(255,244,220,0.9)'); gr.addColorStop(0.5, 'rgba(255,240,210,0.35)'); gr.addColorStop(1, 'rgba(255,240,210,0)'); x.fillStyle = gr; x.fillRect(0, 0, 128, 256);
+        const t = new THREE.CanvasTexture(c); const mat = new THREE.MeshBasicMaterial({ map: t, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.55, polygonOffset: true, polygonOffsetFactor: -6 });
+        headLight = new THREE.Group(); for (const s of [-1, 1]) { const b = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 11), mat); b.rotation.x = -Math.PI / 2; b.rotation.z = s * -0.05; b.position.set(s * 0.55, 0.035, 5.3); headLight.add(b); } }
+      g.add(headLight); headLight.position.set(0, 0, g.userData.half.zF);
       const a = audio(); a?.ctx.resume?.();
       chase(0, true);
     },
@@ -269,7 +273,7 @@ export function makeDriver({ scene, camera, areas, colliders, ground }) {
       const g = car; if (!g) return null; api.active = false;
       const u = g.userData, s = Math.sin(S.h), c = Math.cos(S.h);
       S.vx = S.vz = 0; pose(0.016); api.syncCols(g); for (const k of u.cols) k.active = true;
-      if (headLight) { g.userData.body.remove(headLight); g.userData.body.remove(headLight.target); }
+      if (headLight) g.remove(headLight);
       if (au) au.master.gain.setTargetAtTime(0, au.ctx.currentTime, 0.1), au.sq.gain.setTargetAtTime(0, au.ctx.currentTime, 0.05);
       chEl.style.opacity = 0; camera.fov = 62; camera.updateProjectionMatrix();
       car = null;

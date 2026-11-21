@@ -63,7 +63,7 @@ export function makePickup() {
   return g;
 }
 
-export function makeCompactCorner() {
+export function makeCompactCorner({ truck = true } = {}) {
   const g = new THREE.Group(); g.name = 'compact_corner';
   const L = 11, WH = 1.3, r = rng(50);
   // asphalt (wet sheen) + yellow space lines
@@ -102,7 +102,9 @@ export function makeCompactCorner() {
   const arm = cyl(0.05, 0.05, 1.6, std({ color: '#5a5c60', metalness: 0.6 }), pole, 8); arm.rotation.z = Math.PI / 2; arm.position.set(0.7, 8.7, 0);
   box(0.6, 0.14, 0.3, std({ color: '#3a3c40' }), 1.4, 8.65, 0, pole);
   // the truck, crooked across two spaces
-  const tk = makePickup(); tk.position.set(2.2, 0, 4.0); tk.rotation.y = Math.PI / 2 + 0.13; g.add(tk);
-  g.userData.colliders = [[-L / 2, L / 2, -0.4, 0.95], [-2.6, -2.0, 1.1, 1.7], [1.0, 3.6, 0.7, 7.3]];
+  // (with truck: false the town builds it as a drivable car instead; truckPose is where it sits, nose toward +x)
+  if (truck) { const tk = makePickup(); tk.position.set(2.2, 0, 4.0); tk.rotation.y = Math.PI / 2 + 0.13; g.add(tk); }
+  g.userData.truckPose = { x: 2.2, z: 4.0, ry: Math.PI / 2 + 0.13 };
+  g.userData.colliders = [[-L / 2, L / 2, -0.4, 0.95], [-2.6, -2.0, 1.1, 1.7], ...(truck ? [[1.0, 3.6, 0.7, 7.3]] : [])];
   return g;
 }
