@@ -275,3 +275,11 @@ This is a running list, added to as models get built. Nothing here is urgent.
 - Cake-mix aisle: frosting tubs were planned on shelf 2 but only the boxes went in; add the tubs + a few tipped boxes.
 - Fortune cookies read as a lump at a distance; a crisper fold with a visible paper slip would help.
 - Box trailer: add a dock plate/ramp and a few pallets inside.
+
+## 82 Batch 82
+- Texture library 2 (tools/tex_82.py, libMat82 in batch82.js): seamless now uses a two-pass, variance-preserving
+  blend (no faded cross). Used so far: tread plate (toolbox, trailer ramp), quartz (deli counter, cabinet top),
+  oak laminate (deli tables), chenille (Pixel Den sofa), speckled panel (cabinet), whitewash (comic box), canvases.
+  Not yet used in the world: rust, blue pebbled plastic, impasto texture (the painting is hung).
+- The two primed canvases in the gallery corner sit in shadow; give them a spot.
+- Older textures (i5_*, i7_*, tx_*) still use the one-pass crossfade; re-run them through seamless_vp.

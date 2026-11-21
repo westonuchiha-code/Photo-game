@@ -9,6 +9,7 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { F, fitText } from '../fonts.js';
+import { makePrimedCanvases } from './batch82.js';
 import { makeCanvas } from './props.js';
 import { makeChipBag } from './snacks43.js';
 
@@ -68,7 +69,8 @@ const ART = [['canvas_art_bluehair.png', 0.6, 0.96, 'Blue', 'marker on canvas'],
   // item 72: five more
   ['canvas_art_greenmug.png', 0.64, 0.8, 'Steam', 'acrylic and marker'], ['canvas_art_pinksplatter.png', 0.69, 0.8, 'Pink Rain', 'acrylic'], ['canvas_art_drippour.png', 0.8, 0.8, 'Pour', 'poured acrylic'], ['canvas_art_bluered.png', 0.4, 0.83, 'Ember', 'acrylic'], ['canvas_art_pinkswirls.png', 0.96, 0.5, 'Petals', 'acrylic'],
   ['canvas_art_layflat.png', 0.75, 0.93, 'Please Lay Flat', 'acrylic and marker'],
-  ['canvas_art_oneeye.png', 0.9, 0.68, 'One Eye', 'mixed media on canvas']];
+  ['canvas_art_oneeye.png', 0.9, 0.68, 'One Eye', 'mixed media on canvas'],
+  ['canvas_art_figure.png', 0.45, 0.8, 'Tower Head', 'ink on brushed canvas'], ['canvas_art_impasto.png', 0.36, 0.64, 'Butter Light', 'acrylic impasto']];
 export function makeArtGallery() {
   const g = new THREE.Group(); g.name = 'art_gallery';
   const W = 14, D = 10, X0 = -7, X1 = 7, Z0 = -5, Z1 = 5, H = 3.6;
@@ -91,7 +93,7 @@ export function makeArtGallery() {
   plane(9, 1.3, std({ map: name, transparent: true }), 0, H + 0.7, Z1 + 0.16, 0, g);
   // the paintings: back wall gets three, each side wall one; track rail with a spot on each
   const spots = [[-4.8, Z0 + 0.05, 0], [-1.6, Z0 + 0.05, 0], [1.6, Z0 + 0.05, 0], [X0 + 0.05, -1.6, Math.PI / 2], [X1 - 0.05, -1.6, -Math.PI / 2], [X0 + 0.05, 1.4, Math.PI / 2], [X1 - 0.05, 1.4, -Math.PI / 2], [4.8, Z0 + 0.05, 0],
-    [-1.05, 1.885, 0], [1.05, 1.885, 0], [1.05, 1.715, Math.PI], [X0 + 0.05, 3.6, Math.PI / 2], [X1 - 0.05, 3.7, -Math.PI / 2], [-1.05, 1.715, Math.PI], [X0 + 0.05, -3.8, Math.PI / 2]];
+    [-1.05, 1.885, 0], [1.05, 1.885, 0], [1.05, 1.715, Math.PI], [X0 + 0.05, 3.6, Math.PI / 2], [X1 - 0.05, 3.7, -Math.PI / 2], [-1.05, 1.715, Math.PI], [X0 + 0.05, -3.8, Math.PI / 2], [X1 - 0.05, -3.8, -Math.PI / 2], [X0 + 0.05, -0.1, Math.PI / 2]];
   // a freestanding white partition in the middle of the room (item 72), with a low plinth
   box(4.4, 2.7, 0.15, white, 0, 1.35, 1.8, g);
   for (const sx of [-1.05, 1.05]) { const sp = new THREE.SpotLight('#fff1dc', 9, 6, 0.5, 0.6, 1.4); sp.position.set(sx, H - 0.25, 3.6); sp.target.position.set(sx, 1.6, 1.9); g.add(sp, sp.target); } box(4.4, 0.08, 0.17, std({ color: '#2a2a2c' }), 0, 0.04, 1.8, g);
@@ -113,6 +115,7 @@ export function makeArtGallery() {
   const tbl = new THREE.Group(); tbl.position.set(4.6, 0, 3.0); g.add(tbl); cyl(0.42, 0.42, 0.03, std({ color: '#e8e4dc' }), 0, 0.75, 0, tbl, 32); cyl(0.04, 0.04, 0.75, blk, 0, 0.375, 0, tbl, 12); cyl(0.25, 0.25, 0.02, blk, 0, 0.01, 0, tbl, 24);
   const cp = makeCurryPlate(); cp.position.y = 0.766; tbl.add(cp);
   for (const s of [-1, 1]) { const ch = new THREE.Group(); ch.position.set(4.6 + s * 0.65, 0, 3.0); ch.rotation.y = s * Math.PI / 2; g.add(ch); box(0.42, 0.04, 0.42, blk, 0, 0.45, 0, ch); box(0.42, 0.45, 0.04, blk, 0, 0.7, -0.2, ch); for (const a of [-1, 1]) for (const b of [-1, 1]) box(0.03, 0.45, 0.03, blk, a * 0.18, 0.225, b * 0.18, ch); }
+  { const pc = makePrimedCanvases(); pc.position.set(X1 - 0.6, 0, Z0 + 0.35); g.add(pc); }   // item 82: two primed canvases in the corner
   const fill = new THREE.PointLight('#fff4e8', 5, 12, 1.4); fill.position.set(0, H - 0.4, 3.3); g.add(fill);
   g.userData.colliders = [[X0 - 0.2, X0 + 0.1, Z0, Z1], [X1 - 0.1, X1 + 0.2, Z0, Z1], [X0, X1, Z0 - 0.2, Z0 + 0.1], [X0, -1.1, Z1 - 0.15, Z1 + 0.15], [1.1, X1, Z1 - 0.15, Z1 + 0.15], [-1.0, 1.0, -0.75, -0.25], [3.85, 5.35, 2.4, 3.6], [-2.2, 2.2, 1.72, 1.88]];
   g.userData.areas = [{ minX: X0 + 0.3, maxX: X1 - 0.3, minZ: Z0 + 0.3, maxZ: Z1 - 0.2 }, { minX: -1.05, maxX: 1.05, minZ: Z1 - 0.4, maxZ: Z1 + 0.6 }];

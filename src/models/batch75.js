@@ -3,6 +3,7 @@
 //   makeCRTConsoleTV, makeMagazineRack, makeLakeShutter, makeKaijuShutter, makeMallPassage
 import * as THREE from 'three';
 import { F, fitText } from '../fonts.js';
+import { makeComicStack } from './batch82.js';
 
 const _L = new THREE.TextureLoader(); const _T = {};
 function tex(name, rx = 1, ry = 1) { const k = name + rx + '|' + ry; if (_T[k]) return _T[k]; const t = _L.load(`assets/textures/${name}.png`); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx, ry); t.anisotropy = 8; return (_T[k] = t); }
@@ -164,6 +165,7 @@ export function makeMallPassage() {
   const r = rng(8); for (let i = 0; i < 9; i++) { const b = canvasT(64, 96, (x, w, h) => { x.fillStyle = `hsl(${r() * 360},60%,50%)`; x.fillRect(0, 0, w, h); x.fillStyle = '#fff'; x.fillRect(6, 6, w - 12, 20); x.fillStyle = '#111'; x.fillRect(10, 40, w - 20, 40); }); const bx = box(0.14, 0.2, 0.04, std({ map: b }), -1.45 + i * 0.16, 0.37, 0.2, stall); bx.rotation.x = -0.1; }
   for (const [x, c] of [[-0.25, '#f08a1a'], [0.15, '#2a6ad8'], [-0.1, '#3ab84a']]) { const bag = sphere(0.22, std({ color: c, roughness: 0.9 }), x, 1.0, -0.05, stall); bag.scale.set(0.8, 1.2, 0.7); }
   const mr = makeMagazineRack(); mr.position.set(1.2, 0, 0.05); stall.add(mr);
+  const cs = makeComicStack(); cs.position.set(-1.82, 0, 0.1); stall.add(cs);   // item 82
   const ban = canvasT(512, 128, (x, w, h) => { x.fillStyle = '#e8ff3a'; x.fillRect(0, 0, w, h); x.fillStyle = '#c81e1e'; fitText(x, 'レトロゲーム 買取・販売', w / 2, 68, w - 40, 70, F.marker); });
   plane(2.6, 0.62, std({ map: ban }), 0, 2.6, -0.55, 0, stall);
   plane(CW, 3.4, std({ color: '#3a3a3c' }), 0, 1.7, -0.6, 0, stall);

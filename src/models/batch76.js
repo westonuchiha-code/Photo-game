@@ -6,6 +6,7 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { F, fitText } from '../fonts.js';
+import { makeKnobCabinet, makeTreadToolbox, makeScrewdriver, makeStickerCase, libMat82 } from './batch82.js';
 
 const _L = new THREE.TextureLoader(); const _T = {};
 function tex(name, rx = 1, ry = 1) { const k = name + rx + '|' + ry; if (_T[k]) return _T[k]; const t = _L.load(`assets/textures/${name}.png`); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx, ry); t.anisotropy = 8; return (_T[k] = t); }
@@ -117,6 +118,11 @@ export function makeKeiGarage() {
   const plate = cyl(0.12, 0.1, 0.015, std({ color: '#ece4d4', roughness: 0.35 }), 0.22, 0.75, 0.05, tb, 32); void plate; const sub = makeEggBaconSub(); sub.position.set(0.22, 0.757, 0.05); sub.rotation.y = 0.5; tb.add(sub);
   tb.userData.collider = [-0.42, 0.42, -0.27, 0.27];
   put(tb, 1.15, -1.0, Math.PI / 2);
+  // item 82: a white knob cabinet with a tread-plate toolbox in the back-left corner, the screwdriver on the camp
+  // table, the sticker-covered case on the back shelf
+  put(makeKnobCabinet(), -1.0, -D + 0.47); const tbx = makeTreadToolbox(); tbx.position.set(-1.0, 0.88, -D + 0.45); g.add(tbx);
+  const sd = makeScrewdriver(); sd.position.set(1.4, 0.76, -0.75); sd.rotation.y = 0.6; g.add(sd);
+  const sc = makeStickerCase(); sc.position.set(-0.25, 0.012, -D + 0.25); sc.rotation.y = 0.2; g.add(sc);
   cols.push([-W / 2, -W / 2 + 0.2, -D, 0], [W / 2 - 0.2, W / 2, -D, 0], [-W / 2, W / 2, -D, -D + 0.2]);
   g.userData.colliders = cols;
   g.userData.areas = [{ minX: -W / 2 + 0.25, maxX: W / 2 - 0.25, minZ: -D + 0.25, maxZ: 0.3 }];

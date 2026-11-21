@@ -11,6 +11,7 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { F, fitText } from '../fonts.js';
 import { makeBoxTrailer } from './batch81.js';
+import { makeTreadRamp, libMat82 } from './batch82.js';
 
 const _L = new THREE.TextureLoader(); const _T = {};
 function tex(name, rx = 1, ry = 1) { const k = name + rx + '|' + ry; if (_T[k]) return _T[k]; const t = _L.load(`assets/textures/${name}.png`); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx, ry); t.anisotropy = 8; return (_T[k] = t); }
@@ -278,7 +279,7 @@ export function makeArcade() {
   put(makeAirHockey(), -1.0, 4.4, 0.08);
   put(makeBoardGameTable(), -6.2, 4.0);
   put(makeConsoleStack(), 6.8, AZ + 0.55);
-  const sofa = new THREE.Group(); const sm = std({ color: '#3a2a6a', roughness: 0.9 }); rbox(2.2, 0.42, 0.9, 0.1, sm, 0, 0.21, 0, sofa); rbox(2.2, 0.5, 0.25, 0.1, sm, 0, 0.55, -0.33, sofa); for (const sx of [-1, 1]) rbox(0.25, 0.6, 0.9, 0.1, sm, sx * 1.0, 0.3, 0, sofa); sofa.userData.collider = [-1.1, 1.1, -0.45, 0.45];
+  const sofa = new THREE.Group(); const sm = libMat82('b82_chenille', 2, 1, { color: '#8a78c8', roughness: 0.95 });   // item 82: chenille upholstery rbox(2.2, 0.42, 0.9, 0.1, sm, 0, 0.21, 0, sofa); rbox(2.2, 0.5, 0.25, 0.1, sm, 0, 0.55, -0.33, sofa); for (const sx of [-1, 1]) rbox(0.25, 0.6, 0.9, 0.1, sm, sx * 1.0, 0.3, 0, sofa); sofa.userData.collider = [-1.1, 1.1, -0.45, 0.45];
   put(sofa, 6.8, 3.6, Math.PI);
   const bt = new THREE.Group(); cyl(0.32, 0.32, 0.03, std({ color: '#141416', roughness: 0.2 }), 0, 1.05, 0, bt, 28); cyl(0.03, 0.03, 1.05, std({ color: '#c8ccd0', metalness: 0.9 }), 0, 0.525, 0, bt, 10); cyl(0.25, 0.25, 0.02, std({ color: '#c8ccd0', metalness: 0.9 }), 0, 0.01, 0, bt, 24); bt.userData.collider = [-0.32, 0.32, -0.32, 0.32];
   put(bt, -3.6, 6.4);
@@ -609,7 +610,8 @@ export function makeFairground() {
   for (const [x, z, l, ry] of [[0, -D / 2 + 0.3, W - 1, 0], [-W / 2 + 0.3, 0, D - 1, Math.PI / 2], [W / 2 - 0.3, 0, D - 1, Math.PI / 2]]) { const f = chainLink(l); f.position.set(x, 0, z); f.rotation.y = ry; g.add(f); cols.push(ry ? [x - 0.08, x + 0.08, -l / 2, l / 2] : [-l / 2, l / 2, z - 0.08, z + 0.08]); }
   // the ride trailers, parked in the gravel yard on the east side
   const yard = new THREE.Mesh(new THREE.PlaneGeometry(26, 16), std({ map: tex('tr_gravel', 6, 4), color: '#9a948a', roughness: 1 })); yard.rotation.x = -Math.PI / 2; yard.position.set(15, 0.022, -6.5); g.add(yard);
-  put(makeBoxTrailer(), -20, -2.5, 0);   // item 81: a 53 ft van with its rear doors open (the fair's supply trailer)
+  put(makeBoxTrailer(), -20, -2.5, 0);
+  { const rp = makeTreadRamp(2.6, 1.2, 1.4); rp.position.set(-11.92 + 2.6, 0, -2.5); rp.rotation.y = Math.PI; g.add(rp); }   // item 82: tread-plate ramp up into it   // item 81: a 53 ft van with its rear doors open (the fair's supply trailer)
   put(makeRideTrailer('dragon'), 13, -10.5, 0); put(makeRideTrailer('train'), 14, -3.5, Math.PI);
   // the entrance arch + name
   const nm = canvasT(1024, 192, (x, w, h) => { x.fillStyle = '#1e4a2a'; x.fillRect(0, 0, w, h); x.strokeStyle = '#f2c21a'; x.lineWidth = 8; x.strokeRect(10, 10, w - 20, h - 20); x.fillStyle = '#f2c21a'; fitText(x, 'ELM COUNTY FAIRGROUNDS', w / 2, 86, w - 80, 90, F.slab); x.fillStyle = '#fff'; fitText(x, 'air park · picnic shelter · summer fair', w / 2, 152, w - 160, 32, F.label); });
