@@ -193,7 +193,7 @@ export function makeRestroom(W = 3.0, D = 3.4) {
   put(makeVanity(), -W / 2 + 0.28, 0, -D / 2 - 0.25, Math.PI / 2);
   put(makeDomeBin(), -W / 2 + 0.3, 0, -D / 2 + 0.75);
   put(makeSoapDispenser(), -W / 2 + 0.005, 1.3, -D / 2 - 0.62, Math.PI / 2);
-  const mirror = plane(1.2, 0.8, phys({ color: '#cfd8dc', metalness: 1, roughness: 0.04 }), -W / 2 + 0.012, 1.55, -D / 2 - 0.25, Math.PI / 2, g); void mirror;
+  const mirror = plane(1.2, 0.8, std({ color: '#c8d2d6', metalness: 0.35, roughness: 0.08, emissive: '#3a4448', emissiveIntensity: 0.6 }), -W / 2 + 0.012, 1.55, -D / 2 - 0.25, Math.PI / 2, g); void mirror;
   [['soccer', true], ['football', false], ['baseball', true]].forEach(([b, dia], i) => put(makeSportsPlaque(b, dia), -0.85 + i * 0.55 + 0.2, 1.95, -D + 0.005, 0));
   put(makeAccessPanel(0.34), -W / 2 + 0.005, 0.7, -0.6, Math.PI / 2);
   put(makeFloorDrain(), 0.1, 0.012, -D / 2 - 0.3);

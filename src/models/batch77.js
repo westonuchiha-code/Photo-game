@@ -199,7 +199,7 @@ export function makeHearthMarket() {
   // it, the standing wet-floor sign at its door; in the pickup corner a floor-scrubber robot, a paper-sack case pallet
   // on a green tread-plate dock plate
   { const rr = makeRestroom(3.0, 3.4); rr.position.set(9.6, 0, -18.4); g.add(rr); for (const [a, b, c0, c1] of rr.userData.colliders) cols.push([9.6 + a, 9.6 + b, -18.4 + c0, -18.4 + c1]); g.userData.restroomAreas = rr.userData.areas.map((q) => ({ minX: q.minX + 9.6, maxX: q.maxX + 9.6, minZ: q.minZ - 18.4, maxZ: q.maxZ - 18.4 })); }
-  put(makeStainlessWall(2.4, 2.4), 6.85, -20.0, Math.PI / 2); put(makeWetFloorStanding(), 9.3, -17.6, 0.3);
+  put(makeStainlessWall(2.4, 2.4), 6.85, -20.0, -Math.PI / 2); put(makeWetFloorStanding(), 9.3, -17.6, 0.3);
   put(makeFloorScrubber(), -11.7, -16.6, Math.PI / 2);
   { const dp = makeDockPlate(1.6, 1.3); dp.position.set(-8.3, 0.0, -19.8); g.add(dp); } put(makePaperSackPallet(), -8.3, -19.8, 0.05);
   put(makeWrappedTotePallet(3), -12.6, -20.6); put(makeToteStacks(), -10.9, -20.6); put(makeToteStacks(), -9.2, -20.6, 0.0);
