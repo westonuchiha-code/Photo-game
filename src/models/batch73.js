@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { F, fitText } from '../fonts.js';
 import { b83Mat } from './batch83.js';
+import { b84Mat, makeStump, makeBarkTree } from './batch84.js';
 
 const _L = new THREE.TextureLoader(); const _T = {};
 function tex(name, rx = 1, ry = 1) { const k = name + rx + '|' + ry; if (_T[k]) return _T[k]; const t = _L.load(`assets/textures/${name}.png`); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx, ry); t.anisotropy = 8; return (_T[k] = t); }
@@ -377,7 +378,7 @@ export function makeOldTownRow() {
 export function makePocketPark() {
   const g = new THREE.Group(); g.name = 'pocket_park'; const cols = [], put = placer(g, cols);
   const W = 40, D = 17;
-  const gr = new THREE.Mesh(new THREE.PlaneGeometry(W, D), b83Mat('b83_sandydirt', W / 3, D / 3)); /* item 83: sandy dirt with pebbles */ gr.rotation.x = -Math.PI / 2; gr.position.set(0, 0.015, D / 2); gr.receiveShadow = true; g.add(gr);
+  const gr = new THREE.Mesh(new THREE.PlaneGeometry(W, D), b83Mat('b83_sandydirt', W / 1.2, D / 1.2)); /* item 83: sandy dirt with pebbles */ gr.rotation.x = -Math.PI / 2; gr.position.set(0, 0.015, D / 2); gr.receiveShadow = true; g.add(gr);
   const path = (x0, x1, z0, z1, m) => { const p = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, z1 - z0), m); p.rotation.x = -Math.PI / 2; p.position.set((x0 + x1) / 2, 0.025, (z0 + z1) / 2); p.receiveShadow = true; g.add(p); };
   const dirt = b83Mat('b83_gravel', 2, 12) /* item 83: fine decomposed-granite gravel */, slabs = std({ map: tex('i5_paving', 1, 4), roughness: 0.85 });
   path(-1.5, 1.5, 0, D, dirt); path(-W / 2, W / 2, 7.5, 10, dirt); path(-15.4, -13.6, 10, 15.2, slabs);
@@ -385,9 +386,10 @@ export function makePocketPark() {
   put(makeDomeShed(), -14.5, 13.4, Math.PI);
   put(makeParkingKiosk(), 15.5, 4.2, Math.PI);
   // pines: tall bare trunks with flat clumps of needles; low shrubs and a low stone edging along the paths
-  const r = rng(73), bark = std({ color: '#4a3a2c', roughness: 0.95 }), needles = std({ color: '#2a4a2a', roughness: 0.9, flatShading: true });
+  const r = rng(73), bark = b84Mat('b84_bark_shaggy', 1, 6), needles = std({ color: '#2a4a2a', roughness: 0.9, flatShading: true });
   for (const [x, z, h] of [[-6, 3, 8], [-18, 4, 9], [4, 15, 9.5], [-8, 14.5, 7], [18, 13, 8.5], [-3, 12.5, 6]]) { const lean = (r() - 0.5) * 0.4; const top = V(x + lean * 2, h, z + lean); rod(V(x, 0, z), top, 0.18, bark, g, 10); for (let k = 0; k < 4; k++) { const c = sphere(1.6 - k * 0.2, needles, top.x + (r() - 0.5) * 2.4, h - 1.6 + k * 0.7, top.z + (r() - 0.5) * 2.0, g, 8, 5); c.scale.y = 0.35; } cols.push([x - 0.25, x + 0.25, z - 0.25, z + 0.25]); }
   for (let i = 0; i < 18; i++) { const x = -W / 2 + 1 + r() * (W - 2), z = 1 + r() * (D - 2); if (Math.abs(x) < 2.5 || (z > 7 && z < 10.5) || Math.hypot(x - 9, z - 12.4) < 3.5 || Math.hypot(x + 14.5, z - 13.4) < 3.2 || (x > 13 && x < 18 && z < 9)) continue; const s = sphere(0.5 + r() * 0.4, std({ color: '#3a5a2a', roughness: 0.9 }), x, 0.3, z, g, 10, 6); s.scale.y = 0.6; }
+  put(makeStump(4), -4.5, 5.0); put(makeBarkTree('scored', 2, 6.5), 6.0, 4.6); put(makeBarkTree('split', 5, 5.5), -10.5, 9.0);   // item 84
   const edge = std({ color: '#9a9890' }); for (const s of [-1, 1]) box(0.15, 0.12, D, edge, s * 1.6, 0.06, D / 2, g);
   g.userData.colliders = cols;
   return g;

@@ -20,6 +20,7 @@ import { makeCafeFrontage } from './models/signs65.js';
 import { makeCanalPark } from './models/misc67.js';
 import { makeArtGallery } from './models/inspo68.js';
 import { makeWarehouseStore } from './models/inspo69.js';
+import { makeFireHydrant as makeDryHydrant, makeWallPack, makeSteelDoor, makeWornBollard } from './models/batch84.js';
 import { makeUtilityCorner, b83Mat } from './models/batch83.js';
 import { makeYellowFreeBox, makeMessageTrailer, makeTakeoutShop } from './models/batch80.js';
 import { makeFreePaperCorner } from './models/batch79.js';
@@ -1455,6 +1456,12 @@ const ckAreas = ckShop.userData.areas.map((a) => ({ minX: a.minX + CK.x, maxX: a
 // park's paths and sandy dirt its open ground
 { const uc = makeUtilityCorner(); uc.position.set(288.12, 0.14, 150.0); uc.rotation.y = Math.PI / 2; add(uc);
   for (const [x0, x1, z0, z1] of uc.userData.colliders) rect(288.12 + z0, 288.12 + z1, 150.0 - x1, 150.0 - x0); }
+// 84 batch 84: fire hydrants at three curbs, a grey steel access door with a wall-pack light over it on Hearth Market's
+// east wall, worn bollards outside Calzone Kid (the cake table, stump + bark trees, tan brick are inside the modules)
+{ for (const [x, z, ry] of [[294.6, 162.6, Math.PI], [296.5, -78.6, 0], [192.5, 78.4, Math.PI]]) { const h = makeDryHydrant(Math.round(x)); h.position.set(x, 0.14, z); h.rotation.y = ry; add(h); rect(x - 0.22, x + 0.22, z - 0.25, z + 0.25); }
+  const sd = makeSteelDoor(); sd.position.set(288.22, 0.14, 154.6); sd.rotation.y = Math.PI / 2; add(sd);
+  const wp = makeWallPack(); wp.position.set(288.22, 2.75, 154.6); wp.rotation.y = Math.PI / 2; add(wp);
+  for (const x of [301.6, 310.4]) { const b = makeWornBollard(Math.round(x)); b.position.set(x, 0.14, 162.9); add(b); rect(x - 0.13, x + 0.13, 162.77, 163.03); } }
 const dnAreas = [...dentist.userData.areas, ...wing.userData.areas].map((a) => { const [minX, maxX, minZ, maxZ] = dnW([a.minX, a.maxX, a.minZ, a.maxZ]); return { minX, maxX, minZ, maxZ }; });
 
 const walk = new WalkControls(camera, renderer.domElement, {
@@ -1692,6 +1699,13 @@ const VIEWS = {
   gasmeter: { pos: [291.6, 1.6, 150.6], target: [288.2, 1.0, 150.4] },
   telecom83: { pos: [290.3, 1.2, 146.9], target: [288.5, 0.55, 148.1] },
   cans83: { pos: [290.15, 0.45, 148.6], target: [289.72, 0.24, 149.0] },
+  hydrant: { pos: [295.6, 0.9, 164.0], target: [294.6, 0.55, 162.6] },
+  walllight: { pos: [291.6, 1.8, 154.6], target: [288.3, 1.9, 154.6] },
+  wornbollard: { pos: [301.0, 1.0, 164.0], target: [301.6, 0.65, 162.9] },
+  caketable: { pos: [267.9, 1.65, 159.2], target: [268.4, 0.9, 158.6] },
+  stump: { pos: [282.2, 1.6, -70.0], target: [283.5, 0.1, -72.0] },
+  barktree: { pos: [287.5, 1.7, -80.5], target: [294.0, 3.8, -72.4] },
+  calzonebrick: { pos: [314.0, 1.8, 158.0], target: [311.2, 2.0, 155.0] },
   pixelden: { pos: [353, 2.2, 82.5], target: [348, 2.6, 93] },
   arcadein: { pos: [352.5, 1.7, 94.5], target: [347, 1.2, 99.5] },
   gameroom: { pos: [348, 1.7, 100.5], target: [348, 1.4, 108.6] },

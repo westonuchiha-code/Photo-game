@@ -9,6 +9,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { F, fitText } from '../fonts.js';
 import { brickMat } from './batch78.js';
 import { libMat82 } from './batch82.js';
+import { makeCakeTable } from './batch84.js';
 import { makeEnergyEndcap, makeCakeMixGondola, makeSpiceWall, makeStockingCart, makeDiscontinuedHandheld, makeFoldingEbike, makeWaveRack } from './batch81.js';
 
 const _L = new THREE.TextureLoader(); const _T = {};
@@ -183,6 +184,7 @@ export function makeHearthMarket() {
   for (const [x, z, food] of [[-11.5, -2.2, true], [-9.2, -2.2, false]]) { const t = new THREE.Group(); cyl(0.38, 0.38, 0.03, libMat82('b82_oak', 0.8, 0.8), 0, 0.74, 0, t, 28);   // item 82: oak laminate top cyl(0.04, 0.04, 0.74, std({ color: '#2a2a2c', metalness: 0.6 }), 0, 0.37, 0, t, 10); cyl(0.25, 0.25, 0.02, std({ color: '#2a2a2c', metalness: 0.6 }), 0, 0.01, 0, t, 20); for (const s of [-1, 1]) { const ch = new THREE.Group(); ch.position.set(s * 0.6, 0, 0); ch.rotation.y = s * Math.PI / 2; t.add(ch); box(0.4, 0.04, 0.4, std({ color: '#6a4a32' }), 0, 0.45, 0, ch); box(0.4, 0.4, 0.04, std({ color: '#6a4a32' }), 0, 0.68, -0.18, ch); for (const a of [-1, 1]) for (const b of [-1, 1]) box(0.03, 0.45, 0.03, std({ color: '#2a2a2c' }), a * 0.17, 0.225, b * 0.17, ch); }
     if (food) { const cd = makeCornDogTray(); cd.position.y = 0.755; cd.rotation.y = 0.4; t.add(cd); }
     t.userData.collider = [-0.8, 0.8, -0.4, 0.4]; put(t, x, z); }
+  put(makeCakeTable(), -5.6, -2.3, 0.1);   // item 84: the bakery table of cake slices
   const deli = canvasT(512, 128, (x, w, h) => { x.fillStyle = '#c81e28'; x.fillRect(0, 0, w, h); x.fillStyle = '#fff'; fitText(x, 'HOT DELI · CORN DOGS $3.49', w / 2, 66, w - 40, 54, F.heavy); }); plane(4, 1.0, glow(deli, 0.5), -10.4, 3.4, -4.6, 0, g);
   box(4.2, 1.1, 0.9, std({ color: '#5a3a22' }), -10.4, 0.55, -5.2, g); box(4.2, 0.05, 1.0, libMat82('b82_quartz', 3, 0.8), -10.4, 1.12, -5.2, g);   // item 82: quartz deli counter plane(4.0, 0.6, phys({ color: '#fff', transparent: true, opacity: 0.2, depthWrite: false }), -10.4, 1.45, -4.75, 0, g); cols.push([-12.5, -8.3, -5.65, -4.75]);
   // online-pickup staging corner, back-left, behind a half wall with a sign

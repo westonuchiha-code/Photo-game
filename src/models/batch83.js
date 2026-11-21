@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { F, fitText } from '../fonts.js';
 import { brickMat } from './batch78.js';
+import { makeWornBollard } from './batch84.js';
 
 const _L = new THREE.TextureLoader(); const _T = {};
 function tex(name, rx = 1, ry = 1, srgb = true) { const k = name + rx + '|' + ry; if (_T[k]) return _T[k]; const t = _L.load(`assets/textures/${name}.png`); if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx, ry); t.anisotropy = 8; return (_T[k] = t); }
@@ -104,7 +105,7 @@ export function makeUtilityCorner() {
   const j1 = makeJuniper(3); j1.position.set(0.9, 0, 0.75); g.add(j1); const j2 = makeJuniper(7); j2.position.set(0.25, 0, 1.0); j2.scale.setScalar(0.8); g.add(j2);
   const og = makeOrnamentalGrass(5); og.position.set(-1.95, 0, 0.55); g.add(og);
   const tp = makeTelecomPedestal83(); tp.position.set(1.9, 0.02, 0.4); tp.rotation.y = -0.2; g.add(tp);
-  const bl = new THREE.Group(); bl.position.set(2.85, 0, 1.0); g.add(bl); cyl(0.1, 0.1, 1.0, std({ color: '#f2c21a', roughness: 0.5 }), 0, 0.5, 0, bl, 18); const dm = new THREE.Mesh(new THREE.SphereGeometry(0.1, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), std({ color: '#f2c21a', roughness: 0.5 })); dm.position.y = 1.0; bl.add(dm);
+  const bl = makeWornBollard(3); bl.position.set(2.85, 0, 1.0); g.add(bl);   // item 84: the worn bollard
   const ec = makeEnergyCan16(true); ec.position.set(1.0, 0.1, 1.6); g.add(ec);
   const cc = makeColaCan(false); cc.position.set(-1.2, 0.1, 1.6); cc.rotation.y = 0.5; g.add(cc);
   g.userData.colliders = [[-1.2, 0.5, 0, 0.35], [1.68, 2.12, 0.22, 0.58], [2.73, 2.97, 0.88, 1.12]];

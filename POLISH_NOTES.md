@@ -288,3 +288,9 @@ This is a running list, added to as models get built. Nothing here is urgent.
 - Utility corner: the gas meter is small against the wall; a second regulator run + a bigger meter body would read
   better. The cans face sideways in the close view (rotate the wordmark toward the path).
 - The sandy-dirt pocket-park ground streaks at grazing angles; raise its anisotropy or add a detail layer.
+
+## 84 Batch 84
+- Bark trees use the low-poly icosahedron crown; the bark is the photo texture but the crowns don't match the
+  quality yet (layered leaf cards would). The pocket park pines now carry the shaggy bark.
+- Cake slices read as white boxes from above at a distance; tint the clamshell lids less / add a reflection.
+- The steel door's photo texture is lit flat; a small normal map from it would show the dents.

@@ -6,6 +6,7 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { F, fitText } from '../fonts.js';
 import { makeFortuneCookies } from './batch81.js';
+import { b84Mat } from './batch84.js';
 
 const _L = new THREE.TextureLoader(); const _T = {};
 function tex(name, rx = 1, ry = 1) { const k = name + rx + '|' + ry; if (_T[k]) return _T[k]; const t = _L.load(`assets/textures/${name}.png`); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx, ry); t.anisotropy = 8; return (_T[k] = t); }
@@ -120,7 +121,8 @@ export function makeTakeoutShop() {
   const g = new THREE.Group(); g.name = 'takeout_calzone_kid'; const cols = [], put = placer(g, cols);
   const W = 10, D = 9, H = 3.4;
   const teal = std({ color: '#2a6a5e', roughness: 0.75 }), redwall = std({ map: tex('b80_redwall', 3, 1.2), roughness: 0.9 }), cream = std({ color: '#f0e8d4' });
-  box(W, H + 0.8, 0.2, teal, 0, (H + 0.8) / 2, -D - 0.1, g); box(0.2, H + 0.8, D, redwall, -W / 2 - 0.1, (H + 0.8) / 2, -D / 2, g); box(0.2, H + 0.8, D, teal, W / 2 + 0.1, (H + 0.8) / 2, -D / 2, g); box(W + 0.4, 0.2, D + 0.2, std({ color: '#2a2a2c' }), 0, H + 0.9, -D / 2, g);
+  const tb = (w, h) => b84Mat('b84_tanbrick', w / 0.92, h / 0.6, { roughness: 0.9 });   // item 84: tan face brick outside
+  box(W, H + 0.8, 0.2, tb(W, H + 0.8), 0, (H + 0.8) / 2, -D - 0.1, g); box(0.2, H + 0.8, D, tb(D, H + 0.8), -W / 2 - 0.1, (H + 0.8) / 2, -D / 2, g); box(0.2, H + 0.8, D, tb(D, H + 0.8), W / 2 + 0.1, (H + 0.8) / 2, -D / 2, g); box(W + 0.4, 0.2, D + 0.2, std({ color: '#2a2a2c' }), 0, H + 0.9, -D / 2, g);
   // inner faces: red textured wall on the left, teal at the back + right
   plane(D, H, std({ map: tex('b80_redwall', 4, 1.6), roughness: 0.9 }), -W / 2 + 0.01, H / 2, -D / 2, Math.PI / 2, g);
   plane(W, H, teal, 0, H / 2, -D + 0.01, 0, g); plane(D, H, teal, W / 2 - 0.01, H / 2, -D / 2, -Math.PI / 2, g);
