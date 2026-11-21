@@ -20,6 +20,7 @@ import { makeCafeFrontage } from './models/signs65.js';
 import { makeCanalPark } from './models/misc67.js';
 import { makeArtGallery } from './models/inspo68.js';
 import { makeWarehouseStore } from './models/inspo69.js';
+import { makeFreePaperCorner } from './models/batch79.js';
 import { makeBrickPillar, makeParkGateway } from './models/batch78.js';
 import { makeHearthMarket } from './models/batch77.js';
 import { makeKeiGarage } from './models/batch76.js';
@@ -1436,6 +1437,9 @@ const hmAreas = hmkt.userData.areas.map((a) => ({ minX: a.minX + HM.x, maxX: a.m
 // gateway on its street side, and two tan pillars stand either side of Hearth Market's doors
 { const gw = makeParkGateway(); gw.position.set(PP.x, 0.14, PP.z - 0.3); add(gw); for (const [x0, x1, z0, z1] of gw.userData.colliders) rect(PP.x + x0, PP.x + x1, PP.z - 0.3 + z0, PP.z - 0.3 + z1);
   for (const dx of [-3.2, 3.2]) { const bp = makeBrickPillar('tan', 2.6, 0.55); bp.position.set(HM.x + dx, 0.14, HM.z + 0.9); add(bp); rect(HM.x + dx - 0.33, HM.x + dx + 0.33, HM.z + 0.57, HM.z + 1.23); } }
+// 79 batch 79: a free-paper corner (red domed box, grey house box, slatted trash can, a vault lid) on the sidewalk
+// just east of Hearth Market
+{ const fp = makeFreePaperCorner(); fp.position.set(292.3, 0.14, 161.7); add(fp); for (const [x0, x1, z0, z1] of fp.userData.colliders) rect(292.3 + x0, 292.3 + x1, 161.7 + z0, 161.7 + z1); }
 const dnAreas = [...dentist.userData.areas, ...wing.userData.areas].map((a) => { const [minX, maxX, minZ, maxZ] = dnW([a.minX, a.maxX, a.minZ, a.maxZ]); return { minX, maxX, minZ, maxZ }; });
 
 const walk = new WalkControls(camera, renderer.domElement, {
@@ -1646,6 +1650,7 @@ const VIEWS = {
   whitebrick: { pos: [285.0, 1.4, -79.0], target: [286.2, 1.3, -77.3] },
   tanbrick: { pos: [272.2, 1.5, 164.2], target: [270.8, 1.4, 161.9] },
   parkgate: { pos: [288, 1.9, -82.5], target: [288, 2.0, -77] },
+  freepapers: { pos: [292.6, 1.45, 164.4], target: [292.2, 0.8, 161.8] },
   pixelden: { pos: [353, 2.2, 82.5], target: [348, 2.6, 93] },
   arcadein: { pos: [352.5, 1.7, 94.5], target: [347, 1.2, 99.5] },
   gameroom: { pos: [348, 1.7, 100.5], target: [348, 1.4, 108.6] },

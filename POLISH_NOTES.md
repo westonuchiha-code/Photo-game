@@ -263,3 +263,6 @@ This is a running list, added to as models get built. Nothing here is urgent.
 ## 78 Batch 78
 - The two bricks are rebuilt brick by brick from the photos (tools/tex_78.py). More walls could switch to them
   (Coconut Raft's front, the Pixel Den piers); the white brick's soldier edge only exists on makeBrickPillar.
+
+## 79 Batch 79
+- Free-paper boxes: the window doors read pale; the newspaper behind the glass could be brighter/lit by a street lamp.
