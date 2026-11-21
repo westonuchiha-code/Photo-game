@@ -381,3 +381,77 @@ export function makeDoorTree({ seed = 21 } = {}) {
   g.add(burl);
   return g;
 }
+
+// ---- street trees for the big streets (district avenue + main street, Elm Loop's median) -----------------------------
+// The same grown oak / cherry / pale trees as the old town, baked for instancing: one merged bark geometry + one
+// merged leaf geometry (bigger leaf clusters, colours baked per vertex) per variant, drawn as InstancedMeshes in
+// ~90 m chunks so far ones cull. A few hundred real trees cost a handful of draw calls.
+const _streetParts = {};
+export function streetTreeParts(kind = 'oak', seed = 7) {
+  const key = kind + seed; if (_streetParts[key]) return _streetParts[key];
+  const cfg = { oak: { height: 3.4, radius: 0.2, leafTint: [0.07, 0.45, 0.33] }, cherry: { height: 3.0, radius: 0.17, leafTint: [0.09, 0.5, 0.36] }, pale: { height: 3.6, radius: 0.16, leafTint: [0.08, 0.38, 0.4] } }[kind];
+  const t = deciduous(kind, { seed, ...cfg, lean: { x: 0.02, z: 0.02 }, depth: 2, leaves: 0, opts: { children: 3, spread: 0.6 } });
+  const bark = t.children.find((c) => c.isMesh);
+  // leaves: big clustered cards round the branch tips
+  const r = rng(seed * 31 + 5), tips = t.userData.tips, quads = [], col = new THREE.Color();
+  const n = 230, q = new THREE.Quaternion(), m4 = new THREE.Matrix4(), v = new THREE.Vector3(), s = new THREE.Vector3();
+  for (let i = 0; i < n; i++) {
+    const tip = tips[Math.floor(r() * tips.length)]; const k = 0.42 + r() * 0.34;
+    v.set(tip.p.x + (r() - 0.5) * 0.9, tip.p.y + (r() - 0.35) * 0.7, tip.p.z + (r() - 0.5) * 0.9);
+    q.setFromEuler(new THREE.Euler((r() - 0.5) * 1.6, r() * Math.PI * 2, (r() - 0.5) * 1.6));
+    const pg = new THREE.PlaneGeometry(1, 1.1); pg.applyMatrix4(m4.compose(v, q, s.set(k, k, k)));
+    col.setHSL(cfg.leafTint[0] + (r() - 0.5) * 0.04, cfg.leafTint[1] + (r() - 0.5) * 0.2, cfg.leafTint[2] + (r() - 0.5) * 0.16);
+    pg.setAttribute('color', new THREE.Float32BufferAttribute(new Array(4).fill([col.r, col.g, col.b]).flat(), 3)); quads.push(pg);
+  }
+  const leafGeo = mergeGeometries(quads, false);
+  const leafMat = new THREE.MeshStandardMaterial({ map: leafClumpTex(), alphaTest: 0.45, side: THREE.DoubleSide, roughness: 0.9, vertexColors: true });
+  return (_streetParts[key] = { barkGeo: bark.geometry, barkMat: bark.material, leafGeo, leafMat });
+}
+// a cluster of the photographed oak leaf, drawn many times on one card (so a big card reads as a spray of leaves)
+let _clump = null;
+function leafClumpTex() {
+  if (_clump) return _clump;
+  const c = document.createElement('canvas'); c.width = c.height = 256; const x = c.getContext('2d'); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+  const img = new Image(); img.onload = () => { const r = rng(11); x.clearRect(0, 0, 256, 256); for (let i = 0; i < 46; i++) { const a = r() * 6.28, d = Math.sqrt(r()) * 96, sz = 44 + r() * 34; x.save(); x.translate(128 + Math.cos(a) * d, 128 + Math.sin(a) * d); x.rotate(r() * 6.28); x.globalAlpha = 1; x.drawImage(img, -sz / 2, -sz / 2, sz, sz); x.restore(); } t.needsUpdate = true; };
+  img.src = 'assets/textures/oak_leaf.png';
+  return (_clump = t);
+}
+// place baked street trees: pts = [[x, z, scale?, kindIndex?]], parts = [streetTreeParts(...), ...]; returns a Group
+export function placeStreetTrees(pts, parts, { seed = 3, chunk = 90, baseY = 0, scale = 1.45 } = {}) {
+  const g = new THREE.Group(); g.name = 'street_trees'; const r = rng(seed);
+  const cells = new Map();
+  pts.forEach((p, i) => { const k = (p[3] ?? i) % parts.length; const key = `${Math.floor(p[0] / chunk)}|${Math.floor(p[1] / chunk)}|${k}`; if (!cells.has(key)) cells.set(key, { k, list: [] }); cells.get(key).list.push(p); });
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), UP = new THREE.Vector3(0, 1, 0), v = new THREE.Vector3(), s = new THREE.Vector3();
+  for (const { k, list } of cells.values()) {
+    const P = parts[k]; const cx = list.reduce((a, p) => a + p[0], 0) / list.length, cz = list.reduce((a, p) => a + p[1], 0) / list.length;
+    const bark = new THREE.InstancedMesh(P.barkGeo, P.barkMat, list.length), leaf = new THREE.InstancedMesh(P.leafGeo, P.leafMat, list.length);
+    list.forEach((p, i) => { const sc = (p[2] || 1) * (scale + r() * 0.45); m4.compose(v.set(p[0] - cx, baseY, p[1] - cz), q.setFromAxisAngle(UP, r() * 6.28), s.set(sc, sc * (0.95 + r() * 0.15), sc)); bark.setMatrixAt(i, m4); leaf.setMatrixAt(i, m4); });
+    for (const o of [bark, leaf]) { o.position.set(cx, 0, cz); o.castShadow = true; o.receiveShadow = false; o.computeBoundingSphere(); g.add(o); }
+  }
+  return g;
+}
+// a lighter spruce for tree lines (same bark + needle-spray photos as makeSpruce, ~170 big sprays, no lights)
+export function spruceParts(seed = 3, height = 9) {
+  const key = 'spruce' + seed; if (_streetParts[key]) return _streetParts[key];
+  const r = rng(seed), { geo } = trunk(r, height, 0.26, { x: 0, z: 0 }, 5), geos = [geo], quads = [], col = new THREE.Color();
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), s = new THREE.Vector3(), p = new THREE.Vector3();
+  for (let y = 1.3; y < height - 0.2; y += 0.62) {
+    const f = 1 - (y - 1.3) / (height - 1.3), L = 0.5 + 3.0 * f, n = 5 + Math.round(3 * f);
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2 + r() * 0.6, d = new THREE.Vector3(Math.cos(a), -0.28 - r() * 0.15, Math.sin(a)).normalize();
+      const st = new THREE.Vector3(0, y, 0), end = st.clone().addScaledVector(d, L);
+      geos.push(limb(new THREE.LineCurve3(st, end), 0.03 * (0.5 + f), 0.008, 4, 1));
+      for (let k = 0; k < 2 + Math.round(2 * f); k++) {
+        const t = 0.25 + 0.75 * ((k + r() * 0.6) / (2 + Math.round(2 * f))); p.lerpVectors(st, end, t);
+        const sc = (0.9 + 1.5 * f) * (1.25 - 0.5 * t);
+        q.setFromEuler(new THREE.Euler(r() * 0.6 - 0.3, -a + (r() - 0.5) * 1.2, -0.25 - r() * 0.4, 'YXZ'));
+        const pg = new THREE.PlaneGeometry(1, 0.5); pg.translate(0.4, 0, 0); pg.applyMatrix4(m4.compose(p, q, s.set(sc * 1.3, sc * 1.3, 1)));
+        col.setHSL(0.4, 0.22 + r() * 0.14, 0.26 + r() * 0.16); pg.setAttribute('color', new THREE.Float32BufferAttribute(new Array(4).fill([col.r, col.g, col.b]).flat(), 3)); quads.push(pg);
+      }
+    }
+  }
+  // the leader: a few upright sprays at the tip
+  for (let k = 0; k < 4; k++) { q.setFromEuler(new THREE.Euler(0, k * 1.57, 1.2, 'YXZ')); const pg = new THREE.PlaneGeometry(1, 0.5); pg.translate(0.4, 0, 0); pg.applyMatrix4(m4.compose(p.set(0, height - 0.5, 0), q, s.set(1.1, 1.1, 1))); col.setHSL(0.4, 0.3, 0.3); pg.setAttribute('color', new THREE.Float32BufferAttribute(new Array(4).fill([col.r, col.g, col.b]).flat(), 3)); quads.push(pg); }
+  const leafMat = new THREE.MeshStandardMaterial({ map: tex('spruce_spray.png'), alphaTest: 0.35, side: THREE.DoubleSide, roughness: 0.85, vertexColors: true });
+  return (_streetParts[key] = { barkGeo: mergeGeometries(geos, false), barkMat: barkMat('spruce'), leafGeo: mergeGeometries(quads, false), leafMat });
+}

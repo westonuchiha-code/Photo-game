@@ -10,6 +10,7 @@
 //     views      a few camera views
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { streetTreeParts, placeStreetTrees } from './trees.js';
 import { F, fitText } from '../fonts.js';
 
 // ---- layout ---------------------------------------------------------------------------------------------------
@@ -320,13 +321,13 @@ export function makeDistrict() {
   const win = new THREE.MeshStandardMaterial({ map: tex('city_windows'), emissiveMap: tex('city_windows_e'), emissive: '#ffffff', emissiveIntensity: 0.9, roughness: 0.25, metalness: 0.1 });
   const sa = shopAtlas();
   const MATS = {
-    roof: new THREE.MeshStandardMaterial({ color: '#2c2d30', roughness: 0.95 }),
-    cap: new THREE.MeshStandardMaterial({ color: '#a9a49a', roughness: 0.8 }),
-    equip: new THREE.MeshStandardMaterial({ color: '#8a8c8e', roughness: 0.6, metalness: 0.3 }),
+    roof: new THREE.MeshStandardMaterial({ map: tex('b83_gravel'), normalMap: tex('b83_gravel_n', false), color: '#5a5c60', roughness: 0.95 }),   // ballasted flat roofs
+    cap: new THREE.MeshStandardMaterial({ map: tex('lot_concrete'), normalMap: tex('lot_concrete_normal', false), color: '#c4beb2', roughness: 0.8 }),   // parapet caps + cornices: cast concrete
+    equip: new THREE.MeshStandardMaterial({ map: tex('b85_zinc'), normalMap: tex('b85_zinc_n', false), color: '#a8aaac', roughness: 0.55, metalness: 0.5 }),   // rooftop units: galvanised sheet
     win, shop: new THREE.MeshStandardMaterial({ map: sa.map, emissiveMap: sa.emit, emissive: '#ffffff', emissiveIntensity: 0.7, roughness: 0.3 }),
     asphalt: new THREE.MeshStandardMaterial({ map: tex('city_asphalt'), color: '#7a7c80', roughness: 0.92 }),
     walk: new THREE.MeshStandardMaterial({ map: tex('sidewalk'), normalMap: tex('sidewalk_normal', false), color: '#a8a49c', roughness: 0.9 }),
-    curb: new THREE.MeshStandardMaterial({ color: '#8e8c86', roughness: 0.9 }),
+    curb: new THREE.MeshStandardMaterial({ map: tex('b83_curb'), normalMap: tex('b83_curb_n', false), color: '#b4b2ac', roughness: 0.9 }),
     paint_y: new THREE.MeshStandardMaterial({ color: '#d8b02a', roughness: 0.7 }),
     paint_w: new THREE.MeshStandardMaterial({ color: '#d8d8d2', roughness: 0.7 }),
     far: new THREE.MeshStandardMaterial({ map: tex('city_far'), emissiveMap: tex('city_far_e'), emissive: '#ffffff', emissiveIntensity: 0.55, roughness: 0.9, color: '#9a9aa0' }),
@@ -369,12 +370,8 @@ export function makeDistrict() {
   const treePts = [];
   for (let z = ZMIN + 6; z < ZMAX - 6; z += 14) { if (zs.some((q) => Math.abs(z - q) < WH + 3)) continue; treePts.push([xs[0] + RH + 1.0, z + 7], [xs[0] - RH - 1.0, z]); }
   for (const z of [0]) for (let x = xs[0] + 20; x < XMAX - 10; x += 14) { if (xs.some((q) => Math.abs(x - q) < WH + 3)) continue; if (!(x + 7 > 98 && x + 7 < 124)) treePts.push([x + 7, z - RH - 1.0]); treePts.push([x, z + RH + 1.0]); }   // (no trees in front of the izakaya + pottery)
-  const trunkG = new THREE.CylinderGeometry(0.12, 0.18, 3.2, 7); trunkG.translate(0, 1.6 + SW_H, 0);
-  const crownG = new THREE.IcosahedronGeometry(1.9, 1); crownG.scale(1, 1.15, 1); crownG.translate(0, 4.4 + SW_H, 0);
-  const trunks = new THREE.InstancedMesh(trunkG, new THREE.MeshStandardMaterial({ map: tex('tr_cedar'), color: '#8a7a6a', roughness: 0.95 }), treePts.length);
-  const crowns = new THREE.InstancedMesh(crownG, new THREE.MeshStandardMaterial({ color: '#2a4228', roughness: 1, flatShading: true }), treePts.length);
-  treePts.forEach(([x, z], i) => { const s = 0.85 + r() * 0.35; Q.setFromAxisAngle(UP, r() * 6.28); M4.compose(new THREE.Vector3(x, 0, z), Q, new THREE.Vector3(s, s, s)); trunks.setMatrixAt(i, M4); crowns.setMatrixAt(i, M4); });
-  trunks.castShadow = crowns.castShadow = true; g.add(trunks, crowns);
+  // real grown trees (oak / cherry / pale, from trees.js), baked + instanced
+  g.add(placeStreetTrees(treePts, [streetTreeParts('oak', 7), streetTreeParts('cherry', 4), streetTreeParts('pale', 9), streetTreeParts('oak', 12)], { baseY: SW_H }));
 
   // ---- walking: the streets (road + sidewalks) are walkable; blocks are not (their buildings line the edges)
   const areas = [];

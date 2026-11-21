@@ -5,6 +5,7 @@
 // napkin dispensers, the framed poster, the slatted fence and wall globes outside.
 import * as THREE from 'three';
 import { makeStreamer, mergeStatic } from './stream.js';
+import { autoNormals } from './normals.js';
 import { makeCar, LIVERIES, carEnv } from './vehicle/carbody.js';
 import { makeDriver } from './drive.js';
 import { finishLoading } from './loading.js';
@@ -17,16 +18,15 @@ import { makeRoads } from './models/roads.js';
 import { makeDentistOffice } from './models/dentist57.js';
 import { makeTreatmentWing } from './models/treatment58.js';
 import { makeUtilityLot } from './models/utility59.js';
-import { makeCoupe } from './models/coupe61.js';
 import { makeStorageRow } from './models/storage62.js';
-import { makeCornerStore, makePoliceSedan, makeSedan, makeAircraftCarport } from './models/random64.js';
+import { makeCornerStore, makeAircraftCarport } from './models/random64.js';
 import { makeCafeFrontage } from './models/signs65.js';
 import { makeCanalPark } from './models/misc67.js';
 import { makeArtGallery } from './models/inspo68.js';
 import { makeWarehouseStore } from './models/inspo69.js';
 import { makeWetFloorFolded, makeConcreteBollard } from './models/batch85.js';
 import { makeFireHydrant as makeDryHydrant, makeWallPack, makeSteelDoor, makeWornBollard } from './models/batch84.js';
-import { makeUtilityCorner, b83Mat } from './models/batch83.js';
+import { makeUtilityCorner } from './models/batch83.js';
 import { makeYellowFreeBox, makeMessageTrailer, makeTakeoutShop } from './models/batch80.js';
 import { makeFreePaperCorner } from './models/batch79.js';
 import { makeBrickPillar, makeParkGateway } from './models/batch78.js';
@@ -34,7 +34,7 @@ import { makeHearthMarket } from './models/batch77.js';
 import { makeKeiGarage } from './models/batch76.js';
 import { makeMallPassage } from './models/batch75.js';
 import { makeQueueCard, makeEnergyCan74, makeAppAdPost, makeStickerPole, makeStickerPillar } from './models/batch74.js';
-import { makeOldTownRow, makePocketPark, makeGyudonBowl, makeSickle } from './models/batch73.js';
+import { makeOldTownRow, makePocketPark } from './models/batch73.js';
 import { makeArcade, makeShutterShop as makeShutterStall, makeStreetDrum, makeTempleFront, makeFairground, makeCairn } from './models/inspo72.js';
 import { makeBackroomCorner, makeGameShelf, makeBinShelf, makePinkHouse } from './models/inspo71.js';
 import { makeAqueductGarden, makeIzakaya, makePotteryGallery, makeBarrelPlanter, makeCurvedBench, makeWifiStand, makeWeepingMaple, makePizzaAFrame, makeComicVending, makeStickerPost, makeMural as makeRainbowMural } from './models/inspo70.js';
@@ -50,7 +50,7 @@ import { makeCartCorral } from './models/cart51.js';
 import { makeRealtyWindow } from './models/listings52.js';
 import { makeRobotVending, makePlainVending } from './models/robotvend53.js';
 import { makeCleanBot } from './models/cleanbot54.js';
-import { makeKeiTruck, makeCoachBus, makeScoutTruck, makeWorkVan, makeCommuterTrain, makeTrainPlatform, PLAT_Y, makeVintageScooter, makeRustedScooter, makeKeiHatch } from './models/vehicles36.js';
+import { makeCoachBus, makeCommuterTrain, makeTrainPlatform, PLAT_Y, makeVintageScooter, makeRustedScooter } from './models/vehicles36.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
@@ -65,14 +65,13 @@ import { makeInfinityBox } from './models/neon.js';
 import { makeDoubleDoor, makeWindowBay, makeDoorMat } from './models/entrance.js';
 import { makeNapkinDispenser, makePoster, makeOpenPlaque, makeWallGlobe, makeCanvas, makeMural, makeSoupPot } from './models/props.js';
 import { makeLiquorSign, makeTwoRiversSign } from './models/signs.js';
-import { makeAbandonedBuilding, makeStreetLamp, makeFireHydrant, makePlasticBottle } from './models/abandoned.js';
+import { makeAbandonedBuilding, makeStreetLamp, makeFireHydrant } from './models/abandoned.js';
 import { plane } from './world/util.js';
-import { makeTireShop, TIRE_SHOP } from './models/tireshop.js';
+import { makeTireShop } from './models/tireshop.js';
 import { makeRustyPole, makeWalkSignalPole } from './models/street.js';
 import { makeStreetBuilding } from './models/buildings.js';
 import { makePaverSidewalk, makeDrainCover, makePaverCrosswalk, makeTactilePlate, makeCracks, makeUtilityLid, makeTrafficIsland, makeDirtLot } from './models/streetground.js';
 import { makeSky } from './models/sky.js';
-import { makeOldVan } from './models/van.js';
 import { makeGrocery } from './models/grocery.js';
 import { makePatrolCart, makePatrolScooter } from './models/police.js';
 import { makeCreep } from './models/creep.js';
@@ -90,7 +89,7 @@ import { makeBlueHouse } from './models/bluehouse.js';
 import { makeStationGate, makeLotusPond, makeRockDoor } from './models/city28e.js';
 import { makeCargoTrike, makeArcadeCabinet, makeGraffitiFront } from './models/street28d.js';
 import { makeShutterShop, makeVendingMachine, makeJunkShop } from './models/shops28c.js';
-import { makeShopHouse, makeStreetLamp as makeOldTownLamp, makeBollard, makeMonkey, makeBanner, makeClockTower, makeGreenPillar } from './models/oldtown.js';
+import { makeShopHouse, makeStreetLamp as makeOldTownLamp, makeBollard, makeMonkey, makeBanner, makeGreenPillar } from './models/oldtown.js';
 import { makeBrickGable, makeSpiral, makeOvalBuilding, makePebbleBench, makeOrnateLamp, makePlanter, makePaverTexture, makeGreyBandTexture } from './models/cityplaza.js';
 import { makePlywoodSheet, makeGlassShards, makePasteWall, makePickupZone } from './models/misc27e.js';
 import { makeDumpTruck, makePipeBarrier, makeSiteSign, makeWeeds } from './models/dumpsite.js';
@@ -101,7 +100,6 @@ import { makeMarketAlley } from './models/alley28h.js';
 import { makeBarAlley } from './models/baralley28i.js';
 import { makeAbandonedOffice } from './models/abandoned29.js';
 import { makeKetchupBottle } from './models/ketchup32.js';
-import { makeCircuitBoard, makeCordBundle } from './models/pcb33.js';
 import { makeTunaCan } from './models/tuna34.js';
 import { makeKnotRoom } from './models/knotroom30.js';
 import { makeCornDog, makePorkBun, makeMelonBread, makeKatsuCurry, makeCheeseSticks, makeYogurtDrink, makeEnergyCan, makeUmeSour, makeCocoCan, makeCandyPack, makePizzaDisplay, makeNoodleShop } from './models/food16.js';
@@ -1660,7 +1658,7 @@ const VIEWS = {
   kitten: { pos: [39.7, 1.0, -32.3], target: [38.4, 0.8, -32.6] },
   dumpsite: { pos: [44.5, 2.6, -48.2], target: [48.0, 1.6, -57.0] },
   dumptruck: { pos: [54.6, 2.4, -53.0], target: [48.0, 1.8, -57.0] },
-  pickup: { pos: [37.0, 2.4, -23.0], target: [30.0, 1.8, -28.4] },
+  pickupzone: { pos: [37.0, 2.4, -23.0], target: [30.0, 1.8, -28.4] },
   pastewall: { pos: [36.4, 1.6, -54.2], target: [34.25, 1.4, -54.4] },
   plywood: { pos: [37.4, 1.7, -28.9], target: [36.6, 1.25, -31.5] },
   glass: { pos: [23.6, 1.1, -24.4], target: [23.3, 0.0, -25.6] },
@@ -1766,7 +1764,7 @@ const VIEWS = {
   newart: { pos: [344, 1.6, 8.7], target: [344, 1.5, 11.3] },
   cairn: { pos: [-69.2, 1.5, -29.6], target: [-66.6, 0.5, -25.9] },
   stationplaza: { pos: [146.0, 1.7, -6.2], target: [148, 1.2, -16] },
-  warehouse: { pos: [-33.0, 2.4, -1.0], target: [-44.0, 4.5, -3.0] },
+  brickwarehouse: { pos: [-33.0, 2.4, -1.0], target: [-44.0, 4.5, -3.0] },
   ovalbuilding: { pos: [-25.5, 2.4, 1.5], target: [-25.5, 4.5, -14.0] },
   oldtown: { pos: [-26.5, 2.0, 14.0], target: [-26.5, 2.4, 40.0] },
   oldtownshops: { pos: [-23.5, 1.7, 20.0], target: [-31.0, 1.8, 24.0] },
@@ -2005,6 +2003,8 @@ function updateLightBudget() {
   const sorted = [...pointLights].sort((a, b) => a.userData.d - b.userData.d);
   sorted.forEach((l, i) => { l.visible = i < MAX_LIGHTS; });
 }
+// polish: every colour map that has a normal map on file gets it (see normals.js)
+console.log('auto normal maps:', autoNormals(scene));
 // streaming step 1: hide what's too far away to matter (see stream.js); runs with the light budget
 { // step 1b: merge every static district set's meshes by material (see stream.js). Everything added after item 57 is
   // static (no doors or interactables), so each top-level set is merged on its own.
@@ -2116,4 +2116,4 @@ window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
   composer.setSize(window.innerWidth, window.innerHeight);
 });
-window.__scene = { drive, enterCar, scene, camera, walk, setMode, interactables, walkPoles, creep, renderer, streamer };
+window.__scene = { composer, drive, enterCar, scene, camera, walk, setMode, interactables, walkPoles, creep, renderer, streamer };

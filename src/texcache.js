@@ -53,6 +53,7 @@ THREE.TextureLoader.prototype.load = function (url, onLoad, onProgress, onError)
       e.waiting.length = 0;
     }, onProgress, onError);
   }
+  if (!e.tex.name) e.tex.name = url.split('/').pop().replace(/\.\w+$/, '');   // (the file's name: handy when inspecting materials)
   const c = e.tex.clone();
   e.clones.push(c);
   if (onLoad) { if (e.loaded) setTimeout(() => onLoad(c), 0); else e.waiting.push([c, onLoad]); }

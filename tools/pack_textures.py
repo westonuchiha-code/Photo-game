@@ -59,7 +59,10 @@ if __name__ == '__main__':
     zf = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'texture_zones.json')
     zj = json.load(open(zf)) if os.path.exists(zf) else {}
     district = set(zj.get('district', [])); corelist = set(zj.get('core', []))
-    if corelist: district |= {n for n, _, _, _ in res if n not in corelist}   # unused files ride in the background packs
+    if corelist:   # files the game never asks for (tools/record_zones.js saw no request) are left out of the packs
+        unused = [n for n, _, _, _ in res if n not in corelist and n not in district and n.endswith('.png')]
+        res = [r for r in res if r[0] not in unused]
+        print(f'left out (never requested): {len(unused)} files')
     NC, ND = 8, 6
     packs = [bytearray() for _ in range(NC + ND)]; index = {}
     for name, data, mime, how in res:

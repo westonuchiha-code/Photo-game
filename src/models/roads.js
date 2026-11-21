@@ -12,6 +12,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { GRID } from './district.js';
+import { streetTreeParts, spruceParts, placeStreetTrees } from './trees.js';
 import { F, fitText } from '../fonts.js';
 
 const _L = new THREE.TextureLoader();
@@ -173,13 +174,9 @@ export function makeRoads() {
   // ---- instanced props: median trees, outer treeline, median lamps (double arm), rail posts, fence posts, cones, tyres, floodlights
   const M4 = new THREE.Matrix4(), Q = new THREE.Quaternion(), UP = new THREE.Vector3(0, 1, 0), V3 = new THREE.Vector3(), SC = new THREE.Vector3();
   const inst = (geo, mat, pts, fn) => { const im = new THREE.InstancedMesh(geo, mat, pts.length); pts.forEach((p, i) => { const [x, z, sc, ry] = fn(p, i); Q.setFromAxisAngle(UP, ry); M4.compose(V3.set(x, 0, z), Q, SC.setScalar(sc)); im.setMatrixAt(i, M4); }); im.castShadow = true; im.receiveShadow = true; g.add(im); return im; };
-  const trunkG = new THREE.CylinderGeometry(0.12, 0.18, 3, 6); trunkG.translate(0, 1.5, 0);
-  const crownG = new THREE.IcosahedronGeometry(1.9, 1); crownG.scale(1, 1.15, 1); crownG.translate(0, 4.2, 0);
-  const pinesG = new THREE.ConeGeometry(2.2, 7, 7); pinesG.translate(0, 5, 0);
-  const bark = new THREE.MeshStandardMaterial({ color: '#4a3a2c', roughness: 0.95 }), leaf = new THREE.MeshStandardMaterial({ color: '#2f4a2a', roughness: 0.9, flatShading: true }), pine = new THREE.MeshStandardMaterial({ color: '#223a26', roughness: 0.95, flatShading: true });
   const rnd = (i, k) => { const s = Math.sin(i * 12.9898 + k * 78.233) * 43758.5453; return s - Math.floor(s); };
-  inst(trunkG, bark, treePts, ([x, z], i) => [x, z + 0.001, 0.9 + rnd(i, 1) * 0.3, rnd(i, 2) * 6]).position.y = 0.16; inst(crownG, leaf, treePts, ([x, z], i) => [x, z, 0.9 + rnd(i, 1) * 0.3, rnd(i, 2) * 6]).position.y = 0.16;
-  inst(trunkG, bark, outerTrees, ([x, z], i) => [x, z, 1 + rnd(i, 3) * 0.5, 0]); inst(pinesG, pine, outerTrees, ([x, z], i) => [x, z, 0.8 + rnd(i, 3) * 0.6, rnd(i, 4) * 6]);
+  g.add(placeStreetTrees(treePts, [streetTreeParts('oak', 7), streetTreeParts('pale', 9), streetTreeParts('cherry', 4)], { baseY: 0.16, seed: 8 }));   // the median: real grown trees (trees.js)
+  g.add(placeStreetTrees(outerTrees, [spruceParts(3), spruceParts(8, 11)], { seed: 5, scale: 0.9 }));   // the outer tree line: spruces
   const poleG = new THREE.CylinderGeometry(0.08, 0.12, 8, 8); poleG.translate(0, 4, 0);
   const armG = new THREE.BoxGeometry(5.2, 0.1, 0.1); armG.translate(0, 8, 0);
   const headG = new THREE.BoxGeometry(0.7, 0.14, 0.32); const heads = mergeGeometries([headG.clone().translate(2.45, 7.9, 0), headG.clone().translate(-2.45, 7.9, 0)]);
