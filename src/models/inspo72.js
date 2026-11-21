@@ -289,6 +289,7 @@ export function makeArcade() {
   cols.push([X0 - 0.3, X0, Z0, Z1], [X1, X1 + 0.3, Z0, Z1], [X0, X1, Z0 - 0.3, Z0], [X0, -1.25, Z1 - 0.2, Z1 + 0.2], [1.25, X1, Z1 - 0.2, Z1 + 0.2]);
   // polish pass: the screens flicker (each screen material gets its own phase) and the attract images scroll a little
   const screens = []; g.traverse((o) => { if (o.isMesh && o.material && o.material.emissiveMap && o.material.emissiveIntensity >= 0.85 && o.material.emissiveIntensity <= 1.0) screens.push([o.material, Math.random() * 6]); });
+  g.userData.mergeSafe = true;   // the tick only touches shared screen materials, so merging is fine
   g.userData.tick = (t) => { for (const [m, ph] of screens) { m.emissiveIntensity = 0.85 + 0.1 * Math.sin(t * 9 + ph) + 0.05 * Math.sin(t * 31 + ph * 2); m.map.offset.x = Math.floor(t * 2 + ph) % 4 === 0 ? 0.004 : 0; } };
   g.userData.colliders = cols;
   g.userData.areas = [{ minX: X0 + 0.3, maxX: X1 - 0.3, minZ: Z0 + 0.3, maxZ: Z1 - 0.2 }, { minX: -1.2, maxX: 1.2, minZ: Z1 - 0.4, maxZ: Z1 + 1.5 }];

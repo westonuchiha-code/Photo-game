@@ -4,6 +4,7 @@
 // teal window trim, subway tile and lime walls, globe pendants, LED strips,
 // napkin dispensers, the framed poster, the slatted fence and wall globes outside.
 import * as THREE from 'three';
+import { makeStreamer, mergeStatic } from './stream.js';
 import { finishLoading } from './loading.js';
 import { shrinkCanvases } from './texcache.js';
 import { makeTrail } from './models/trail40.js';
@@ -118,7 +119,7 @@ document.getElementById('app').appendChild(renderer.domElement);
 const scene = new THREE.Scene();
 scene.background = new THREE.Color('#0b1018');
 // night haze: far streets, towers and hills fade into the horizon instead of ending at a hard edge
-scene.fog = new THREE.Fog('#20232c', 140, 1900);
+scene.fog = new THREE.Fog('#20232c', 120, 900);   // (tightened for streaming: far things fade before they cull)
 const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.05, 3200);
 const mats = makeMaterials();
 
@@ -1303,6 +1304,7 @@ const mallAreas = mall.userData.areas.map((a) => ({ ...a, minX: a.minX + MALL.x,
 const district = makeDistrict(); add(district);
 for (const [x, z] of district.userData.lampPosts) circle(x, z, 0.18);
 for (const [x, z] of district.userData.treePosts) circle(x, z, 0.25);
+const DISTRICT_FROM = room.children.length;   // (streaming: everything added from here on is static district content)
 // 57 Brightwater Dental: on its lot on Cedar Avenue (local +z = the storefront, facing the avenue, -x)
 const DN = { x: 95, z: 39 };
 const dentist = makeDentistOffice(); dentist.position.set(DN.x, 0.14, DN.z); dentist.rotation.y = -Math.PI / 2; add(dentist);
@@ -1963,12 +1965,22 @@ const pointLights = [];
 scene.traverse((o) => { if (o.isPointLight) pointLights.push(o); });
 const _lp = new THREE.Vector3();
 let lightTimer = 0;
+function lightLive(l) { for (let o = l.parent; o; o = o.parent) if (!o.visible) return false; return true; }
 function updateLightBudget() {
   const cam = camera.position;
-  pointLights.forEach((l) => { l.getWorldPosition(_lp); l.userData.d = _lp.distanceToSquared(cam); });
+  pointLights.forEach((l) => { l.getWorldPosition(_lp); l.userData.d = lightLive(l) ? _lp.distanceToSquared(cam) : 1e12; });
   const sorted = [...pointLights].sort((a, b) => a.userData.d - b.userData.d);
   sorted.forEach((l, i) => { l.visible = i < MAX_LIGHTS; });
 }
+// streaming step 1: hide what's too far away to matter (see stream.js); runs with the light budget
+{ // step 1b: merge every static district set's meshes by material (see stream.js). Everything added after item 57 is
+  // static (no doors or interactables), so each top-level set is merged on its own.
+  const t0 = performance.now(); let before = 0, after = 0;
+  for (const o of room.children.slice(DISTRICT_FROM)) { if (o.isLight || o.userData.update || o.userData.brain || (o.userData.tick && !o.userData.mergeSafe)) continue; const r = mergeStatic(o); before += r.before; after += r.after; }
+  console.log('merge', Math.round(performance.now() - t0), 'ms:', before, '->', after, 'meshes');
+}
+const streamer = makeStreamer(scene, { phone: IS_PHONE });
+streamer.update(camera.position);
 updateLightBudget();
 shrinkCanvases(scene);
 
@@ -2031,7 +2043,7 @@ function frame() {
     blueHouse.userData.update(dt);
     groceryDoor.active = !grocery.userData.doorsOpen();
   }
-  if ((lightTimer += dt) > 0.4) { lightTimer = 0; updateLightBudget(); }
+  if ((lightTimer += dt) > 0.3) { lightTimer = 0; streamer.update(camera.position); updateLightBudget(); }
   walkPoles.forEach((p, i) => p.userData.update(t, i * 0.3));
   // Doors swing open when you walk up to them (inside or out).
   const near = mode === 'walk' && Math.hypot(walk.position.x - X1, walk.position.z - DOOR_Z) < 2.3;
@@ -2064,4 +2076,4 @@ window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
   composer.setSize(window.innerWidth, window.innerHeight);
 });
-window.__scene = { scene, camera, walk, setMode, interactables, walkPoles, creep };
+window.__scene = { scene, camera, walk, setMode, interactables, walkPoles, creep, renderer, streamer };
