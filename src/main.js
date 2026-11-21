@@ -20,6 +20,7 @@ import { makeCafeFrontage } from './models/signs65.js';
 import { makeCanalPark } from './models/misc67.js';
 import { makeArtGallery } from './models/inspo68.js';
 import { makeWarehouseStore } from './models/inspo69.js';
+import { makeQueueCard, makeEnergyCan74, makeAppAdPost, makeStickerPole, makeStickerPillar } from './models/batch74.js';
 import { makeOldTownRow, makePocketPark, makeGyudonBowl, makeSickle } from './models/batch73.js';
 import { makeArcade, makeShutterShop as makeShutterStall, makeStreetDrum, makeTempleFront, makeFairground, makeCairn } from './models/inspo72.js';
 import { makeBackroomCorner, makeGameShelf, makeBinShelf, makePinkHouse } from './models/inspo71.js';
@@ -1403,6 +1404,13 @@ const otAreas = otRow.userData.areas.map((a) => ({ minX: a.minX + OT.x, maxX: a.
 const PP = { x: 288, z: -77 };
 const ppark = makePocketPark(); ppark.position.set(PP.x, 0, PP.z); add(ppark);
 for (const [x0, x1, z0, z1] of ppark.userData.colliders) rect(PP.x + x0, PP.x + x1, PP.z + z0, PP.z + z1);
+// 74 batch 74: street details on the old-town row's curb (an ad panel on a post, a stickered pole, a stickered
+// steel pillar) and a queue card + an energy can on the izakaya's standing table
+{ const ap = makeAppAdPost(); ap.position.set(300.5, 0.14, -89.6); add(ap); rect(300.2, 300.8, -89.7, -89.45);
+  const sp = makeStickerPole(); sp.position.set(296.0, 0.14, -89.5); add(sp); rect(295.88, 296.12, -89.62, -89.38);
+  const pl = makeStickerPillar(); pl.position.set(303.8, 0.14, -89.7); add(pl); rect(303.59, 304.01, -89.91, -89.49);
+  const tY = 0.14 + 1.02; const qc = makeQueueCard(2); qc.position.set(263.55, tY, -89.85); qc.rotation.y = 0.4; add(qc);
+  const ec = makeEnergyCan74(); ec.position.set(262.97, tY, -90.1); add(ec); }
 const dnAreas = [...dentist.userData.areas, ...wing.userData.areas].map((a) => { const [minX, maxX, minZ, maxZ] = dnW([a.minX, a.maxX, a.minZ, a.maxZ]); return { minX, maxX, minZ, maxZ }; });
 
 const walk = new WalkControls(camera, renderer.domElement, {
@@ -1584,6 +1592,10 @@ const VIEWS = {
   domeburner: { pos: [295.5, 1.7, -71.0], target: [297, 1.1, -64.6] },
   domeshed: { pos: [274.0, 1.5, -67.0], target: [273.5, 0.8, -63.5] },
   parkkiosk: { pos: [299, 1.7, -78.5], target: [303.5, 1.6, -72.8] },
+  adpost: { pos: [300.4, 1.55, -88.2], target: [300.5, 1.5, -89.55] },
+  stickerpole: { pos: [296.3, 1.6, -88.6], target: [296.0, 1.5, -89.5] },
+  stickerpillar: { pos: [303.8, 2.0, -87.6], target: [303.8, 2.0, -89.5] },
+  tabletop74: { pos: [263.4, 1.5, -89.35], target: [263.25, 1.16, -89.95] },
   pixelden: { pos: [353, 2.2, 82.5], target: [348, 2.6, 93] },
   arcadein: { pos: [352.5, 1.7, 94.5], target: [347, 1.2, 99.5] },
   gameroom: { pos: [348, 1.7, 100.5], target: [348, 1.4, 108.6] },

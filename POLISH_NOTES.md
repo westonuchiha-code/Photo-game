@@ -238,3 +238,7 @@ This is a running list, added to as models get built. Nothing here is urgent.
 - Pocket park: pines are trunk + flattened spheres; proper layered pine canopies would read better. The parking kiosk
   stairs drop into a black void (no car park below).
 - Gyudon bowl: beef strips are bent boxes; a glossier sauce pool between them would help.
+
+## 74 Batch 74
+- Sticker pillar: brushed steel reads grey without an environment map; a local reflection probe would make it shine.
+- More stickers could be scattered on other poles in the old town (reuse makeStickerPole with other seeds).
