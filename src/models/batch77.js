@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { F, fitText } from '../fonts.js';
+import { brickMat } from './batch78.js';
 
 const _L = new THREE.TextureLoader(); const _T = {};
 function tex(name, rx = 1, ry = 1) { const k = name + rx + '|' + ry; if (_T[k]) return _T[k]; const t = _L.load(`assets/textures/${name}.png`); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx, ry); t.anisotropy = 8; return (_T[k] = t); }
@@ -144,8 +145,8 @@ function gondola(L, seed) { const g = new THREE.Group(); const H = 1.7, D = 1.0;
 export function makeHearthMarket() {
   const g = new THREE.Group(); g.name = 'hearth_market'; const cols = [], put = placer(g, cols);
   const W = 28, D = 22, H = 5.2, X0 = -W / 2, X1 = W / 2, Z0 = -D;
-  const brick = std({ map: tex('i4_brick_tan', W / 2.2, H / 1.6), roughness: 0.9 });
-  box(W + 0.4, H + 1, 0.2, brick, 0, (H + 1) / 2, Z0 - 0.1, g); for (const s of [-1, 1]) box(0.2, H + 1, D, std({ map: tex('i4_brick_tan', D / 2.2, H / 1.6), roughness: 0.9 }), s * (X1 + 0.1), (H + 1) / 2, -D / 2, g);
+  const brick = brickMat('tan', W, H + 1);   // item 78: the tan speckled pillar brick
+  box(W + 0.4, H + 1, 0.2, brick, 0, (H + 1) / 2, Z0 - 0.1, g); for (const s of [-1, 1]) box(0.2, H + 1, D, brickMat('tan', D, H + 1), s * (X1 + 0.1), (H + 1) / 2, -D / 2, g);
   box(W + 0.4, 0.2, D + 0.2, std({ color: '#3a3a3c' }), 0, H + 1.1, -D / 2, g);
   // inside: polished warm concrete floor, white ceiling with light panels; the blue wall + cream scroll mural above the dairy run
   const fl = new THREE.Mesh(new THREE.PlaneGeometry(W, D), phys({ map: tex('lot_concrete', W / 4, D / 4), color: '#c8a078', roughness: 0.3, clearcoat: 0.5 })); fl.rotation.x = -Math.PI / 2; fl.position.set(0, 0.01, -D / 2); fl.receiveShadow = true; g.add(fl);

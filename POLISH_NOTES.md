@@ -259,3 +259,7 @@ This is a running list, added to as models get built. Nothing here is urgent.
 - Hearth Market: the middle gondolas are printed faces; real product meshes on at least one run would help close up.
   The tote groceries are plain cylinders/boxes. A roster sheet with invented names could go on the pickup wall.
 - The open dairy case could get a cold mist + a hum.
+
+## 78 Batch 78
+- The two bricks are rebuilt brick by brick from the photos (tools/tex_78.py). More walls could switch to them
+  (Coconut Raft's front, the Pixel Den piers); the white brick's soldier edge only exists on makeBrickPillar.
