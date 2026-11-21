@@ -20,6 +20,7 @@ import { makeCafeFrontage } from './models/signs65.js';
 import { makeCanalPark } from './models/misc67.js';
 import { makeArtGallery } from './models/inspo68.js';
 import { makeWarehouseStore } from './models/inspo69.js';
+import { makeMallPassage } from './models/batch75.js';
 import { makeQueueCard, makeEnergyCan74, makeAppAdPost, makeStickerPole, makeStickerPillar } from './models/batch74.js';
 import { makeOldTownRow, makePocketPark, makeGyudonBowl, makeSickle } from './models/batch73.js';
 import { makeArcade, makeShutterShop as makeShutterStall, makeStreetDrum, makeTempleFront, makeFairground, makeCairn } from './models/inspo72.js';
@@ -1411,6 +1412,11 @@ for (const [x0, x1, z0, z1] of ppark.userData.colliders) rect(PP.x + x0, PP.x + 
   const pl = makeStickerPillar(); pl.position.set(303.8, 0.14, -89.7); add(pl); rect(303.59, 304.01, -89.91, -89.49);
   const tY = 0.14 + 1.02; const qc = makeQueueCard(2); qc.position.set(263.55, tY, -89.85); qc.rotation.y = 0.4; add(qc);
   const ec = makeEnergyCan74(); ec.position.set(262.97, tY, -90.1); add(ec); }
+// 75 batch 75: the Nakamachi Arcade mall passage on the lot west of the pocket park, entrance on the z = -84 street
+const NM = { x: 259, z: -77 };
+const nmall = makeMallPassage(); nmall.position.set(NM.x, 0.14, NM.z); nmall.rotation.y = Math.PI; add(nmall);
+for (const c of nmall.userData.colliders) rect(...piMap(NM.x, NM.z, c));
+const nmAreas = nmall.userData.areas.map((a) => { const [minX, maxX, minZ, maxZ] = piMap(NM.x, NM.z, [a.minX, a.maxX, a.minZ, a.maxZ]); return { minX, maxX, minZ, maxZ }; });
 const dnAreas = [...dentist.userData.areas, ...wing.userData.areas].map((a) => { const [minX, maxX, minZ, maxZ] = dnW([a.minX, a.maxX, a.minZ, a.maxZ]); return { minX, maxX, minZ, maxZ }; });
 
 const walk = new WalkControls(camera, renderer.domElement, {
@@ -1450,6 +1456,7 @@ const walk = new WalkControls(camera, renderer.domElement, {
     ...i5Areas, // the pottery gallery, the aqueduct garden + plaza
     ...arAreas, // the arcade
     ...otAreas, // inside Club Nova
+    ...nmAreas, // the Nakamachi Arcade passage
     { minX: PP.x - 19.8, maxX: PP.x + 19.8, minZ: PP.z, maxZ: PP.z + 16.8 }, // the pocket park
     { minX: TM.x - 13, maxX: TM.x + 13, minZ: TM.z - 26.6, maxZ: TM.z + 0.3 }, // the temple plaza, stairs + platform top
     { minX: FG.x - 29.6, maxX: FG.x + 29.6, minZ: FG.z - 16.2, maxZ: FG.z + 16.8 }, // the fairgrounds
@@ -1476,6 +1483,7 @@ walk.ground = (x, z, prevY) => {
   if (x > 338 && x < 358 && z > 92 && z < 109.5) return 0.14;   // the arcade floor
   if (x > 252 && x < 322 && z > -101 && z < -91) return 0.14;   // the old-town row (Club Nova floor)
   if (x > 268 && x < 308 && z > -77 && z < -60) return 0;   // the pocket park
+  if (x > 252.5 && x < 265.5 && z > -77.4 && z < -61) return 0.14;   // the Nakamachi Arcade floor
   if (x > TM.x + tmSt.x0 && x < TM.x + tmSt.x1 && z > TM.z + tmSt.front && z < TM.z + tmSt.z1) {   // the temple stairs + platform top
     const zz = z - TM.z; return 0.02 + (zz <= tmSt.zTop ? tmSt.top : tmSt.top * (tmSt.z1 - zz) / (tmSt.z1 - tmSt.zTop)); }
   if (x > TM.x - 13 && x < TM.x + 13 && z > TM.z - 18 && z < TM.z) return 0.06;   // the temple plaza
@@ -1596,6 +1604,11 @@ const VIEWS = {
   stickerpole: { pos: [296.3, 1.6, -88.6], target: [296.0, 1.5, -89.5] },
   stickerpillar: { pos: [303.8, 2.0, -87.6], target: [303.8, 2.0, -89.5] },
   tabletop74: { pos: [263.4, 1.5, -89.35], target: [263.25, 1.16, -89.95] },
+  nakamachi: { pos: [259, 2.2, -86.5], target: [259, 3.0, -77] },
+  mallhall: { pos: [259, 1.7, -76.0], target: [259, 1.4, -66] },
+  lakeshutter: { pos: [257.6, 1.8, -72.8], target: [261.1, 1.7, -72.8] },
+  kaijushutter: { pos: [260.6, 1.8, -69.2], target: [256.9, 1.9, -69.2] },
+  gamestall: { pos: [259.2, 1.6, -65.8], target: [259.2, 1.1, -62.3] },
   pixelden: { pos: [353, 2.2, 82.5], target: [348, 2.6, 93] },
   arcadein: { pos: [352.5, 1.7, 94.5], target: [347, 1.2, 99.5] },
   gameroom: { pos: [348, 1.7, 100.5], target: [348, 1.4, 108.6] },

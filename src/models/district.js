@@ -37,6 +37,7 @@ export const LOTS = [
   { id: 'fair', x0: 176, x1: 236, z0: 128, z1: 161, face: 's', built: true },   // fairgrounds (item 72)
   { id: 'oldtown', x0: 252, x1: 322, z0: -101, z1: -91, face: 's', built: true },   // old-town shop row (item 73)
   { id: 'pocketpark', x0: 268, x1: 308, z0: -77, z1: -60, face: 'n', built: true },   // pocket park (item 73)
+  { id: 'nakamachi', x0: 252, x1: 266, z0: -77, z1: -60, face: 'n', built: true },   // Nakamachi Arcade mall passage (item 75)
   { id: 'lotD', x0: 210, x1: 236, z0: -31, z1: -7, face: 's', built: true },   // canal walkway park (item 67)
 ];
 

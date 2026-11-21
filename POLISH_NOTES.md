@@ -242,3 +242,9 @@ This is a running list, added to as models get built. Nothing here is urgent.
 ## 74 Batch 74
 - Sticker pillar: brushed steel reads grey without an environment map; a local reflection probe would make it shine.
 - More stickers could be scattered on other poles in the old town (reuse makeStickerPole with other seeds).
+
+## 75 Batch 75
+- Nakamachi Arcade: only one stall is open; the passage could continue to a B1 staircase and a tiny cinema lobby
+  (the kaiju shutter's "Hoshizora" picture house).
+- The kaiju shutter's red title runs into the monster's tail; nudge the lettering left.
+- The CRT console TV could show a static/attract screen when switched on.
