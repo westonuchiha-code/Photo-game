@@ -20,6 +20,7 @@ import { makeCafeFrontage } from './models/signs65.js';
 import { makeCanalPark } from './models/misc67.js';
 import { makeArtGallery } from './models/inspo68.js';
 import { makeWarehouseStore } from './models/inspo69.js';
+import { makeYellowFreeBox, makeMessageTrailer, makeTakeoutShop } from './models/batch80.js';
 import { makeFreePaperCorner } from './models/batch79.js';
 import { makeBrickPillar, makeParkGateway } from './models/batch78.js';
 import { makeHearthMarket } from './models/batch77.js';
@@ -1440,6 +1441,14 @@ const hmAreas = hmkt.userData.areas.map((a) => ({ minX: a.minX + HM.x, maxX: a.m
 // 79 batch 79: a free-paper corner (red domed box, grey house box, slatted trash can, a vault lid) on the sidewalk
 // just east of Hearth Market
 { const fp = makeFreePaperCorner(); fp.position.set(292.3, 0.14, 161.7); add(fp); for (const [x0, x1, z0, z1] of fp.userData.colliders) rect(292.3 + x0, 292.3 + x1, 161.7 + z0, 161.7 + z1); }
+// 80 batch 80: the yellow free-paper box against Hearth Market's brick; a road-message trailer at the fairgrounds' street
+// edge; the Calzone Kid takeout shop on the lot east of the free-paper corner
+{ const yb = makeYellowFreeBox(); yb.position.set(270.15, 0.14, 161.95); yb.rotation.y = 0.1; add(yb); rect(269.94, 270.36, 161.77, 162.13);
+  const mt = makeMessageTrailer(); mt.position.set(231.5, 0, 157.0); mt.rotation.y = 0.25; add(mt); rect(229.8, 233.3, 155.8, 159.3); }
+const CK = { x: 306, z: 161 };
+const ckShop = makeTakeoutShop(); ckShop.position.set(CK.x, 0.14, CK.z); add(ckShop);
+for (const [x0, x1, z0, z1] of ckShop.userData.colliders) rect(CK.x + x0, CK.x + x1, CK.z + z0, CK.z + z1);
+const ckAreas = ckShop.userData.areas.map((a) => ({ minX: a.minX + CK.x, maxX: a.maxX + CK.x, minZ: a.minZ + CK.z, maxZ: a.maxZ + CK.z }));
 const dnAreas = [...dentist.userData.areas, ...wing.userData.areas].map((a) => { const [minX, maxX, minZ, maxZ] = dnW([a.minX, a.maxX, a.minZ, a.maxZ]); return { minX, maxX, minZ, maxZ }; });
 
 const walk = new WalkControls(camera, renderer.domElement, {
@@ -1482,6 +1491,7 @@ const walk = new WalkControls(camera, renderer.domElement, {
     ...nmAreas, // the Nakamachi Arcade passage
     ...kgAreas, // the kei car garage
     ...hmAreas, // Hearth Market
+    ...ckAreas, // Calzone Kid
     { minX: PP.x - 19.8, maxX: PP.x + 19.8, minZ: PP.z, maxZ: PP.z + 16.8 }, // the pocket park
     { minX: TM.x - 13, maxX: TM.x + 13, minZ: TM.z - 26.6, maxZ: TM.z + 0.3 }, // the temple plaza, stairs + platform top
     { minX: FG.x - 29.6, maxX: FG.x + 29.6, minZ: FG.z - 16.2, maxZ: FG.z + 16.8 }, // the fairgrounds
@@ -1509,7 +1519,8 @@ walk.ground = (x, z, prevY) => {
   if (x > 252 && x < 322 && z > -101 && z < -91) return 0.14;   // the old-town row (Club Nova floor)
   if (x > 268 && x < 308 && z > -77 && z < -60) return 0;   // the pocket park
   if (x > 252.5 && x < 265.5 && z > -77.4 && z < -61) return 0.14;
-  if (x > 260 && x < 288 && z > 139 && z < 161.7) return 0.14;   // Hearth Market floor   // the Nakamachi Arcade floor
+  if (x > 260 && x < 288 && z > 139 && z < 161.7) return 0.14;   // Hearth Market floor
+  if (x > 301 && x < 311 && z > 152 && z < 161.7) return 0.14;   // Calzone Kid floor   // the Nakamachi Arcade floor
   if (x > TM.x + tmSt.x0 && x < TM.x + tmSt.x1 && z > TM.z + tmSt.front && z < TM.z + tmSt.z1) {   // the temple stairs + platform top
     const zz = z - TM.z; return 0.02 + (zz <= tmSt.zTop ? tmSt.top : tmSt.top * (tmSt.z1 - zz) / (tmSt.z1 - tmSt.zTop)); }
   if (x > TM.x - 13 && x < TM.x + 13 && z > TM.z - 18 && z < TM.z) return 0.06;   // the temple plaza
@@ -1651,6 +1662,13 @@ const VIEWS = {
   tanbrick: { pos: [272.2, 1.5, 164.2], target: [270.8, 1.4, 161.9] },
   parkgate: { pos: [288, 1.9, -82.5], target: [288, 2.0, -77] },
   freepapers: { pos: [292.6, 1.45, 164.4], target: [292.2, 0.8, 161.8] },
+  yellowbox: { pos: [269.4, 1.3, 163.9], target: [270.4, 0.9, 161.9] },
+  msgtrailer: { pos: [229.8, 1.8, 162.6], target: [231.5, 2.1, 157] },
+  calzonekid: { pos: [309, 2.0, 167.5], target: [306, 2.4, 161] },
+  ckinside: { pos: [303.5, 1.65, 160.0], target: [307.5, 1.2, 155.6] },
+  condiments: { pos: [308.6, 1.55, 158.7], target: [310.7, 1.1, 158.7] },
+  drinkdisp: { pos: [308.8, 1.6, 157.0], target: [310.75, 1.3, 157.0] },
+  doormat: { pos: [306.0, 1.6, 161.7], target: [306.0, 0.0, 160.0] },
   pixelden: { pos: [353, 2.2, 82.5], target: [348, 2.6, 93] },
   arcadein: { pos: [352.5, 1.7, 94.5], target: [347, 1.2, 99.5] },
   gameroom: { pos: [348, 1.7, 100.5], target: [348, 1.4, 108.6] },

@@ -266,3 +266,7 @@ This is a running list, added to as models get built. Nothing here is urgent.
 
 ## 79 Batch 79
 - Free-paper boxes: the window doors read pale; the newspaper behind the glass could be brighter/lit by a street lamp.
+
+## 80 Batch 80
+- Message trailer: the board could cycle through 2-3 messages (the 5x7 font in batch80.js makes that easy).
+- Calzone Kid: no kitchen behind the counter yet (an oven + prep table would fill the back), the menu board is flat.
