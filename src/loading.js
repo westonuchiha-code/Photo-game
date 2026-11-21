@@ -24,7 +24,9 @@ function downloadsSettled(timeoutMs = 120000) {
   const t0 = performance.now();
   return new Promise((res) => {
     const tick = () => {
-      const idle = loaded >= total && performance.now() - lastChange > 700;
+      // loads waiting on background (district) texture packs don't hold the start (see tools/boot.js)
+      const deferred = window.__deferredWaiting ? window.__deferredWaiting() : 0;
+      const idle = loaded + deferred >= total && performance.now() - lastChange > 700;
       if (idle || performance.now() - t0 > timeoutMs) res(); else setTimeout(tick, 150);
     };
     tick();
@@ -33,6 +35,7 @@ function downloadsSettled(timeoutMs = 120000) {
 
 export async function finishLoading(renderer, scene, camera) {
   await downloadsSettled();
+  console.log('T downloads', Math.round(performance.now()));
   setPhase('Preparing the world');
   await new Promise((r) => setTimeout(r, 30));
   // upload every texture now (instead of the first time it comes into view)
@@ -41,8 +44,10 @@ export async function finishLoading(renderer, scene, camera) {
     const mats = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : [];
     for (const mat of mats) for (const k in mat) { const v = mat[k]; if (v && v.isTexture && !seen.has(v)) { seen.add(v); try { renderer.initTexture(v); } catch (e) { /* ignore */ } } }
   });
+  console.log('T textures-uploaded', Math.round(performance.now()), seen.size);
   // compile all shaders, including objects currently off screen
   try { if (renderer.compileAsync) await renderer.compileAsync(scene, camera); else renderer.compile(scene, camera); } catch (e) { /* ignore */ }
+  console.log('T shaders', Math.round(performance.now()));
   setPhase('Ready');
   if (el) { el.classList.add('done'); setTimeout(() => el.remove(), 700); }
 }

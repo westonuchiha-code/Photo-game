@@ -1298,12 +1298,15 @@ const mallAreas = mall.userData.areas.map((a) => ({ ...a, minX: a.minX + MALL.x,
   const d = makeDeliveryBag(); d.position.set(49.6, 0, 6.0); d.rotation.y = -0.8; add(d);
 }
 
+console.log('T oldtown', Math.round(performance.now()));
 // ------------------------------------------------------------------ city district (town expansion)
 // A street grid east of the old town (Cedar Avenue at x 75, cross streets every 84 m), generated buildings in the
 // wall photos, lit windows + made-up shopfronts, lamps and street trees; far towers and hills all round.
 const district = makeDistrict(); add(district);
 for (const [x, z] of district.userData.lampPosts) circle(x, z, 0.18);
 for (const [x, z] of district.userData.treePosts) circle(x, z, 0.25);
+console.log('T districtgrid', Math.round(performance.now()));
+window.__texPhase = 'district';   // (tools/record_zones.js: textures first requested from here are district-only)
 const DISTRICT_FROM = room.children.length;   // (streaming: everything added from here on is static district content)
 // 57 Brightwater Dental: on its lot on Cedar Avenue (local +z = the storefront, facing the avenue, -x)
 const DN = { x: 95, z: 39 };
@@ -1471,6 +1474,8 @@ const ckAreas = ckShop.userData.areas.map((a) => ({ minX: a.minX + CK.x, maxX: a
   const cb = makeConcreteBollard(); cb.position.set(281.0, 0.14, 162.7); add(cb); rect(280.75, 281.25, 162.45, 162.95); }
 const dnAreas = [...dentist.userData.areas, ...wing.userData.areas].map((a) => { const [minX, maxX, minZ, maxZ] = dnW([a.minX, a.maxX, a.minZ, a.maxZ]); return { minX, maxX, minZ, maxZ }; });
 
+console.log('T districtsites', Math.round(performance.now()));
+window.__texPhase = 'core';
 const walk = new WalkControls(camera, renderer.domElement, {
   bounds: null,
   areas: [
@@ -1980,6 +1985,7 @@ function updateLightBudget() {
   console.log('merge', Math.round(performance.now() - t0), 'ms:', before, '->', after, 'meshes');
 }
 const streamer = makeStreamer(scene, { phone: IS_PHONE });
+console.log('T streamer', Math.round(performance.now()));
 streamer.update(camera.position);
 updateLightBudget();
 shrinkCanvases(scene);

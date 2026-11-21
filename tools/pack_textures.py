@@ -5,7 +5,7 @@ Quality policy (the PNGs in the repo stay the masters):
   - every other image lossy at quality 94; it is decoded again and compared with the PNG, and if the error is above a
     visually-transparent level (PSNR < 44 dB) it is re-encoded at 98, then losslessly
   - non-image files (json) are packed as they are
-Writes <out>/pack<N>.wasm (N = 12 fixed hash buckets; a served binary type on the artifact host, raw bytes, not WebAssembly) and <out>/packs.json: { "assets/textures/<name>": [pack, offset, length, mime] }
+Writes <out>/pack<N>.wasm (8 core + 6 district hash buckets, see below; a served binary type on the artifact host, raw bytes, not WebAssembly) and <out>/packs.json: { "assets/textures/<name>": [pack, offset, length, mime] }
 """
 import io, json, os, sys
 from multiprocessing import Pool
@@ -49,13 +49,21 @@ if __name__ == '__main__':
     # each file goes to a fixed pack chosen by a hash of its name, so adding or changing one texture only changes one
     # pack (and the published update stays small); packs are written in name order inside
     import zlib
-    NP = 12
-    packs = [bytearray() for _ in range(NP)]; index = {}
+    # two zones: 'core' textures (the old town, where you start, plus anything shared) are packed into NC packs the
+    # game waits for; 'district' textures (only used by the district sites, see tools/record_zones.js) go into ND packs
+    # that stream in the background after the game has started. Within a zone a file's pack is a hash of its name, so
+    # adding a texture only changes one pack.
+    zf = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'texture_zones.json')
+    zj = json.load(open(zf)) if os.path.exists(zf) else {}
+    district = set(zj.get('district', [])); corelist = set(zj.get('core', []))
+    if corelist: district |= {n for n, _, _, _ in res if n not in corelist}   # unused files ride in the background packs
+    NC, ND = 8, 6
+    packs = [bytearray() for _ in range(NC + ND)]; index = {}
     for name, data, mime, how in res:
-        k = zlib.crc32(name.encode()) % NP
+        k = NC + zlib.crc32(name.encode()) % ND if name in district else zlib.crc32(name.encode()) % NC
         index['assets/textures/' + name] = [k, len(packs[k]), len(data), mime]; packs[k] += data
     for i, b in enumerate(packs): open(os.path.join(OUT, f'pack{i}.wasm'), 'wb').write(b)
-    json.dump({'packs': [len(b) for b in packs], 'files': index}, open(os.path.join(OUT, 'packs.json'), 'w'))
+    json.dump({'packs': [len(b) for b in packs], 'core': list(range(NC)), 'files': index}, open(os.path.join(OUT, 'packs.json'), 'w'))
     tot = sum(os.path.getsize(os.path.join(SRC, n)) for n in names)
     kinds = {}
     for _, _, _, how in res: kinds[how] = kinds.get(how, 0) + 1
