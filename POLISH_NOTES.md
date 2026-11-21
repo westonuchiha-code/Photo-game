@@ -254,3 +254,8 @@ This is a running list, added to as models get built. Nothing here is urgent.
   seat and dash would make it hold up close. The mirror stalks render as black discs (no env map for chrome).
 - Walk-in freezer: no frost/vapour; add breath fog + a cold blue tint inside, and frost on the evaporators.
 - The camp stove is a plain box; add knobs, a gas canister.
+
+## 77 Batch 77
+- Hearth Market: the middle gondolas are printed faces; real product meshes on at least one run would help close up.
+  The tote groceries are plain cylinders/boxes. A roster sheet with invented names could go on the pickup wall.
+- The open dairy case could get a cold mist + a hum.

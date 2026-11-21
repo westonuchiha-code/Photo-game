@@ -67,7 +67,8 @@ export function makeChipTower() {
 const ART = [['canvas_art_bluehair.png', 0.6, 0.96, 'Blue', 'marker on canvas'], ['canvas_art_eyeshroom.png', 0.95, 0.78, 'The Watcher', 'oil on canvas'], ['canvas_art_nopurple.png', 0.78, 0.97, 'NO!', 'acrylic and marker'], ['canvas_art_splash.png', 0.68, 0.98, 'Burst', 'acrylic'], ['canvas_art_collage.png', 0.65, 0.97, 'Head Full', 'mixed media'], ['canvas_art_bwsplatter.png', 0.72, 0.95, 'Static', 'acrylic'], ['canvas_art_pinkloops.png', 0.74, 0.95, 'Loops', 'acrylic'], ['canvas_art_tileface.png', 0.5, 0.67, 'Tile Face', 'marker on bathroom tile (photo)'],
   // item 72: five more
   ['canvas_art_greenmug.png', 0.64, 0.8, 'Steam', 'acrylic and marker'], ['canvas_art_pinksplatter.png', 0.69, 0.8, 'Pink Rain', 'acrylic'], ['canvas_art_drippour.png', 0.8, 0.8, 'Pour', 'poured acrylic'], ['canvas_art_bluered.png', 0.4, 0.83, 'Ember', 'acrylic'], ['canvas_art_pinkswirls.png', 0.96, 0.5, 'Petals', 'acrylic'],
-  ['canvas_art_layflat.png', 0.75, 0.93, 'Please Lay Flat', 'acrylic and marker']];
+  ['canvas_art_layflat.png', 0.75, 0.93, 'Please Lay Flat', 'acrylic and marker'],
+  ['canvas_art_oneeye.png', 0.9, 0.68, 'One Eye', 'mixed media on canvas']];
 export function makeArtGallery() {
   const g = new THREE.Group(); g.name = 'art_gallery';
   const W = 14, D = 10, X0 = -7, X1 = 7, Z0 = -5, Z1 = 5, H = 3.6;
@@ -90,7 +91,7 @@ export function makeArtGallery() {
   plane(9, 1.3, std({ map: name, transparent: true }), 0, H + 0.7, Z1 + 0.16, 0, g);
   // the paintings: back wall gets three, each side wall one; track rail with a spot on each
   const spots = [[-4.8, Z0 + 0.05, 0], [-1.6, Z0 + 0.05, 0], [1.6, Z0 + 0.05, 0], [X0 + 0.05, -1.6, Math.PI / 2], [X1 - 0.05, -1.6, -Math.PI / 2], [X0 + 0.05, 1.4, Math.PI / 2], [X1 - 0.05, 1.4, -Math.PI / 2], [4.8, Z0 + 0.05, 0],
-    [-1.05, 1.885, 0], [1.05, 1.885, 0], [1.05, 1.715, Math.PI], [X0 + 0.05, 3.6, Math.PI / 2], [X1 - 0.05, 3.7, -Math.PI / 2], [-1.05, 1.715, Math.PI]];
+    [-1.05, 1.885, 0], [1.05, 1.885, 0], [1.05, 1.715, Math.PI], [X0 + 0.05, 3.6, Math.PI / 2], [X1 - 0.05, 3.7, -Math.PI / 2], [-1.05, 1.715, Math.PI], [X0 + 0.05, -3.8, Math.PI / 2]];
   // a freestanding white partition in the middle of the room (item 72), with a low plinth
   box(4.4, 2.7, 0.15, white, 0, 1.35, 1.8, g);
   for (const sx of [-1.05, 1.05]) { const sp = new THREE.SpotLight('#fff1dc', 9, 6, 0.5, 0.6, 1.4); sp.position.set(sx, H - 0.25, 3.6); sp.target.position.set(sx, 1.6, 1.9); g.add(sp, sp.target); } box(4.4, 0.08, 0.17, std({ color: '#2a2a2c' }), 0, 0.04, 1.8, g);

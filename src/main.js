@@ -20,6 +20,7 @@ import { makeCafeFrontage } from './models/signs65.js';
 import { makeCanalPark } from './models/misc67.js';
 import { makeArtGallery } from './models/inspo68.js';
 import { makeWarehouseStore } from './models/inspo69.js';
+import { makeHearthMarket } from './models/batch77.js';
 import { makeKeiGarage } from './models/batch76.js';
 import { makeMallPassage } from './models/batch75.js';
 import { makeQueueCard, makeEnergyCan74, makeAppAdPost, makeStickerPole, makeStickerPillar } from './models/batch74.js';
@@ -1424,6 +1425,12 @@ const KG = { x: 186.5, z: 77 };
 const kgar = makeKeiGarage(); kgar.position.set(KG.x, 0.02, KG.z); add(kgar);
 for (const [x0, x1, z0, z1] of kgar.userData.colliders) rect(KG.x + x0, KG.x + x1, KG.z + z0, KG.z + z1);
 const kgAreas = kgar.userData.areas.map((a) => ({ minX: a.minX + KG.x, maxX: a.maxX + KG.x, minZ: a.minZ + KG.z, maxZ: a.maxZ + KG.z }));
+// 77 batch 77: Hearth Market (dairy aisle under the blue scroll mural, deli corn dogs, online-pickup staging) on the
+// north side of the z = 168 street; the one-eye painting is in the gallery
+const HM = { x: 274, z: 161 };
+const hmkt = makeHearthMarket(); hmkt.position.set(HM.x, 0.14, HM.z); add(hmkt);
+for (const [x0, x1, z0, z1] of hmkt.userData.colliders) rect(HM.x + x0, HM.x + x1, HM.z + z0, HM.z + z1);
+const hmAreas = hmkt.userData.areas.map((a) => ({ minX: a.minX + HM.x, maxX: a.maxX + HM.x, minZ: a.minZ + HM.z, maxZ: a.maxZ + HM.z }));
 const dnAreas = [...dentist.userData.areas, ...wing.userData.areas].map((a) => { const [minX, maxX, minZ, maxZ] = dnW([a.minX, a.maxX, a.minZ, a.maxZ]); return { minX, maxX, minZ, maxZ }; });
 
 const walk = new WalkControls(camera, renderer.domElement, {
@@ -1465,6 +1472,7 @@ const walk = new WalkControls(camera, renderer.domElement, {
     ...otAreas, // inside Club Nova
     ...nmAreas, // the Nakamachi Arcade passage
     ...kgAreas, // the kei car garage
+    ...hmAreas, // Hearth Market
     { minX: PP.x - 19.8, maxX: PP.x + 19.8, minZ: PP.z, maxZ: PP.z + 16.8 }, // the pocket park
     { minX: TM.x - 13, maxX: TM.x + 13, minZ: TM.z - 26.6, maxZ: TM.z + 0.3 }, // the temple plaza, stairs + platform top
     { minX: FG.x - 29.6, maxX: FG.x + 29.6, minZ: FG.z - 16.2, maxZ: FG.z + 16.8 }, // the fairgrounds
@@ -1491,7 +1499,8 @@ walk.ground = (x, z, prevY) => {
   if (x > 338 && x < 358 && z > 92 && z < 109.5) return 0.14;   // the arcade floor
   if (x > 252 && x < 322 && z > -101 && z < -91) return 0.14;   // the old-town row (Club Nova floor)
   if (x > 268 && x < 308 && z > -77 && z < -60) return 0;   // the pocket park
-  if (x > 252.5 && x < 265.5 && z > -77.4 && z < -61) return 0.14;   // the Nakamachi Arcade floor
+  if (x > 252.5 && x < 265.5 && z > -77.4 && z < -61) return 0.14;
+  if (x > 260 && x < 288 && z > 139 && z < 161.7) return 0.14;   // Hearth Market floor   // the Nakamachi Arcade floor
   if (x > TM.x + tmSt.x0 && x < TM.x + tmSt.x1 && z > TM.z + tmSt.front && z < TM.z + tmSt.z1) {   // the temple stairs + platform top
     const zz = z - TM.z; return 0.02 + (zz <= tmSt.zTop ? tmSt.top : tmSt.top * (tmSt.z1 - zz) / (tmSt.z1 - tmSt.zTop)); }
   if (x > TM.x - 13 && x < TM.x + 13 && z > TM.z - 18 && z < TM.z) return 0.06;   // the temple plaza
@@ -1623,6 +1632,12 @@ const VIEWS = {
   cardboardcooler: { pos: [271.8, 1.5, 101.7], target: [267.0, 1.1, 101.7] },
   padlock: { pos: [270.95, 1.3, 105.75], target: [270.4, 1.2, 105.72] },
   layflat: { pos: [345.0, 1.6, 13.9], target: [345.05, 1.6, 11.3] },
+  hearth: { pos: [278, 2.4, 170.5], target: [274, 3.0, 161] },
+  dairyaisle: { pos: [284.6, 1.7, 159.5], target: [286.5, 1.4, 146] },
+  corndogs: { pos: [262.2, 1.25, 158.2], target: [262.5, 0.9, 158.8] },
+  pickup: { pos: [266.0, 1.8, 144.0], target: [263.0, 1.0, 140.5] },
+  handheld: { pos: [264.55, 2.55, 140.55], target: [264.5, 2.2, 140.2] },
+  oneeye: { pos: [347.6, 1.6, 16.8], target: [350.95, 1.6, 16.8] },
   pixelden: { pos: [353, 2.2, 82.5], target: [348, 2.6, 93] },
   arcadein: { pos: [352.5, 1.7, 94.5], target: [347, 1.2, 99.5] },
   gameroom: { pos: [348, 1.7, 100.5], target: [348, 1.4, 108.6] },
