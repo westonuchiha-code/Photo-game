@@ -311,3 +311,17 @@ This is a running list, added to as models get built. Nothing here is urgent.
   Re-run tools/record_zones.js whenever new district content adds textures (else they ride in the core packs).
 - Next: 2b lazy-build district sites (needed once the map grows; today the district's JS build is only ~2 s),
   split the old town into zones too (it's most of the 72 MB), drop textures/geometry of far sites from GPU memory.
+
+## Driving (round 1)
+- src/vehicle/carbody.js: parametric car bodies, modelled (no photos). Lower body + greenhouse lofted through
+  rounded-trapezoid rings; roof + sail panels split out of the glass by face. Clearcoat metallic paint, studio env map
+  (RoomEnvironment PMREM) for paint/chrome, alloy or steel wheels with lathe tyres, discs + calipers, lamps, plates
+  (made-up "ELM COUNTY"), mirrors, handles, wipers, seats, dash. Presets: hatch, sedan, coupe, kei, wagon, pickup, van;
+  liveries: taxi (ELM CAB), police.
+- src/drive.js: third-person chase cam; heavy-but-forgiving arcade-sim (power-limited accel, ~0.95 g grip cap,
+  slow-building steering that tightens with speed, spring pitch/roll, per-wheel ground following for curbs);
+  Space/Shift drift with a hop, charge -> blue/orange/pink mini-turbo; skid marks, sparks, boost flames,
+  synthesized engine + tyre squeal, FOV kick. Collides with colliders (8 m grid) and stays on walkable areas.
+  Touch pads on phones. E to get in/out, hold C to look back. ?drive=N starts in car N.
+- Next: round 2 rebuild every parked vehicle with the generator (drivable); round 3 roads (ring road, wider avenue,
+  ramps, a route out to the fairground / Hearth Market).

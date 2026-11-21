@@ -5,6 +5,8 @@
 // napkin dispensers, the framed poster, the slatted fence and wall globes outside.
 import * as THREE from 'three';
 import { makeStreamer, mergeStatic } from './stream.js';
+import { makeCar, LIVERIES, carEnv } from './vehicle/carbody.js';
+import { makeDriver } from './drive.js';
 import { finishLoading } from './loading.js';
 import { shrinkCanvases } from './texcache.js';
 import { makeTrail } from './models/trail40.js';
@@ -1524,6 +1526,16 @@ const walk = new WalkControls(camera, renderer.domElement, {
   ],
   colliders,
 });
+// ---- driving: modelled, drivable cars parked on the district streets (third-person; see drive.js + vehicle/carbody.js)
+const drive = makeDriver({ scene, camera, areas: walk.areas, colliders, ground: (x, z) => district.userData.floorY(x, z) ?? 0 });
+carEnv(renderer);
+for (const [type, opt, x, z, h] of [
+  ['hatch', { color: '#b3242a', name: 'red hatch', plate: 'ELM 2K7' }, 71.4, 14.5, 0],
+  ['kei', { color: '#a8d6c6', roofColor: '#f2f0ea', rim: 'steel', name: 'mint kei car', plate: 'ELM 55K', metal: 0.2 }, 71.4, 21.0, 0],
+  ['coupe', { color: '#1b3a78', rim: 'black', name: 'blue coupe', plate: 'ELM 9C3' }, 71.4, 27.0, 0],
+  ['sedan', { color: '#f0c41c', rim: 'steel', name: 'cab', plate: 'ELM T41', livery: LIVERIES.taxi, metal: 0.15 }, 92.0, 3.7, Math.PI / 2],
+  ['pickup', { color: '#5e6e52', rim: 'alloy', name: 'pickup', plate: 'ELM 7P8', chromeGrille: true }, 104.0, -3.6, -Math.PI / 2],
+]) { const c = makeCar({ type, ...opt }); c.position.set(x, 0, z); c.rotation.y = h; scene.add(c); drive.addCar(c, { name: opt.name }); }
 walk.ground = (x, z, prevY) => {
   const my = mall.userData.floorY(x - MALL.x, z - MALL.z, prevY);
   if (my !== null) return my;
@@ -1886,6 +1898,7 @@ function setMode(m, view = 'room') {
   mode = m;
   walk.enabled = m === 'walk';
   orbit.enabled = m === 'orbit';
+  if (m !== 'drive' && drive.active) { const out = drive.exit(); if (out) { walk.position.set(out.x, 0, out.z); walk.yaw = out.yaw; walk.pitch = -0.05; } }
   if (m === 'orbit') {
     const v = VIEWS[view] || VIEWS.room;
     // indoor views that look up at a ceiling may orbit below the target; everywhere else stay above the ground
@@ -1895,16 +1908,18 @@ function setMode(m, view = 'room') {
     // wide views (the city from above, long streets) need to zoom out further than the room views
     orbit.maxDistance = Math.max(12, camera.position.distanceTo(orbit.target) * 1.3);
     orbit.update();
-  } else {
+  } else if (m === 'walk') {
     walk.apply();
   }
-  modeBtn.textContent = m === 'walk' ? 'Inspect (orbit)' : 'Walk';
+  modeBtn.textContent = m === 'walk' ? 'Inspect (orbit)' : m === 'drive' ? 'Get out' : 'Walk';
   document.body.dataset.mode = m;
 }
 modeBtn.addEventListener('click', () => setMode(mode === 'walk' ? 'orbit' : 'walk'));
+function enterCar(c) { if (mode === 'orbit') setMode('walk'); drive.enter(c); setMode('drive'); }
 document.querySelectorAll('[data-view]').forEach((b) => b.addEventListener('click', () => setMode('orbit', b.dataset.view)));
 const qs = new URLSearchParams(location.search);
 setMode(qs.get('mode') === 'orbit' ? 'orbit' : 'walk', qs.get('view') || 'room');
+if (qs.get('drive') !== null) enterCar(drive.cars[+qs.get('drive') || 0]);
 
 // ------------------------------------------------------------------ post: neon glow
 const composer = new EffectComposer(renderer);
@@ -2020,7 +2035,8 @@ let t = 0;
 let doorOpen = 0;
 let nearest = null;
 const useBtn = document.getElementById('use');
-const useNearest = () => { if (nearest) nearest.target = nearest.target ? 0 : 1; };
+let nearCar = null;
+const useNearest = () => { if (mode === 'drive') return setMode('walk'); if (nearCar) return enterCar(nearCar); if (nearest) nearest.target = nearest.target ? 0 : 1; };
 useBtn.addEventListener('click', useNearest);
 addEventListener('keydown', (e) => { if (e.code === 'KeyE') useNearest(); });
 const amberMats = new Set();
@@ -2033,6 +2049,7 @@ function frame() {
   if (!tickers) { tickers = []; scene.traverse((o) => { if (o.userData && typeof o.userData.tick === 'function') tickers.push(o); }); }
   for (const o of tickers) o.userData.tick(t, dt);
   if (mode === 'walk') walk.update(dt);
+  else if (mode === 'drive') drive.update(dt);
   else if (!window.__lock) orbit.update();
   sky.userData.update(camera, t);
   alien.userData.update(t);
@@ -2065,8 +2082,12 @@ function frame() {
     if (mode === 'walk' && sameFloor && dd < bestD) { best = it; bestD = dd; }
   }
   nearest = best;
-  useBtn.hidden = !best;
-  if (best) useBtn.textContent = `${best.target ? 'Close' : 'Open'} ${best.name} (E)`;
+  nearCar = mode === 'walk' ? drive.nearest(walk.position) : null;
+  if (nearCar && best && bestD < 1.6) nearCar = null;   // a door right next to you wins
+  useBtn.hidden = !best && !nearCar;
+  if (nearCar) useBtn.textContent = `Drive the ${nearCar.userData.driveName} (E)`;
+  else if (best) useBtn.textContent = `${best.target ? 'Close' : 'Open'} ${best.name} (E)`;
+  if (mode === 'drive') useBtn.hidden = true;
   door.userData.setOpen(doorOpen);
   doorCollider.active = doorOpen < 0.7;
   const f = 0.94 + 0.06 * Math.sin(t * 31) * Math.sin(t * 7.3); // subtle neon buzz
@@ -2082,4 +2103,4 @@ window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
   composer.setSize(window.innerWidth, window.innerHeight);
 });
-window.__scene = { scene, camera, walk, setMode, interactables, walkPoles, creep, renderer, streamer };
+window.__scene = { drive, enterCar, scene, camera, walk, setMode, interactables, walkPoles, creep, renderer, streamer };
