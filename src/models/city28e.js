@@ -14,6 +14,7 @@
 //       grey pipe, black wall lamp, a dark plaque, a sandwich board
 // Each faces +z, origin at ground level.
 import * as THREE from 'three';
+import { leafBall } from './trees.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { fitText } from '../fonts.js';
 
@@ -218,7 +219,7 @@ export function makeLotusPond(W = 26, D = 30) {
   }
   // far shore: dark trees, the temple hall, lamp glows, skyline towers with lit windows
   const treeM = std({ color: '#1a2a1e', roughness: 1 });
-  for (let i = 0; i < 26; i++) { const t = new THREE.Mesh(new THREE.IcosahedronGeometry(1.4 + r() * 1.4, 1), treeM); t.position.set(-W / 2 - 2 + i * (W + 4) / 26, 1.6 + r() * 1.2, -D - 1 - r() * 2); t.scale.y = 1.2; g.add(t); }
+  for (let i = 0; i < 26; i++) { const t = leafBall(1.4 + r() * 1.4, i, [0.3, 0.3, 0.16]); t.position.set(-W / 2 - 2 + i * (W + 4) / 26, 1.6 + r() * 1.2, -D - 1 - r() * 2); t.scale.y *= 1.2; g.add(t); }
   // temple hall: raised base, red posts, white walls, two-tier green hip roof with a finial
   const hall = new THREE.Group();
   hall.add(box(5, 0.6, 4, std({ color: '#6a6660' }), 0, 0.3, 0));

@@ -15,6 +15,7 @@
 //   makeBunBag()          a bun in a clear bag with a round sticker   makeStickerPost()   a pole with street stickers
 //   makeMural()           the faded rainbow mural block wall (the photo)
 import * as THREE from 'three';
+import { leafBall } from './trees.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { F, fitText } from '../fonts.js';
 
@@ -75,7 +76,7 @@ export function makeAqueductGarden() {
   for (const [x, z] of [[5.0, 1.0], [6.4, -0.6], [-6.2, 0.6]]) hydrangea(g, x, z, Math.round(x * 5 + z));
   const lan = makeStoneLantern(); lan.position.set(5.6, 0, -2.0); g.add(lan);
   // a slender tree behind
-  const trunk = std({ color: '#5a4a3a' }); cyl(0.08, 0.12, 3.5, trunk, -6, 1.75, -3.8, g, 8); const crown = new THREE.Mesh(new THREE.IcosahedronGeometry(1.4, 1), std({ color: '#3a6a2a', flatShading: true })); crown.position.set(-6, 4, -3.8); crown.castShadow = true; g.add(crown);
+  const trunk = std({ map: tex('bark_oak', 1, 3), roughness: 0.95 }); cyl(0.08, 0.12, 3.5, trunk, -6, 1.75, -3.8, g, 8); const crown = leafBall(1.5, 3, [0.27, 0.42, 0.3]); crown.position.set(-6, 4, -3.8); g.add(crown); for (const [dx, dy, dz] of [[0.9, 0.3, 0.4], [-0.8, 0.5, -0.5], [0.1, 1.0, 0.2]]) { const c2 = leafBall(1.0, dx * 9, [0.25, 0.4, 0.32]); c2.position.set(-6 + dx, 4 + dy, -3.8 + dz); g.add(c2); }
   g.userData.colliders = [[-2.6, -0.6, -2.2, -0.8], [0, 2.0, -2.3, -0.9], [-4.6, 3.6, 0.15, 0.3], [5.3, 5.9, -2.3, -1.7], [-4.7, -3.7, 0.7, 1.1]];
   return g;
 }

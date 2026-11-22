@@ -6,6 +6,7 @@
 //   makeCompactCorner() the whole set: wall + hedge + rock strip + pole + sign + yellow lines + the truck.
 //     Local: wall along x at z = 0 (spaces extend toward +z), origin at the wall's centre.
 import * as THREE from 'three';
+import { leafBall } from './trees.js';
 import { F, fitText } from '../fonts.js';
 
 const _L = new THREE.TextureLoader();
@@ -85,7 +86,7 @@ export function makeCompactCorner({ truck = true } = {}) {
   box(L + 0.1, 0.12, 0.45, std({ map: tex('bp_block', L / 1.2, 1), roughness: 0.95 }), 0, WH + 0.06, -0.12, g);
   // hedge on top
   const hedge = std({ color: '#3a5a2a', roughness: 1 });
-  for (let i = 0; i < 26; i++) { const b = new THREE.Mesh(new THREE.IcosahedronGeometry(0.55 + r() * 0.2, 1), hedge); b.position.set(-L / 2 + 0.3 + i * (L - 0.6) / 25, WH + 0.5, -0.45); b.scale.set(1, 0.9, 0.8); b.castShadow = true; g.add(b); }
+  for (let i = 0; i < 26; i++) { const b = leafBall(0.55 + r() * 0.2, i, [0.27, 0.42, 0.26]); b.position.set(-L / 2 + 0.3 + i * (L - 0.6) / 25, WH + 0.5, -0.45); b.scale.y *= 0.9; b.scale.z *= 0.8; g.add(b); }
   // the sign on the wall, "NO" taped over
   const sign = canvasT(256, 384, (x) => { x.fillStyle = '#f6f6f2'; x.fillRect(0, 0, 256, 384); x.strokeStyle = '#222'; x.lineWidth = 6; x.strokeRect(6, 6, 244, 372); x.fillStyle = '#111';
     fitText(x, 'COMPACT', 128, 62, 220, 64, F.condensed, { spacing: 2 }); fitText(x, 'CARS ONLY', 128, 128, 220, 64, F.condensed, { spacing: 2 });

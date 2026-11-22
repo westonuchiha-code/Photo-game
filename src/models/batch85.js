@@ -4,6 +4,7 @@
 //   b85Mat, makeCookieTower, makeFlyerShelf, makeServiceCounter, makeLaundryGondola, makeWetFloorFolded,
 //   makeConcreteBollard, makeDomedTrashCan, makeBarrelTrashPost, makeSlatBench, makeCreekCrossing
 import * as THREE from 'three';
+import { NORMAL_OF } from '../normals.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { F, fitText } from '../fonts.js';
 
@@ -21,7 +22,7 @@ function sphere(r, mat, x, y, z, p, ws = 16, hs = 12) { const m = new THREE.Mesh
 function canvasT(w, h, draw) { const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d'); draw(x, w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; if (document.fonts) document.fonts.ready.then(() => { draw(x, w, h); t.needsUpdate = true; }); return t; }
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const M4 = new THREE.Matrix4();
-export function b85Mat(name, rx = 1, ry = 1, extra = {}) { return std({ map: tex(name, rx, ry), normalMap: tex(name + '_n', rx, ry, false), roughness: 0.85, ...extra }); }
+export function b85Mat(name, rx = 1, ry = 1, extra = {}) { const o = { map: tex(name, rx, ry), roughness: 0.85, ...extra }; if (NORMAL_OF[name]) o.normalMap = tex(NORMAL_OF[name], rx, ry, false); return std(o); }
 // a printed flyer sheet (weekly ad / coupons / pamphlet) — made-up store "Hearth Market"
 function flyerT(kind, seed) { return canvasT(256, 330, (x, w, h) => { const r = rng(seed);
   if (kind === 'weekly') { x.fillStyle = '#fbfbf8'; x.fillRect(0, 0, w, h); x.fillStyle = '#e8402a'; x.fillRect(0, 0, w, 40); x.fillStyle = '#fff'; fitText(x, 'WEEKLY DEALS', w / 2, 22, w - 30, 26, F.heavy);

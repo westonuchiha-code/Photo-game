@@ -12,6 +12,7 @@
 // Local frame: entrance at the origin, trail runs toward -x; north is -z. Ground y = 0 except the terrace.
 // userData: colliders [[x0,x1,z0,z1]], area {minX..maxZ}, floorY(x, z) -> height or null
 import * as THREE from 'three';
+import { crownSprays, leafBlob } from './trees.js';
 import { F, fitText } from '../fonts.js';
 import { makeBlueCrate } from './grime39.js';
 import { makeSnackPile, makeSodaCan, makeCandyPouch } from './snacks43.js';
@@ -61,14 +62,15 @@ function cedar(r, h, barkMat, canopyMat) {
   const g = new THREE.Group(); const rad = 0.16 + r() * 0.12;
   const t = cyl(rad * 0.55, rad, h, barkMat, g, 10); t.position.y = h / 2;
   // dark, narrow crown high up (layered cones), like the cedar plantations in the photos
-  for (let i = 0; i < 4; i++) { const c = new THREE.Mesh(new THREE.ConeGeometry(1.1 - i * 0.2 + r() * 0.2, 2.2, 7), canopyMat); c.position.y = h - 3.2 + i * 1.1; c.rotation.y = r() * 3; c.castShadow = true; g.add(c); }
+  // (polish: the crown is needle sprays from the spruce photo, three shared variants, instead of flat green cones)
+  { const cs = crownSprays(1 + Math.floor(r() * 3), 5.5, 1.5); const c = new THREE.Mesh(cs.geo, cs.mat); c.position.y = h - 4.6; c.rotation.y = r() * 6.28; c.scale.setScalar(0.9 + r() * 0.3); c.castShadow = true; g.add(c); }
   return g;
 }
 function thinTree(r, h, barkMat, leafMat) {
   const g = new THREE.Group(); const lean = (r() - 0.5) * 0.25;
   const pts = [new THREE.Vector3(0, 0, 0), new THREE.Vector3(lean * 1.5, h * 0.4, 0.1), new THREE.Vector3(lean * 3, h * 0.75, -0.1), new THREE.Vector3(lean * 3.5, h, 0)];
   tube(pts, 0.07 + r() * 0.04, barkMat, g, 16);
-  for (let i = 0; i < 4; i++) { const b = new THREE.Mesh(new THREE.IcosahedronGeometry(0.9 + r() * 0.6, 1), leafMat); b.position.set(lean * 3 + (r() - 0.5) * 1.6, h * (0.75 + r() * 0.3), (r() - 0.5) * 1.6); b.scale.y = 0.6; b.castShadow = true; g.add(b); }
+  for (let i = 0; i < 4; i++) { const lb = leafBlob(1 + (i % 3)); const b = new THREE.Mesh(lb.geo, lb.mat); b.position.set(lean * 3 + (r() - 0.5) * 1.6, h * (0.75 + r() * 0.3), (r() - 0.5) * 1.6); b.scale.setScalar(1.1 + r() * 0.7); b.scale.y *= 0.7; b.rotation.y = r() * 6.28; b.castShadow = true; g.add(b); }
   return g;
 }
 // ---- signs
@@ -109,7 +111,7 @@ export function makeTrail() {
   ribbon([[-17.5, -12.6], [-17.8, -15.5], [-17.2, -18.5], [-16.2, -21.5], [-15.5, -24.5]], 1.6, std({ map: tex('tr_gravel', 1, 1) }), 0.009, g, 2);      // gravel spur to the junk
   // ---- cedar stand + thin trees (kept off the trail), ferns, fallen leaves
   const bark = std({ map: tex('tr_cedar', 1, 3), roughness: 0.95 }), canopy = std({ color: '#1f3a22', roughness: 1 });
-  const thinBark = std({ color: '#5a4a3a', roughness: 0.9 }), leaves = std({ color: '#4a6a30', roughness: 1 });
+  const thinBark = std({ map: tex('bark_pale', 1, 4), color: '#9a8a7a', roughness: 0.9 }), leaves = std({ color: '#4a6a30', roughness: 1 });
   const nearTrail = (x, z, d) => trailPts.some(([px, pz]) => Math.hypot(px - x, pz - z) < d);
   let placed = 0;
   for (let i = 0; i < 160 && placed < 46; i++) {
@@ -140,7 +142,7 @@ export function makeTrail() {
   const GC = [-9, -1.2];
   const big = cyl(0.75, 1.15, 26, std({ map: tex('tr_cedar', 3, 6), roughness: 0.95 }), g, 24); big.position.set(GC[0], 13, GC[1]);
   for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2; tube([new THREE.Vector3(GC[0] + Math.cos(a) * 0.9, 0.9, GC[1] + Math.sin(a) * 0.9), new THREE.Vector3(GC[0] + Math.cos(a) * 1.5, 0.25, GC[1] + Math.sin(a) * 1.5), new THREE.Vector3(GC[0] + Math.cos(a) * 1.9, 0.02, GC[1] + Math.sin(a) * 1.9)], 0.14, std({ color: '#5a4030' }), g, 10); }
-  for (let k = 0; k < 4; k++) { const c = new THREE.Mesh(new THREE.ConeGeometry(2.6 - k * 0.4, 3.4, 9), canopy); c.position.set(GC[0], 21 + k * 1.6, GC[1]); g.add(c); }
+  { const cs = crownSprays(7, 8, 3.2); const c = new THREE.Mesh(cs.geo, cs.mat); c.position.set(GC[0], 19.5, GC[1]); c.scale.setScalar(1.5); g.add(c); }
   const rope = new THREE.Mesh(new THREE.TorusGeometry(1.0, 0.05, 8, 40), std({ color: '#c8b07a' })); rope.rotation.x = Math.PI / 2; rope.position.set(GC[0], 2.2, GC[1]); g.add(rope);
   const shideM = std({ color: '#f6f4ee', side: THREE.DoubleSide, roughness: 0.8 });
   for (let k = 0; k < 4; k++) {

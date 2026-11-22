@@ -4,6 +4,7 @@
 //   b84Mat, makeFireHydrant, makeWallPack, makeSteelDoor, makeWornBollard, makeCakeSlice, makeCakeTable, makeStump,
 //   makeBarkTree
 import * as THREE from 'three';
+import { leafBall } from './trees.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { F, fitText } from '../fonts.js';
 
@@ -156,7 +157,7 @@ export function makeBarkTree(kind = 'shaggy', seed = 1, H = 6) {
   const tr = new THREE.Mesh(new THREE.LatheGeometry(pr, 18), bark); tr.castShadow = true; g.add(tr);
   const tops = []; for (let k = 0; k < 3; k++) { const a = k * 2.1 + r(); const end = V(Math.cos(a) * 1.4, H * 0.85, Math.sin(a) * 1.4); rod(V(0, H * 0.55, 0), end, 0.08, bark, g, 10); tops.push(end); }
   const leaf = std({ color: '#5a7a3a', roughness: 0.9, flatShading: true }), leaf2 = std({ color: '#7a8a3a', roughness: 0.9, flatShading: true });
-  for (const t of [...tops, V(0, H * 0.95, 0)]) for (let i = 0; i < 4; i++) { const c = new THREE.Mesh(new THREE.IcosahedronGeometry(0.9 + r() * 0.5, 1), i % 2 ? leaf : leaf2); c.position.set(t.x + (r() - 0.5) * 1.2, t.y + (r() - 0.3) * 0.8, t.z + (r() - 0.5) * 1.2); c.scale.y = 0.75; c.castShadow = true; g.add(c); }
+  for (const t of [...tops, V(0, H * 0.95, 0)]) for (let i = 0; i < 4; i++) { const c = leafBall(0.9 + r() * 0.5, i + t.x * 7, i % 2 ? [0.24, 0.38, 0.34] : [0.19, 0.42, 0.36]); c.position.set(t.x + (r() - 0.5) * 1.2, t.y + (r() - 0.3) * 0.8, t.z + (r() - 0.5) * 1.2); c.scale.y *= 0.75; g.add(c); }
   g.userData.collider = [-0.3, 0.3, -0.3, 0.3];
   return g;
 }

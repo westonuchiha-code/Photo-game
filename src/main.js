@@ -6,6 +6,7 @@
 import * as THREE from 'three';
 import { makeStreamer, mergeStatic } from './stream.js';
 import { autoNormals } from './normals.js';
+import { applyFinishes } from './finishes.js';
 import { makeCar, LIVERIES, carEnv } from './vehicle/carbody.js';
 import { makeDriver } from './drive.js';
 import { finishLoading } from './loading.js';
@@ -212,12 +213,15 @@ add(plaque);
 // ------------------------------------------------------------------ outside (night)
 const outside = new THREE.Group();
 // Ground plane in 4 pieces around the parking-ramp opening (x 13..17, z -23..-9).
-const pavementMat = new THREE.MeshStandardMaterial({ color: '#2a2c30', roughness: 0.9 });
+// (polish: the old town's base ground is worn asphalt from the street photo, not a flat dark colour)
+const pavementTex = new THREE.TextureLoader().load('assets/textures/city_asphalt.png'); pavementTex.colorSpace = THREE.SRGBColorSpace; pavementTex.wrapS = pavementTex.wrapT = THREE.RepeatWrapping; pavementTex.anisotropy = 8;
+const pavementMat = new THREE.MeshStandardMaterial({ map: pavementTex, color: '#c4c6c8', roughness: 0.92 });
 const pavement = new THREE.Group();
 // (the Elmwood footprint, world x 52..62 z -8..6, is left open so its garden-level floor isn't capped)
 // (and the underground-mall stair well, world x 0.2..3.8 z 50.9..58.7)
 for (const [a, b, c, d] of [[-80, 0.2, -120, 80], [3.8, 13, -120, 80], [0.2, 3.8, -120, 50.9], [0.2, 3.8, 58.7, 80], [17, 52, -120, 80], [62, 120, -120, 80], [52, 62, -120, -8], [52, 62, 6, 80], [13, 17, -120, -23], [13, 17, -9, 80]]) {
-  const m = new THREE.Mesh(new THREE.PlaneGeometry(b - a, d - c), pavementMat);
+  const pg = new THREE.PlaneGeometry(b - a, d - c); { const uv = pg.attributes.uv, pp = pg.attributes.position; for (let i = 0; i < uv.count; i++) uv.setXY(i, (pp.getX(i) + (a + b) / 2) / 3, (pp.getY(i) - (c + d) / 2) / 3); }   // world-scale tiling (3 m)
+  const m = new THREE.Mesh(pg, pavementMat);
   m.rotation.x = -Math.PI / 2;
   m.position.set((a + b) / 2, 0, (c + d) / 2);
   m.receiveShadow = true;
@@ -1481,6 +1485,7 @@ const dnAreas = [...dentist.userData.areas, ...wing.userData.areas].map((a) => {
 
 console.log('T districtsites', Math.round(performance.now()));
 window.__texPhase = 'core';
+const qs0 = new URLSearchParams(location.search);
 const walk = new WalkControls(camera, renderer.domElement, {
   bounds: null,
   areas: [
@@ -1532,7 +1537,9 @@ const walk = new WalkControls(camera, renderer.domElement, {
 });
 // ---- driving: modelled, drivable cars parked on the district streets (third-person; see drive.js + vehicle/carbody.js)
 const drive = makeDriver({ scene, camera, areas: walk.areas, colliders, pads: roads.userData.pads, ground: (x, z) => roads.userData.groundY(x, z) ?? district.userData.floorY(x, z) ?? 0 });
-carEnv(renderer);
+// polish: the same soft studio environment gives every metal + glossy surface in town something to reflect (chrome,
+// steel, glass, glazed tile were near-black at night without it); kept low so the night mood stays
+scene.environment = carEnv(renderer); scene.environmentIntensity = +(qs0.get('env') ?? 0.1);
 for (const [type, opt, x, z, h] of [
   ['hatch', { color: '#b3242a', name: 'red hatch', plate: 'ELM 2K7' }, 71.4, 14.5, 0],
   ['kei', { color: '#a8d6c6', roofColor: '#f2f0ea', rim: 'steel', name: 'mint kei car', plate: 'ELM 55K', metal: 0.2 }, 71.4, 21.0, 0],
@@ -2004,6 +2011,7 @@ function updateLightBudget() {
   sorted.forEach((l, i) => { l.visible = i < MAX_LIGHTS; });
 }
 // polish: every colour map that has a normal map on file gets it (see normals.js)
+if (!qs0.has('nofinish')) console.log('surface finishes:', JSON.stringify(applyFinishes(scene)));
 console.log('auto normal maps:', autoNormals(scene));
 // streaming step 1: hide what's too far away to matter (see stream.js); runs with the light budget
 { // step 1b: merge every static district set's meshes by material (see stream.js). Everything added after item 57 is
@@ -2116,4 +2124,4 @@ window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
   composer.setSize(window.innerWidth, window.innerHeight);
 });
-window.__scene = { composer, drive, enterCar, scene, camera, walk, setMode, interactables, walkPoles, creep, renderer, streamer };
+window.__scene = { refresh: () => { streamer.update(camera.position); updateLightBudget(); }, composer, drive, enterCar, scene, camera, walk, setMode, interactables, walkPoles, creep, renderer, streamer };

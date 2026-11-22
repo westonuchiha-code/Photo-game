@@ -12,6 +12,7 @@
 //   makePaverTexture()   tan/beige brick pavers with scattered coloured accents and grey bands
 // Everything faces +z, origin at ground level.
 import * as THREE from 'three';
+import { leafBall } from './trees.js';
 
 const _L = new THREE.TextureLoader();
 function ptex(name, rx = 1, ry = 1) {
@@ -293,13 +294,13 @@ export function makePlanter(w = 3, d = 2, seed = 1) {
   g.add(box(w - 0.36, 0.02, d - 0.36, soil, 0, h - 0.05, 0));
   const leaf = ['#3f6f34', '#4f7f3a', '#2f5a2a', '#5f8a42'];
   for (let i = 0; i < Math.round(w * d * 2.2); i++) {
-    const s = new THREE.Mesh(new THREE.IcosahedronGeometry(0.18 + r() * 0.16, 1), std({ color: leaf[Math.floor(r() * 4)], roughness: 1, flatShading: true }));
-    s.position.set((r() - 0.5) * (w - 0.6), h + 0.08 + r() * 0.1, (r() - 0.5) * (d - 0.6)); s.scale.y = 0.75; g.add(s);
+    const s = leafBall(0.18 + r() * 0.16, Math.floor(r() * 40), [0.26 + r() * 0.05, 0.4, 0.3 + r() * 0.08]);
+    s.position.set((r() - 0.5) * (w - 0.6), h + 0.08 + r() * 0.1, (r() - 0.5) * (d - 0.6)); s.scale.y *= 0.75; g.add(s);
   }
   // small tree
   const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.09, 2.4, 8), std({ color: '#5a4a3a' })); trunk.position.set(0, h + 1.2, 0); g.add(trunk);
   for (let i = 0; i < 9; i++) {
-    const c = new THREE.Mesh(new THREE.IcosahedronGeometry(0.55 + r() * 0.35, 1), std({ color: leaf[Math.floor(r() * 4)], roughness: 1, flatShading: true }));
+    const c = leafBall(0.55 + r() * 0.35, Math.floor(r() * 40), [0.26 + r() * 0.05, 0.4, 0.3 + r() * 0.08]);
     c.position.set((r() - 0.5) * 1.6, h + 2.4 + r() * 1.0, (r() - 0.5) * 1.6); g.add(c);
   }
   g.userData.collider = [-w / 2, w / 2, -d / 2, d / 2];

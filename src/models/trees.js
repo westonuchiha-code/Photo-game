@@ -455,3 +455,37 @@ export function spruceParts(seed = 3, height = 9) {
   const leafMat = new THREE.MeshStandardMaterial({ map: tex('spruce_spray.png'), alphaTest: 0.35, side: THREE.DoubleSide, roughness: 0.85, vertexColors: true });
   return (_streetParts[key] = { barkGeo: mergeGeometries(geos, false), barkMat: barkMat('spruce'), leafGeo: mergeGeometries(quads, false), leafMat });
 }
+// a conifer crown made of needle-spray cards (for tall cedars: goes on top of a bare trunk). Origin at the crown's
+// base; `h` tall, `rad` wide at the bottom. Returns { geo, mat } (vertex-coloured, shared material).
+let _sprayMat = null;
+export function crownSprays(seed = 1, h = 5, rad = 1.5) {
+  const key = `crown${seed}|${h}|${rad}`; if (_streetParts[key]) return _streetParts[key];
+  const r = rng(seed), quads = [], col = new THREE.Color(), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), s = new THREE.Vector3(), p = new THREE.Vector3();
+  for (let y = 0; y < h; y += 0.42) {
+    const f = 1 - y / h, L = 0.35 + rad * f, n = 5 + Math.round(4 * f);
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2 + r() * 0.8, sc = (0.8 + 1.0 * f) * (0.8 + r() * 0.4);
+      p.set(Math.cos(a) * L * 0.25, y + r() * 0.2, Math.sin(a) * L * 0.25);
+      q.setFromEuler(new THREE.Euler(r() * 0.5 - 0.25, -a, -0.3 - r() * 0.45, 'YXZ'));
+      const pg = new THREE.PlaneGeometry(1, 0.5); pg.translate(0.42, 0, 0); pg.applyMatrix4(m4.compose(p, q, s.set(sc * 1.25, sc * 1.25, 1)));
+      col.setHSL(0.38, 0.28 + r() * 0.12, 0.2 + r() * 0.12); pg.setAttribute('color', new THREE.Float32BufferAttribute(new Array(4).fill([col.r, col.g, col.b]).flat(), 3)); quads.push(pg);
+    }
+  }
+  _sprayMat = _sprayMat || new THREE.MeshStandardMaterial({ map: tex('spruce_spray.png'), alphaTest: 0.35, side: THREE.DoubleSide, roughness: 0.85, vertexColors: true });
+  return (_streetParts[key] = { geo: mergeGeometries(quads, false), mat: _sprayMat });
+}
+// a leafy mass of clustered leaf cards (for small trees + shrubs): unit radius, scale the mesh. { geo, mat }
+export function leafBlob(seed = 1, tint = [0.25, 0.4, 0.3]) {
+  const key = `blob${seed}|${tint}`; if (_streetParts[key]) return _streetParts[key];
+  const r = rng(seed), quads = [], col = new THREE.Color(), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), s = new THREE.Vector3(), p = new THREE.Vector3();
+  for (let i = 0; i < 30; i++) {
+    const a = r() * 6.28, u = r() * 2 - 1, d = 0.45 + r() * 0.5, sr = Math.sqrt(1 - u * u); p.set(Math.cos(a) * sr * d, u * d * 0.8, Math.sin(a) * sr * d);
+    q.setFromEuler(new THREE.Euler((r() - 0.5) * 2, r() * 6.28, (r() - 0.5) * 2)); const k = 0.7 + r() * 0.5;
+    const pg = new THREE.PlaneGeometry(1, 1.1); pg.applyMatrix4(m4.compose(p, q, s.set(k, k, k)));
+    col.setHSL(tint[0] + (r() - 0.5) * 0.05, tint[1] + (r() - 0.5) * 0.15, tint[2] + (r() - 0.5) * 0.14); pg.setAttribute('color', new THREE.Float32BufferAttribute(new Array(4).fill([col.r, col.g, col.b]).flat(), 3)); quads.push(pg);
+  }
+  return (_streetParts[key] = { geo: mergeGeometries(quads, false), mat: new THREE.MeshStandardMaterial({ map: leafClumpTex(), alphaTest: 0.45, side: THREE.DoubleSide, roughness: 0.9, vertexColors: true }) });
+}
+// drop-in for the old flat-shaded foliage balls: a Mesh of leaf cards with the given radius
+export function leafBall(radius = 1, seed = 1, tint = [0.25, 0.4, 0.3]) { tint = tint.map((v) => Math.round(v / 0.04) * 0.04);   // (a few shared tints, not one material per ball)
+  const lb = leafBlob(1 + (Math.abs(Math.floor(seed)) % 4), tint); const m = new THREE.Mesh(lb.geo, lb.mat); m.scale.setScalar(radius * 1.25); m.rotation.y = seed * 2.4; m.castShadow = true; return m; }
