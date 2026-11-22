@@ -17,7 +17,9 @@ import { shrinkCanvases } from './texcache.js';
 import { makeTrail } from './models/trail40.js';
 import { makeMossCreature, makeMossMound } from './models/creature55.js';
 import { makeThriftCorner } from './models/fabrics56.js';
-import { makeDistrict } from './models/district.js';
+import { makeDistrict, GRID } from './models/district.js';
+import { placeStreetServices, makeATM } from './models/street92.js';
+import { instanceGroup } from './models/kit.js';
 import { makeRoads } from './models/roads.js';
 import { makeCommunityGarden } from './models/garden87.js';
 import { makeFurnitureShowroom } from './models/furniture88.js';
@@ -1321,6 +1323,10 @@ for (const [x, z] of district.userData.lampPosts) circle(x, z, 0.18);
 for (const [x, z] of district.userData.treePosts) circle(x, z, 0.25);
 // driving round 3: Elm Loop round the district + the Loop Jump Lot (ramps, boost pads)
 const roads = makeRoads(); add(roads); colliders.push(...roads.userData.colliders);
+// 92 street services along the district streets: traffic lights, bus stops, phone booths, mailboxes, benches, bins,
+// news stands (instanced: see street92.js)
+const svc = placeStreetServices({ grid: GRID, sidewalkY: district.userData.sidewalkY }); scene.add(svc.group); colliders.push(...svc.colliders);
+console.log('street services:', JSON.stringify(svc.group.userData.counts));
 console.log('T districtgrid', Math.round(performance.now()));
 window.__texPhase = 'district';   // (tools/record_zones.js: textures first requested from here are district-only)
 const DISTRICT_FROM = room.children.length;   // (streaming: everything added from here on is static district content)
@@ -1578,6 +1584,9 @@ scene.environment = carEnv(renderer); scene.environmentIntensity = +(qs0.get('en
 // before this, so they can't drive into buildings.)
 const interiors = makeInteriors({ scene, district, colliders, areas: walk.areas });
 console.log('interiors:', JSON.stringify(interiors.stats()));
+{ // cash machines in the wall beside the door of every fourth office building
+  const at = interiors.list.filter((e) => e.type === 'office').filter((_, i) => i % 4 === 0).map((e) => { const [x, z] = e.W(e.doorX + 1.3, -0.045); return { x, y: district.userData.sidewalkY, z, ry: e.th + Math.PI }; });
+  if (at.length) scene.add(instanceGroup(makeATM(), at)); }
 for (const [type, opt, x, z, h] of [
   ['hatch', { color: '#b3242a', name: 'red hatch', plate: 'ELM 2K7' }, 71.4, 14.5, 0],
   ['kei', { color: '#a8d6c6', roofColor: '#f2f0ea', rim: 'steel', name: 'mint kei car', plate: 'ELM 55K', metal: 0.2 }, 71.4, 21.0, 0],
@@ -1927,6 +1936,9 @@ const VIEWS = {
   glasshousein: { pos: [142.6, 1.6, 194.5], target: [138.0, 1.0, 194.3] },
   gardenshed: { pos: [147.6, 1.7, 196.6], target: [150.1, 1.2, 200.4] },
   gardenbeds: { pos: [143.5, 2.2, 196.8], target: [139.5, 0.4, 200.6] },
+  busstop: { pos: [118.0, 2.4, 79.5], target: [118.0, 1.2, 90.5] },
+  trafficlights: { pos: [150.0, 4.5, 96.0], target: [161.0, 3.5, 84.0] },
+  streetcorner: { pos: [133.0, 2.2, 82.5], target: [140.0, 1.0, 77.0] },
   elmloop: { pos: [300, 20, 236], target: [345, 0, 208] },
   loopeast: { pos: [440, 10, -110], target: [462, 0, -70] },
   jumplot: { pos: [478, 18, -46], target: [520, 1, 0] },
