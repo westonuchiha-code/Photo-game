@@ -1791,7 +1791,7 @@ const VIEWS = {
   warehouse2: { pos: [282, 1.8, 102.5], target: [293, 1.2, 112] },
   tvboxes: { pos: [302, 1.7, 104.5], target: [305.5, 0.9, 109] },
   breaktable: { pos: [274.4, 1.5, 100.4], target: [276, 0.8, 99] },
-  gallery: { pos: [344, 1.75, 10.6], target: [344, 1.6, 17.9] },
+  gallery: { pos: [340.3, 1.75, 9.0], target: [346.5, 1.5, 16.5] },
   gallery2: { pos: [341.8, 1.55, 11.9], target: [339.4, 0.85, 10.0] },
   galleryfront: { pos: [344, 2.2, -3.0], target: [344, 2.6, 8] },
   canal: { pos: [214.2, 2.4, -15.6], target: [225, 0.4, -19.8] },
@@ -1849,7 +1849,7 @@ const VIEWS = {
   realty: { pos: [RW.x + 0.4, 1.7, RW.z + 3.6], target: [RW.x, 1.8, RW.z] },
   carts: { pos: [14.0, 1.7, -19.6], target: [14.0, 0.5, -22.3] },
   badparker: { pos: [BP.x + 9.0, 2.0, BP.z - 4.6], target: [BP.x + 3.0, 1.0, BP.z - 1.6] },
-  ebike: { pos: [-20.4, 1.5, 44.2], target: [-20.9, 0.5, 41.0] },
+  ebike: { pos: [-20.15, 1.2, 42.9], target: [-20.95, 0.5, 41.05] },
   pawnart: { pos: [58.4, 1.6, -27.4], target: [58.4, 1.6, -30] },
   rose: { pos: [3.6, 1.4, Z0 + 1.1], target: [3.2, 1.25, Z0 + 0.3] },
   decor: { pos: [1.4, 1.6, 16.2], target: [-0.6, 1.1, 14.4] },
@@ -2049,6 +2049,21 @@ if (!qs0.has('nomergeold')) {
   room.add(loose); { const r = mergeStatic(loose); before += r.before; after += r.after; }
   console.log('merge old town', Math.round(performance.now() - t0), 'ms:', before, '->', after, 'meshes;', movers, 'moving meshes left alone');
 }
+// polish: a soft pool of light on the ground under every outdoor lamp, always there (the real lights are budgeted
+// to the nearest few, so streets away from them went black). Outdoor = nothing overhead. One instanced draw.
+{ const t0 = performance.now(), rc = new THREE.Raycaster(), up = new THREE.Vector3(0, 1, 0), wp = new THREE.Vector3(), solids = [];
+  room.traverse((o) => { if (o.isMesh && !o.isInstancedMesh && o.visible) solids.push(o); });
+  const spots = [];
+  for (const l of pointLights) { l.getWorldPosition(wp); if (wp.y < 2.2 || wp.y > 9 || l.intensity < 2) continue;
+    rc.set(wp.clone().add(up.clone().multiplyScalar(0.6)), up); rc.far = 40; if (rc.intersectObjects(solids, false).length) continue;
+    const gy = walk.ground(wp.x, wp.z, 0); if (wp.y - gy < 2) continue; spots.push([wp.x, gy + 0.035, wp.z, Math.min(6, 1.2 + wp.y * 0.75), l.color]); }
+  if (spots.length) { const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'); const gr = x.createRadialGradient(64, 64, 0, 64, 64, 64); gr.addColorStop(0, 'rgba(255,255,255,0.5)'); gr.addColorStop(0.5, 'rgba(255,255,255,0.18)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = gr; x.fillRect(0, 0, 128, 128);
+    const geo = new THREE.CircleGeometry(1, 28); geo.rotateX(-Math.PI / 2);
+    const pools = new THREE.InstancedMesh(geo, new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, polygonOffset: true, polygonOffsetFactor: -4 }), spots.length);
+    const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), col = new THREE.Color();
+    spots.forEach(([x0, y0, z0, r, lc], i) => { pools.setMatrixAt(i, m4.compose(new THREE.Vector3(x0, y0, z0), q, new THREE.Vector3(r, 1, r))); pools.setColorAt(i, col.copy(lc).multiplyScalar(0.55)); });
+    pools.name = 'lamp_pools'; pools.frustumCulled = false; pools.renderOrder = 1; scene.add(pools); }
+  console.log('lamp pools:', spots.length, Math.round(performance.now() - t0), 'ms'); }
 const streamer = makeStreamer(scene, { phone: IS_PHONE });
 console.log('T streamer', Math.round(performance.now()));
 streamer.update(camera.position);

@@ -25,7 +25,7 @@ function mats() {
   MATS.black = new THREE.MeshStandardMaterial({ color: '#0c0c0e', roughness: 0.55 });
   MATS.trim = new THREE.MeshStandardMaterial({ color: '#16171a', roughness: 0.4, metalness: 0.2 });
   MATS.chrome = envd(new THREE.MeshStandardMaterial({ color: '#e8ecf0', metalness: 1, roughness: 0.18 }), 0.45);
-  MATS.steel = envd(new THREE.MeshStandardMaterial({ map: tex('b86_stainless', 0.3, 0.3), color: '#c8ccd0', metalness: 0.85, roughness: 0.3 }), 0.8);
+  MATS.steel = envd(new THREE.MeshStandardMaterial({ map: tex('b86_stainless', 0.3, 0.3), color: '#aed8f4', metalness: 0.7, roughness: 0.3 }), 0.8);
   MATS.alloy = envd(new THREE.MeshStandardMaterial({ color: '#b8bcc2', metalness: 0.9, roughness: 0.28 }), 0.9);
   MATS.darkAlloy = envd(new THREE.MeshStandardMaterial({ color: '#3a3c40', metalness: 0.85, roughness: 0.32 }), 0.8);
   MATS.disc = new THREE.MeshStandardMaterial({ color: '#6a6c70', metalness: 0.8, roughness: 0.45 });

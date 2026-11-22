@@ -264,7 +264,7 @@ export function makeWetFloorStanding() {
 }
 // brushed stainless wall panels (2 x 1.2 m): seams with a stapled tape strip, one panel torn and taped
 export function makeStainlessWall(L = 4.8, H = 2.4) {
-  const g = new THREE.Group(); g.name = 'stainless_wall'; const m = b86Mat('b86_stainless', L / 1.2, H / 2.4, { metalness: 0.75, roughness: 0.32 });
+  const g = new THREE.Group(); g.name = 'stainless_wall'; const m = b86Mat('b86_stainless', L / 1.2, H / 2.4, { metalness: 0.25, roughness: 0.3 }); m.color.setRGB(1.3, 1.62, 1.84);   // (the photo was taken under warm light: cooled back to steel, and less mirror so it doesn't go dark at night)
   box(L, H, 0.03, m, 0, H / 2, 0, g);
   for (let x = -L / 2 + 1.2; x < L / 2 - 0.1; x += 1.2) { box(0.004, H, 0.002, std({ color: '#5a5e62' }), x, H / 2, 0.016, g);
     if (Math.abs(x) < 0.7) for (let i = 0; i < 26; i++) box(0.025, 0.0025, 0.002, std({ color: '#d8dce0', metalness: 0.9 }), x + (i % 2 ? 0.003 : -0.003), 0.15 + i * 0.085, 0.018, g); }

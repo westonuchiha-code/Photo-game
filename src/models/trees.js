@@ -446,7 +446,7 @@ export function spruceParts(seed = 3, height = 9) {
         const sc = (0.9 + 1.5 * f) * (1.25 - 0.5 * t);
         q.setFromEuler(new THREE.Euler(r() * 0.6 - 0.3, -a + (r() - 0.5) * 1.2, -0.25 - r() * 0.4, 'YXZ'));
         const pg = new THREE.PlaneGeometry(1, 0.5); pg.translate(0.4, 0, 0); pg.applyMatrix4(m4.compose(p, q, s.set(sc * 1.3, sc * 1.3, 1)));
-        col.setHSL(0.4, 0.22 + r() * 0.14, 0.26 + r() * 0.16); pg.setAttribute('color', new THREE.Float32BufferAttribute(new Array(4).fill([col.r, col.g, col.b]).flat(), 3)); quads.push(pg);
+        col.setHSL(0.4, 0.24 + r() * 0.14, 0.34 + r() * 0.16).multiplyScalar(1.5); pg.setAttribute('color', new THREE.Float32BufferAttribute(new Array(4).fill([col.r, col.g, col.b]).flat(), 3)); quads.push(pg);
       }
     }
   }
@@ -468,7 +468,7 @@ export function crownSprays(seed = 1, h = 5, rad = 1.5) {
       p.set(Math.cos(a) * L * 0.25, y + r() * 0.2, Math.sin(a) * L * 0.25);
       q.setFromEuler(new THREE.Euler(r() * 0.5 - 0.25, -a, -0.3 - r() * 0.45, 'YXZ'));
       const pg = new THREE.PlaneGeometry(1, 0.5); pg.translate(0.42, 0, 0); pg.applyMatrix4(m4.compose(p, q, s.set(sc * 1.25, sc * 1.25, 1)));
-      col.setHSL(0.38, 0.28 + r() * 0.12, 0.2 + r() * 0.12); pg.setAttribute('color', new THREE.Float32BufferAttribute(new Array(4).fill([col.r, col.g, col.b]).flat(), 3)); quads.push(pg);
+      col.setHSL(0.38, 0.28 + r() * 0.12, 0.3 + r() * 0.14).multiplyScalar(1.6); pg.setAttribute('color', new THREE.Float32BufferAttribute(new Array(4).fill([col.r, col.g, col.b]).flat(), 3)); quads.push(pg);
     }
   }
   _sprayMat = _sprayMat || new THREE.MeshStandardMaterial({ map: tex('spruce_spray.png'), alphaTest: 0.35, side: THREE.DoubleSide, roughness: 0.85, vertexColors: true });
@@ -489,3 +489,16 @@ export function leafBlob(seed = 1, tint = [0.25, 0.4, 0.3]) {
 // drop-in for the old flat-shaded foliage balls: a Mesh of leaf cards with the given radius
 export function leafBall(radius = 1, seed = 1, tint = [0.25, 0.4, 0.3]) { tint = tint.map((v) => Math.round(v / 0.04) * 0.04);   // (a few shared tints, not one material per ball)
   const lb = leafBlob(1 + (Math.abs(Math.floor(seed)) % 4), tint); const m = new THREE.Mesh(lb.geo, lb.mat); m.scale.setScalar(radius * 1.25); m.rotation.y = seed * 2.4; m.castShadow = true; return m; }
+// a low spreading conifer shrub (juniper): needle sprays fanning out from the centre in a mound ~1 m across. { geo, mat }
+export function sprayMound(seed = 1) {
+  const key = 'mound' + seed; if (_streetParts[key]) return _streetParts[key];
+  const r = rng(seed * 13 + 2), quads = [], col = new THREE.Color(), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), s = new THREE.Vector3(), p = new THREE.Vector3();
+  for (let i = 0; i < 80; i++) {
+    const a = r() * 6.28, lift = 0.05 + r() * 0.6, sc = 0.4 + r() * 0.28;
+    p.set(Math.cos(a) * 0.05, 0.04 + r() * 0.1, Math.sin(a) * 0.05); q.setFromEuler(new THREE.Euler(r() * 0.8 - 0.4, -a, lift, 'YXZ'));
+    const pg = new THREE.PlaneGeometry(1, 0.5); pg.translate(0.45, 0, 0); pg.applyMatrix4(m4.compose(p, q, s.set(sc, sc, 1)));
+    col.setHSL(0.33, 0.35 + r() * 0.12, 0.5 + r() * 0.2).multiplyScalar(2.4); pg.setAttribute('color', new THREE.Float32BufferAttribute(new Array(4).fill([col.r, col.g, col.b]).flat(), 3)); quads.push(pg);
+  }
+  _sprayMat = _sprayMat || new THREE.MeshStandardMaterial({ map: tex('spruce_spray.png'), alphaTest: 0.35, side: THREE.DoubleSide, roughness: 0.85, vertexColors: true });
+  return (_streetParts[key] = { geo: mergeGeometries(quads, false), mat: _sprayMat });
+}

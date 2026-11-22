@@ -12,11 +12,11 @@ import { NORMAL_OF } from './normals.js';
 
 // average linear colour of each finish texture (tools: mean of the PNG in linear space) + tile size in metres
 const FIN = {
-  plaster: { tex: 'sg_plaster', avg: [0.547, 0.547, 0.510], tile: 2.4 },
+  plaster: { tex: 'sg_plaster', avg: [0.547, 0.547, 0.510], tile: 2.4, soft: 0.4 },
   concrete: { tex: 'lot_concrete', avg: [0.303, 0.295, 0.269], tile: 3 },
   gravel: { tex: 'b83_gravel', avg: [0.461, 0.378, 0.293], tile: 3 },
   ceiling: { tex: 'b82_speckle', avg: [0.439, 0.390, 0.367], tile: 1.2 },
-  stucco: { tex: 'tx_stucco', avg: [0.543, 0.463, 0.315], tile: 2.5 },
+  stucco: { tex: 'tx_stucco', avg: [0.543, 0.463, 0.315], tile: 2.5, soft: 0.6 },
   plank: { tex: 'wd_plank_a', avg: [0.202, 0.087, 0.032], tile: 1.6 },
 };
 // place-specific picks: '<set name>#<hex colour>' -> finish
@@ -28,6 +28,15 @@ const OVERRIDE = {
 };
 const SKIP_SET = /^car_|bus|train|truck|scooter|night_sky|city_district|elm_loop|street_trees|creep|alien|cat_|moss_|clean_bot|patrol|van$/;
 const _L = new THREE.TextureLoader(), _tex = {};
+// a quieter copy of a texture: its contrast pulled toward its own average (paint over plaster, not raw plaster)
+function softTex(name, avg, keep = 0.45) {
+  const k = name + '|soft'; if (_tex[k]) return _tex[k];
+  const c = document.createElement('canvas'); c.width = c.height = 512; const x = c.getContext('2d'); const toS = (v) => Math.round(255 * (v <= 0.0031308 ? v * 12.92 : 1.055 * Math.pow(v, 1 / 2.4) - 0.055));
+  const fill = `rgb(${toS(avg[0])},${toS(avg[1])},${toS(avg[2])})`; x.fillStyle = fill; x.fillRect(0, 0, 512, 512);
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8; t.colorSpace = THREE.SRGBColorSpace; t.name = name + '_soft';
+  const img = new Image(); img.onload = () => { x.globalAlpha = 1; x.drawImage(img, 0, 0, 512, 512); x.globalAlpha = 1 - keep; x.fillStyle = fill; x.fillRect(0, 0, 512, 512); x.globalAlpha = 1; t.needsUpdate = true; }; img.src = `assets/textures/${name}.png`;
+  return (_tex[k] = t);
+}
 function tex(name, color) { const k = name; if (!_tex[k]) { const t = _L.load(`assets/textures/${name}.png`); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8; if (color) t.colorSpace = THREE.SRGBColorSpace; _tex[k] = t; } return _tex[k]; }
 const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _c = new THREE.Vector3(), _s = new THREE.Vector3(), _q = new THREE.Quaternion(), _p = new THREE.Vector3();
 
@@ -64,7 +73,7 @@ export function applyFinishes(root) {
         if (fin === undefined) { m.color.getHSL(hsl); fin = hsl.s < 0.1 && hsl.l > 0.28 && hsl.l < 0.62 ? 'concrete' : hsl.l >= 0.18 ? 'plaster' : null; }
         if (fin && worldArea(o) >= 6) {
           const F = FIN[fin], mk = m.uuid + fin; let nm = made.get(mk);
-          if (!nm) { nm = m.clone(); nm.map = tex(F.tex, true); if (NORMAL_OF[F.tex]) { nm.normalMap = tex(NORMAL_OF[F.tex], false); nm.normalScale.set(0.7, 0.7); }
+          if (!nm) { nm = m.clone(); nm.map = F.soft ? softTex(F.tex, F.avg, F.soft) : tex(F.tex, true); if (NORMAL_OF[F.tex]) { nm.normalMap = tex(NORMAL_OF[F.tex], false); nm.normalScale.set(0.45, 0.45); }
             // keep the designed colour: tint = colour / the texture's average (both linear)
             nm.color.setRGB(Math.min(2.2, m.color.r / F.avg[0]), Math.min(2.2, m.color.g / F.avg[1]), Math.min(2.2, m.color.b / F.avg[2])); nm.userData.finish = fin; made.set(mk, nm); }
           m2 += worldArea(o); boxUVs(o, F.tile); o.material = nm; n++;

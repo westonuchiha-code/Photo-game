@@ -392,3 +392,10 @@ untextured surfaces and colour maps missing their normal map; unused-export / un
   matrices; the rest merges per set: 18,788 -> 3,332 meshes, 1,088 moving meshes left alone. mergeStatic keeps vertex
   colours now.
 - Packs: textures the game never requests are left out (record_zones logs fetches as well as <img> loads).
+- Round 2 (after reviewing every view): auto normal maps at 0.5 and never for th_plaster (dentist / gallery walls had
+  gone gritty); painted-wall finishes use a softened copy of the plaster (contrast pulled 60 % toward its mean) and
+  softer stucco; lamp pools: an additive pool under every outdoor PointLight (nothing overhead), one instanced draw,
+  so streets and parks don't go black when the light budget is spent elsewhere; juniper = needle-spray mound
+  (sprayMound) not 60 balls; scooter paint clearcoated; camera views fixed: ramp, aptunit, gallery, stainless.
+- Known, not fixed: in the headless software renderer some floors/roads draw black at certain viewport sizes
+  (depth precision); not reproducible at other sizes.

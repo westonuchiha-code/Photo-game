@@ -53,12 +53,12 @@ function profileBody(points, width, bevel, mat) {
 
 export function makeScooter() {
   const mats = {
-    red: std({ color: '#c8141b', roughness: 0.25, metalness: 0.1 }),
+    red: new THREE.MeshPhysicalMaterial({ color: '#b8121a', roughness: 0.3, metalness: 0.35, clearcoat: 1, clearcoatRoughness: 0.08 }),   // (polish: real clearcoated paint, real metal trim)
     dark: std({ color: '#1a1a1c', roughness: 0.6 }),
     seat: std({ color: '#121214', roughness: 0.55 }),
     tyre: std({ color: '#151515', roughness: 0.9 }),
-    alu: std({ color: '#b9bcc0', metalness: 0.3, roughness: 0.35 }),
-    chrome: std({ color: '#d9dcdf', metalness: 0.4, roughness: 0.2 }),
+    alu: std({ color: '#b9bcc0', metalness: 0.55, roughness: 0.3 }),
+    chrome: std({ color: '#e4e7ea', metalness: 0.65, roughness: 0.16 }),
     amber: std({ color: '#f29a1d', roughness: 0.3, emissive: '#3a1c00' }),
     lens: new THREE.MeshBasicMaterial({ color: new THREE.Color(1.3, 1.3, 1.2), toneMapped: false }),
     floor: std({ color: '#2a2a2c', roughness: 0.85 }),

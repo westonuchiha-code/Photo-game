@@ -4,6 +4,7 @@
 //   b83Mat, makeEnergyCan16, makeColaCan, makeTelecomPedestal83, makeGasManifold, makeJuniper, makeOrnamentalGrass,
 //   makeUtilityCorner
 import * as THREE from 'three';
+import { sprayMound } from './trees.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { F, fitText } from '../fonts.js';
 import { brickMat } from './batch78.js';
@@ -87,8 +88,8 @@ export function makeGasManifold() {
   g.userData.collider = [-0.6, 1.0, 0, 0.3];
   return g;
 }
-export function makeJuniper(seed = 1) { const g = new THREE.Group(); g.name = 'juniper'; const r = rng(seed); const m = std({ color: '#3a6a34', roughness: 0.95 });
-  for (let i = 0; i < 60; i++) { const a = r() * 6.28, d = Math.sqrt(r()) * 0.45; const s = new THREE.Mesh(new THREE.IcosahedronGeometry(0.09 + r() * 0.07, 1), m); s.position.set(Math.cos(a) * d, 0.1 + (0.45 - d) * 0.6 + r() * 0.1, Math.sin(a) * d); s.scale.y = 0.6; s.rotation.set(r() * 3, r() * 3, 0); s.castShadow = true; g.add(s); } return g; }
+// (polish: a mound of needle sprays from the spruce photo, three shared variants, instead of 60 green balls)
+export function makeJuniper(seed = 1) { const g = new THREE.Group(); g.name = 'juniper'; const sm = sprayMound(1 + (seed % 3)); const m = new THREE.Mesh(sm.geo, sm.mat); m.rotation.y = seed * 1.7; m.scale.setScalar(1.05); m.castShadow = true; g.add(m); return g; }
 export function makeOrnamentalGrass(seed = 1, H = 1.3) { const g = new THREE.Group(); g.name = 'ornamental_grass'; const r = rng(seed);
   const blade = new THREE.PlaneGeometry(0.02, 1, 1, 6); blade.translate(0, 0.5, 0); const m = std({ color: '#c8a878', roughness: 1, side: THREE.DoubleSide }); const n = 140;
   const im = new THREE.InstancedMesh(blade, m, n); const M = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler();
