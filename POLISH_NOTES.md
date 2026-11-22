@@ -446,3 +446,9 @@ untextured surfaces and colour maps missing their normal map; unused-export / un
   bathroom89, bathfix.
 - kit.cyl now positions the mesh instead of baking the offset (rotating a baked cylinder swung it round the origin:
   stove knobs had landed on the floor; the same bug had misplaced knobs in furniture88).
+
+## 90 Office set (library textures only)
+- src/models/office90.js: makeOfficeDesk, makeOfficeChair (swivel), makeComputer (crt/flat, made-up screens),
+  makeDeskPhone, makeFilingCabinet (2/4 drawers, one open with folders), makeCopier, makeWaterCooler, makePartition,
+  makeWhiteboard, makeCorkBoard, makeWasteBin, makeWorkstation (desk + chair + computer + phone, for the interiors
+  kit). Showroom "Nestwell Office" (NO 206.3, 196.4). Views: office90, officedesks, officewall, officecorner.
