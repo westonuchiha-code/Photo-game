@@ -41,6 +41,8 @@ function origLoad(url, onLoad, onProgress, onError) {
 }
 THREE.TextureLoader.prototype.load = function (url, onLoad, onProgress, onError) {
   const key = (this.path || '') + url;
+  // (tools/record_zones.js: note which build phase first asks for each texture file)
+  if (window.__texLog) { const m = key.match(/assets\/textures\/([^?#]+)/); if (m && !(m[1] in window.__texLog)) window.__texLog[m[1]] = window.__texPhase; }
   let e = base.get(key);
   if (!e) {
     e = { tex: null, clones: [], loaded: false, waiting: [] };

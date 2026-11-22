@@ -216,6 +216,7 @@ const outside = new THREE.Group();
 // (polish: the old town's base ground is worn asphalt from the street photo, not a flat dark colour)
 const pavementTex = new THREE.TextureLoader().load('assets/textures/city_asphalt.png'); pavementTex.colorSpace = THREE.SRGBColorSpace; pavementTex.wrapS = pavementTex.wrapT = THREE.RepeatWrapping; pavementTex.anisotropy = 8;
 const pavementMat = new THREE.MeshStandardMaterial({ map: pavementTex, color: '#c4c6c8', roughness: 0.92 });
+pavementMat.polygonOffset = true; pavementMat.polygonOffsetFactor = 2; pavementMat.polygonOffsetUnits = 16;   // (always loses depth ties to the floors, walks and roads laid a few mm above it)
 pavementMat.color.setRGB(1.5, 1.5, 1.56);   // (the asphalt photo is dark: lifted so unlit stretches of street still read as a surface at night)
 const pavement = new THREE.Group();
 // (the Elmwood footprint, world x 52..62 z -8..6, is left open so its garden-level floor isn't capped)
@@ -1617,7 +1618,7 @@ const VIEWS = {
   spruce: { pos: [33.5, 2.2, -5.5], target: [39, 4, -12] },
   streettrees: { pos: [23.5, 1.9, 4.6], target: [19, 2.6, 10.4] },
   trunks: { pos: [37.3, 0.9, -8.4], target: [39.6, 0.9, -11.3] },
-  ramp: { pos: [15, 2.6, -27.5], target: [15, -1.5, -15] },
+  ramp: { pos: [15, 3.0, -24.4], target: [15, -1.5, -15] },
   tealshop: { pos: [44, 1.8, -10.5], target: [45, 1.8, -16] },
   rabbit: { pos: [17.4, 1.5, 7.6], target: [16, 1.6, 10.3] },
   newsbox: { pos: [10.2, 1.3, -1.6], target: [8.55, 0.5, -3.1] },
@@ -1630,7 +1631,7 @@ const VIEWS = {
   aptgarden: { pos: [53.0, -0.1, 0.4], target: [60.0, -0.6, -0.6] },
   aptgardenunit: { pos: [55.2, -0.05, 2.4], target: [52.3, -0.45, 4.2] },
   apthall2: { pos: [61.2, 6.1, -0.4], target: [52.5, 5.6, -0.8] },
-  aptunit: { pos: [58.5, 3.0, -3.6], target: [63.0, 2.2, -6.0] },
+  aptunit: { pos: [59.1, 2.95, -3.9], target: [63.0, 2.2, -6.0] },
   aptunit2: { pos: [55.0, 6.0, 1.9], target: [56.5, 5.2, 5.6] },
   stoop: { pos: [47.6, 2.4, 3.4], target: [50.5, 1.0, -1] },
   alien: { pos: [40.4, 2.4, 1.6], target: [44.5, 1.4, -3] },
