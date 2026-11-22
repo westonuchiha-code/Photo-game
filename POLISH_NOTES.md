@@ -420,3 +420,9 @@ untextured surfaces and colour maps missing their normal map; unused-export / un
 - Startup: circuit-board normal map (2 MP per-pixel loop), the monkey statue's surface nets and the lamp-pool
   overhead checks moved to after-start jobs; rock-bed packing without square roots. Old-town build 9.7 s -> 4.4 s in
   the headless test; loading screen work done at 16 s first visit / 14 s repeat (was 19 / 17).
+
+## Single-file download
+- tools/build_single.mjs -> dist/photo-town.html (~58 MB): game code, texture packs and fonts embedded as base64 in
+  one page; opens from disk (file://) with no server. boot.js reads embedded packs / game (window.__packIndex,
+  #pkN, #gamecode); fonts.js takes window.__fontURL. Run after tools/build_web.mjs. Send this file to the user
+  after every change (the hosted page did not work for them).

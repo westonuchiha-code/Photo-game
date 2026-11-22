@@ -34,7 +34,7 @@ export const F = {
   wayfind: '"Josefin Sans", sans-serif',                  // modern mall / transit wayfinding
 };
 export const fontsReady = Promise.all(FILES.map(([fam, file, weight]) => {
-  const f = new FontFace(fam, `url(assets/fonts/${file})`, { weight: weight || '400' });
+  const f = new FontFace(fam, `url(${window.__fontURL ? window.__fontURL(file) : 'assets/fonts/' + file})`, { weight: weight || '400' });   // (__fontURL: the single-file build embeds the fonts)
   return f.load().then((ff) => document.fonts.add(ff)).catch(() => null);
 }));
 

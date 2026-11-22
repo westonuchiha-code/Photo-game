@@ -11,14 +11,16 @@ window.__boot = async function (bundle) {
   const el = document.getElementById('loader'), bar = el && el.querySelector('.bar i'), txt = el && el.querySelector('.status');
   const say = (s, p) => { if (txt) txt.textContent = s; if (bar && p !== undefined) bar.style.width = `${Math.round(p * 100)}%`; };
   try {
-    const idx = await (await fetch('packs/packs.json', { cache: 'no-cache' })).json();
+    // (single-file build, tools/build_single.mjs: the index, the packs and the game are embedded in the page itself)
+    const emb = (id) => { const el = document.getElementById(id); if (!el) return null; const b = atob(el.textContent.trim()); const out = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) out[i] = b.charCodeAt(i); el.remove(); return out; };
+    const idx = window.__packIndex || await (await fetch('packs/packs.json', { cache: 'no-cache' })).json();
     const core = new Set(idx.core || idx.packs.map((_, i) => i));
     const prog = window.__packProgress = { got: 0, total: idx.packs.reduce((a, b, i) => a + (core.has(i) ? b : 0), 0), cached: 0 };
     const blobs = {}, ready = {}, waiting = { n: 0 };
     const byPack = {}; for (const [name, v] of Object.entries(idx.files)) (byPack[v[0]] = byPack[v[0]] || []).push([name, v]);
     // browser cache (may be unavailable: private windows, sandboxed frames) -> just download then
     const keyOf = (i) => new URL(`packs/pack${i}.wasm?h=${idx.hashes ? idx.hashes[i] : idx.packs[i]}`, location.href).href;
-    let cache = null; try { cache = await caches.open('photo-town-packs'); } catch (e) { cache = null; }
+    let cache = null; if (!window.__packIndex) { try { cache = await caches.open('photo-town-packs'); } catch (e) { cache = null; } }
     if (cache) { try { const want = new Set(idx.packs.map((_, i) => keyOf(i))); for (const r of await cache.keys()) if (!want.has(r.url)) cache.delete(r); } catch (e) { /* ignore */ } }
     // the downloads run in a worker when the page allows one: the main thread is busy building the world meanwhile,
     // and a fetch read from a busy thread stalls (the network stops once its small buffer is full)
@@ -40,6 +42,7 @@ window.__boot = async function (bundle) {
     };
     const loadPack = (i, onBytes) => ready[i] || (ready[i] = (async () => {
       let out = null;
+      if (document.getElementById('pk' + i)) { await new Promise((r) => setTimeout(r, 0)); out = emb('pk' + i); if (onBytes) onBytes(out.length); }
       if (cache) { try { const hit = await cache.match(keyOf(i)); if (hit) { out = new Uint8Array(await hit.arrayBuffer()); if (out.length !== idx.packs[i]) out = null; else { if (onBytes) onBytes(out.length); prog.cached += out.length; } } } catch (e) { out = null; } }
       if (!out) {
         out = await download(i, onBytes);
@@ -64,5 +67,7 @@ window.__boot = async function (bundle) {
     coreDone.then(() => setTimeout(async () => { for (let i = 0; i < idx.packs.length; i++) if (!core.has(i)) { try { await loadPack(i); } catch (e) { /* retried on demand */ } } }, 1500));
   } catch (e) { console.warn('texture packs unavailable, loading files directly', e); }
   say('Building the world…', 0.02);
-  await import(bundle);
+  const gc = document.getElementById('gamecode');
+  if (gc) { const b = atob(gc.textContent.trim()); const u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); gc.remove(); await import(URL.createObjectURL(new Blob([u], { type: 'text/javascript' }))); }
+  else await import(bundle);
 };
