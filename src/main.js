@@ -20,6 +20,7 @@ import { makeDistrict } from './models/district.js';
 import { makeRoads } from './models/roads.js';
 import { makeCommunityGarden } from './models/garden87.js';
 import { makeFurnitureShowroom } from './models/furniture88.js';
+import { makeKitchenBathShowroom } from './models/kitchen89.js';
 import { makeDentistOffice } from './models/dentist57.js';
 import { makeTreatmentWing } from './models/treatment58.js';
 import { makeUtilityLot } from './models/utility59.js';
@@ -1499,7 +1500,12 @@ const NH = { x: 178.5, z: 196.4 };
 const nest = makeFurnitureShowroom(); nest.position.set(NH.x, 0.006, NH.z); nest.rotation.y = Math.PI; add(nest);
 for (const [x0, x1, z0, z1] of nest.userData.colliders) rect(NH.x - x1, NH.x - x0, NH.z - z1, NH.z - z0);
 const nhAreas = [{ minX: NH.x - nest.userData.area.maxX, maxX: NH.x - nest.userData.area.minX, minZ: NH.z - nest.userData.area.maxZ, maxZ: NH.z - nest.userData.area.minZ },
-  { minX: 167.0, maxX: NH.x + 9.3, minZ: NH.z + 4.5, maxZ: NH.z + 6.2 }];   // the apron along its front, out to the connector
+  { minX: 167.0, maxX: NH.x + 9.3 + 13, minZ: NH.z + 4.5, maxZ: NH.z + 6.2 }];   // the apron along both showrooms' fronts, out to the connector
+// 89 Nestwell Kitchen & Bath: the kitchen + bathroom set, in a second showroom beside the first (kitchen89.js)
+const KB = { x: 194.2, z: 196.4 };
+const kbath = makeKitchenBathShowroom(); kbath.position.set(KB.x, 0.006, KB.z); kbath.rotation.y = Math.PI; add(kbath);
+for (const [x0, x1, z0, z1] of kbath.userData.colliders) rect(KB.x - x1, KB.x - x0, KB.z - z1, KB.z - z0);
+nhAreas.push({ minX: KB.x - kbath.userData.area.maxX, maxX: KB.x - kbath.userData.area.minX, minZ: KB.z - kbath.userData.area.maxZ, maxZ: KB.z - kbath.userData.area.minZ });
 const dnAreas = [...dentist.userData.areas, ...wing.userData.areas].map((a) => { const [minX, maxX, minZ, maxZ] = dnW([a.minX, a.maxX, a.minZ, a.maxZ]); return { minX, maxX, minZ, maxZ }; });
 
 console.log('T districtsites', Math.round(performance.now()));
@@ -1595,7 +1601,7 @@ walk.ground = (x, z, prevY) => {
   if (x > TM.x + tmSt.x0 && x < TM.x + tmSt.x1 && z > TM.z + tmSt.front && z < TM.z + tmSt.z1) {   // the temple stairs + platform top
     const zz = z - TM.z; return 0.02 + (zz <= tmSt.zTop ? tmSt.top : tmSt.top * (tmSt.z1 - zz) / (tmSt.z1 - tmSt.zTop)); }
   if (x > TM.x - 13 && x < TM.x + 13 && z > TM.z - 18 && z < TM.z) return 0.06;   // the temple plaza
-  if (x > NH.x - 9 && x < NH.x + 9 && z > NH.z - 4.5 && z < NH.z + 4.5) return 0.156;   // the furniture showroom floor
+  if (x > NH.x - 9 && x < KB.x + 6 && z > NH.z - 4.5 && z < NH.z + 4.5) return 0.156;   // the two showrooms' floors
   const ry = roads.userData.groundY(x, z);   // the stunt lot's ramps
   if (ry !== null) return ry;
   const dy = district.userData.floorY(x, z);
@@ -1890,6 +1896,11 @@ const VIEWS = {
   train: { pos: [-12.5, 2.6, 71.0], target: [-17.5, 2.0, 77.2] },
   workvan: { pos: [-26.0, 1.7, 36.2], target: [-22.8, 0.9, 39.9] },
   scout: { pos: [36.4, 1.7, -5.4], target: [39.9, 0.8, -0.6] },
+  kitchenbath: { pos: [194.2, 3.0, 209.0], target: [194.2, 1.6, 197] },
+  kitchen89: { pos: [196.0, 1.75, 199.6], target: [197.6, 1.0, 192.6] },
+  kitchenrun: { pos: [197.4, 1.6, 195.4], target: [197.6, 1.1, 192.4] },
+  bathroom89: { pos: [193.6, 1.75, 199.4], target: [190.4, 0.9, 193.0] },
+  bathfix: { pos: [191.8, 1.6, 195.6], target: [188.8, 0.8, 194.6] },
   showroom: { pos: [178.5, 3.2, 210.5], target: [178.5, 1.6, 197] },
   bedroom: { pos: [182.4, 1.8, 196.6], target: [184.6, 0.6, 193.2] },
   livingroom88: { pos: [180.4, 1.75, 200.2], target: [178.2, 0.7, 195.0] },

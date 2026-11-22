@@ -438,3 +438,11 @@ untextured surfaces and colour maps missing their normal map; unused-export / un
   makeBookshelf (instanced books), makeRug. All take wood / fabric / colour options; userData.collider each.
 - Nestwell Home showroom (NH 178.5, 196.4, east of the 2nd Street connector, front to Elm Loop): bedroom, living
   room, study. Views: showroom, bedroom, livingroom88, study88, bedsingle.
+
+## 89 Kitchen + bathroom set (library textures only)
+- src/models/kitchen89.js: makeFridge, makeStove, makeBaseCabinet ({ sink, drawers }), makeWallCabinet,
+  makeKitchenTable, makeBathtub, makeShower, makeToilet, makeWashbasin, makeMirror, makeTowelRail. Showroom
+  "Nestwell Kitchen & Bath" (KB 194.2, 196.4) beside Nestwell Home. Views: kitchenbath, kitchen89, kitchenrun,
+  bathroom89, bathfix.
+- kit.cyl now positions the mesh instead of baking the offset (rotating a baked cylinder swung it round the origin:
+  stove knobs had landed on the floor; the same bug had misplaced knobs in furniture88).

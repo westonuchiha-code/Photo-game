@@ -13,6 +13,8 @@ export const AVG = {
   fb_velour: [0.02, 0.02, 0.02], b82_chenille: [0.33, 0.33, 0.33], op_leather: [0.27, 0.25, 0.22], dn_carpet: [0.15, 0.12, 0.1], dn_walnut: [0.29, 0.14, 0.09], wd_plank_a: [0.2, 0.09, 0.03],
   wd_plank_b: [0.2, 0.09, 0.035], wd_plank_c: [0.21, 0.11, 0.05], wd_plank_d: [0.24, 0.13, 0.05], laminate_oak: [0.35, 0.24, 0.16], liv_wood: [0.04, 0.02, 0.02], b80_blackplastic: [0.11, 0.1, 0.09],
   booth_vinyl: [0.43, 0.4, 0.16], liv_shade: [0.13, 0.11, 0.1], b82_canvasgrey: [0.28, 0.27, 0.26], sg_plaster: [0.547, 0.547, 0.51], gf_galv: [0.42, 0.45, 0.5], b85_zinc: [0.3, 0.3, 0.3],
+  b86_floortile: [0.39, 0.30, 0.22], b86_walltile: [0.55, 0.51, 0.45], b82_quartz: [0.40, 0.34, 0.27], terrazzo: [0.48, 0.44, 0.46], subway_tile: [0.81, 0.81, 0.77], butcher_block: [0.34, 0.17, 0.09],
+  ab_tile: [0.51, 0.42, 0.33], em_tile: [0.18, 0.33, 0.38], um_marble: [0.73, 0.74, 0.77], store_floor: [0.35, 0.33, 0.32],
   wood_floor: [0.41, 0.27, 0.19], walnut_floor: [0.35, 0.22, 0.14], lot_concrete: [0.303, 0.295, 0.269], b82_speckle: [0.439, 0.39, 0.367], i7_brass: [0.4, 0.3, 0.12],
 };
 const _L = new THREE.TextureLoader(), _T = new Map(), _M = new Map();
@@ -39,7 +41,7 @@ export function projUV(g, tile = 1) {
 const add = (g, m, parent, shadow = true) => { const o = new THREE.Mesh(g, m); o.castShadow = shadow; o.receiveShadow = true; parent.add(o); return o; };
 export function box(w, h, d, m, x, y, z, parent, tile = 1) { const g = new THREE.BoxGeometry(w, h, d); g.translate(x, y, z); return add(projUV(g, tile), m, parent); }
 export function rbox(w, h, d, r, m, x, y, z, parent, tile = 1, seg = 3) { const g = new RoundedBoxGeometry(w, h, d, seg, Math.min(r, w / 2 - 0.001, h / 2 - 0.001, d / 2 - 0.001)); g.translate(x, y, z); return add(projUV(g, tile), m, parent); }
-export function cyl(rt, rb, h, m, x, y, z, parent, seg = 18) { const g = new THREE.CylinderGeometry(rt, rb, h, seg); g.translate(x, y, z); return add(g, m, parent); }
+export function cyl(rt, rb, h, m, x, y, z, parent, seg = 18) { const o = add(new THREE.CylinderGeometry(rt, rb, h, seg), m, parent); o.position.set(x, y, z); return o; }   // (positioned, not baked: callers turn it with .rotation)
 export function flat(x0, x1, z0, z1, y, m, parent, tile = 1) { const g = new THREE.PlaneGeometry(x1 - x0, z1 - z0); g.rotateX(-Math.PI / 2); g.translate((x0 + x1) / 2, y, (z0 + z1) / 2); return add(projUV(g, tile), m, parent, false); }
 export function bar(a, b, t, m, parent) { const d = new THREE.Vector3().subVectors(b, a); const o = new THREE.Mesh(new THREE.BoxGeometry(t, d.length(), t), m); o.position.copy(a).addScaledVector(d, 0.5); o.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.clone().normalize()); o.castShadow = true; parent.add(o); return o; }
 export function canvasT(w, h, draw) { const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d'); draw(x, w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; if (document.fonts) document.fonts.ready.then(() => { draw(x, w, h); t.needsUpdate = true; }); return t; }
