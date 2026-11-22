@@ -501,5 +501,7 @@ untextured surfaces and colour maps missing their normal map; unused-export / un
 - people96.js: 40 pedestrians on the district sidewalk rings (respawn 34-72 m away, dropped past 84 m; stop for the
   player, wait for cars, step clear). 9 looks per sex share materials. Two workers at Elm Works.
 - bodytest.html (dev only): bodies on a plain background; ?grey=1 bare mesh, ?walk=1 poses, ?tpl=m|f template.
-- Not done: people indoors / in the old town, crossing streets, talking, sitting; fingers are one block; the short
-  male hair has rough sideburns.
+- Fixes: four separate fingers + slimmer thumb; hair shells get a clean edge (vertices under the hairline sit on it,
+  smooth hairline by angle, closed crown); arm tops lean in under the shoulder slope and are weighted partly to the
+  chest, so the shoulder reads as one surface; thigh tops no longer poke through the hip.
+- Not done: people indoors / in the old town, crossing streets, talking, sitting.
