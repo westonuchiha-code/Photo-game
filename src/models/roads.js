@@ -2,7 +2,7 @@
 // way, a 2 m planted median with trees and double-arm lamps, 1 m shoulders, W-beam guardrail on the outside, grass
 // verges. Every district street runs on through the outer building rows to meet it (district.js). Off the east side,
 // through a gap in the rail, a fenced asphalt stunt lot with ramps you can jump, cones, tyre stacks, floodlights.
-// Boost pads (glowing chevrons) on the Loop's straights and in the lot give a kart-style shove.
+// Boost pads (glowing chevrons) in the stunt lot only give a shove.
 //   makeRoads()  world coordinates. userData:
 //     areas            drivable/walkable rects
 //     colliders        [{ type: 'box' | 'circle', ... }]
@@ -145,8 +145,7 @@ export function makeRoads() {
 
   // ---- boost pads: chevrons on the Loop's straights (both directions) and in the lot
   const padDefs = [];
-  for (const x of [118, 290, 380]) { padDefs.push([x, N - 6.8, 1, 0], [x + 20, N + 6.8, -1, 0], [x, S + 6.8, -1, 0], [x + 20, S - 6.8, 1, 0]); }
-  for (const z of [-140, -50, 120]) padDefs.push([E - 6.8, z, 0, 1], [E + 6.8, z + 20, 0, -1]);
+  // (none on Elm Loop itself: the roads are for getting around, the stunt lot keeps its toys)
   padDefs.push([LX0 + 22, 0, 1, 0], [LX0 + 25, 15, 0, 1], [LX0 + 104, -38, -1, 0], [LX0 + 104, -28, -1, 0]);
   const padT = canvasT(128, 256, (x, w, h) => { x.clearRect(0, 0, w, h); x.fillStyle = 'rgba(20,20,24,0.65)'; x.fillRect(0, 0, w, h); for (let i = 0; i < 3; i++) { const y = h - 30 - i * 80; const gr = x.createLinearGradient(0, y, 0, y - 60); gr.addColorStop(0, '#ff8a1a'); gr.addColorStop(1, '#ffe24a'); x.fillStyle = gr; x.beginPath(); x.moveTo(12, y); x.lineTo(w / 2, y - 50); x.lineTo(w - 12, y); x.lineTo(w - 12, y - 22); x.lineTo(w / 2, y - 72); x.lineTo(12, y - 22); x.fill(); } });
   padT.wrapT = THREE.RepeatWrapping;

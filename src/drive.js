@@ -1,6 +1,6 @@
 // Driving: third-person, arcade-sim. The car feels heavy (mass, weight transfer, slow-building steering, body roll on
-// springs) but forgiving: grip is generous, the handbrake/drift button kicks the tail out and holding a drift charges a
-// mini-turbo (blue -> orange -> pink) that fires when you let go, kart-style. A small hop starts each drift.
+// springs) but forgiving: grip is generous. Driving is how you get around town, not a race: no kart tricks. The
+// handbrake locks the rear wheels: it slows the car and, with steering at speed, swings the tail round (a handbrake turn).
 //   const drive = makeDriver({ scene, camera, areas, colliders, ground })
 //   drive.addCar(carGroup, { name })    register a drivable car (a carbody.js car)
 //   drive.nearest(pos)                   -> car within reach of a walker, or null
@@ -35,7 +35,7 @@ export function makeDriver({ scene, camera, areas, colliders, ground, pads = [] 
 
   // ---- HUD + touch controls
   const hud = document.createElement('div'); hud.id = 'drivehud';
-  hud.innerHTML = `<div class="spd"><b>0</b><i>km/h</i></div><div class="charge"><i></i></div><div class="tip help-mouse"><b>W/S</b> gas / brake · <b>A/D</b> steer · <b>Space</b> drift (hold + let go to boost) · <b>E</b> get out · hold <b>C</b> look back</div>
+  hud.innerHTML = `<div class="spd"><b>0</b><i>km/h</i></div><div class="charge" style="display:none"><i></i></div><div class="tip help-mouse"><b>W/S</b> gas / brake · <b>A/D</b> steer · <b>Space</b> handbrake · <b>E</b> get out · hold <b>C</b> look back</div>
     <div class="pads"><button data-k="left">◀</button><button data-k="right">▶</button><span></span><button data-k="drift">DRIFT</button><button data-k="brake">BRAKE</button><button data-k="gas">GAS</button></div>`;
   const css = document.createElement('style');
   css.textContent = `#drivehud{position:fixed;inset:0;pointer-events:none;display:none;font-family:system-ui,sans-serif;color:#fff}
@@ -142,21 +142,20 @@ export function makeDriver({ scene, camera, areas, colliders, ground, pads = [] 
     if (S.boost > 0) { aF += 7; S.boost -= dt; }
     aF -= (0.0045 * vF * Math.abs(vF)) + (Math.abs(vF) > 0.05 ? Math.sign(vF) * 0.25 : 0);    // drag + rolling
     if (!inp.gas && !inp.brake && Math.abs(vF) < 0.4) vF *= 0.9;
-    if (inp.drift && S.drift === 0 && Math.abs(vF) < 6) aF -= Math.sign(vF) * 4;            // handbrake at low speed just stops
+    if (inp.drift && Math.abs(vF) > 0.3) aF -= Math.sign(vF) * (S.drift ? 3.2 : 5.5);       // the handbrake always slows the car (less while it's sliding)
     vF += aF * dt;
     // steering builds slowly and shrinks with speed (heavy at speed, nimble when parking)
     const maxSt = 0.58 / (1 + spd * 0.055);
     const stT = inp.steer * maxSt * (S.drift ? 1.25 : 1);
     S.steer = damp(S.steer, stT, inp.steer ? 5.5 : 8, dt);
-    // drift: start on drift + steer at speed (with a hop), hold to charge, release to boost
-    if (inp.drift && S.drift === 0 && vF > 9 && Math.abs(inp.steer) > 0) { S.drift = 1; S.driftDir = Math.sign(inp.steer); S.hopV = 2.4; S.charge = 0; }
+    // handbrake turn: handbrake + steering at speed breaks the rear loose; it ends when you let go or slow down
+    if (inp.drift && S.drift === 0 && vF > 9 && Math.abs(inp.steer) > 0) { S.drift = 1; S.driftDir = Math.sign(inp.steer); }
     if (S.drift && (!inp.drift || vF < 5)) {
-      if (S.charge > 0.8 && vF > 5) { S.boost = S.charge > 2.4 ? 1.6 : S.charge > 1.5 ? 1.1 : 0.7; S.shake = 0.3; }
       S.drift = 0; S.charge = 0;
     }
     const WB = sp.WB;
     let rT = (vF * Math.tan(S.steer)) / WB;                // the yaw rate the tyres ask for
-    if (S.drift) { const lean = S.driftDir * (0.6 + 0.4 * (inp.steer * S.driftDir)); rT = S.driftDir * Math.max(0.55, Math.abs(rT)) * (0.75 + lean * 0.45) * Math.min(1, vF / 12) * 1.15; S.charge += dt * (1 + 0.6 * Math.max(0, inp.steer * S.driftDir)); }
+    if (S.drift) { const lean = S.driftDir * (0.6 + 0.4 * (inp.steer * S.driftDir)); rT = S.driftDir * Math.max(0.55, Math.abs(rT)) * (0.75 + lean * 0.45) * Math.min(1, vF / 12) * 1.15;  }
     // grip limit: the tyres can only give ~0.95 g sideways; past that the car pushes wide
     const gLim = 9.3 * (sp.gripK || 1);
     const lim = (S.drift ? gLim * 2.6 : gLim) / Math.max(1, Math.abs(vF)); rT = clamp(rT, -lim, lim);

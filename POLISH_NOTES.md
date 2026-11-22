@@ -523,3 +523,9 @@ untextured surfaces and colour maps missing their normal map; unused-export / un
   vertex-coloured material (`det`); the small dressing (det, capd, glow, tile, awnings) is only shown within 150 m
   (`userData.lodTick`). About 1.1 M triangles in total, roughly 200 k of them always candidates for drawing.
 - Not done: blank party walls (sides not on a street) are still plain; real-device frame rate unmeasured.
+
+## 99 Driving is transport, not racing
+- Direction from the owner: cars are how you get around (like a horse in an open-world RPG), fun to drive in a GTA
+  way, but the game is not a racing game. Removed the kart mechanics: no drift hop, no drift charge / mini-turbo, no
+  charge bar, no boost pads on Elm Loop. Space is a handbrake: it always slows the car and, with steering at speed,
+  swings the tail (handbrake turn). The stunt lot off the east side keeps its ramps and pads as an optional spot.
