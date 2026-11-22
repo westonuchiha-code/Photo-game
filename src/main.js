@@ -16,6 +16,7 @@ import { makeMossCreature, makeMossMound } from './models/creature55.js';
 import { makeThriftCorner } from './models/fabrics56.js';
 import { makeDistrict } from './models/district.js';
 import { makeRoads } from './models/roads.js';
+import { makeCommunityGarden } from './models/garden87.js';
 import { makeDentistOffice } from './models/dentist57.js';
 import { makeTreatmentWing } from './models/treatment58.js';
 import { makeUtilityLot } from './models/utility59.js';
@@ -1483,6 +1484,12 @@ const ckAreas = ckShop.userData.areas.map((a) => ({ minX: a.minX + CK.x, maxX: a
 // laundry aisle, park trash cans, bench + ball, creek + culvert are placed in their modules)
 { const wf = makeWetFloorFolded(); wf.position.set(279.6, 0.142, 162.3); add(wf);
   const cb = makeConcreteBollard(); cb.position.set(281.0, 0.14, 162.7); add(cb); rect(280.75, 281.25, 162.45, 162.95); }
+// 87 Elm Loop Community Garden: on the grass verge inside the Loop, west of the 2nd Street connector (gate faces it).
+// Built only from textures already in the library (see garden87.js).
+const CG = { x: 143.5, z: 197.5 };
+const cgarden = makeCommunityGarden(); cgarden.position.set(CG.x, 0.006, CG.z); add(cgarden);
+for (const [x0, x1, z0, z1] of cgarden.userData.colliders) rect(CG.x + x0, CG.x + x1, CG.z + z0, CG.z + z1);
+const cgArea = { minX: CG.x + cgarden.userData.area.minX, maxX: CG.x + cgarden.userData.area.maxX + 1.2, minZ: CG.z + cgarden.userData.area.minZ, maxZ: CG.z + cgarden.userData.area.maxZ };
 const dnAreas = [...dentist.userData.areas, ...wing.userData.areas].map((a) => { const [minX, maxX, minZ, maxZ] = dnW([a.minX, a.maxX, a.minZ, a.maxZ]); return { minX, maxX, minZ, maxZ }; });
 
 console.log('T districtsites', Math.round(performance.now()));
@@ -1516,6 +1523,7 @@ const walk = new WalkControls(camera, renderer.domElement, {
     { minX: TP.x - 12.8, maxX: TP.x + 12.8, minZ: TP.z - 5.2, maxZ: TP.z - 0.3 }, // train platform + its stairs
     ...district.userData.areas, // the district's streets + sidewalks
     ...roads.userData.areas, // Elm Loop + the stunt lot
+    cgArea, // the community garden
     ...dnAreas, // the dentist's waiting room + its door
     ulArea, // the utility + parking lot
     ...stAreas, // the storage row's apron + the two open units
@@ -1870,6 +1878,11 @@ const VIEWS = {
   train: { pos: [-12.5, 2.6, 71.0], target: [-17.5, 2.0, 77.2] },
   workvan: { pos: [-26.0, 1.7, 36.2], target: [-22.8, 0.9, 39.9] },
   scout: { pos: [36.4, 1.7, -5.4], target: [39.9, 0.8, -0.6] },
+  garden: { pos: [158.5, 4.2, 191.5], target: [144.5, 1.0, 197.5] },
+  glasshouse: { pos: [146.2, 1.7, 197.4], target: [140.5, 1.2, 194.5] },
+  glasshousein: { pos: [142.6, 1.6, 194.5], target: [138.0, 1.0, 194.3] },
+  gardenshed: { pos: [147.6, 1.7, 196.6], target: [150.1, 1.2, 200.4] },
+  gardenbeds: { pos: [143.5, 2.2, 196.8], target: [139.5, 0.4, 200.6] },
   elmloop: { pos: [300, 20, 236], target: [345, 0, 208] },
   loopeast: { pos: [440, 10, -110], target: [462, 0, -70] },
   jumplot: { pos: [478, 18, -46], target: [520, 1, 0] },

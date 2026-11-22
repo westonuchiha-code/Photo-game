@@ -399,3 +399,12 @@ untextured surfaces and colour maps missing their normal map; unused-export / un
   (sprayMound) not 60 balls; scooter paint clearcoated; camera views fixed: ramp, aptunit, gallery, stainless.
 - Known, not fixed: in the headless software renderer some floors/roads draw black at certain viewport sizes
   (depth precision); not reproducible at other sizes.
+
+## 87 Elm Loop Community Garden (library textures only)
+- src/models/garden87.js, on the verge inside Elm Loop west of the 2nd Street connector (CG 143.5, 197.5). Glasshouse
+  (tan-brick knee wall, galvanised frame, glass panes, open door + roof vent, slat benches, clay pots, tomato canes,
+  seed trays, watering can, work light); blue corrugated tool shed (plywood door on rust hinges, mossy zinc roof,
+  ivy, tools inside); raised beds (greens, beans on canes, herbs, mulch); compost bay; blue water butt; potting
+  table; wheelbarrow; whitewashed picket fence (instanced); gate arch + sign (made-up name, 555 number).
+- mat() takes a hex tint or a linear [r,g,b] multiplier above 1 to lift a dark photo (plank timber); projUV gives
+  every box real-world texture scale. Views: garden, glasshouse, glasshousein, gardenshed, gardenbeds.
