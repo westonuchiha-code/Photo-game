@@ -426,3 +426,15 @@ untextured surfaces and colour maps missing their normal map; unused-export / un
   one page; opens from disk (file://) with no server. boot.js reads embedded packs / game (window.__packIndex,
   #pkN, #gamecode); fonts.js takes window.__fontURL. Run after tools/build_web.mjs. Send this file to the user
   after every change (the hosted page did not work for them).
+
+## 88 Home furniture set (library textures only)
+- src/models/kit.js: shared helpers. mat(name, { to: '#hex' }) recolours a library texture so its average becomes
+  that colour (AVG table) while keeping its grain; box / rbox / cyl / flat / bar with real-world UVs; puff() turns a
+  rounded box into a cushion. Lesson: recolour light photos for light things (dark plank photos pushed up to pale
+  wood blow out into cracks; dark knit pushed to blue goes white) -> light woods use laminate_oak / wood_floor /
+  plaster, blankets use chenille.
+- src/models/furniture88.js: makeBed (single/double, wood/metal frame), makeNightstand, makeWardrobe, makeDesk,
+  makeChair, makeSofa (1/2/3 seats), makeCoffeeTable, makeTV (crt/flat) + makeTVStand, makeLamp (floor/table),
+  makeBookshelf (instanced books), makeRug. All take wood / fabric / colour options; userData.collider each.
+- Nestwell Home showroom (NH 178.5, 196.4, east of the 2nd Street connector, front to Elm Loop): bedroom, living
+  room, study. Views: showroom, bedroom, livingroom88, study88, bedsingle.
