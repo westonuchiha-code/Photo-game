@@ -22,6 +22,8 @@ import { placeStreetServices, makeATM } from './models/street92.js';
 import { instanceGroup } from './models/kit.js';
 import { makeRoads } from './models/roads.js';
 import { makeCommunityGarden } from './models/garden87.js';
+import { placeHouses } from './models/house94.js';
+import { makeWorks } from './models/factory95.js';
 import { makeFurnitureShowroom } from './models/furniture88.js';
 import { makeKitchenBathShowroom } from './models/kitchen89.js';
 import { makeOfficeShowroom } from './models/office90.js';
@@ -1575,6 +1577,14 @@ const walk = new WalkControls(camera, renderer.domElement, {
   ],
   colliders,
 });
+// 94 Loop houses: a row of detached homes on the verge inside Elm Loop's south side (house94.js); each one is enterable
+// (its record joins the district's building list, so interiors.js gives it a door + a flat inside)
+const loopHouses = placeHouses({ grid: GRID }); scene.add(loopHouses.group); colliders.push(...loopHouses.colliders); walk.areas.push(...loopHouses.areas); district.userData.buildings.push(...loopHouses.records);
+console.log('loop houses:', loopHouses.records.length);
+// 95 Elm Works: the factory shed + yard on the north verge (factory95.js)
+const EW = { x: 290, z: 196.9 };
+{ const works = makeWorks(); works.position.set(EW.x, 0.006, EW.z); scene.add(works); for (const [x0, x1, z0, z1] of works.userData.colliders) colliders.push({ type: 'box', minX: EW.x + x0, maxX: EW.x + x1, minZ: EW.z + z0, maxZ: EW.z + z1 });
+  const a = works.userData.area; walk.areas.push({ minX: EW.x + a.minX, maxX: EW.x + a.maxX, minZ: EW.z + a.minZ, maxZ: EW.z + a.maxZ + 3 }); }
 // ---- driving: modelled, drivable cars parked on the district streets (third-person; see drive.js + vehicle/carbody.js)
 const drive = makeDriver({ scene, camera, areas: walk.areas.slice(), colliders, pads: roads.userData.pads, ground: (x, z) => roads.userData.groundY(x, z) ?? district.userData.floorY(x, z) ?? 0 });
 // polish: the same soft studio environment gives every metal + glossy surface in town something to reflect (chrome,
@@ -1704,6 +1714,11 @@ const VIEWS = {
   livingroom: { pos: [56.6, 3.0, -2.2], target: [52.6, 2.4, -6.6] },
   bookshelves: { pos: [55.2, 2.6, -4.6], target: [52.4, 2.5, -6.9] },
   lamptable: { pos: [54.6, 2.7, -4.4], target: [54.6, 2.3, -7.6] },
+  loophouses: { pos: [205, 5.5, -209], target: [196, 1.5, -198] },
+  loophouse: { pos: [188, 1.7, -205.5], target: [186, 1.6, -198] },
+  works: { pos: [283, 3.2, 212], target: [292, 2.2, 196] },
+  worksin: { pos: [279, 1.7, 199.5], target: [286, 1.6, 194.5] },
+  tanks: { pos: [304, 2.5, 206], target: [309.5, 3, 196] },
   houses: { pos: [38.5, 2.6, -33.0], target: [46.0, 1.6, -38.5] },
   housesouth: { pos: [40.0, 1.8, -36.5], target: [40.0, 1.4, -44.0] },
   porchhouse: { pos: [40.8, 1.9, -27.8], target: [46.0, 1.5, -31.2] },

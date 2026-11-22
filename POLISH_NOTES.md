@@ -465,3 +465,25 @@ untextured surfaces and colour maps missing their normal map; unused-export / un
   threshold, floor height, wall + furniture colliders; two shared lights move into the interior you're in (light
   count never changes). Cars use the area list from before the interiors were added.
 - 329 buildings: 230 shops, 42 flats, 21 studios, 36 offices.
+
+## 92 Street services (street92.js)
+- Bus stops, phone booths, mailboxes, traffic lights, cash machines, benches, bins and news stands, built from library
+  textures and placed along the district sidewalks as instanced groups (`placeStreetServices`). Cash machines sit in
+  the wall beside the door of every fourth office building.
+
+## 93 Hospital, police station, school (civic93.js)
+- Hospital beds, drip stands, trolleys, wheelchairs, waiting chairs, reception desk; holding cell, lockers, front
+  counter; student desks, chalkboard, teacher desk. They are interior types (`clinic`, `police`, `school`) in
+  interiors91.js: a few wide non-shop buildings get them, with a wall sign outside.
+
+## 94 Loop houses (house94.js)
+- `makeHouse`: detached home with clad walls, framed windows (lit or dark), gable roof, chimney, porch, garage with
+  roller door, driveway, path, lawn, instanced picket fence, mailbox, house number. Nine claddings x four roofs.
+- `placeHouses` puts a row on the verge inside Elm Loop's south side, facing the Loop. Each house adds a record to
+  `district.userData.buildings`, so the interiors manager gives it a working door and a furnished flat inside.
+- The verge is only 12 m deep, so houses are 10.4 x 7.9 with a 2.5 m front yard.
+
+## 95 Elm Works (factory95.js)
+- Parts: pallet (empty / boxes / drums / crate), drum, crate, machine, roller conveyor, tank with ladder, pipe runs
+  with flanges and wheel valves, forklift. `makeWorks` assembles an open-fronted steel shed (portal frames, sheet walls
+  with instanced ribs), a catwalk with stair, and a tank yard, on the north verge at (290, 197).
