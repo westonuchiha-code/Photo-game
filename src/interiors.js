@@ -20,16 +20,17 @@ export function makeInteriors({ scene, district, colliders, areas }) {
   const civic = { n: 0, clinic: 0, police: 0, school: 0 };
   for (const b of district.userData.buildings) {
     const [ax, az, bx, bz] = b.front, L = b.L, dx = (bx - ax) / L, dz = (bz - az) / L, dep = (b.face === 'n' || b.face === 's') ? b.z1 - b.z0 : b.x1 - b.x0;
-    const U = Math.min(L - 0.8, 10), V = Math.min(dep - 0.8, 9); if (U < 4.2 || V < 5) continue;
+    const IN = b.house ? 0.03 : 0.46;   // (generated buildings: the interior starts behind the recessed shopfront + window reveals)
+    const U = Math.min(L - 0.8, 10), V = Math.min(dep - 0.8 - IN, 9); if (U < 4.2 || V < 5) continue;
     const uA = Math.max(0.4, Math.min(b.doorU - U / 2, L - 0.4 - U)), uB = uA + U, doorX = uB - b.doorU; if (doorX < 0.8 || doorX > U - 0.8) continue;
-    const th = Math.atan2(dz, -dx), cs = Math.cos(th), sn = Math.sin(th), ox = ax + dx * uB + dz * 0.03, oz = az + dz * uB - dx * 0.03;
+    const th = Math.atan2(dz, -dx), cs = Math.cos(th), sn = Math.sin(th), ox = ax + dx * uB + dz * IN, oz = az + dz * uB - dx * IN;
     const W = (lx, lz) => [ox + lx * cs + lz * sn, oz - lx * sn + lz * cs];
     const rect = (x0, x1, z0, z1) => { const [p0x, p0z] = W(x0, z0), [p1x, p1z] = W(x1, z1); return { minX: Math.min(p0x, p1x), maxX: Math.max(p0x, p1x), minZ: Math.min(p0z, p1z), maxZ: Math.max(p0z, p1z) }; };
     let type = b.shop >= 0 ? 'shop' : b.floors >= 5 ? 'office' : (U >= 8 && V >= 7 ? 'flat' : 'studio');
     // civic buildings: a few of the wide non-shop buildings become clinics, police stations and schools (signed outside)
     if (b.shop < 0 && U >= 9.4 && V >= 8.5) { const k = civic.n++ % 7; if (k === 1 && civic.clinic < 4) { type = 'clinic'; civic.clinic++; } else if (k === 3 && civic.police < 2) { type = 'police'; civic.police++; } else if (k === 5 && civic.school < 3) { type = 'school'; civic.school++; } }
     const e = { b, U, V, doorX, th, W, type, inner: rect(0.22, U - 0.22, 0.2, V - 0.22), door: W(doorX, 0), t: 0, target: 0, group: null, cols: [] };
-    areas.push(e.inner, rect(doorX - 0.42, doorX + 0.42, -0.95, 0.5));
+    areas.push(e.inner, rect(doorX - 0.42, doorX + 0.42, -0.95 - IN, 0.5));
     e.doorCol = { type: 'box', ...rect(doorX - 0.6, doorX + 0.6, -0.12, 0.16), active: true }; colliders.push(e.doorCol);
     list.push(e);
   }

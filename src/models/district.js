@@ -60,10 +60,13 @@ const FACADES = [
   ['tx_stucco', 1.8, 1.8, 'tx_stucco_n'], ['tx_stone', 1.0, 2.0, 'tx_stone_n'], ['tx_fins', 1.2, 1.2, 'tx_fins_n'],
 ];
 
+// small parts that share the one vertex-coloured 'det' material (colour per part, linear RGB)
+const DET = Object.fromEntries(Object.entries({ frame: '#3a3c42', iron: '#232326', trim: '#e8e4da', shut0: '#4a7a5a', shut1: '#4a6a94', shut2: '#c8b08a', equip: '#a8aaac', tank: '#a07a54', riser: '#7aa09a' }).map(([k, v]) => { const c = new THREE.Color(v); return [k, [c.r, c.g, c.b]]; }));
 // ---- geometry helpers: quads / boxes with world-metre UVs, collected per material ------------------------------
 class Bin {
   constructor() { this.parts = new Map(); }
-  push(key, geo) { if (!this.parts.has(key)) this.parts.set(key, []); this.parts.get(key).push(geo); }
+  push(key, geo) { const dc = DET[key]; if (dc) { const n = geo.attributes.position.count, c = new Float32Array(n * 3); for (let i = 0; i < n; i++) { c[i * 3] = dc[0]; c[i * 3 + 1] = dc[1]; c[i * 3 + 2] = dc[2]; } geo.setAttribute('color', new THREE.BufferAttribute(c, 3)); key = 'det'; }
+    if (this.tag) key += '@' + this.tag; if (!this.parts.has(key)) this.parts.set(key, []); this.parts.get(key).push(geo); }   // (tag: buildings are merged per block, so whole blocks cull)
 }
 // a vertical quad from (x0,z0) to (x1,z1) along the ground, y from ya to yb, normal to the right of the a->b
 // direction... we pass the outward normal explicitly. UV: u along the wall (m / tw), v up (m / th) with offsets
@@ -144,71 +147,120 @@ const winUV = (i) => { const q = i % 4, r = Math.floor(i / 4); return [q / 4 + 0
 // footprint x0..x1, z0..z1; front faces the street on side `face` (n = -z, s = +z, w = -x, e = +x);
 // `street` = which sides are on a street (get windows); r = random
 // every generated building gets a real doorway in its street front (interiors are built on demand: src/interiors.js)
+// a quad through four points (any orientation), wound to face `want`; UVs in metres along its two edges
+function quad4(p, want, tw = 1, th = 1) {
+  const e1 = [p[1][0] - p[0][0], p[1][1] - p[0][1], p[1][2] - p[0][2]], e2 = [p[3][0] - p[0][0], p[3][1] - p[0][1], p[3][2] - p[0][2]];
+  let n = [e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0]]; const nl = Math.hypot(...n) || 1; n = n.map((v) => v / nl);
+  const flip = n[0] * want[0] + n[1] * want[1] + n[2] * want[2] < 0, l1 = Math.hypot(...e1) / tw, l2 = Math.hypot(...e2) / th; if (flip) n = n.map((v) => -v);
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(p.flat(), 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute([...n, ...n, ...n, ...n], 3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute([0, 0, l1, 0, l1, l2, 0, l2], 2)); g.setIndex(flip ? [0, 2, 1, 0, 3, 2] : [0, 1, 2, 0, 2, 3]); return g;
+}
+// a box-section bar from p to q (w wide, h deep), for stairs, braces and rails
+function barGeo(p, q, w, h) { const a = new THREE.Vector3(...p), c = new THREE.Vector3(...q), d = c.clone().sub(a), g = new THREE.BoxGeometry(w, d.length(), h); g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.clone().normalize())); const m = a.add(c).multiplyScalar(0.5); g.translate(m.x, m.y, m.z); return g; }
+const cylGeo = (r0, r1, h, x, y, z, seg = 12) => { const g = new THREE.CylinderGeometry(r0, r1, h, seg); g.translate(x, y + h / 2, z); return g; };
+// what kind of building a facade material makes: decides the windows, trim and roofline
+const STYLE = { wall_red_brick: 'brick', wall_gray_brick: 'brick', hs_brick: 'brick', hs_ybrick: 'brick', sg_darkbrick: 'brick', cy_brick: 'brick', wall_olive_stucco: 'stucco', wall_teal_stucco: 'stucco', ab_stucco: 'stucco', th_plaster: 'stucco', tx_stucco: 'stucco',
+  wall_red_sandstone: 'stone', tx_stone: 'stone', wall_gray_tile: 'stone', concrete_cracked: 'modern', tx_fins: 'modern', hs_siding: 'modern' };
+
 export const DOOR = { w: 1.1, h: 2.15 };
 const BUILDINGS = [];
 function building(bin, b, r) {
   const { x0, x1, z0, z1, face, floors, fac, shop } = b;
-  const [file, tw, th] = FACADES[fac];
+  const [file, tw, th] = FACADES[fac], style = STYLE[file] || 'brick', FK = 'f' + fac;
   const GF = 3.8, FH = 3.2, H = GF + (floors - 1) * FH, PAR = 0.7;
-  // walls: each side's a->b runs so the quad faces outward (n -> -z, s -> +z, w -> -x, e -> +x)
-  const sides = {
-    n: [x1, z0, x0, z0], s: [x0, z1, x1, z1], w: [x0, z0, x0, z1], e: [x1, z1, x1, z0],
-  };
-  // where the door goes along the front (u = metres from the front's `a` end): shops keep their shopfront and get a
-  // door bay at the far end; other buildings swap their middle ground-floor window for the door
+  const sides = { n: [x1, z0, x0, z0], s: [x0, z1, x1, z1], w: [x0, z0, x0, z1], e: [x1, z1, x1, z0] };   // a->b so the wall faces outward
   { const [ax, az, bx, bz] = sides[face]; const L = Math.hypot(bx - ax, bz - az); const n = Math.max(1, Math.floor((L - 1.2) / 2.6)), step = L / n;
     b.doorU = shop >= 0 ? L - 1.3 : step * (Math.floor(n / 2) + 0.5); b.L = L; b.front = [ax, az, bx, bz]; b.index = BUILDINGS.length; BUILDINGS.push(b); }
-  for (const k of ['n', 's', 'w', 'e']) {
-    const [ax, az, bx, bz] = sides[k]; const u0 = (ax + az) * 0.37 % 7;
-    if (k !== face) { bin.push('f' + fac, wallQuad(ax, az, bx, bz, 0, H + PAR, tw, th, u0)); continue; }
-    // the front wall is laid in three pieces round the doorway
-    const L = b.L, dx = (bx - ax) / L, dz = (bz - az) / L, d0 = b.doorU - DOOR.w / 2, d1 = b.doorU + DOOR.w / 2, top = SW_H + DOOR.h, P = (u) => [ax + dx * u, az + dz * u];
-    bin.push('f' + fac, wallQuad(ax, az, ...P(d0), 0, H + PAR, tw, th, u0)); bin.push('f' + fac, wallQuad(...P(d1), bx, bz, 0, H + PAR, tw, th, u0 + d1)); bin.push('f' + fac, wallQuad(...P(d0), ...P(d1), top, H + PAR, tw, th, u0 + d0));
-    // door frame (jambs + lintel, standing a little proud) and a stone threshold
-    const nx = -dz, nz = dx, fr = (ua, ub, ya, yb) => { const [p0x, p0z] = P(ua), [p1x, p1z] = P(ub); bin.push('cap', boxGeo(Math.min(p0x, p1x) - Math.abs(nx) * 0.1, Math.max(p0x, p1x) + Math.abs(nx) * 0.1, ya, yb, Math.min(p0z, p1z) - Math.abs(nz) * 0.1, Math.max(p0z, p1z) + Math.abs(nz) * 0.1, 1, 1)); };
-    fr(d0 - 0.09, d0, 0, top + 0.09); fr(d1, d1 + 0.09, 0, top + 0.09); fr(d0, d1, top, top + 0.09); fr(d0, d1, 0, SW_H + 0.012);
-  }
+  const d = rng(b.index * 9973 + 17);   // detail choices (separate from r, which lays the town out)
+  const shutters = style === 'stucco' && d() < 0.5 ? 'shut' + Math.floor(d() * 3) : null, balconies = style === 'stucco' && floors >= 3 && d() < 0.45, escape = style === 'brick' && floors >= 3 && floors <= 7 && d() < 0.6, awning = shop >= 0 && d() < 0.45 ? 'awn' + Math.floor(d() * 4) : null, acs = d() < 0.5;
+  // a wall's own frame: u along it, y up, o outward
+  const kit = (k) => { const [ax, az, bx, bz] = sides[k], L = Math.hypot(bx - ax, bz - az), dx = (bx - ax) / L, dz = (bz - az) / L, nx = -dz, nz = dx, uo = (ax + az) * 0.37 % 7, P = (u, o = 0) => [ax + dx * u + nx * o, az + dz * u + nz * o];
+    const K = { L, P, n: [nx, 0, nz], t: [dx, 0, dz],
+      Q: (u0, u1, y0, y1, o, key, uv) => { const [px, pz] = P(u0, o), [qx, qz] = P(u1, o); bin.push(key, uv ? wallQuad(px, pz, qx, qz, y0, y1, 1, 1, 0, 0, uv) : wallQuad(px, pz, qx, qz, y0, y1, tw, th, uo + u0)); },
+      BX: (u0, u1, y0, y1, o0, o1, key, tile = 1) => { const [px, pz] = P(u0, o0), [qx, qz] = P(u1, o1); bin.push(key, boxGeo(Math.min(px, qx), Math.max(px, qx), y0, y1, Math.min(pz, qz), Math.max(pz, qz), tile, tile)); },
+      V: (u, y, o) => { const [x, z] = P(u, o); return [x, y, z]; },
+      // the four inner faces of an opening cut `dep` into the wall
+      reveal: (u0, u1, y0, y1, dep, key = FK) => { const V = K.V; bin.push(key, quad4([V(u0, y0, 0), V(u0, y0, -dep), V(u0, y1, -dep), V(u0, y1, 0)], [dx, 0, dz], tw, th)); bin.push(key, quad4([V(u1, y0, 0), V(u1, y0, -dep), V(u1, y1, -dep), V(u1, y1, 0)], [-dx, 0, -dz], tw, th));
+        bin.push(key, quad4([V(u0, y1, 0), V(u1, y1, 0), V(u1, y1, -dep), V(u0, y1, -dep)], [0, -1, 0], tw, th)); bin.push(key, quad4([V(u0, y0, 0), V(u1, y0, 0), V(u1, y0, -dep), V(u0, y0, -dep)], [0, 1, 0], tw, th)); },
+      // the wall itself, laid round its openings [{u0, u1, y0, y1}]
+      wall: (ya, yb, ops) => { const ys = [...new Set([ya, yb, ...ops.flatMap((o) => [o.y0, o.y1])].filter((y) => y >= ya && y <= yb))].sort((p, q) => p - q);
+        for (let i = 0; i < ys.length - 1; i++) { const a = ys[i], c = ys[i + 1], act = ops.filter((o) => o.y0 <= a + 1e-6 && o.y1 >= c - 1e-6).sort((p, q) => p.u0 - q.u0); let u = 0; for (const o of act) { if (o.u0 > u + 1e-4) K.Q(u, o.u0, a, c, 0, FK); u = Math.max(u, o.u1); } if (L > u + 1e-4) K.Q(u, L, a, c, 0, FK); } } };
+    return K; };
+  // ---- roof: deck, parapet with coping, then what stands on it
   bin.push('roof', flatQuad(x0, x1, z0, z1, H + 0.05, 4, 4));
-  // parapet cap + a cornice band over the shopfronts on the street sides
-  const capM = 0.12;
-  const cw = 0.35, ct = H + PAR, cb = H + PAR + 0.18;   // a ring of coping along the parapet edges
+  const capM = 0.12, cw = 0.35, ct = H + PAR, cb = H + PAR + 0.18;
   bin.push('cap', boxGeo(x0 - capM, x1 + capM, ct, cb, z0 - capM, z0 + cw, 1, 1)); bin.push('cap', boxGeo(x0 - capM, x1 + capM, ct, cb, z1 - cw, z1 + capM, 1, 1));
   bin.push('cap', boxGeo(x0 - capM, x0 + cw, ct, cb, z0 + cw, z1 - cw, 1, 1)); bin.push('cap', boxGeo(x1 - cw, x1 + capM, ct, cb, z0 + cw, z1 - cw, 1, 1));
   for (const [ax, az, bx, bz] of [[x0 + cw, z0 + cw, x1 - cw, z0 + cw], [x1 - cw, z1 - cw, x0 + cw, z1 - cw], [x0 + cw, z1 - cw, x0 + cw, z0 + cw], [x1 - cw, z0 + cw, x1 - cw, z1 - cw]]) bin.push('cap', wallQuad(ax, az, bx, bz, H + 0.05, ct, 1, 1));   // inner parapet faces
-  // rooftop clutter
-  if (r() < 0.7) { const cx = x0 + 1.5 + r() * Math.max(0.5, x1 - x0 - 4), cz = z0 + 1.5 + r() * Math.max(0.5, z1 - z0 - 4); bin.push('equip', boxGeo(cx, cx + 1.6 + r(), H, H + 1.0 + r() * 0.6, cz, cz + 1.2 + r(), 1, 1)); }
-  if (floors > 4 && r() < 0.4) { const cx = x0 + 2 + r() * Math.max(0.5, x1 - x0 - 6), cz = z0 + 2 + r() * Math.max(0.5, z1 - z0 - 6); bin.push('equip', boxGeo(cx, cx + 3, H, H + 2.6, cz, cz + 3, 1, 1)); }
-  // street sides: windows on every upper floor, the front gets a shopfront or a lobby + windows
-  for (const k of b.street) {
-    const [ax, az, bx, bz] = sides[k]; const L = Math.hypot(bx - ax, bz - az), dx = (bx - ax) / L, dz = (bz - az) / L;
-    const nx = -dz, nz = dx, off = 0.04;
-    const n = Math.max(1, Math.floor((L - 1.2) / 2.6)), step = L / n;
-    const ww = Math.min(1.5, step * 0.6), wh = 1.7;
-    for (let f = 1; f < floors; f++) {
-      const y = GF + (f - 1) * FH + 0.8;
-      for (let i = 0; i < n; i++) {
-        const u = step * (i + 0.5); const cx = ax + dx * u + nx * off, cz = az + dz * u + nz * off;
-        const lit = r() < 0.32; const cell = lit ? Math.floor(r() * 7) : 7 + Math.floor(r() * 9);
-        bin.push('win', wallQuad(cx - dx * ww / 2, cz - dz * ww / 2, cx + dx * ww / 2, cz + dz * ww / 2, y, y + wh, 1, 1, 0, 0, winUV(cell)));
-        const sl = ww / 2 + 0.08, sx = cx + nx * 0.07, sz = cz + nz * 0.07, ex = Math.abs(dx) * sl + Math.abs(nx) * 0.07, ez = Math.abs(dz) * sl + Math.abs(nz) * 0.07;
-        bin.push('cap', boxGeo(sx - ex, sx + ex, y - 0.12, y, sz - ez, sz + ez));   // sill
-      }
-    }
-    // ground floor
-    if (k === face && shop >= 0) {
-      const sw = Math.max(2.5, Math.min(L - 0.8 - 1.9, 11)), u0 = Math.max(0.4, (L - 1.9 - sw) / 2); const cx0 = ax + dx * u0 + nx * off, cz0 = az + dz * u0 + nz * off;
-      bin.push('shop', wallQuad(cx0, cz0, cx0 + dx * sw, cz0 + dz * sw, 0.15, 3.5, 1, 1, 0, 0, shopUV(shop)));
-    } else {
-      for (let i = 0; i < n; i++) {
-        const u = step * (i + 0.5); const cx = ax + dx * u + nx * off, cz = az + dz * u + nz * off;
-        const cell = r() < 0.25 ? Math.floor(r() * 7) : 7 + Math.floor(r() * 9);
-        if (k === face && Math.abs(u - b.doorU) < 0.01) continue;   // (the door takes this window's place)
-        bin.push('win', wallQuad(cx - dx * ww / 2, cz - dz * ww / 2, cx + dx * ww / 2, cz + dz * ww / 2, 1.1, 2.9, 1, 1, 0, 0, winUV(cell)));
-      }
-    }
-    // a cornice band between the ground floor and the first floor
-    const mnx = Math.min(ax, bx) - (nx < 0 ? 0.18 : 0), mxx = Math.max(ax, bx) + (nx > 0 ? 0.18 : 0), mnz = Math.min(az, bz) - (nz < 0 ? 0.18 : 0), mxz = Math.max(az, bz) + (nz > 0 ? 0.18 : 0);
-    bin.push('cap', boxGeo(mnx, mxx, GF - 0.25, GF, mnz, mxz, 1, 1));
+  if (r() < 0.7) { const cx = x0 + 1.5 + r() * Math.max(0.5, x1 - x0 - 4), cz = z0 + 1.5 + r() * Math.max(0.5, z1 - z0 - 4), w = 1.6 + r(), h = 1.0 + r() * 0.6, dd = 1.2 + r(); bin.push('equip', boxGeo(cx, cx + w, H + 0.15, H + 0.15 + h, cz, cz + dd, 1, 1));
+    bin.push('iron', boxGeo(cx - 0.05, cx + w + 0.05, H, H + 0.15, cz + 0.1, cz + 0.25)); bin.push('iron', boxGeo(cx - 0.05, cx + w + 0.05, H, H + 0.15, cz + dd - 0.25, cz + dd - 0.1)); bin.push('iron', cylGeo(Math.min(w, dd) * 0.36, Math.min(w, dd) * 0.36, 0.06, cx + w / 2, H + 0.15 + h, cz + dd / 2, 14)); }   // an air handler on rails, its fan on top
+  if (floors > 4 && r() < 0.4) { const cx = x0 + 2 + r() * Math.max(0.5, x1 - x0 - 6), cz = z0 + 2 + r() * Math.max(0.5, z1 - z0 - 6); bin.push('equip', boxGeo(cx, cx + 3, H, H + 2.6, cz, cz + 3, 1, 1)); for (let i = 0; i < 6; i++) bin.push('iron', boxGeo(cx - 0.02, cx + 3.02, H + 0.5 + i * 0.3, H + 0.56 + i * 0.3, cz - 0.03, cz + 3.03)); }   // a louvred plant room
+  { const rx0 = x0 + 1, rx1 = x1 - 1, rz0 = z0 + 1, rz1 = z1 - 1, at = () => [rx0 + d() * Math.max(0.1, rx1 - rx0 - 3), rz0 + d() * Math.max(0.1, rz1 - rz0 - 3)];
+    if (floors >= 3) { const [sx, sz] = at(); bin.push(FK, boxGeo(sx, sx + 2.4, H, H + 2.5, sz, sz + 2.8, tw, th)); bin.push('cap', boxGeo(sx - 0.1, sx + 2.5, H + 2.5, H + 2.62, sz - 0.1, sz + 2.9)); bin.push('frame', boxGeo(sx + 0.7, sx + 1.7, H + 0.05, H + 2.1, sz + 2.8, sz + 2.84)); }   // the stair bulkhead + its door
+    if (floors >= 4 && d() < 0.45) { const [tx, tz] = at(), R = 1.15, ty = H + 1.9; for (const [lx, lz] of [[-0.8, -0.8], [0.8, -0.8], [-0.8, 0.8], [0.8, 0.8]]) bin.push('iron', boxGeo(tx + 1.2 + lx - 0.06, tx + 1.2 + lx + 0.06, H, ty, tz + 1.2 + lz - 0.06, tz + 1.2 + lz + 0.06));
+      bin.push('iron', boxGeo(tx + 0.3, tx + 2.1, ty - 0.12, ty, tz + 0.3, tz + 2.1)); bin.push('tank', cylGeo(R, R * 0.94, 2.2, tx + 1.2, ty, tz + 1.2, 16)); bin.push('tank', cylGeo(0.05, R + 0.12, 0.7, tx + 1.2, ty + 2.2, tz + 1.2, 16)); for (const hy of [0.4, 1.1, 1.8]) bin.push('iron', cylGeo(R + 0.015, R + 0.015, 0.05, tx + 1.2, ty + hy, tz + 1.2, 16)); }   // a wooden water tank
+    for (let i = 0, n = 1 + Math.floor(d() * 3); i < n; i++) { const [vx, vz] = at(); bin.push('equip', cylGeo(0.12, 0.12, 0.7 + d() * 0.5, vx, H, vz, 8)); bin.push('equip', cylGeo(0.2, 0.2, 0.08, vx, H + 0.75, vz, 8)); }   // vent stacks
+    if (d() < 0.4) { const [mx, mz] = at(); bin.push('iron', boxGeo(mx, mx + 0.05, H, H + 3.4, mz, mz + 0.05)); for (const [hy, hw] of [[2.6, 0.7], [2.9, 0.55], [3.2, 0.4]]) bin.push('iron', boxGeo(mx - hw, mx + hw, H + hy, H + hy + 0.03, mz, mz + 0.03)); } }   // an aerial
+  // ---- walls
+  for (const k of ['n', 's', 'w', 'e']) {
+    const K = kit(k), L = K.L;
+    if (!b.street.includes(k)) { K.Q(0, L, 0, H + PAR, 0, FK); continue; }
+    const isFront = k === face, n = Math.max(1, Math.floor((L - 1.2) / 2.6)), step = L / n, modern = style === 'modern';
+    const ww = modern ? Math.min(2.2, step * 0.82) : style === 'brick' ? Math.min(1.25, step * 0.55) : Math.min(1.4, step * 0.58), wh = modern ? 1.6 : style === 'brick' ? 1.9 : 1.7, dep = modern ? 0.22 : 0.16, ops = [], wins = [];
+    for (let f = 1; f < floors; f++) { const y = GF + (f - 1) * FH + (style === 'brick' ? 0.7 : 0.8); for (let i = 0; i < n; i++) { const u = step * (i + 0.5), lit = r() < 0.32, cell = lit ? Math.floor(r() * 7) : 7 + Math.floor(r() * 9); wins.push({ u0: u - ww / 2, u1: u + ww / 2, y0: y, y1: y + wh, cell, f, i }); } }
+    let shopOp = null;
+    if (isFront && shop >= 0) { const sw = Math.max(2.5, Math.min(L - 0.8 - 1.9, 11)), u0 = Math.max(0.4, (L - 1.9 - sw) / 2); shopOp = { u0, u1: u0 + sw, y0: SW_H, y1: 3.5 }; ops.push(shopOp); }
+    else for (let i = 0; i < n; i++) { const u = step * (i + 0.5), cell = r() < 0.25 ? Math.floor(r() * 7) : 7 + Math.floor(r() * 9); if (isFront && Math.abs(u - b.doorU) < 0.01) continue; wins.push({ u0: u - ww / 2, u1: u + ww / 2, y0: 1.1, y1: 2.9, cell, f: 0, i }); }
+    if (isFront) ops.push({ u0: b.doorU - DOOR.w / 2, u1: b.doorU + DOOR.w / 2, y0: 0, y1: SW_H + DOOR.h, door: true });
+    ops.push(...wins); K.wall(0, H + PAR, ops);
+    // windows: glass set back in the wall, reveals, a frame, a sill; then each style's own dressing
+    for (const w of wins) { const { u0, u1, y0, y1 } = w, panes = modern ? 2 : 1, pw = (u1 - u0) / panes;
+      for (let q = 0; q < panes; q++) K.Q(u0 + q * pw, u0 + (q + 1) * pw, y0, y1, -dep, 'win', winUV(q ? (w.cell + 3) % 16 < 7 === w.cell < 7 ? (w.cell + 3) % 16 : w.cell : w.cell));
+      K.reveal(u0, u1, y0, y1, dep, modern ? 'frame' : FK); const fo = -dep + 0.01, f1 = -dep + 0.06, fk = modern ? 'frame' : 'trim';
+      const FQ = (a0, a1, b0, b1) => K.Q(a0, a1, b0, b1, f1, fk, [0, 0, 1, 1]); FQ(u0, u0 + 0.06, y0, y1); FQ(u1 - 0.06, u1, y0, y1); FQ(u0 + 0.06, u1 - 0.06, y1 - 0.06, y1); FQ(u0 + 0.06, u1 - 0.06, y0, y0 + 0.06);
+      if (modern) FQ(u0 + pw - 0.035, u0 + pw + 0.035, y0 + 0.06, y1 - 0.06); else { FQ((u0 + u1) / 2 - 0.022, (u0 + u1) / 2 + 0.022, y0 + 0.06, y1 - 0.06); FQ(u0 + 0.06, u1 - 0.06, (y0 + y1) / 2 - 0.022, (y0 + y1) / 2 + 0.022); }
+      if (!modern) K.BX(u0 - 0.09, u1 + 0.09, y0 - 0.11, y0, -0.03, 0.1, 'capd');
+      if (style === 'brick') { K.BX(u0 - 0.14, u1 + 0.14, y1, y1 + 0.24, 0, 0.045, 'capd'); K.BX((u0 + u1) / 2 - 0.09, (u0 + u1) / 2 + 0.09, y1 - 0.02, y1 + 0.3, 0.045, 0.075, 'capd'); }   // stone lintel + keystone
+      if (style === 'stucco') { K.BX(u0 - 0.1, u0, y0, y1 + 0.1, 0, 0.05, 'trim'); K.BX(u1, u1 + 0.1, y0, y1 + 0.1, 0, 0.05, 'trim'); K.BX(u0 - 0.14, u1 + 0.14, y1, y1 + 0.14, 0, 0.08, 'trim');
+        if (shutters) for (const s of [-1, 1]) { const a = s < 0 ? u0 - 0.12 - ww * 0.46 : u1 + 0.12; K.BX(a, a + ww * 0.46, y0, y1, 0, 0.045, shutters); for (let l = 0; l < 3; l++) K.BX(a + 0.04, a + ww * 0.46 - 0.04, y0 + 0.14 + l * (wh - 0.2) / 3, y0 + 0.14 + (l + 0.8) * (wh - 0.2) / 3, 0.045, 0.058, shutters); } }
+      if (style === 'stone') { K.BX(u0 - 0.12, u1 + 0.12, y1, y1 + 0.18, 0, 0.1, 'capd'); K.BX(u0 - 0.2, u1 + 0.2, y1 + 0.18, y1 + 0.26, 0, 0.16, 'capd'); K.BX(u0 - 0.12, u0, y0, y1, 0, 0.06, 'capd'); K.BX(u1, u1 + 0.12, y0, y1, 0, 0.06, 'capd'); }   // a surround with a hood
+      if (balconies && w.f >= 1 && (w.i + w.f) % 2 === 0) { const a = u0 - 0.35, c = u1 + 0.35, by = y0 - 0.75; K.BX(a, c, by - 0.12, by, 0, 0.85, 'cap'); for (const [p, q2] of [[a, a + 0.04], [c - 0.04, c]]) { K.BX(p, q2, by + 0.95, by + 1.0, 0, 0.85, 'iron'); K.BX(p, q2, by, by + 0.06, 0, 0.85, 'iron'); } K.BX(a, c, by + 0.95, by + 1.0, 0.81, 0.85, 'iron'); K.BX(a, c, by, by + 0.06, 0.81, 0.85, 'iron');
+        for (let t = a + 0.02; t < c; t += 0.2) K.BX(t, t + 0.025, by, by + 0.97, 0.82, 0.845, 'iron'); for (let t = 0.2; t < 0.8; t += 0.27) for (const p of [a + 0.01, c - 0.035]) K.BX(p, p + 0.025, by, by + 0.97, t, t + 0.025, 'iron'); }
+      else if (acs && w.f >= 1 && (w.i * 7 + w.f * 3 + b.index) % 5 === 0) { K.BX((u0 + u1) / 2 - 0.36, (u0 + u1) / 2 + 0.36, y0, y0 + 0.42, -0.05, 0.38, 'equip'); K.BX((u0 + u1) / 2 - 0.3, (u0 + u1) / 2 + 0.3, y0 + 0.05, y0 + 0.37, 0.38, 0.39, 'iron'); } }   // a window air conditioner
+    // ---- the base: a plinth course either side of the door / shopfront
+    { const gaps = ops.filter((o) => o.y0 < 0.6).sort((p, q) => p.u0 - q.u0); let u = 0; for (const o of gaps) { if (o.u0 - 0.1 > u + 0.05) K.BX(u, o.u0 - 0.1, 0, 0.55, 0, 0.06, 'cap'); u = o.u1 + 0.1; } if (L > u + 0.05) K.BX(u, L, 0, 0.55, 0, 0.06, 'cap'); }
+    // ---- the shopfront: pilasters, a tiled stall riser, glass set back behind mullions, a sign fascia, maybe an awning
+    if (shopOp) { const { u0, u1 } = shopOp, sw = u1 - u0, [ua, va, ub, vb] = shopUV(shop), sd = 0.4, gy0 = SW_H + 0.5, gy1 = 2.72, vs = va + (vb - va) * 0.78;
+      K.reveal(u0, u1, SW_H, 3.5, sd, 'frame'); K.BX(u0, u1, SW_H, gy0, -sd, -sd + 0.14, 'riser', 0.6); K.BX(u0, u1, gy0, gy0 + 0.05, -sd, -sd + 0.2, 'cap');
+      K.Q(u0, u1, gy0, gy1, -sd + 0.05, 'shop', [ua + 0.02 * (ub - ua), va + (vb - va) * 0.03, ub - 0.02 * (ub - ua), vs]); K.BX(u0, u1, gy1, 3.5, -sd, -sd + 0.1, 'frame');
+      for (const m of [0, 180 / 512, 330 / 512, 1]) { const mu = u0 + 0.05 + m * (sw - 0.1); K.BX(mu - 0.04, mu + 0.04, gy0, gy1, -sd + 0.04, -sd + 0.13, 'frame'); } K.BX(u0, u1, gy1 - 0.04, gy1 + 0.04, -sd + 0.04, -sd + 0.13, 'frame');
+      for (const pu of [u0 - 0.32, u1 + 0.02]) { K.BX(pu, pu + 0.3, 0, 3.5, 0, 0.1, 'cap'); K.BX(pu - 0.04, pu + 0.34, 0, 0.3, 0, 0.14, 'cap'); K.BX(pu - 0.04, pu + 0.34, 3.3, 3.5, 0, 0.14, 'cap'); }
+      K.BX(u0 - 0.36, u1 + 0.36, 2.78, 3.48, -0.02, 0.16, 'frame'); K.Q(u0 - 0.3, u1 + 0.3, 2.82, 3.44, 0.165, 'shop', [ua + 0.012 * (ub - ua), vs + (vb - va) * 0.015, ub - 0.012 * (ub - ua), vb - (vb - va) * 0.025]); K.BX(u0 - 0.4, u1 + 0.4, 3.48, 3.56, -0.02, 0.24, 'cap');
+      if (awning) { const V = K.V, a = u0 - 0.2, c = u1 + 0.2, yt = 2.74, yb = 2.28, out = 1.25; bin.push(awning, quad4([V(a, yb, out), V(c, yb, out), V(c, yt, 0.17), V(a, yt, 0.17)], [K.n[0], 1, K.n[2]], 1, 1)); bin.push(awning, quad4([V(a, yb - 0.2, out), V(c, yb - 0.2, out), V(c, yb, out), V(a, yb, out)], K.n, 1, 1));
+        for (const e of [a, c]) { bin.push('iron', barGeo(V(e, yb, out), V(e, yt, 0.17), 0.03, 0.03)); bin.push('iron', barGeo(V(e, yb, out), V(e, yb - 0.02, 0.05), 0.03, 0.03)); } }
+      else for (let t = u0 + 0.6; t < u1; t += 1.9) { bin.push('iron', barGeo(K.V(t, 3.5, 0.1), K.V(t, 3.78, 0.5), 0.025, 0.025)); bin.push('iron', barGeo(K.V(t, 3.78, 0.5), K.V(t, 3.62, 0.62), 0.025, 0.025)); const [gx, gz] = K.P(t, 0.62); bin.push('iron', cylGeo(0.03, 0.13, 0.12, gx, 3.5, gz, 8)); bin.push('glow', cylGeo(0.05, 0.05, 0.03, gx, 3.48, gz, 6)); } }   // gooseneck sign lamps
+    // ---- the door: frame, threshold, a hood on brackets, a lamp beside it
+    if (isFront) { const d0 = b.doorU - DOOR.w / 2, d1 = b.doorU + DOOR.w / 2, top = SW_H + DOOR.h; K.BX(d0 - 0.09, d0, 0, top + 0.09, -0.1, 0.1, 'cap'); K.BX(d1, d1 + 0.09, 0, top + 0.09, -0.1, 0.1, 'cap'); K.BX(d0, d1, top, top + 0.09, -0.1, 0.1, 'cap'); K.BX(d0, d1, 0, SW_H + 0.012, -0.5, 0.1, 'cap'); K.reveal(d0, d1, SW_H, top, 0.5);
+      if (shop < 0) { K.BX(d0 - 0.3, d1 + 0.3, top + 0.22, top + 0.32, 0, 0.6, style === 'modern' ? 'frame' : 'cap'); if (style !== 'modern') for (const e of [d0 - 0.24, d1 + 0.16]) { K.BX(e, e + 0.08, top - 0.1, top + 0.22, 0, 0.12, 'cap'); bin.push('cap', barGeo(K.V(e + 0.04, top - 0.08, 0.1), K.V(e + 0.04, top + 0.2, 0.5), 0.07, 0.07)); } K.BX(d0 - 0.2, d1 + 0.2, 0, SW_H + 0.1, 0.1, 0.5, 'cap'); }
+      const lu = d0 - 0.4; K.BX(lu - 0.05, lu + 0.05, top - 0.35, top - 0.3, 0, 0.14, 'iron'); K.BX(lu - 0.06, lu + 0.06, top - 0.3, top - 0.08, 0.06, 0.18, 'glow'); K.BX(lu - 0.08, lu + 0.08, top - 0.08, top - 0.04, 0.04, 0.2, 'iron'); }
+    // ---- the band over the ground floor, then each style's own roofline + vertical dressing
+    K.BX(0, L, GF - 0.25, GF, 0, 0.18, 'cap'); K.BX(0, L, GF - 0.33, GF - 0.25, 0, 0.1, 'cap');
+    if (style === 'brick') { K.BX(0, L, H + PAR - 0.5, H + PAR - 0.32, 0, 0.14, 'cap'); K.BX(0, L, H + PAR - 0.32, H + PAR - 0.06, 0, 0.3, 'cap'); K.BX(0, L, H + PAR - 0.06, H + PAR + 0.02, 0, 0.38, 'cap'); for (let t = 0.25; t < L - 0.25; t += 0.72) K.BX(t, t + 0.24, H + PAR - 0.5, H + PAR - 0.32, 0.14, 0.26, 'capd');   // a bracketed cornice
+      for (let f = 2; f < floors; f++) K.BX(0, L, GF + (f - 1) * FH - 0.06, GF + (f - 1) * FH + 0.06, 0, 0.035, FK, tw); }
+    if (style === 'stucco') { const V = K.V, ye = H + PAR + 0.1; bin.push('tile', quad4([V(-0.1, ye - 0.55, 0.7), V(L + 0.1, ye - 0.55, 0.7), V(L + 0.1, ye, 0), V(-0.1, ye, 0)], [K.n[0], 1, K.n[2]], 1.2, 1.2)); bin.push('cap', quad4([V(-0.1, ye - 0.55, 0.7), V(L + 0.1, ye - 0.55, 0.7), V(L + 0.1, ye - 0.62, 0.02), V(-0.1, ye - 0.62, 0.02)], [0, -1, 0], 1, 1)); K.BX(-0.1, L + 0.1, ye - 0.62, ye - 0.52, 0.66, 0.72, 'cap');
+      for (let t = 0.3; t < L; t += 1.6) bin.push('capd', barGeo(V(t, ye - 0.95, 0.03), V(t, ye - 0.6, 0.6), 0.09, 0.09)); }   // a tiled pent eave on brackets
+    if (style === 'stone') { for (let i = 0; i <= n; i++) { const u = Math.min(L - 0.42, Math.max(0, step * i - 0.21)); K.BX(u, u + 0.42, GF, H + PAR - 0.6, 0, 0.12, FK, tw); K.BX(u - 0.05, u + 0.47, GF, GF + 0.3, 0, 0.17, 'cap'); K.BX(u - 0.05, u + 0.47, H + PAR - 0.9, H + PAR - 0.6, 0, 0.17, 'cap'); }
+      K.BX(0, L, H + PAR - 0.6, H + PAR - 0.3, 0, 0.22, 'cap'); K.BX(0, L, H + PAR - 0.3, H + PAR + 0.04, 0, 0.42, 'cap'); for (let f = 2; f < floors; f++) K.BX(0, L, GF + (f - 1) * FH - 0.09, GF + (f - 1) * FH + 0.09, 0, 0.07, 'cap');
+      if (isFront && L > 8) { K.BX(L / 2 - 2.2, L / 2 + 2.2, H + PAR + 0.18, H + PAR + 0.75, -0.3, 0.05, FK, tw); K.BX(L / 2 - 1.3, L / 2 + 1.3, H + PAR + 0.75, H + PAR + 1.2, -0.3, 0.05, FK, tw); K.BX(L / 2 - 2.3, L / 2 + 2.3, H + PAR + 0.72, H + PAR + 0.8, -0.34, 0.1, 'cap'); K.BX(L / 2 - 1.4, L / 2 + 1.4, H + PAR + 1.2, H + PAR + 1.3, -0.34, 0.1, 'cap'); } }   // pilasters, courses, a stepped pediment
+    if (modern) { for (let i = 0; i <= n; i++) { const u = Math.min(L - 0.14, Math.max(0, step * i - 0.07)); K.BX(u, u + 0.14, GF, H + PAR, 0, 0.3, 'cap'); } for (let f = 1; f < floors; f++) K.BX(0, L, GF + (f - 1) * FH + 0.32, GF + (f - 1) * FH + 0.42, 0, 0.12, 'frame'); }   // fins + slab edges
+    for (const e of [0.12, L - 0.2]) { if (d() < 0.5) continue; const [px, pz] = K.P(e + 0.04, 0.1); bin.push('iron', cylGeo(0.05, 0.05, H + PAR - 0.4, px, 0.2, pz, 8)); for (let y = 2.5; y < H; y += 3.2) K.BX(e - 0.03, e + 0.11, y, y + 0.05, 0, 0.17, 'iron'); }   // rainwater pipes
+    // ---- a fire escape down the front of a brick walk-up: landings, rails, stairs between, a drop ladder
+    if (escape && isFront && n >= 2) { const i0 = Math.max(0, Math.min(n - 2, Math.floor(n / 2) - (shop >= 0 ? 0 : 1) + (shop < 0 && n > 2 ? 2 : 0) > n - 2 ? 0 : Math.floor(n / 2) - 1)), a = step * (i0 + 0.5) - ww / 2 - 0.35, c = step * (i0 + 1.5) + ww / 2 + 0.35, W = 1.0, V = K.V;
+      for (let f = 1; f < floors; f++) { const y = GF + (f - 1) * FH + 0.55; K.BX(a, c, y - 0.05, y, 0, W, 'iron'); 
+        for (const hy of [0.5, 1.0]) { K.BX(a, c, y + hy - 0.02, y + hy + 0.02, W - 0.04, W, 'iron'); K.BX(a, a + 0.04, y + hy - 0.02, y + hy + 0.02, 0, W, 'iron'); K.BX(c - 0.04, c, y + hy - 0.02, y + hy + 0.02, 0, W, 'iron'); }
+        for (let t = a; t <= c + 0.01; t += (c - a) / 6) K.BX(Math.min(t, c - 0.03), Math.min(t, c - 0.03) + 0.03, y, y + 1.0, W - 0.04, W - 0.01, 'iron'); for (const e of [a, c - 0.05]) bin.push('iron', barGeo(V(e + 0.025, y - 0.05, W - 0.05), V(e + 0.025, y - 0.7, 0.03), 0.04, 0.04));
+        if (f < floors - 1) { const s0 = V(a + 0.5, y, W * 0.5), s1 = V(c - 0.5, y + FH, W * 0.5); for (const o of [-0.26, 0.26]) bin.push('iron', barGeo([s0[0] + K.n[0] * o, s0[1], s0[2] + K.n[2] * o], [s1[0] + K.n[0] * o, s1[1], s1[2] + K.n[2] * o], 0.05, 0.12)); for (let q = 1; q < 9; q++) { const t = q / 9, ux = a + 0.5 + (c - a - 1) * t; K.BX(ux - 0.11, ux + 0.11, y + FH * t - 0.02, y + FH * t + 0.01, W * 0.5 - 0.26, W * 0.5 + 0.26, 'iron'); } } }
+      const y1 = GF + 0.55; for (const o of [0, 0.42]) K.BX(a + 0.2 + o, a + 0.24 + o, y1 - 1.9, y1 + 0.9, W - 0.1, W - 0.06, 'iron'); for (let y = y1 - 1.8; y < y1 + 0.9; y += 0.3) K.BX(a + 0.2, a + 0.66, y, y + 0.03, W - 0.1, W - 0.06, 'iron'); }
   }
 }
 
@@ -233,7 +285,11 @@ function fillFrontage(bin, r, side, bx0, bx1, bz0, bz1, a, b, depth, blockStreet
     building(bin, { ...fp, face: side, floors, fac: Math.floor(r() * FACADES.length), shop: r() < 0.7 ? Math.floor(r() * 15) : -1, street }, r);
   }
 }
+let _blk = 0;
 function fillBlock(bin, r, bx0, bx1, bz0, bz1, streets, tallness = 1) {
+  bin.tag = 'b' + (_blk++); try { fillBlock0(bin, r, bx0, bx1, bz0, bz1, streets, tallness); } finally { bin.tag = ''; }
+}
+function fillBlock0(bin, r, bx0, bx1, bz0, bz1, streets, tallness) {
   const D = 16;
   // n and s rows run the full width; w and e rows fill between them
   if (streets.includes('n')) fillFrontage(bin, r, 'n', bx0, bx1, bz0, bz1, bx0, bx1, D, streets, LOTS, tallness);
@@ -244,7 +300,7 @@ function fillBlock(bin, r, bx0, bx1, bz0, bz1, streets, tallness = 1) {
 }
 
 export function makeDistrict() {
-  BUILDINGS.length = 0;
+  BUILDINGS.length = 0; _blk = 0;
   const g = new THREE.Group(); g.name = 'city_district';
   const bin = new Bin(); const r = rng(2026);
   const { xs, zs, road: RH, walk: WH } = GRID;
@@ -348,15 +404,20 @@ export function makeDistrict() {
     far: new THREE.MeshStandardMaterial({ map: tex('city_far'), emissiveMap: tex('city_far_e'), emissive: '#ffffff', emissiveIntensity: 0.55, roughness: 0.9, color: '#9a9aa0' }),
   };
   facMats.forEach((m, i) => { MATS['f' + i] = m; });
+  // the modelled dressing: window frames + shop metalwork, painted trim, ironwork, shutters, awnings, tank staves, eave tiles
+  const tint = (file, color, o = {}) => new THREE.MeshStandardMaterial({ map: tex(file), color, roughness: 0.7, ...o });
+  Object.assign(MATS, { det: new THREE.MeshStandardMaterial({ map: tex('b82_whitewash'), vertexColors: true, roughness: 0.65, metalness: 0.15 }), capd: MATS.cap, tile: tint('shr_roof', '#c8846a', { roughness: 0.85, side: THREE.DoubleSide }), glow: new THREE.MeshBasicMaterial({ color: new THREE.Color(2.4, 1.9, 1.1), toneMapped: false }) });
+  ['#a8322a', '#2e5a3a', '#2a4a7a', '#c8962a'].forEach((col, i) => { const c = document.createElement('canvas'); c.width = 64; c.height = 8; const x = c.getContext('2d'); x.fillStyle = col; x.fillRect(0, 0, 64, 8); x.fillStyle = '#efe9da'; x.fillRect(0, 0, 32, 8); const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1.6, 1); t.colorSpace = THREE.SRGBColorSpace; MATS['awn' + i] = new THREE.MeshStandardMaterial({ map: t, roughness: 0.9, side: THREE.DoubleSide }); });
   const chain = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'); x.strokeStyle = '#b8bcbc'; x.lineWidth = 3; x.beginPath(); x.moveTo(0, 32); x.lineTo(32, 0); x.lineTo(64, 32); x.lineTo(32, 64); x.closePath(); x.stroke(); const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; return t; })();
   const leaseT = (() => { const c = document.createElement('canvas'); c.width = 512; c.height = 256; const x = c.getContext('2d'); const draw = () => { x.fillStyle = '#f2efe6'; x.fillRect(0, 0, 512, 256); x.fillStyle = '#1d4a2a'; x.fillRect(0, 0, 512, 70); x.fillStyle = '#f2ead0'; fitText(x, 'MAPLE CREEK PROPERTIES', 256, 38, 470, 34, F.roman, { spacing: 3 }); x.fillStyle = '#c81e28'; fitText(x, 'LOT FOR LEASE', 256, 130, 470, 70, F.heavy); x.fillStyle = '#222'; fitText(x, 'build to suit · (555) 018-3365', 256, 205, 440, 32, F.label); }; draw(); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; if (document.fonts) document.fonts.ready.then(() => { draw(); t.needsUpdate = true; }); return t; })();
   MATS.lot = new THREE.MeshStandardMaterial({ map: tex('tx_drygrass'), normalMap: tex('tx_drygrass_n', false), color: '#c8b494', roughness: 1 });   // vacant lots: patchy dry grass on sandy dirt (item 60)
   MATS.fence = new THREE.MeshStandardMaterial({ map: chain, alphaTest: 0.4, transparent: false, metalness: 0.5, roughness: 0.5 });
   MATS.post = new THREE.MeshStandardMaterial({ color: '#9a9e9e', metalness: 0.6, roughness: 0.4 });
   MATS.lease = new THREE.MeshStandardMaterial({ map: leaseT, roughness: 0.6 });
+  const LODK = /^(det|capd|glow|tile|awn\d)$/, lod = [];   // (the small dressing of each block is only drawn within reach)
   for (const [key, list] of bin.parts) {
-    const m = new THREE.Mesh(mergeGeometries(list, false), MATS[key]);
-    m.receiveShadow = !['far', 'win', 'shop'].includes(key); m.castShadow = false; m.name = 'district_' + key;
+    const mk = key.split('@')[0], m = new THREE.Mesh(mergeGeometries(list, false), MATS[mk]); if (!m.geometry) console.warn('district merge failed', key);
+    m.receiveShadow = !['far', 'win', 'shop', 'glow'].includes(mk); m.castShadow = false; m.name = 'district_' + key; if (key.includes('@')) { m.userData.noMerge = true; m.geometry.computeBoundingSphere(); if (LODK.test(mk)) lod.push(m); }
     if (key === 'far') m.frustumCulled = false;
     g.add(m);
   }
@@ -397,6 +458,7 @@ export function makeDistrict() {
     for (const x of xs) { areas.push({ minX: x - WH + 0.3, maxX: x + WH - 0.3, minZ: ZMAX - 1, maxZ: RG.n - RG.hw + 0.5 }, { minX: x - WH + 0.3, maxX: x + WH - 0.3, minZ: RG.s + RG.hw - 0.5, maxZ: ZMIN + 1 }); }
     for (const z of zs) areas.push({ minX: XMAX - 1, maxX: RG.e - RG.hw + 0.5, minZ: z - WH + 0.3, maxZ: z + WH - 0.3 }); }   // the old town's east edge opens onto the avenue
   g.userData = {
+    lodTick: (pos, reach = 150) => { for (const m of lod) { const bs = m.geometry.boundingSphere; m.visible = Math.hypot(bs.center.x - pos.x, bs.center.z - pos.z) - bs.radius < reach; } },
     buildings: BUILDINGS, sidewalkY: SW_H,
     areas, lots: LOTS,
     lampPosts: lampPts.map(([x, z]) => [x, z]), treePosts: treePts,

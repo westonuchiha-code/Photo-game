@@ -505,3 +505,21 @@ untextured surfaces and colour maps missing their normal map; unused-export / un
   smooth hairline by angle, closed crown); arm tops lean in under the shoulder slope and are weighted partly to the
   chest, so the shoulder reads as one surface; thigh tops no longer poke through the hip.
 - Not done: people indoors / in the old town, crossing streets, talking, sitting.
+
+## 98 District buildings rebuilt as modelled buildings (district.js)
+- The generated district buildings were flat boxes with window + shopfront pictures: out of keeping with the modelled
+  old town. `building()` now models them. The layout (footprints, shops, doors) is unchanged: detail choices use a
+  separate random stream.
+- Street walls are laid round their openings (`K.wall`), so windows are really recessed: glass set back, reveals,
+  frame + glazing bars, sill. Four styles from the facade material (`STYLE`): brick (stone lintels + keystones,
+  bracketed cornice, fire escapes with landings / stairs / drop ladder), stucco (trim surrounds, shutters, iron
+  balconies, tiled pent eave), stone (pilasters, string courses, hooded surrounds, stepped pediment), modern (paired
+  panes, fins, slab edges).
+- Shopfronts: recessed glazing behind mullions, tiled stall riser, pilasters, projecting sign fascia, striped awning or
+  gooseneck sign lamps. Doors: frame, recessed leaf, hood on brackets, step, wall lamp. Plinth course, rain pipes,
+  window air conditioners. Roofs: stair bulkhead, water tank on legs, air handler, vents, aerial.
+- Interiors now start 0.46 m behind the front wall (interiors.js `IN`), so they sit behind the recessed fronts.
+- Cost control: buildings merge per block (`bin.tag`, `noMerge`) so whole blocks frustum-cull; small parts share one
+  vertex-coloured material (`det`); the small dressing (det, capd, glow, tile, awnings) is only shown within 150 m
+  (`userData.lodTick`). About 1.1 M triangles in total, roughly 200 k of them always candidates for drawing.
+- Not done: blank party walls (sides not on a street) are still plain; real-device frame rate unmeasured.

@@ -2196,6 +2196,7 @@ const amberMats = new Set();
 neon.traverse((o) => { if (o.isMesh && o.material.isMeshBasicMaterial && o.material.color.r > 1.9 && o.material.color.b === 0) amberMats.add(o.material); });
 // polish pass: anything with userData.tick(t, dt) animates (message boards, creek water, arcade screens...)
 let tickers = null;
+let lodN = 0;
 function frame() {
   if (window.__loadingHold) { clock.getDelta(); requestAnimationFrame(frame); return; }   // (loading screen up: see loading.js)
   const rawDt = clock.getDelta(), dt = Math.min(rawDt, 0.05);
@@ -2247,6 +2248,7 @@ function frame() {
   const f = 0.94 + 0.06 * Math.sin(t * 31) * Math.sin(t * 7.3); // subtle neon buzz
   for (const m of amberMats) m.color.setRGB(2.0 * f, 0.42 * f, 0.0);
   interiors.update(mode === 'walk' ? walk.position : camera.position, dt, mode !== 'drive');
+  if ((lodN = (lodN + 1) % 12) === 0) district.userData.lodTick(camera.position);
   people.update(mode === 'walk' ? walk.position : mode === 'drive' ? drive.state : camera.position, dt, mode === 'drive' ? drive.state : null, mode === 'walk');
   // the diner's key light is the only shadow caster: its shadow map is redrawn only while you're near the diner
   renderer.shadowMap.needsUpdate = renderer.shadowMap.enabled && Math.abs(camera.position.x) < 45 && Math.abs(camera.position.z) < 40;
