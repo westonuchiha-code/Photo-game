@@ -1,0 +1,13 @@
+const { chromium } = require('playwright');
+(async () => { const b = await chromium.launch(); const p = await b.newPage({ viewport: { width: 640, height: 400 } });
+  p.on('pageerror', (e) => console.log('PAGEERR', e.message, (e.stack || '').split('\n').slice(1, 3).join(' | ')));
+  await p.goto('http://localhost:8123/', { waitUntil: 'commit', timeout: 400000 });
+  await p.waitForFunction(() => !document.getElementById('loader') && window.__scene, null, { timeout: 400000, polling: 2000 });
+  await p.evaluate(() => window.__scene.setMode("orbit", "people")); await p.waitForTimeout(6000); await p.evaluate(() => { document.querySelectorAll('.hud').forEach((h) => (h.style.display = 'none')); });
+  const shot = async (name, fn) => { await p.evaluate(async (src) => { const S = window.__scene; S.setMode('orbit', 'people'); window.__lock = true; const fr = (n) => new Promise((r) => { let k = 0; const f = () => (++k >= n ? r() : requestAnimationFrame(f)); requestAnimationFrame(f); }); await fr(3); eval(src); S.refresh(); await fr(3); }, fn); await p.waitForTimeout(400); await p.screenshot({ path: `ppl/${name}.jpg`, type: 'jpeg', quality: 88, timeout: 400000 }); };
+  console.log(await p.evaluate(() => { const S = window.__scene; return S.people.list.filter((q) => q.active).length; }));
+  const near = `const L = S.people.list.filter((q) => q.active).sort((a, b) => a.mesh.position.distanceTo(S.camera.position) - b.mesh.position.distanceTo(S.camera.position));`;
+  for (let i = 0; i < 4; i++) await shot('p' + i, near + `const m = L[${i}].mesh, h = m.rotation.y; S.camera.position.set(m.position.x + Math.sin(h + 0.5) * ${i === 0 ? 1.6 : 2.6}, m.position.y + 1.5, m.position.z + Math.cos(h + 0.5) * ${i === 0 ? 1.6 : 2.6}); S.camera.lookAt(m.position.x, m.position.y + ${i === 0 ? 1.45 : 1.0}, m.position.z);`);
+  await shot('street', near + `const m = L[2].mesh; S.camera.position.set(m.position.x + 9, 3.2, m.position.z + 9); S.camera.lookAt(m.position.x, 1, m.position.z);`);
+  await shot('worker', `S.camera.position.set(282.6, 1.6, 198.6); S.camera.lookAt(284.6, 1.1, 195.6);`);
+  await b.close(); })();

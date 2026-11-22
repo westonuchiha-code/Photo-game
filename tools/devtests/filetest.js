@@ -1,0 +1,11 @@
+const { chromium } = require('playwright');
+(async () => { const b = await chromium.launch(); const p = await b.newPage({ viewport: { width: 960, height: 600 } }); const t0 = Date.now();
+  p.on('pageerror', (e) => console.log('error:', e.message.slice(0, 200))); p.on('console', (m) => { if (m.type() === 'error' || /quality|texture packs|T shaders/.test(m.text())) console.log(m.type(), m.text().slice(0, 180)); }); p.on('requestfailed', (r) => console.log('request failed:', r.url().slice(0, 100)));
+  await p.goto('file://' + require('path').resolve(process.argv[2] || 'photo-town.html'), { waitUntil: 'commit', timeout: 400000 });
+  await p.waitForFunction(() => window.__scene && !document.getElementById('loader'), null, { timeout: 500000, polling: 1000 });
+  console.log('playable at', ((Date.now() - t0) / 1000).toFixed(0), 's'); await p.waitForTimeout(20000);
+  await p.screenshot({ path: 'ft_start.jpg', type: 'jpeg', quality: 85 });
+  console.log(await p.evaluate(() => { let img = 0, bmp = 0, none = 0; window.__scene.scene.traverse((o) => { for (const m of [].concat(o.material || [])) if (m && m.map && m.map.name) { const i = m.map.image; if (!i) none++; else if (i.constructor.name === 'ImageBitmap') bmp++; else img++; } }); return `textures: bitmap ${bmp}, image ${img}, missing ${none}; fonts loaded ${[...document.fonts].filter((f) => f.status === 'loaded').length}`; }));
+  await p.evaluate(async () => { const S = window.__scene; S.setMode('orbit', 'oldtown'); document.querySelectorAll('.hud').forEach((h) => (h.style.display = 'none')); const fr = (n) => new Promise((r) => { let k = 0; const f = () => (++k >= n ? r() : requestAnimationFrame(f)); requestAnimationFrame(f); }); S.refresh(); await fr(2); S.refresh(); await fr(2); });
+  await p.screenshot({ path: 'ft_oldtown.jpg', type: 'jpeg', quality: 85 });
+  await b.close(); })();
