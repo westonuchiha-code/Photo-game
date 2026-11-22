@@ -487,3 +487,12 @@ untextured surfaces and colour maps missing their normal map; unused-export / un
 - Parts: pallet (empty / boxes / drums / crate), drum, crate, machine, roller conveyor, tank with ladder, pipe runs
   with flanges and wheel valves, forklift. `makeWorks` assembles an open-fronted steel shed (portal frames, sheet walls
   with instanced ribs), a catwalk with stair, and a tank yard, on the north verge at (290, 197).
+
+## 96 People (people96.js)
+- `makePerson(seed)`: low-poly jointed character (torso, pelvis, head, drawn face patch, hair styles / cap / hard hat,
+  arms + legs with pivots), six outfits (long sleeves, tee, shorts, skirt, jacket, coat), clothes from the fabric
+  textures recoloured (light source textures only: dark ones went black), plain skin + hair colours.
+- `makePeople`: a pool of 40 pedestrians walking the sidewalk rings of the district blocks; they respawn 34-72 m from
+  the player and are dropped past 84 m, stop and look at a player in their way, wait for a nearby moving car and
+  step clear of one that reaches them. Limb animation only within 70 m. Two hi-vis workers stand at Elm Works.
+- Not done: people indoors / in the old town, crossing streets, talking, sitting.

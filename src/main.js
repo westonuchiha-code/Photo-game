@@ -24,6 +24,7 @@ import { makeRoads } from './models/roads.js';
 import { makeCommunityGarden } from './models/garden87.js';
 import { placeHouses } from './models/house94.js';
 import { makeWorks } from './models/factory95.js';
+import { makePeople, makePerson } from './models/people96.js';
 import { makeFurnitureShowroom } from './models/furniture88.js';
 import { makeKitchenBathShowroom } from './models/kitchen89.js';
 import { makeOfficeShowroom } from './models/office90.js';
@@ -1581,6 +1582,9 @@ const walk = new WalkControls(camera, renderer.domElement, {
 // (its record joins the district's building list, so interiors.js gives it a door + a flat inside)
 const loopHouses = placeHouses({ grid: GRID }); scene.add(loopHouses.group); colliders.push(...loopHouses.colliders); walk.areas.push(...loopHouses.areas); district.userData.buildings.push(...loopHouses.records);
 console.log('loop houses:', loopHouses.records.length);
+// 96 People: pedestrians on the district sidewalks (a pool that stays around the player) + two workers at Elm Works
+const people = makePeople({ scene, grid: GRID, sidewalkY: district.userData.sidewalkY, count: 40 });
+for (const [sd, x, z, ry] of [[501, 284.6, 195.6, 2.6], [502, 297.5, 199.3, -0.6]]) { const w = makePerson(sd, { worker: true }); w.position.set(x, 0.03, z); w.rotation.y = ry; scene.add(w); }
 // 95 Elm Works: the factory shed + yard on the north verge (factory95.js)
 const EW = { x: 290, z: 196.9 };
 { const works = makeWorks(); works.position.set(EW.x, 0.006, EW.z); scene.add(works); for (const [x0, x1, z0, z1] of works.userData.colliders) colliders.push({ type: 'box', minX: EW.x + x0, maxX: EW.x + x1, minZ: EW.z + z0, maxZ: EW.z + z1 });
@@ -1714,6 +1718,7 @@ const VIEWS = {
   livingroom: { pos: [56.6, 3.0, -2.2], target: [52.6, 2.4, -6.6] },
   bookshelves: { pos: [55.2, 2.6, -4.6], target: [52.4, 2.5, -6.9] },
   lamptable: { pos: [54.6, 2.7, -4.4], target: [54.6, 2.3, -7.6] },
+  people: { pos: [168, 1.7, 30], target: [168, 1.4, 60] },
   loophouses: { pos: [205, 5.5, -209], target: [196, 1.5, -198] },
   loophouse: { pos: [188, 1.7, -205.5], target: [186, 1.6, -198] },
   works: { pos: [283, 3.2, 212], target: [292, 2.2, 196] },
@@ -2242,6 +2247,7 @@ function frame() {
   const f = 0.94 + 0.06 * Math.sin(t * 31) * Math.sin(t * 7.3); // subtle neon buzz
   for (const m of amberMats) m.color.setRGB(2.0 * f, 0.42 * f, 0.0);
   interiors.update(mode === 'walk' ? walk.position : camera.position, dt, mode !== 'drive');
+  people.update(mode === 'walk' ? walk.position : mode === 'drive' ? drive.state : camera.position, dt, mode === 'drive' ? drive.state : null, mode === 'walk');
   // the diner's key light is the only shadow caster: its shadow map is redrawn only while you're near the diner
   renderer.shadowMap.needsUpdate = renderer.shadowMap.enabled && Math.abs(camera.position.x) < 45 && Math.abs(camera.position.z) < 40;
   composer.render();   // (with the glow off this is one scene pass + the output pass, same colours as with it on)
@@ -2265,4 +2271,4 @@ window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
   composer.setSize(window.innerWidth, window.innerHeight);
 });
-window.__scene = { interiors, refresh: () => { streamer.update(camera.position); updateLightBudget(); }, composer, drive, enterCar, scene, camera, walk, setMode, interactables, walkPoles, creep, renderer, streamer };
+window.__scene = { people, interiors, refresh: () => { streamer.update(camera.position); updateLightBudget(); }, composer, drive, enterCar, scene, camera, walk, setMode, interactables, walkPoles, creep, renderer, streamer };

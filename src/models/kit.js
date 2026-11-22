@@ -18,6 +18,7 @@ export const AVG = {
   hs_siding: [0.21, 0.21, 0.20], siding: [0.52, 0.42, 0.31], hs_brick: [0.39, 0.25, 0.22], hs_ybrick: [0.49, 0.38, 0.26], bk_tan: [0.25, 0.18, 0.10], bk_white: [0.71, 0.69, 0.65], shr_roof: [0.45, 0.30, 0.28],
   ba_scale: [0.25, 0.14, 0.13], ab_bluesiding: [0.27, 0.39, 0.47], hs_grass: [0.49, 0.36, 0.20], gf_shutter_a: [0.24, 0.25, 0.28], b85_crackconc: [0.44, 0.45, 0.46], i5_plaster: [0.56, 0.44, 0.26],
   b84_rust: [0.28, 0.19, 0.15], store_crate_blue: [0.14, 0.18, 0.36], cardboard: [0.22, 0.12, 0.05], i4_ply: [0.28, 0.09, 0.05], b82_rust: [0.32, 0.09, 0.02], tx_drygrass: [0.20, 0.20, 0.19], b83_gravel: [0.461, 0.378, 0.293],
+  b82_canvasblue: [0.199, 0.271, 0.365], creep_jeans: [0.074, 0.158, 0.326], i3_cloth: [0.118, 0.079, 0.222],
   wood_floor: [0.41, 0.27, 0.19], walnut_floor: [0.35, 0.22, 0.14], lot_concrete: [0.303, 0.295, 0.269], b82_speckle: [0.439, 0.39, 0.367], i7_brass: [0.4, 0.3, 0.12],
 };
 const _L = new THREE.TextureLoader(), _T = new Map(), _M = new Map();
