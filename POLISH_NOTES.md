@@ -452,3 +452,16 @@ untextured surfaces and colour maps missing their normal map; unused-export / un
   makeDeskPhone, makeFilingCabinet (2/4 drawers, one open with folders), makeCopier, makeWaterCooler, makePartition,
   makeWhiteboard, makeCorkBoard, makeWasteBin, makeWorkstation (desk + chair + computer + phone, for the interiors
   kit). Showroom "Nestwell Office" (NO 206.3, 196.4). Views: office90, officedesks, officewall, officecorner.
+
+## 91 Enterable district buildings (interiors on demand)
+- district.js: every generated building gets a doorway in its street front (front wall laid in three pieces, frame,
+  threshold); shops keep the shopfront and get a door bay at the end, others swap the middle ground-floor window for
+  the door. userData.buildings lists them.
+- src/models/interiors91.js: makeInterior({ U, V, doorX, type, seed }): flat (hall, living room, kitchen, bedroom,
+  bathroom), studio, office (workstations, cabinets, copier), shop (gondolas of instanced stock, counter, till).
+  Variety from the seed (wall colour, woods, fabrics). Ground floor only: stairs / back rooms are shut doors.
+- src/interiors.js: one InstancedMesh of doors (they swing open within 3.2 m); the interior is built when you're
+  within 24 m of its door (one per 0.25 s tick), merged by material, removed beyond 44 m; per-building walk area +
+  threshold, floor height, wall + furniture colliders; two shared lights move into the interior you're in (light
+  count never changes). Cars use the area list from before the interiors were added.
+- 329 buildings: 230 shops, 42 flats, 21 studios, 36 offices.

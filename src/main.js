@@ -8,6 +8,7 @@ import { makeStreamer, mergeStatic } from './stream.js';
 import { autoNormals } from './normals.js';
 import { applyFinishes } from './finishes.js';
 import { makeQuality } from './quality.js';
+import { makeInteriors } from './interiors.js';
 import { afterStart } from './defer.js';
 import { makeCar, LIVERIES, carEnv } from './vehicle/carbody.js';
 import { makeDriver } from './drive.js';
@@ -1569,10 +1570,14 @@ const walk = new WalkControls(camera, renderer.domElement, {
   colliders,
 });
 // ---- driving: modelled, drivable cars parked on the district streets (third-person; see drive.js + vehicle/carbody.js)
-const drive = makeDriver({ scene, camera, areas: walk.areas, colliders, pads: roads.userData.pads, ground: (x, z) => roads.userData.groundY(x, z) ?? district.userData.floorY(x, z) ?? 0 });
+const drive = makeDriver({ scene, camera, areas: walk.areas.slice(), colliders, pads: roads.userData.pads, ground: (x, z) => roads.userData.groundY(x, z) ?? district.userData.floorY(x, z) ?? 0 });
 // polish: the same soft studio environment gives every metal + glossy surface in town something to reflect (chrome,
 // steel, glass, glazed tile were near-black at night without it); kept low so the night mood stays
 scene.environment = carEnv(renderer); scene.environmentIntensity = +(qs0.get('env') ?? 0.1);
+// enterable district buildings: doors + interiors built on demand (see interiors.js). (Cars keep the area list from
+// before this, so they can't drive into buildings.)
+const interiors = makeInteriors({ scene, district, colliders, areas: walk.areas });
+console.log('interiors:', JSON.stringify(interiors.stats()));
 for (const [type, opt, x, z, h] of [
   ['hatch', { color: '#b3242a', name: 'red hatch', plate: 'ELM 2K7' }, 71.4, 14.5, 0],
   ['kei', { color: '#a8d6c6', roofColor: '#f2f0ea', rim: 'steel', name: 'mint kei car', plate: 'ELM 55K', metal: 0.2 }, 71.4, 21.0, 0],
@@ -1608,6 +1613,7 @@ walk.ground = (x, z, prevY) => {
     const zz = z - TM.z; return 0.02 + (zz <= tmSt.zTop ? tmSt.top : tmSt.top * (tmSt.z1 - zz) / (tmSt.z1 - tmSt.zTop)); }
   if (x > TM.x - 13 && x < TM.x + 13 && z > TM.z - 18 && z < TM.z) return 0.06;   // the temple plaza
   if (x > NH.x - 9 && x < NO.x + 5.5 && z > NH.z - 4.5 && z < NH.z + 4.5) return 0.156;   // the three showrooms' floors
+  const iy = interiors.floorY(x, z); if (iy !== null) return iy;   // inside a district building
   const ry = roads.userData.groundY(x, z);   // the stunt lot's ramps
   if (ry !== null) return ry;
   const dy = district.userData.floorY(x, z);
@@ -2208,6 +2214,7 @@ function frame() {
   doorCollider.active = doorOpen < 0.7;
   const f = 0.94 + 0.06 * Math.sin(t * 31) * Math.sin(t * 7.3); // subtle neon buzz
   for (const m of amberMats) m.color.setRGB(2.0 * f, 0.42 * f, 0.0);
+  interiors.update(mode === 'walk' ? walk.position : camera.position, dt, mode !== 'drive');
   // the diner's key light is the only shadow caster: its shadow map is redrawn only while you're near the diner
   renderer.shadowMap.needsUpdate = renderer.shadowMap.enabled && Math.abs(camera.position.x) < 45 && Math.abs(camera.position.z) < 40;
   composer.render();   // (with the glow off this is one scene pass + the output pass, same colours as with it on)
@@ -2231,4 +2238,4 @@ window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
   composer.setSize(window.innerWidth, window.innerHeight);
 });
-window.__scene = { refresh: () => { streamer.update(camera.position); updateLightBudget(); }, composer, drive, enterCar, scene, camera, walk, setMode, interactables, walkPoles, creep, renderer, streamer };
+window.__scene = { interiors, refresh: () => { streamer.update(camera.position); updateLightBudget(); }, composer, drive, enterCar, scene, camera, walk, setMode, interactables, walkPoles, creep, renderer, streamer };

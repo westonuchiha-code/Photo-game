@@ -143,6 +143,9 @@ const winUV = (i) => { const q = i % 4, r = Math.floor(i / 4); return [q / 4 + 0
 // ---- one generated building -----------------------------------------------------------------------------------
 // footprint x0..x1, z0..z1; front faces the street on side `face` (n = -z, s = +z, w = -x, e = +x);
 // `street` = which sides are on a street (get windows); r = random
+// every generated building gets a real doorway in its street front (interiors are built on demand: src/interiors.js)
+export const DOOR = { w: 1.1, h: 2.15 };
+const BUILDINGS = [];
 function building(bin, b, r) {
   const { x0, x1, z0, z1, face, floors, fac, shop } = b;
   const [file, tw, th] = FACADES[fac];
@@ -151,9 +154,19 @@ function building(bin, b, r) {
   const sides = {
     n: [x1, z0, x0, z0], s: [x0, z1, x1, z1], w: [x0, z0, x0, z1], e: [x1, z1, x1, z0],
   };
+  // where the door goes along the front (u = metres from the front's `a` end): shops keep their shopfront and get a
+  // door bay at the far end; other buildings swap their middle ground-floor window for the door
+  { const [ax, az, bx, bz] = sides[face]; const L = Math.hypot(bx - ax, bz - az); const n = Math.max(1, Math.floor((L - 1.2) / 2.6)), step = L / n;
+    b.doorU = shop >= 0 ? L - 1.3 : step * (Math.floor(n / 2) + 0.5); b.L = L; b.front = [ax, az, bx, bz]; b.index = BUILDINGS.length; BUILDINGS.push(b); }
   for (const k of ['n', 's', 'w', 'e']) {
-    const [ax, az, bx, bz] = sides[k];
-    bin.push('f' + fac, wallQuad(ax, az, bx, bz, 0, H + PAR, tw, th, (ax + az) * 0.37 % 7));
+    const [ax, az, bx, bz] = sides[k]; const u0 = (ax + az) * 0.37 % 7;
+    if (k !== face) { bin.push('f' + fac, wallQuad(ax, az, bx, bz, 0, H + PAR, tw, th, u0)); continue; }
+    // the front wall is laid in three pieces round the doorway
+    const L = b.L, dx = (bx - ax) / L, dz = (bz - az) / L, d0 = b.doorU - DOOR.w / 2, d1 = b.doorU + DOOR.w / 2, top = SW_H + DOOR.h, P = (u) => [ax + dx * u, az + dz * u];
+    bin.push('f' + fac, wallQuad(ax, az, ...P(d0), 0, H + PAR, tw, th, u0)); bin.push('f' + fac, wallQuad(...P(d1), bx, bz, 0, H + PAR, tw, th, u0 + d1)); bin.push('f' + fac, wallQuad(...P(d0), ...P(d1), top, H + PAR, tw, th, u0 + d0));
+    // door frame (jambs + lintel, standing a little proud) and a stone threshold
+    const nx = -dz, nz = dx, fr = (ua, ub, ya, yb) => { const [p0x, p0z] = P(ua), [p1x, p1z] = P(ub); bin.push('cap', boxGeo(Math.min(p0x, p1x) - Math.abs(nx) * 0.1, Math.max(p0x, p1x) + Math.abs(nx) * 0.1, ya, yb, Math.min(p0z, p1z) - Math.abs(nz) * 0.1, Math.max(p0z, p1z) + Math.abs(nz) * 0.1, 1, 1)); };
+    fr(d0 - 0.09, d0, 0, top + 0.09); fr(d1, d1 + 0.09, 0, top + 0.09); fr(d0, d1, top, top + 0.09); fr(d0, d1, 0, SW_H + 0.012);
   }
   bin.push('roof', flatQuad(x0, x1, z0, z1, H + 0.05, 4, 4));
   // parapet cap + a cornice band over the shopfronts on the street sides
@@ -183,12 +196,13 @@ function building(bin, b, r) {
     }
     // ground floor
     if (k === face && shop >= 0) {
-      const sw = Math.min(L - 0.8, 11), u0 = (L - sw) / 2; const cx0 = ax + dx * u0 + nx * off, cz0 = az + dz * u0 + nz * off;
+      const sw = Math.max(2.5, Math.min(L - 0.8 - 1.9, 11)), u0 = Math.max(0.4, (L - 1.9 - sw) / 2); const cx0 = ax + dx * u0 + nx * off, cz0 = az + dz * u0 + nz * off;
       bin.push('shop', wallQuad(cx0, cz0, cx0 + dx * sw, cz0 + dz * sw, 0.15, 3.5, 1, 1, 0, 0, shopUV(shop)));
     } else {
       for (let i = 0; i < n; i++) {
         const u = step * (i + 0.5); const cx = ax + dx * u + nx * off, cz = az + dz * u + nz * off;
         const cell = r() < 0.25 ? Math.floor(r() * 7) : 7 + Math.floor(r() * 9);
+        if (k === face && Math.abs(u - b.doorU) < 0.01) continue;   // (the door takes this window's place)
         bin.push('win', wallQuad(cx - dx * ww / 2, cz - dz * ww / 2, cx + dx * ww / 2, cz + dz * ww / 2, 1.1, 2.9, 1, 1, 0, 0, winUV(cell)));
       }
     }
@@ -230,6 +244,7 @@ function fillBlock(bin, r, bx0, bx1, bz0, bz1, streets, tallness = 1) {
 }
 
 export function makeDistrict() {
+  BUILDINGS.length = 0;
   const g = new THREE.Group(); g.name = 'city_district';
   const bin = new Bin(); const r = rng(2026);
   const { xs, zs, road: RH, walk: WH } = GRID;
@@ -382,6 +397,7 @@ export function makeDistrict() {
     for (const x of xs) { areas.push({ minX: x - WH + 0.3, maxX: x + WH - 0.3, minZ: ZMAX - 1, maxZ: RG.n - RG.hw + 0.5 }, { minX: x - WH + 0.3, maxX: x + WH - 0.3, minZ: RG.s + RG.hw - 0.5, maxZ: ZMIN + 1 }); }
     for (const z of zs) areas.push({ minX: XMAX - 1, maxX: RG.e - RG.hw + 0.5, minZ: z - WH + 0.3, maxZ: z + WH - 0.3 }); }   // the old town's east edge opens onto the avenue
   g.userData = {
+    buildings: BUILDINGS, sidewalkY: SW_H,
     areas, lots: LOTS,
     lampPosts: lampPts.map(([x, z]) => [x, z]), treePosts: treePts,
     floorY: (x, z) => (walks.some(([a, b, c, d]) => x >= a && x <= b && z >= c && z <= d) ? SW_H : null),
