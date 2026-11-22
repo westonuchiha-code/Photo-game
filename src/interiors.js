@@ -12,10 +12,12 @@ import { makeInterior } from './models/interiors91.js';
 import { DOOR } from './models/district.js';
 import { mat } from './models/kit.js';
 import { mergeStatic } from './stream.js';
+import { makeWallSign } from './models/civic93.js';
 
 export function makeInteriors({ scene, district, colliders, areas }) {
   const SW = district.userData.sidewalkY, FY = SW + 0.02, list = [];
   const DOORCOLS = ['#5a3a26', '#2a4a3a', '#6a2a22', '#2a3a5a', '#3a3a3c', '#7a5a34', '#e4e0d6', '#1c1c1e'];
+  const civic = { n: 0, clinic: 0, police: 0, school: 0 };
   for (const b of district.userData.buildings) {
     const [ax, az, bx, bz] = b.front, L = b.L, dx = (bx - ax) / L, dz = (bz - az) / L, dep = (b.face === 'n' || b.face === 's') ? b.z1 - b.z0 : b.x1 - b.x0;
     const U = Math.min(L - 0.8, 10), V = Math.min(dep - 0.8, 9); if (U < 4.2 || V < 5) continue;
@@ -23,7 +25,9 @@ export function makeInteriors({ scene, district, colliders, areas }) {
     const th = Math.atan2(dz, -dx), cs = Math.cos(th), sn = Math.sin(th), ox = ax + dx * uB + dz * 0.03, oz = az + dz * uB - dx * 0.03;
     const W = (lx, lz) => [ox + lx * cs + lz * sn, oz - lx * sn + lz * cs];
     const rect = (x0, x1, z0, z1) => { const [p0x, p0z] = W(x0, z0), [p1x, p1z] = W(x1, z1); return { minX: Math.min(p0x, p1x), maxX: Math.max(p0x, p1x), minZ: Math.min(p0z, p1z), maxZ: Math.max(p0z, p1z) }; };
-    const type = b.shop >= 0 ? 'shop' : b.floors >= 5 ? 'office' : (U >= 8 && V >= 7 ? 'flat' : 'studio');
+    let type = b.shop >= 0 ? 'shop' : b.floors >= 5 ? 'office' : (U >= 8 && V >= 7 ? 'flat' : 'studio');
+    // civic buildings: a few of the wide non-shop buildings become clinics, police stations and schools (signed outside)
+    if (b.shop < 0 && U >= 9.4 && V >= 8.5) { const k = civic.n++ % 7; if (k === 1 && civic.clinic < 4) { type = 'clinic'; civic.clinic++; } else if (k === 3 && civic.police < 2) { type = 'police'; civic.police++; } else if (k === 5 && civic.school < 3) { type = 'school'; civic.school++; } }
     const e = { b, U, V, doorX, th, W, type, inner: rect(0.22, U - 0.22, 0.2, V - 0.22), door: W(doorX, 0), t: 0, target: 0, group: null, cols: [] };
     areas.push(e.inner, rect(doorX - 0.42, doorX + 0.42, -0.95, 0.5));
     e.doorCol = { type: 'box', ...rect(doorX - 0.6, doorX + 0.6, -0.12, 0.16), active: true }; colliders.push(e.doorCol);
@@ -39,6 +43,9 @@ export function makeInteriors({ scene, district, colliders, areas }) {
   // the two shared interior lights (parked far below until you go inside)
   const lamps = [0, 1].map(() => { const l = new THREE.PointLight('#fff0dc', 7, 12, 1.5); l.position.set(0, -200, 0); scene.add(l); return l; });
   let litFor = null;
+  // signs over the doors of the civic buildings
+  const SIGN = { clinic: ['ELM STREET CLINIC', '#2a6a5a', 'walk-in · open late'], police: ['POLICE', '#16243a', 'Elm County · 555-0110'], school: ['ELM PREP SCHOOL', '#6a2a2a', 'est. 1962'] };
+  for (const e of list) if (SIGN[e.type]) { const [t, bg, sub] = SIGN[e.type]; const sg = makeWallSign(t, { w: 3.0, h: 0.6, bg, sub }); const [x, z] = e.W(e.doorX, -0.07); sg.position.set(x, SW + DOOR.h + 0.55, z); sg.rotation.y = e.th + Math.PI; scene.add(sg); }
 
   function build(e) {
     const g = makeInterior({ U: e.U, V: e.V, doorX: e.doorX, type: e.type, seed: e.b.index + 1 });

@@ -11,6 +11,7 @@ import { mat, plain, box, rbox, cyl, flat, bar, canvasT, rng, V as V3, projUV } 
 import { makeBed, makeNightstand, makeWardrobe, makeDesk, makeChair, makeSofa, makeCoffeeTable, makeTV, makeTVStand, makeLamp, makeBookshelf, makeRug } from './furniture88.js';
 import { makeFridge, makeStove, makeBaseCabinet, makeWallCabinet, makeKitchenTable, makeBathtub, makeShower, makeToilet, makeWashbasin, makeMirror, makeTowelRail } from './kitchen89.js';
 import { makeWorkstation, makeFilingCabinet, makeCopier, makeWaterCooler, makeWhiteboard, makeCorkBoard, makeWasteBin, makePartition } from './office90.js';
+import { makeHospitalBed, makeDripStand, makeTrolley, makeWheelchair, makeWaitingChairs, makeReceptionDesk, makeHoldingCell, makeLockers, makeFrontCounter, makeStudentDesk, makeChalkboard, makeTeacherDesk, makeWallSign } from './civic93.js';
 import { F, fitText } from '../fonts.js';
 
 const PI = Math.PI, H = 2.6, T = 0.1;
@@ -88,6 +89,29 @@ export function makeInterior({ U, V, doorX, type = 'flat', seed = 1 }) {
     put(makeCopier(), U - T - 0.36, V * 0.55, -PI / 2); put(makeWaterCooler(), U - T - 0.2, V * 0.55 + 1.0, -PI / 2); put(makeWasteBin(), T + 0.3, V * 0.5);
     put(makeSofa({ seats: 2, fabric: ['op_leather', '#3a3230'], cushions: [] }), doorX < U / 2 ? U - T - 0.5 : T + 0.5, 1.2, doorX < U / 2 ? -PI / 2 : PI / 2);
     shutDoor(U * 0.75, V - T - 0.001, PI, 'STAFF ONLY'); for (let x = 1.5; x < U - 1; x += 3) { lightPanel(x, V * 0.35, 0.25, 1.6); lightPanel(x, V * 0.75, 0.25, 1.6); }
+  } else if (type === 'clinic') {
+    // reception + waiting at the front, a ward behind a partition wall: beds with curtains along the back wall
+    floorOf(T, U - T, T, V - T, 'bath'); skirt(); const zp = 4.4; wall(true, zp, T, U - T, [[doorX - 0.9, doorX + 0.9]]);
+    put(makeReceptionDesk({ w: Math.min(2.6, U - 5), sign: 'RECEPTION' }), doorX < U / 2 ? doorX + 2.6 : doorX - 2.6, 3.2, PI); put(makeWaitingChairs({ n: 4 }), doorX < U / 2 ? U - 1.6 : 1.6, 0.5, 0); put(makeWaitingChairs({ n: 3, color: '#3a7a6a' }), doorX < U / 2 ? T + 0.35 : U - T - 0.35, 2.4, doorX < U / 2 ? PI / 2 : -PI / 2);
+    put(makeWheelchair(), doorX + (doorX < U / 2 ? -1.6 : 1.6), 2.0, 0.8); { const sg = makeWallSign('WARD', { w: 1.2, h: 0.3, bg: '#2a6a5a' }); sg.position.set(doorX, 2.3, zp - T / 2 - 0.002); sg.rotation.y = PI; g.add(sg); }
+    const nb = Math.max(2, Math.floor((U - 1.0) / 2.3)); for (let i = 0; i < nb; i++) { const x = 1.0 + (i + 0.5) * (U - 1.4) / nb; put(makeHospitalBed({ curtain: pick(['#8ab8c8', '#a8c8a8', '#c8b8d8']), blanket: pick(['#c8dce8', '#d8e8d0', '#e8dcc8']) }), x, V - T - 1.12, PI); if (i % 2 === 0) put(makeDripStand(), x - 0.75, V - T - 0.5); }
+    put(makeTrolley(), U / 2 + 0.6, zp + 1.3, 0.4); put(makeLockers({ n: 2, color: '#e4e0d6' }), T + 0.27, zp + 0.9, PI / 2);
+    for (let x = 1.6; x < U - 1; x += 2.8) { lightPanel(x, 2.2, 0.25, 1.4); lightPanel(x, (zp + V) / 2, 0.25, 1.4); } lights[0] = [U / 2, H - 0.35, 2.2]; lights[1] = [U / 2, H - 0.35, (zp + V) / 2];
+  } else if (type === 'police') {
+    // front counter behind glass, benches for the public, two desks, lockers, a holding cell in the back corner
+    floorOf(T, U - T, T, V - T, 'shop'); skirt(); const cw = Math.min(3.4, U - 4.5), cx = doorX < U / 2 ? U - T - 0.6 - cw / 2 : T + 0.6 + cw / 2;
+    put(makeFrontCounter({ w: cw, sign: 'FRONT DESK' }), cx, 3.3, PI); put(makeWaitingChairs({ n: 3, color: '#4a5a6a' }), doorX < U / 2 ? U - 1.4 : 1.4, 0.5, 0);
+    { const cb = makeWallSign('ELM COUNTY POLICE', { w: Math.min(3.2, cw), h: 0.36, bg: '#16243a', sub: 'to protect the Loop' }); cb.position.set(cx, 2.25, V - T - 0.002); cb.rotation.y = PI; g.add(cb); }
+    put(makeHoldingCell({ w: 2.4, d: 2.2 }), T + 1.22, V - T - 1.12, PI); put(makeLockers({ n: 4, color: '#4a5a6e' }), U - T - 0.25, V - 2.0, -PI / 2);
+    put(makeWorkstation({ kind: 'crt', screen: 'doc', seed: seed + 1 }), U / 2 + 1.2, V - 2.6, PI); if (U > 9) put(makeWorkstation({ kind: 'flat', screen: 'sheet', seed: seed + 2 }), U / 2 - 0.7, V - 2.6, PI); put(makeFilingCabinet({ drawers: 4, color: '#5a6470' }), U / 2 + 2.6 < U - 1 ? U / 2 + 2.6 : U / 2 + 0.2, V - T - 0.33, PI);
+    { const b = makeCorkBoard({ w: 1.0 }); b.position.set(doorX < U / 2 ? T + 0.003 : U - T - 0.003, 0, 2.0); b.rotation.y = doorX < U / 2 ? PI / 2 : -PI / 2; g.add(b); } put(makeWaterCooler(), doorX < U / 2 ? T + 0.2 : U - T - 0.2, 3.6, doorX < U / 2 ? PI / 2 : -PI / 2);
+    for (let x = 1.6; x < U - 1; x += 2.8) { lightPanel(x, V * 0.3, 0.25, 1.4); lightPanel(x, V * 0.72, 0.25, 1.4); }
+  } else if (type === 'school') {
+    // one classroom: chalkboard + teacher's desk at the back wall, rows of desks facing it, lockers down a side wall
+    floorOf(T, U - T, T, V - T, 'oak'); skirt(); { const cb = makeChalkboard({ w: Math.min(3.4, U - 3) }); cb.position.set(U / 2, 0, V - T - 0.003); cb.rotation.y = PI; g.add(cb); } put(makeTeacherDesk(), U / 2 + 1.6 < U - 1.2 ? U / 2 + 1.6 : U / 2, V - T - 1.25, PI);
+    const nc = Math.max(2, Math.floor((U - 2.6) / 1.15)), nr = Math.max(2, Math.floor((V - 5.0) / 1.35)); for (let j = 0; j < nr; j++) for (let i = 0; i < nc; i++) { const x = 1.6 + i * 1.15 + (U - 3.2 - (nc - 1) * 1.15) / 2, z = 2.2 + j * 1.35; if (Math.abs(x - doorX) < 0.9 && z < 2.6) continue; put(makeStudentDesk(), x, z, PI); }
+    put(makeLockers({ n: Math.min(6, Math.floor((V - 3) / 0.38)), color: pick(['#5a7a8a', '#8a5a4a', '#5a8a6a']) }), T + 0.25, V / 2 + 0.4, PI / 2); { const b = makeCorkBoard({ w: 1.2 }); b.position.set(U - T - 0.003, 0, V / 2); b.rotation.y = -PI / 2; g.add(b); } put(makeWasteBin(), U - T - 0.3, V - 0.6);
+    for (let x = 1.6; x < U - 1; x += 2.8) { lightPanel(x, V * 0.3, 0.25, 1.4); lightPanel(x, V * 0.72, 0.25, 1.4); }
   } else {   // shop
     floorOf(T, U - T, T, V - T, 'shop'); const cols3 = ['#c8281e', '#2a6ad8', '#f2c21a', '#2a8a4a', '#e8742a', '#7a3a8a', '#f4f2ea', '#1a1a1c', '#3aa8b8'];
     // gondolas: steel uprights + four shelves, stocked with instanced boxes + tins
