@@ -488,11 +488,18 @@ untextured surfaces and colour maps missing their normal map; unused-export / un
   with flanges and wheel valves, forklift. `makeWorks` assembles an open-fronted steel shed (portal frames, sheet walls
   with instanced ribs), a catwalk with stair, and a tank yard, on the north verge at (290, 197).
 
-## 96 People (people96.js)
-- `makePerson(seed)`: low-poly jointed character (torso, pelvis, head, drawn face patch, hair styles / cap / hard hat,
-  arms + legs with pivots), six outfits (long sleeves, tee, shorts, skirt, jacket, coat), clothes from the fabric
-  textures recoloured (light source textures only: dark ones went black), plain skin + hair colours.
-- `makePeople`: a pool of 40 pedestrians walking the sidewalk rings of the district blocks; they respawn 34-72 m from
-  the player and are dropped past 84 m, stop and look at a player in their way, wait for a nearby moving car and
-  step clear of one that reaches them. Limb animation only within 70 m. Two hi-vis workers stand at Elm Works.
-- Not done: people indoors / in the old town, crossing streets, talking, sitting.
+## 96/97 People (body97.js, people96.js)
+- The first people (boxes + ball heads, separate rigid parts) were rejected as too simplistic and removed.
+- body97.js: one male + one female base body, each a single skinned mesh (17 bones) lofted from measured rings
+  (torso, neck, head with sculpted nose / eye sockets / brow / lips / chin / ears, arms, hands with thumb, legs, feet).
+  One square atlas per character ("skin"), regions in `ATLAS`: face (flat front projection, so a face photo drops
+  in), headBack (hair), torso (unwrapped, seam down the spine), arm + leg (both sides share, mirrored), foot, sole.
+  `drawTemplate(sex)` draws the UV guide (docs/skin_template_m.png / _f.png). Hair = shells on the head bone
+  (short, crop, bob, long, bald) using the headBack region.
+- `paintSkin` is only a painted stand-in (flat skin tone, drawn face, plain clothes). Next: skins from photos (skin
+  photo for tone, face photos fitted to the face region, clothes from the fabric textures).
+- people96.js: 40 pedestrians on the district sidewalk rings (respawn 34-72 m away, dropped past 84 m; stop for the
+  player, wait for cars, step clear). 9 looks per sex share materials. Two workers at Elm Works.
+- bodytest.html (dev only): bodies on a plain background; ?grey=1 bare mesh, ?walk=1 poses, ?tpl=m|f template.
+- Not done: people indoors / in the old town, crossing streets, talking, sitting; fingers are one block; the short
+  male hair has rough sideburns.

@@ -1,0 +1,13 @@
+<!doctype html><meta charset="utf-8"><title>bodies</title><style>body{margin:0;background:#888}</style>
+<script type="importmap">{"imports":{"three":"./vendor/three/three.module.js","three/addons/":"./vendor/three/addons/"}}</script>
+<script type="module">
+import * as THREE from 'three'; import { makeBody, paintSkin, drawTemplate, addHair } from './src/models/body97.js';
+const q = new URLSearchParams(location.search), r = new THREE.WebGLRenderer({ antialias: true }); r.setSize(innerWidth, innerHeight); document.body.appendChild(r.domElement); r.outputColorSpace = THREE.SRGBColorSpace;
+const s = new THREE.Scene(); s.background = new THREE.Color('#8a8f96'); s.add(new THREE.HemisphereLight('#ffffff', '#555048', 1.6)); const d = new THREE.DirectionalLight('#fff', 2.2); d.position.set(2, 4, 3); s.add(d);
+const cam = new THREE.PerspectiveCamera(30, innerWidth / innerHeight, 0.05, 50);
+if (q.get('tpl')) { const c = drawTemplate(q.get('tpl'), 1024); document.body.innerHTML = ''; document.body.appendChild(c); window.done = true; } else {
+const grey = q.get('grey'), mk = (sex, x, ry, ph, o) => { const m = grey ? new THREE.MeshStandardMaterial({ color: '#c8c4bc', roughness: 0.7, flatShading: grey === 'flat' }) : new THREE.MeshStandardMaterial({ map: paintSkin(sex, o), roughness: 0.8 }); const b = makeBody(sex, m); if (!grey || q.get('hair')) { const hm = m.clone(); hm.side = THREE.DoubleSide; addHair(b, o.hairStyle || (sex === 'f' ? 'long' : 'short'), hm); } b.position.x = x; b.rotation.y = ry; b.userData.pose(ph, ph ? 1 : 0); s.add(b); return b; };
+const ry = +(q.get('ry') || 0); mk('m', -0.45, ry, 0, { seed: 1 }); mk('f', 0.45, ry, 0, { seed: 2, skin: '#e8c0a0', hair: '#5a3418', top: '#b8485a', bottom: '#2c3040', legs: q.get('legs') || 'long' });
+if (q.get('walk')) { mk('m', -1.5, ry, 1.2, { seed: 3, hairStyle: 'crop', skin: '#8a5a38', top: '#e0dccc', sleeves: 'long' }); mk('f', 1.5, ry, 4.2, { seed: 4, hairStyle: 'bob', skin: '#c89868', hair: '#141010', top: '#3a6a5a', legs: 'short' }); }
+const [cx, cy, cz, ty] = (q.get('cam') || '0,1.0,5.2,0.9').split(',').map(Number); cam.position.set(cx, cy, cz); cam.lookAt(q.get('tx') ? +q.get('tx') : 0, ty, 0); r.render(s, cam); window.done = true; }
+</script>
