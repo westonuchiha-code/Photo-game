@@ -2020,6 +2020,33 @@ console.log('auto normal maps:', autoNormals(scene));
   for (const o of room.children.slice(DISTRICT_FROM)) { if (o.isLight || o.userData.update || o.userData.brain || (o.userData.tick && !o.userData.mergeSafe)) continue; const r = mergeStatic(o); before += r.before; after += r.after; }
   console.log('merge', Math.round(performance.now() - t0), 'ms:', before, '->', after, 'meshes');
 }
+// step 1c (polish): the old town too. Its sets have doors, lids and animated props, so first find everything that
+// moves: run each animation at another time, open everything that opens, and compare every mesh's world matrix and
+// visibility with a snapshot. Movers are left alone (userData.noMerge); the rest of each set merges by material.
+if (!qs0.has('nomergeold')) {
+  const t0 = performance.now(), olds = room.children.slice(0, DISTRICT_FROM);
+  scene.updateMatrixWorld(true);
+  const snap = new Map(); for (const o of olds) o.traverse((m) => { if (m.isMesh) snap.set(m, { e: m.matrixWorld.elements.slice(), v: m.visible }); });
+  const anim = (t) => { try { sky.userData.update(camera, t); alien.userData.update(t); soupPots.forEach((p) => p.userData.update(t)); puffCup.userData.update(t); creep.userData.update(t); cleanBotUpdate(t); mossCreatureUpdate(t);
+    (alley.userData.anim || []).forEach((a) => a.userData.update(t)); cart.userData.update(t); walkPoles.forEach((p, i) => p.userData.update(t, i * 0.3));
+    scene.traverse((o) => { if (o.userData && typeof o.userData.tick === 'function') o.userData.tick(t, 0.05); }); } catch (e) { console.warn('anim probe', e); } };
+  anim(3.7); for (const it of interactables) it.setOpen(1); door.userData.setOpen(1);
+  scene.updateMatrixWorld(true);
+  let movers = 0;
+  for (const [m, s0] of snap) { const e = m.matrixWorld.elements; let moved = m.visible !== s0.v; for (let i = 0; i < 16 && !moved; i++) if (Math.abs(e[i] - s0.e[i]) > 1e-5) moved = true; if (moved) { m.userData.noMerge = true; movers++; } }
+  for (const it of interactables) it.setOpen(it.t); door.userData.setOpen(0); anim(0);
+  for (const o of mall.userData.hideForCapture || []) o.traverse((m) => { m.userData.noMerge = true; });
+  neon.traverse((m) => { m.userData.noMerge = true; });   // (its tubes' colours are animated per material)
+  scene.updateMatrixWorld(true);
+  let before = 0, after = 0; const loose = new THREE.Group(); loose.name = 'old_town_loose';
+  for (const o of olds) {
+    if (o.isLight || o.userData.update || o.userData.brain || (o.userData.tick && !o.userData.mergeSafe) || o.userData.noMerge) continue;
+    if (o.isMesh) { if (!o.isInstancedMesh && !Array.isArray(o.material)) loose.add(o); continue; }
+    const r = mergeStatic(o); before += r.before; after += r.after;
+  }
+  room.add(loose); { const r = mergeStatic(loose); before += r.before; after += r.after; }
+  console.log('merge old town', Math.round(performance.now() - t0), 'ms:', before, '->', after, 'meshes;', movers, 'moving meshes left alone');
+}
 const streamer = makeStreamer(scene, { phone: IS_PHONE });
 console.log('T streamer', Math.round(performance.now()));
 streamer.update(camera.position);

@@ -88,7 +88,9 @@ export function mergeStatic(root, { minCount = 2 } = {}) {
     const geos = [];
     for (const o of list) {
       let g = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone();
-      for (const n of Object.keys(g.attributes)) if (n !== 'position' && n !== 'normal' && n !== 'uv') g.deleteAttribute(n);
+      const keepCol = list[0].material.vertexColors;   // (vertex-coloured materials keep their colours)
+      for (const n of Object.keys(g.attributes)) if (n !== 'position' && n !== 'normal' && n !== 'uv' && !(keepCol && n === 'color')) g.deleteAttribute(n);
+      if (keepCol && !g.attributes.color) g.setAttribute('color', new THREE.Float32BufferAttribute(new Float32Array(g.attributes.position.count * 3).fill(1), 3));
       if (!g.attributes.normal) g.computeVertexNormals();
       if (!g.attributes.uv) g.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(g.attributes.position.count * 2), 2));
       g.clearGroups(); m4.multiplyMatrices(inv, o.matrixWorld); g.applyMatrix4(m4); geos.push(g);
