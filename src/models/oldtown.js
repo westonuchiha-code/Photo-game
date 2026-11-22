@@ -11,6 +11,7 @@
 //   makeGreenPillar()  tall green sign pillar with a made-up logo
 // Everything faces +z, origin at ground level.
 import * as THREE from 'three';
+import { afterStart } from '../defer.js';
 import { ellipsoid, cone, smin, surfaceNets, v3 } from './cat.js';
 import { fitText } from '../fonts.js';
 
@@ -198,7 +199,8 @@ export function makeBollard(seed = 1) {
 
 // stone monkey: one sculpted surface (SDF + surface nets), weathered grey stone
 let monkeyGeo = null;
-export function makeMonkey() {
+// (the statue's body is meshed after the world is on screen: see defer.js)
+function buildMonkeyGeo() {
   if (!monkeyGeo) {
     // seated monkey, hands on knees, big round head with a flat face mask (faces +x)
     const parts = [
@@ -250,11 +252,15 @@ export function makeMonkey() {
     }
     monkeyGeo = geo;
   }
+  return monkeyGeo;
+}
+export function makeMonkey() {
   const g = new THREE.Group();
   const stone = std({ vertexColors: true, color: '#d6d3cb', roughness: 0.95 });
   const base = new THREE.Mesh(new THREE.DodecahedronGeometry(0.4, 1), std({ color: '#a8a59c', roughness: 1, flatShading: true }));
   base.scale.set(1.25, 0.4, 1.0); base.position.y = 0.12; base.castShadow = true; g.add(base);
-  const mk = new THREE.Mesh(monkeyGeo, stone); mk.position.y = 0.24; mk.scale.setScalar(1.35); mk.castShadow = true; g.add(mk);
+  const mk = new THREE.Mesh(new THREE.BufferGeometry(), stone); mk.position.y = 0.24; mk.scale.setScalar(1.35); mk.castShadow = true; mk.visible = false; mk.userData.noMerge = true; g.add(mk);
+  afterStart(() => { mk.geometry = buildMonkeyGeo(); mk.visible = true; });
   // carved face details: eyes + mouth line
   const dark = std({ color: '#4a4844' });
   for (const s of [-1, 1]) { const e = new THREE.Mesh(new THREE.SphereGeometry(0.016, 8, 6), dark); e.position.set(0.24 + 0.155 * 0.0 + 0.2 - 0.2, 0.24 + 0.548 * 1.35, s * 0.03 * 1.35); e.position.x = 0.148 * 1.35; g.add(e); }

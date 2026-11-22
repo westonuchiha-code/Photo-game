@@ -408,3 +408,15 @@ untextured surfaces and colour maps missing their normal map; unused-export / un
   table; wheelbarrow; whitewashed picket fence (instanced); gate arch + sign (made-up name, 555 number).
 - mat() takes a hex tint or a linear [r,g,b] multiplier above 1 to lift a dark photo (plank timber); projUV gives
   every box real-world texture scale. Views: garden, glasshouse, glasshousein, gardenshed, gardenbeds.
+
+## Efficiency pass (any machine)
+- quality.js: automatic quality. Seven levels (pixel ratio 0.5-2.0, glow, 4/8 lights + shadows, draw distance
+  55-100 %). Starting level guessed from the device (software renderer -> 0, phones 1-2, desktops 4-5) or the level
+  remembered in localStorage; a governor averages frame time over 1.5 s windows and steps down above 34 ms, up below
+  13.5 ms (more evidence needed to cross the 2<->3 step, which rebuilds shaders). ?q=N locks; automated browsers
+  lock at 4. stream.js gained setScale.
+- Shadow map: the diner's key light is the only caster; its map is redrawn only while the camera is near the diner
+  (shadowMap.autoUpdate off).
+- Startup: circuit-board normal map (2 MP per-pixel loop), the monkey statue's surface nets and the lamp-pool
+  overhead checks moved to after-start jobs; rock-bed packing without square roots. Old-town build 9.7 s -> 4.4 s in
+  the headless test; loading screen work done at 16 s first visit / 14 s repeat (was 19 / 17).

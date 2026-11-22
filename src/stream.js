@@ -44,17 +44,18 @@ export function makeStreamer(scene, { base = 70, k = 8, max = 450, always = 120,
   const ms = Math.round(performance.now() - t0);
   let shown = entries.length;
   const wp = new THREE.Vector3();
+  let scale = 1;   // (quality.js shortens the draw distance on slow machines)
   function update(cam) {
     shown = 0;
     for (const e of entries) {
       if (e.live) { e.o.getWorldPosition(wp); e.c.copy(wp).add(e.off); }
       const dx = cam.x - e.c.x, dz = cam.z - e.c.z, dy = cam.y - e.c.y, dist = Math.sqrt(dx * dx + dz * dz + dy * dy * 0.25) - e.r;
-      const show = dist < e.d * (e.hidden ? 0.94 : 1.0);   // a little hysteresis so things don't flicker at the edge
+      const show = dist < e.d * scale * (e.hidden ? 0.94 : 1.0);   // a little hysteresis so things don't flicker at the edge
       if (show) { shown++; if (e.hidden) { e.o.visible = true; e.hidden = false; } }
       else if (!e.hidden) { if (e.o.visible) { e.o.visible = false; e.hidden = true; } }
     }
   }
-  return { update, entries, stats: () => ({ managed: entries.length, shown, setupMs: ms }) };
+  return { update, entries, setScale: (v) => { scale = v; }, stats: () => ({ managed: entries.length, shown, setupMs: ms }) };
 }
 
 // Streaming step 1b: merge a hand-built building's static meshes by material, so a room full of small props costs a

@@ -7,6 +7,7 @@
 //     side by side and drooping over an edge, braid weave from the photo, plus one loose coil
 // Units metres.
 import * as THREE from 'three';
+import { afterStart } from '../defer.js';
 import { F } from '../fonts.js';
 
 const _L = new THREE.TextureLoader();
@@ -54,15 +55,17 @@ function boardTextures(W, H) {
   // board edge line
   c.strokeStyle = '#e9e9e2'; c.lineWidth = 4; c.strokeRect(20, 20, S - 40, CH - 40);
   const t = new THREE.CanvasTexture(col); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
-  // normal map from the height canvas
-  const hd = h.getImageData(0, 0, S, CH).data, nm = c.createImageData(S, CH);
-  const at = (x, y) => hd[(Math.min(CH - 1, Math.max(0, y)) * S + Math.min(S - 1, Math.max(0, x))) * 4] / 255;
-  for (let y = 0; y < CH; y++) for (let x = 0; x < S; x++) {
-    const dx = (at(x + 1, y) - at(x - 1, y)) * 2.5, dy = (at(x, y + 1) - at(x, y - 1)) * 2.5, l = Math.hypot(dx, dy, 1), i = (y * S + x) * 4;
-    nm.data[i] = (-dx / l * 0.5 + 0.5) * 255; nm.data[i + 1] = (dy / l * 0.5 + 0.5) * 255; nm.data[i + 2] = (1 / l * 0.5 + 0.5) * 255; nm.data[i + 3] = 255;
-  }
-  const nc = document.createElement('canvas'); nc.width = S; nc.height = CH; nc.getContext('2d').putImageData(nm, 0, 0);
+  // normal map from the height canvas: 2 megapixels of per-pixel maths, done after the world is on screen
+  const nc = document.createElement('canvas'); nc.width = S; nc.height = CH; { const x = nc.getContext('2d'); x.fillStyle = 'rgb(128,128,255)'; x.fillRect(0, 0, S, CH); }
   const n = new THREE.CanvasTexture(nc);
+  afterStart(() => {
+    const hd = h.getImageData(0, 0, S, CH).data, nm = c.createImageData(S, CH), nd = nm.data;
+    for (let y = 0; y < CH; y++) { const ym = Math.max(0, y - 1) * S, yp = Math.min(CH - 1, y + 1) * S, yy = y * S;
+      for (let x = 0; x < S; x++) { const xm = x > 0 ? x - 1 : 0, xp = x < S - 1 ? x + 1 : x;
+        const dx = (hd[(yy + xp) * 4] - hd[(yy + xm) * 4]) / 255 * 2.5, dy = (hd[(yp + x) * 4] - hd[(ym + x) * 4]) / 255 * 2.5, l = Math.sqrt(dx * dx + dy * dy + 1), i = (yy + x) * 4;
+        nd[i] = (-dx / l * 0.5 + 0.5) * 255; nd[i + 1] = (dy / l * 0.5 + 0.5) * 255; nd[i + 2] = (1 / l * 0.5 + 0.5) * 255; nd[i + 3] = 255; } }
+    nc.getContext('2d').putImageData(nm, 0, 0); n.needsUpdate = true;
+  });
   return { t, n };
 }
 

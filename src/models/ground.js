@@ -124,9 +124,8 @@ export function makeRockBed(x0, x1, z0, z1, { density = 420, seed = 1 } = {}) {
   const fits = (x, z, rad) => {
     const gx = Math.floor(x / cell), gz = Math.floor(z / cell);
     for (let dx = -1; dx <= 1; dx++) for (let dz = -1; dz <= 1; dz++) {
-      for (const o of grid.get(key(gx + dx, gz + dz)) || []) {
-        if (Math.hypot(o.x - x, o.z - z) < o.rad + rad + 0.001) return false;
-      }
+      const list = grid.get(key(gx + dx, gz + dz)); if (!list) continue;
+      for (let i = 0; i < list.length; i++) { const o = list[i], ex = o.x - x, ez = o.z - z, m = o.rad + rad + 0.001; if (ex * ex + ez * ez < m * m) return false; }   // (same test as before, without the square root)
     }
     return true;
   };

@@ -7,6 +7,8 @@ import * as THREE from 'three';
 import { makeStreamer, mergeStatic } from './stream.js';
 import { autoNormals } from './normals.js';
 import { applyFinishes } from './finishes.js';
+import { makeQuality } from './quality.js';
+import { afterStart } from './defer.js';
 import { makeCar, LIVERIES, carEnv } from './vehicle/carbody.js';
 import { makeDriver } from './drive.js';
 import { finishLoading } from './loading.js';
@@ -1957,7 +1959,7 @@ if (qs.get('drive') !== null) enterCar(drive.cars[+qs.get('drive') || 0]);
 // ------------------------------------------------------------------ post: neon glow
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
-composer.addPass(new UnrealBloomPass(new THREE.Vector2(window.innerWidth / 2, window.innerHeight / 2), 0.35, 0.45, 1.5));
+const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth / 2, window.innerHeight / 2), 0.35, 0.45, 1.5); composer.addPass(bloomPass);
 composer.addPass(new OutputPass());
 
 // ------------------------------------------------------------------ GLB export
@@ -2013,7 +2015,7 @@ document.getElementById('export')?.addEventListener('click', async () => {
 // too many lights. Only the MAX_LIGHTS point lights nearest the camera are on;
 // the count never changes, so shaders compile once and stay small.
 const IS_PHONE = matchMedia('(pointer: coarse)').matches;
-const MAX_LIGHTS = IS_PHONE ? 4 : 8;
+let MAX_LIGHTS = IS_PHONE ? 4 : 8;
 const pointLights = [];
 scene.traverse((o) => { if (o.isPointLight) pointLights.push(o); });
 const _lp = new THREE.Vector3();
@@ -2064,7 +2066,7 @@ if (!qs0.has('nomergeold')) {
 }
 // polish: a soft pool of light on the ground under every outdoor lamp, always there (the real lights are budgeted
 // to the nearest few, so streets away from them went black). Outdoor = nothing overhead. One instanced draw.
-{ const t0 = performance.now(), rc = new THREE.Raycaster(), up = new THREE.Vector3(0, 1, 0), wp = new THREE.Vector3(), solids = [];
+afterStart(() => { const t0 = performance.now(), rc = new THREE.Raycaster(), up = new THREE.Vector3(0, 1, 0), wp = new THREE.Vector3(), solids = [];
   room.traverse((o) => { if (o.isMesh && !o.isInstancedMesh && o.visible) solids.push(o); });
   const spots = [];
   for (const l of pointLights) { l.getWorldPosition(wp); if (wp.y < 2.2 || wp.y > 9 || l.intensity < 2) continue;
@@ -2076,7 +2078,7 @@ if (!qs0.has('nomergeold')) {
     const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), col = new THREE.Color();
     spots.forEach(([x0, y0, z0, r, lc], i) => { pools.setMatrixAt(i, m4.compose(new THREE.Vector3(x0, y0, z0), q, new THREE.Vector3(r, 1, r))); pools.setColorAt(i, col.copy(lc).multiplyScalar(0.55)); });
     pools.name = 'lamp_pools'; pools.frustumCulled = false; pools.renderOrder = 1; scene.add(pools); }
-  console.log('lamp pools:', spots.length, Math.round(performance.now() - t0), 'ms'); }
+  console.log('lamp pools:', spots.length, Math.round(performance.now() - t0), 'ms'); });   // (after the world is on screen: the overhead checks take about a second on a slow machine)
 const streamer = makeStreamer(scene, { phone: IS_PHONE });
 console.log('T streamer', Math.round(performance.now()));
 streamer.update(camera.position);
@@ -2122,7 +2124,7 @@ neon.traverse((o) => { if (o.isMesh && o.material.isMeshBasicMaterial && o.mater
 let tickers = null;
 function frame() {
   if (window.__loadingHold) { clock.getDelta(); requestAnimationFrame(frame); return; }   // (loading screen up: see loading.js)
-  const dt = Math.min(clock.getDelta(), 0.05);
+  const rawDt = clock.getDelta(), dt = Math.min(rawDt, 0.05);
   t += dt;
   if (!tickers) { tickers = []; scene.traverse((o) => { if (o.userData && typeof o.userData.tick === 'function') tickers.push(o); }); }
   for (const o of tickers) o.userData.tick(t, dt);
@@ -2170,9 +2172,21 @@ function frame() {
   doorCollider.active = doorOpen < 0.7;
   const f = 0.94 + 0.06 * Math.sin(t * 31) * Math.sin(t * 7.3); // subtle neon buzz
   for (const m of amberMats) m.color.setRGB(2.0 * f, 0.42 * f, 0.0);
-  composer.render();
+  // the diner's key light is the only shadow caster: its shadow map is redrawn only while you're near the diner
+  renderer.shadowMap.needsUpdate = renderer.shadowMap.enabled && Math.abs(camera.position.x) < 45 && Math.abs(camera.position.z) < 40;
+  composer.render();   // (with the glow off this is one scene pass + the output pass, same colours as with it on)
+  quality.frame(rawDt, performance.now());
   requestAnimationFrame(frame);
 }
+renderer.shadowMap.autoUpdate = false;
+// automatic quality (see quality.js)
+const quality = makeQuality({ renderer, apply: (q) => {
+  renderer.setPixelRatio(q.pixelRatio); composer.setPixelRatio(q.pixelRatio); bloomPass.enabled = q.bloom;
+  const lights = IS_PHONE ? 4 : q.heavy ? 8 : 4; if (lights !== MAX_LIGHTS) { MAX_LIGHTS = lights; updateLightBudget(); }
+  if (key.castShadow !== q.heavy) { key.castShadow = q.heavy; renderer.shadowMap.needsUpdate = true; }
+  streamer.setScale(q.stream); streamer.update(camera.position);
+} });
+window.__quality = quality;
 frame();
 
 window.addEventListener('resize', () => {
