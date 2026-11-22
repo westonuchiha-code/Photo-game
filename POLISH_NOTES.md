@@ -368,3 +368,27 @@ This is a running list, added to as models get built. Nothing here is urgent.
 - Headless test (software GL, 4 cores, 40 Mbit/s): loading screen lifts at 19 s first visit / 17 s repeat visit,
   was 81 s. (The headless box then spends a while drawing first frames; a real GPU doesn't.)
 - Not done (diminishing returns now): lazy district build, splitting the old town's textures by area.
+
+## Polish pass 2 (whole-game sweep)
+Audit tools (scratch, not in repo): every camera view captured to contact sheets; a material audit listing big
+untextured surfaces and colour maps missing their normal map; unused-export / unused-import / dead-code scan.
+- Code: removed the photo-based car models the generator replaced (van.js, coupe61.js, four models in vehicles36.js,
+  unused imports in main.js); two duplicate camera-view keys renamed (pickupzone, brickwarehouse); Loop / jump-lot
+  view buttons added to the published page; a 404 fixed (b85Mat asked for a normal map that doesn't exist).
+- normals.js: NORMAL_OF table (tools/list_normals.py regenerates it) + autoNormals(scene): every material using a
+  colour map that has a normal map on file gets it (95 materials had been left flat).
+- finishes.js: applyFinishes(scene): every large flat-coloured wall / ceiling / deck / roof gets plaster, concrete,
+  gravel, acoustic tile, stucco or plank from the library, tinted so its designed colour is kept; box-projected UVs
+  at world scale. 340 meshes, ~17,400 m2. Opt out per material with userData.flat, per object with userData.noFinish.
+- District: roofs = ballast gravel, parapets/cornices = cast concrete, rooftop units = galvanised sheet, kerbs =
+  the kerb photo (all were flat colours).
+- Trees: district avenue / main-street trees and Elm Loop's median are the grown oak / cherry / pale trees from
+  trees.js, baked (bark + leaf-cluster cards) and instanced in 90 m chunks; Elm Loop's tree line is spruces built
+  from the bark + needle-spray photos; trail cedars get needle-spray crowns; every flat-shaded foliage ball
+  (plaza planters, hedges, bark tree, pond trees, pottery tree) is leaf cards now (leafBall / leafBlob).
+- Old town ground: worn asphalt texture at world scale instead of a flat dark colour.
+- Reflections: a low studio environment (0.1) on the whole scene so metal, glass and glazed surfaces aren't black.
+- Old-town merge (step 1c): movers detected by running every animation + opening every door and diffing world
+  matrices; the rest merges per set: 18,788 -> 3,332 meshes, 1,088 moving meshes left alone. mergeStatic keeps vertex
+  colours now.
+- Packs: textures the game never requests are left out (record_zones logs fetches as well as <img> loads).

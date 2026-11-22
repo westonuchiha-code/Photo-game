@@ -122,7 +122,7 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color('#0b1018');
 // night haze: far streets, towers and hills fade into the horizon instead of ending at a hard edge
 scene.fog = new THREE.Fog('#20232c', 120, 900);   // (tightened for streaming: far things fade before they cull)
-const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.05, 3200);
+const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 3200);   // (near 0.1: twice the depth precision of 0.05, for the many stacked ground layers)
 const mats = makeMaterials();
 
 // ------------------------------------------------------------------ shell
@@ -216,6 +216,7 @@ const outside = new THREE.Group();
 // (polish: the old town's base ground is worn asphalt from the street photo, not a flat dark colour)
 const pavementTex = new THREE.TextureLoader().load('assets/textures/city_asphalt.png'); pavementTex.colorSpace = THREE.SRGBColorSpace; pavementTex.wrapS = pavementTex.wrapT = THREE.RepeatWrapping; pavementTex.anisotropy = 8;
 const pavementMat = new THREE.MeshStandardMaterial({ map: pavementTex, color: '#c4c6c8', roughness: 0.92 });
+pavementMat.color.setRGB(1.5, 1.5, 1.56);   // (the asphalt photo is dark: lifted so unlit stretches of street still read as a surface at night)
 const pavement = new THREE.Group();
 // (the Elmwood footprint, world x 52..62 z -8..6, is left open so its garden-level floor isn't capped)
 // (and the underground-mall stair well, world x 0.2..3.8 z 50.9..58.7)
@@ -2030,17 +2031,17 @@ if (!qs0.has('nomergeold')) {
   const anim = (t) => { try { sky.userData.update(camera, t); alien.userData.update(t); soupPots.forEach((p) => p.userData.update(t)); puffCup.userData.update(t); creep.userData.update(t); cleanBotUpdate(t); mossCreatureUpdate(t);
     (alley.userData.anim || []).forEach((a) => a.userData.update(t)); cart.userData.update(t); walkPoles.forEach((p, i) => p.userData.update(t, i * 0.3));
     scene.traverse((o) => { if (o.userData && typeof o.userData.tick === 'function') o.userData.tick(t, 0.05); }); } catch (e) { console.warn('anim probe', e); } };
-  anim(3.7); for (const it of interactables) it.setOpen(1); door.userData.setOpen(1);
+  anim(3.7); for (const it of interactables) it.setOpen(1); door.userData.setOpen(1); grocery.userData.update(1.5, true); blueHouse.userData.update(0.7);
   scene.updateMatrixWorld(true);
   let movers = 0;
   for (const [m, s0] of snap) { const e = m.matrixWorld.elements; let moved = m.visible !== s0.v; for (let i = 0; i < 16 && !moved; i++) if (Math.abs(e[i] - s0.e[i]) > 1e-5) moved = true; if (moved) { m.userData.noMerge = true; movers++; } }
-  for (const it of interactables) it.setOpen(it.t); door.userData.setOpen(0); anim(0);
+  for (const it of interactables) it.setOpen(it.t); door.userData.setOpen(0); anim(0); grocery.userData.update(5, false);
   for (const o of mall.userData.hideForCapture || []) o.traverse((m) => { m.userData.noMerge = true; });
   neon.traverse((m) => { m.userData.noMerge = true; });   // (its tubes' colours are animated per material)
   scene.updateMatrixWorld(true);
   let before = 0, after = 0; const loose = new THREE.Group(); loose.name = 'old_town_loose';
   for (const o of olds) {
-    if (o.isLight || o.userData.update || o.userData.brain || (o.userData.tick && !o.userData.mergeSafe) || o.userData.noMerge) continue;
+    if (o.isLight || (o.userData.update && o !== grocery && o !== blueHouse) || o.userData.brain || (o.userData.tick && !o.userData.mergeSafe) || o.userData.noMerge) continue;   // (the grocery + blue house only move the parts found above)
     if (o.isMesh) { if (!o.isInstancedMesh && !Array.isArray(o.material)) loose.add(o); continue; }
     const r = mergeStatic(o); before += r.before; after += r.after;
   }
