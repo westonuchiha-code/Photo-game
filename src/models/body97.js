@@ -49,7 +49,15 @@ function smooth(rings, sub) { const out = [], n = rings.length, cr = (p0, p1, p2
 // (phones: a lighter mesh, about a third of the triangles; set once before any body is made)
 let LOW = false; export function useLowDetailBodies(v = true) { LOW = v; }
 const _geo = {};
-function bodyGeometry(sex) { if (_geo[sex]) return _geo[sex]; const S = SPEC[sex], fem = sex === 'f', b = new Builder(), N = LOW ? 10 : 16, SUB = LOW ? 1 : 2;
+// A body's build: the base measurements with the rings scaled by region. shape = { chest, waist, hips, arm, leg, neck }
+// (1 = the base body; e.g. a stocky man in a loose hoodie is about { chest 1.14, waist 1.32, hips 1.14, arm 1.3, leg 1.18 }).
+// The shoulders and hips move out with the chest and hips, so the limbs stay attached; the head is not changed.
+const _spec = {};
+function specFor(sex, shape) { const B = SPEC[sex]; if (!shape) { B.key = sex + (LOW ? 'lo' : ''); return B; } const key = sex + JSON.stringify(shape) + (LOW ? 'lo' : ''); if (_spec[key]) return _spec[key];
+  const { chest = 1, waist = 1, hips = 1, arm = 1, leg = 1, neck = 1 } = shape, zone = (y) => y > B.neckY - 0.012 ? [neck, neck] : y > B.shY - 0.2 ? [chest, chest] : y > B.hipY + 0.05 ? [waist, 1 + (waist - 1) * 1.35] : [hips, hips];
+  return (_spec[key] = { ...B, key, shX: B.shX * (1 + (chest - 1) * 0.85), hipX: B.hipX * (1 + (hips - 1) * 0.55),
+    torso: B.torso.map(([y, rx, rf, rb, cz]) => { const [k, kf] = zone(y); return [y, rx * k, rf * kf, rb * k, cz]; }), arm: B.arm.map(([t, rx, rz]) => [t, rx * arm, rz * arm]), leg: B.leg.map(([t, rx, rf, rb]) => [t, rx * leg, rf * leg, rb * leg]) }); }
+function bodyGeometry(sex, shape) { const S = specFor(sex, shape); if (_geo[S.key]) return _geo[S.key]; const fem = sex === 'f', b = new Builder(), N = LOW ? 10 : 16, SUB = LOW ? 1 : 2;
   // ---- torso + neck: unwrapped round the body, the seam down the spine
   { const R = smooth(S.torso, SUB), y0 = R[0][0], y1 = R[R.length - 1][0], base = b.p.length / 3;
     for (const [y, rx, rf, rb, cz] of R) for (let c = 0; c <= N; c++) { const a = -Math.PI + (c / N) * Math.PI * 2, sn = Math.sin(a), cs = Math.cos(a); let x = rx * Math.sign(sn) * Math.abs(sn) ** 0.85, z = cz + (cs > 0 ? rf : rb) * cs;
@@ -99,9 +107,9 @@ function bodyGeometry(sex) { if (_geo[sex]) return _geo[sex]; const S = SPEC[sex
   // weld the normals of vertices that share a position (UV seams), so no seam shows in the shading
   { const p = g.attributes.position, n = g.attributes.normal, map = new Map(); for (let i = 0; i < p.count; i++) { const k = Math.round(p.getX(i) * 1500) + '|' + Math.round(p.getY(i) * 1500) + '|' + Math.round(p.getZ(i) * 1500); (map.get(k) || map.set(k, []).get(k)).push(i); }
     for (const l of map.values()) if (l.length > 1) { let x = 0, y = 0, z = 0; for (const i of l) { x += n.getX(i); y += n.getY(i); z += n.getZ(i); } const d = Math.hypot(x, y, z) || 1; for (const i of l) n.setXYZ(i, x / d, y / d, z / d); } }
-  g.computeBoundingSphere(); g.boundingSphere.radius *= 1.3; g.userData.spec = S; return (_geo[sex] = g); }
+  g.computeBoundingSphere(); g.boundingSphere.radius *= 1.3; g.userData.spec = S; return (_geo[S.key] = g); }
 
-export function makeBody(sex = 'm', material) { const S = SPEC[sex], geo = bodyGeometry(sex), g = new THREE.Group(), bones = [], mk = (name, parent, x, y, z) => { const bn = new THREE.Bone(); bn.name = name; bn.userData.w = [x, y, z]; const pw = parent ? parent.userData.w : [0, 0, 0]; bn.position.set(x - pw[0], y - pw[1], z - pw[2]); parent ? parent.add(bn) : g.add(bn); bones.push(bn); return bn; };
+export function makeBody(sex = 'm', material, shape = null) { const S = specFor(sex, shape), geo = bodyGeometry(sex, shape), g = new THREE.Group(), bones = [], mk = (name, parent, x, y, z) => { const bn = new THREE.Bone(); bn.name = name; bn.userData.w = [x, y, z]; const pw = parent ? parent.userData.w : [0, 0, 0]; bn.position.set(x - pw[0], y - pw[1], z - pw[2]); parent ? parent.add(bn) : g.add(bn); bones.push(bn); return bn; };
   const hips = mk('hips', null, 0, S.hipY, 0), spine = mk('spine', hips, 0, S.hipY + 0.1, 0), chest = mk('chest', spine, 0, (S.hipY + S.shY) / 2 + 0.06, 0), neck = mk('neck', chest, 0, S.neckY + 0.02, 0), head = mk('head', neck, 0, S.headY + 0.005, 0), limbs = {};
   for (const s of [-1, 1]) { const A = S.armA * s, at = (t) => [s * S.shX + t * Math.sin(A), S.shY - t * Math.cos(A), 0], a = mk('arm', chest, ...at(0)), f = mk('fore', a, ...at(S.elbow)), h = mk('hand', f, ...at(S.wrist)); limbs[s] = { a, f, h }; }
   for (const s of [-1, 1]) { const t = mk('thigh', hips, s * S.hipX, S.hipY, 0), sh = mk('shin', t, s * S.hipX, S.hipY - S.knee, 0), ft = mk('foot', sh, s * S.hipX, S.hipY - S.ankle, 0); limbs[s].t = t; limbs[s].s = sh; limbs[s].ft = ft; }
@@ -115,18 +123,20 @@ export function makeBody(sex = 'm', material) { const S = SPEC[sex], geo = bodyG
 
 // ---- hair: a shell over the scalp, hung from the head bone. Styles: 'short', 'crop', 'bob', 'long', 'beanie' (a hat), 'bald' (none)
 const _hair = {};
-function hairGeometry(sex, style) { const key = sex + style; if (_hair[key]) return _hair[key]; const S = SPEC[sex], hs = S.hs, N = 28, R = smooth(HEAD, 3), hat = style === 'beanie', shortS = style === 'short' || style === 'crop' || hat, low = hat ? 0.072 : style === 'long' ? -0.17 : style === 'bob' ? -0.03 : 0.058, th = hat ? 0.013 : style === 'crop' ? 0.004 : style === 'short' ? 0.008 : 0.014;
+function hairGeometry(sex, style) { const key = sex + style; if (_hair[key]) return _hair[key]; const S = SPEC[sex], hs = S.hs, N = 28, R = smooth(HEAD, 3), hat = style === 'beanie', shortS = style === 'short' || style === 'crop' || hat, low = hat ? 0.066 : style === 'long' ? -0.17 : style === 'bob' ? -0.03 : 0.058, th = hat ? 0.017 : style === 'crop' ? 0.004 : style === 'short' ? 0.008 : 0.014;
   const ringAt = (dy) => { if (dy <= 0.06) return R.find((r) => r[0] >= 0.06); for (let i = 0; i < R.length - 1; i++) if (dy <= R[i + 1][0]) { const t = (dy - R[i][0]) / (R[i + 1][0] - R[i][0]); return R[i].map((v, k) => lerp(v, R[i + 1][k], t)); } return R[R.length - 1]; };
   const ss = (x) => { x = Math.min(1, Math.max(0, x)); return x * x * (3 - 2 * x); };
   // the hairline, by angle from straight ahead: forehead, temple, over the ear, down to the nape (or the hair's length)
-  const line = (a) => { const d = Math.abs(a) * 180 / Math.PI; if (hat) return d < 50 ? 0.155 : d < 95 ? lerp(0.155, 0.098, ss((d - 50) / 45)) : lerp(0.098, low, ss((d - 95) / 40));   // a knit hat: low on the brow, over the tops of the ears, down the back
+  const line = (a) => { const d = Math.abs(a) * 180 / Math.PI; if (hat) return d < 50 ? 0.152 : d < 95 ? lerp(0.152, 0.092, ss((d - 50) / 45)) : lerp(0.092, low, ss((d - 95) / 40));   // a knit hat: low on the brow, over the tops of the ears, down the back
     if (shortS) return d < 40 ? 0.17 : d < 72 ? lerp(0.17, 0.128, ss((d - 40) / 32)) : d < 100 ? 0.128 : lerp(0.128, low, ss((d - 100) / 35)); return d < 45 ? 0.17 - 0.01 * (d / 45) : lerp(0.16, low, ss((d - 45) / 40)); };
-  const rows = []; for (let dy = low; dy < 0.058; dy += 0.02) rows.push(dy); for (let dy = 0.058; dy < 0.2295; dy += 0.0086) rows.push(dy);
-  const p = [], uv = [], idx = []; for (const dy of rows) for (let c = 0; c <= N; c++) { const a = -Math.PI + (c / N) * Math.PI * 2, sn = Math.sin(a), cs = Math.cos(a), ln = line(a), de = Math.max(dy, ln), q = ringAt(de), drop = de < 0.06 ? (0.06 - de) * 0.12 : 0, edge = Math.min(1, 0.12 + (de - ln) / 0.03), t2 = th * edge;
-      let x = q[1] * sn, z = (cs > 0 ? q[2] : q[3]) * cs + 0.006; const len = Math.hypot(x, z) || 1; x = (x + x / len * t2) * (1 - drop); z = (z + z / len * t2) * (1 - drop * 0.4);
-      p.push(x * hs, (de + (de > 0.2 ? th * 0.6 * (de - 0.2) / 0.03 : 0)) * hs - 0.005, z * hs); uv.push(...rect(ATLAS.headBack, 0.08 + 0.84 * c / N, lerp(0.45, 0.98, (de - low) / (0.23 - low)))); }
+  const rows = []; for (let dy = low; dy < 0.058; dy += 0.02) rows.push(dy); for (let dy = 0.058; dy < (hat ? 0.2385 : 0.2295); dy += 0.0086) rows.push(dy);
+  const p = [], uv = [], idx = []; for (const dy of rows) for (let c = 0; c <= N; c++) { const a = -Math.PI + (c / N) * Math.PI * 2, sn = Math.sin(a), cs = Math.cos(a), ln = line(a), de = Math.max(dy, ln), q = ringAt(hat ? Math.min(de, 0.185) : de), drop = de < 0.06 ? (0.06 - de) * 0.12 : 0, edge = Math.min(1, 0.12 + (de - ln) / 0.03),
+      // a knit hat: a thick rolled cuff at its edge, a full rounded crown that stands off the skull and slouches back
+      cuff = hat ? 0.007 * Math.max(0, 1 - Math.abs(de - ln - 0.014) / 0.016) : 0, t2 = th * edge + cuff, dome = hat && de > 0.185 ? Math.sqrt(Math.max(0.03, 1 - ((de - 0.185) / 0.056) ** 2)) : 1, up = hat && de > 0.14 ? (de - 0.14) * 0.42 : 0, bk = hat && de > 0.14 ? ((de - 0.14) / 0.095) ** 2 * 0.045 : 0;
+      let x = q[1] * sn, z = (cs > 0 ? q[2] : q[3]) * cs + 0.006; const len = Math.hypot(x, z) || 1; x = (x + x / len * t2) * (1 - drop) * dome; z = (z + z / len * t2) * (1 - drop * 0.4) * dome - bk;
+      p.push(x * hs, (de + up + (!hat && de > 0.2 ? th * 0.6 * (de - 0.2) / 0.03 : 0)) * hs - 0.005, z * hs); uv.push(...rect(ATLAS.headBack, 0.08 + 0.84 * c / N, lerp(0.45, 0.98, (de - low) / (0.23 - low)))); }
   for (let r = 0; r < rows.length - 1; r++) for (let c = 0; c < N; c++) { const a = r * (N + 1) + c, b = a + 1, d = a + N + 1, e = d + 1; idx.push(a, b, d, b, e, d); }
-  { const top = p.length / 3, tr = (rows.length - 1) * (N + 1), cy = (0.229 + th * 0.6) * hs - 0.004; p.push(0, cy, 0.004 * hs); uv.push(...rect(ATLAS.headBack, 0.5, 0.99)); for (let c = 0; c < N; c++) idx.push(tr + c, tr + c + 1, top); }
+  { const top = p.length / 3, tr = (rows.length - 1) * (N + 1), cy = hat ? (0.2385 + (0.2385 - 0.14) * 0.42 + 0.004) * hs - 0.005 : (0.229 + th * 0.6) * hs - 0.004; p.push(0, cy, (hat ? -0.046 : 0.004) * hs); uv.push(...rect(ATLAS.headBack, 0.5, 0.99)); for (let c = 0; c < N; c++) idx.push(tr + c, tr + c + 1, top); }
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals(); return (_hair[key] = g); }
 // a full beard: a shell from the jaw down past the chin, hung from the head bone. It repeats the beard pixels of the face
 // map (the strip between mouth and chin), so it matches whatever beard the face photo has.
@@ -138,6 +148,10 @@ function beardGeometry(sex, len) { const key = sex + len; if (_beard[key]) retur
   for (let r = 0; r < rows.length - 1; r++) for (let c = 0; c < N; c++) { const a = r * (N + 1) + c, b = a + 1, d = a + N + 1, e = d + 1; idx.push(a, d, b, b, d, e); }
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals(); return (_beard[key] = g); }
 export function addBeard(body, material, len = 0.05) { const m = new THREE.Mesh(beardGeometry(body.userData.sex, len), material); body.userData.bones.head.add(m); return m; }
+// a hoodie's hood, down: a roll of cloth round the back of the neck and over the shoulders, hung from the chest bone
+export function addHood(body, material) { const S = body.userData.spec, arc = Math.PI * 1.3, g = new THREE.TorusGeometry(0.098, 0.04, 7, 14, arc); g.rotateZ(-Math.PI / 2 - arc / 2); g.rotateX(Math.PI / 2); g.scale(1.18, 0.62, 1.0);
+  const uv = g.attributes.uv, [u0, v0] = rect(ATLAS.torso, 0.3, 0.7), [u1, v1] = rect(ATLAS.torso, 0.7, 0.86); for (let i = 0; i < uv.count; i++) uv.setXY(i, lerp(u0, u1, uv.getX(i)), lerp(v0, v1, uv.getY(i)));
+  const m = new THREE.Mesh(g, material), cw = body.userData.bones.chest.userData.w; m.position.set(0 - cw[0], S.neckY - 0.004 - cw[1], -0.045 - cw[2]); m.rotation.x = -0.34; body.userData.bones.chest.add(m); return m; }
 export function addHair(body, style, material) { if (!style || style === 'bald') return null; const m = new THREE.Mesh(hairGeometry(body.userData.sex, style), material); body.userData.bones.head.add(m); return m; }
 
 // ---- the UV template: every triangle of the body drawn over the atlas regions (give this to whoever paints a skin)
@@ -150,7 +164,7 @@ export function drawTemplate(sex = 'm', size = 1024) { const c = document.create
 // (Photo skins replace this: a skin photo for the tone, a face photo fitted to the face region, clothes from fabric.)
 // `face` / `back`: names of photo maps made by tools/make_face.py (np_face_<name>, np_back_<name>). They replace the
 // drawn face and the painted hair, and are laid in when their images arrive.
-export function paintSkin(sex = 'm', { skin = '#d8a880', hair = '#2a1c12', top = '#7a8a9a', bottom = '#34425e', shoe = '#2a2420', sleeves = 'short', legs = 'long', seed = 1, size = 512, face = null, back = null, collar = 'open' } = {}) {   // collar 'high': the top covers the neck (a hoodie, a roll-neck)
+export function paintSkin(sex = 'm', { skin = '#d8a880', hair = '#2a1c12', top = '#7a8a9a', bottom = '#34425e', shoe = '#2a2420', sleeves = 'short', legs = 'long', seed = 1, size = 512, face = null, back = null, collar = 'open', hoodie = false } = {}) {   // collar 'high': the top covers the neck (a hoodie, a roll-neck)
   const c = document.createElement('canvas'); c.width = c.height = size; const x = c.getContext('2d'), fem = sex === 'f', S = SPEC[sex], px = (R, s, t) => [lerp(R[0], R[2], s) * size, (1 - lerp(R[1], R[3], t)) * size], box = (R, s0, t0, s1, t1) => { const [ax, ay] = px(R, s0, t1), [bx, by] = px(R, s1, t0); x.fillRect(ax, ay, bx - ax, by - ay); };
   let sd = seed * 9301 + 49297; const rnd = () => ((sd = (sd * 16807) % 2147483647) / 2147483647), shade = (col, k) => { const c3 = new THREE.Color(col); c3.multiplyScalar(k); return '#' + c3.getHexString(); };
   const grain = (R, s0, t0, s1, t1, col, amt = 0.07, n = 900) => { x.fillStyle = col; box(R, s0, t0, s1, t1); const [ax, ay] = px(R, s0, t1), [bx, by] = px(R, s1, t0); for (let i = 0; i < n; i++) { x.fillStyle = rnd() < 0.5 ? `rgba(0,0,0,${amt * rnd()})` : `rgba(255,255,255,${amt * rnd()})`; x.fillRect(ax + rnd() * (bx - ax), ay + rnd() * (by - ay), 1 + rnd() * 2, 1 + rnd() * 3); } };
@@ -158,10 +172,14 @@ export function paintSkin(sex = 'm', { skin = '#d8a880', hair = '#2a1c12', top =
   const hgrad = (R, stops) => { const [ax, ay] = px(R, 0, 1), [bx, by] = px(R, 1, 0), g = x.createLinearGradient(ax, 0, bx, 0); for (const [o, col] of stops) g.addColorStop(o, col); x.fillStyle = g; x.fillRect(ax, ay, bx - ax, by - ay); };
   x.fillStyle = skin; x.fillRect(0, 0, size, size); for (const R of Object.values(ATLAS)) grain(R, 0, 0, 1, 1, skin, 0.035, 500);
   // torso: top (neckline leaves the neck + collarbone bare), bottom's waistband below
-  { const R = ATLAS.torso, y0 = S.torso[0][0], y1 = S.torso[S.torso.length - 1][0], T = (y) => (y - y0) / (y1 - y0), waist = T(S.hipY + 0.1), neck = collar === 'high' ? 1 : T(S.neckY - 0.012);
+  { const R = ATLAS.torso, y0 = S.torso[0][0], y1 = S.torso[S.torso.length - 1][0], T = (y) => (y - y0) / (y1 - y0), waist = T(S.hipY + (hoodie ? -0.02 : 0.1)), neck = collar === 'high' ? 1 : T(S.neckY - 0.012);
     grain(R, 0, waist, 1, neck, top, 0.09, 2600); grain(R, 0, 0, 1, waist, bottom, 0.08, 1400); x.fillStyle = shade(bottom, 0.6); box(R, 0, waist - 0.012, 1, waist + 0.004);
     const [nx, ny] = px(R, 0.5, neck); x.fillStyle = collar === 'high' ? top : skin; x.beginPath(); x.ellipse(nx, ny, size * 0.6 * (fem ? 0.085 : 0.06), size * 0.36 * (fem ? 0.07 : 0.04), 0, 0, Math.PI); x.fill(); x.strokeStyle = shade(top, 0.7); x.lineWidth = size / 220; x.beginPath(); x.ellipse(nx, ny, size * 0.6 * (fem ? 0.085 : 0.06), size * 0.36 * (fem ? 0.07 : 0.04), 0, 0, Math.PI); x.stroke();
     hgrad(R, [[0, 'rgba(0,0,0,0.22)'], [0.12, 'rgba(0,0,0,0.0)'], [0.25, 'rgba(0,0,0,0.16)'], [0.5, 'rgba(255,255,255,0.06)'], [0.75, 'rgba(0,0,0,0.16)'], [0.88, 'rgba(0,0,0,0)'], [1, 'rgba(0,0,0,0.22)']]);
+    if (hoodie) { const U = (y) => T(y), lite = shade(top, 1.9), dark = shade(top, 0.55);   // ribbed hem, front pocket, drawstrings (the front of the body is the middle of this region)
+      x.fillStyle = dark; box(R, 0, waist, 1, waist + 0.03); x.strokeStyle = 'rgba(255,255,255,0.07)'; x.lineWidth = 1; for (let i = 0; i < 90; i++) { const [lx, ly] = px(R, i / 90, waist + 0.03), [, ly2] = px(R, 0, waist); x.beginPath(); x.moveTo(lx, ly); x.lineTo(lx, ly2); x.stroke(); }
+      const P0 = px(R, 0.41, U(S.hipY + 0.07)), P1 = px(R, 0.59, U(S.hipY + 0.07)), P2 = px(R, 0.565, U(S.hipY + 0.27)), P3 = px(R, 0.435, U(S.hipY + 0.27)); x.strokeStyle = dark; x.lineWidth = size / 170; x.beginPath(); x.moveTo(...P0); x.lineTo(...P1); x.lineTo(...P2); x.lineTo(...P3); x.closePath(); x.stroke(); x.fillStyle = 'rgba(0,0,0,0.18)'; x.fill();
+      x.strokeStyle = lite; x.lineWidth = size / 260; for (const sgn of [-1, 1]) { const a0 = px(R, 0.5 + sgn * 0.022, U(S.neckY - 0.03)), a1 = px(R, 0.5 + sgn * 0.03, U(S.neckY - 0.2)); x.beginPath(); x.moveTo(...a0); x.lineTo(...a1); x.stroke(); x.fillStyle = lite; x.fillRect(a1[0] - size / 300, a1[1], size / 150, size / 90); } }
     for (let i = 0; i < 9; i++) { const [fx, fy] = px(R, 0.3 + rnd() * 0.4, waist + 0.05 + rnd() * 0.25); x.strokeStyle = 'rgba(0,0,0,0.10)'; x.lineWidth = size / 300; x.beginPath(); x.moveTo(fx - size * 0.03, fy); x.quadraticCurveTo(fx, fy + size * 0.012 * (rnd() - 0.5) * 2, fx + size * 0.03, fy + size * 0.006); x.stroke(); } }
   // arms: sleeve to mid upper arm or to the wrist; legs: trousers or shorts; socks + shoes
   { const R = ATLAS.arm, L = S.wrist + 0.2 * S.hand + 0.05, t = sleeves === 'long' ? (S.wrist + 0.045) / L : (0.15 + 0.05) / L; grain(R, 0, 1 - t, 0.64, 1, top, 0.09, 1200); x.fillStyle = shade(top, 0.7); box(R, 0, 1 - t - 0.004, 0.64, 1 - t + 0.006);

@@ -635,3 +635,16 @@ inside the view cone at five fixed camera spots, `tools/devtests/where2.js`), th
 - Still rough: the beard shell is one smooth shape and a little lighter than the cheeks; glasses are only painted
   on (no frame standing off the face); where front and profile photos meet at the glasses rim there is some doubling;
   each face still needs landmarks read off by hand.
+
+## 107 Photo-faced character: hat and body
+- Owner: "fix the hat and body" (no detail given; read as: the hat was a tight helmet, the body a thin mannequin in a
+  skin-tight top, where the photos show a slouchy knit beanie and a stocky man in a loose hoodie).
+- Hat (`beanie` style in hairGeometry): thicker, a rolled cuff at the edge, a full rounded crown that stands off the
+  skull, lifts and slouches back; sits lower on the brow and over more of the ears.
+- Body: `specFor(sex, shape)` makes a build variant of the base body by scaling the rings by region
+  ({ chest, waist, hips, arm, leg, neck }; belly comes forward with the waist; shoulders and hips move out so limbs
+  stay attached). `makeBody(sex, material, shape)`. Hank uses chest 1.27, waist 1.55, hips 1.3, arm 1.42, leg 1.34.
+  The earlier whole-group `build` scale is gone.
+- Hoodie: `addHood` (a roll of cloth behind the neck, on the chest bone); `paintSkin({ hoodie })` paints a ribbed
+  hem, front pocket and drawstrings and lets the top hang over the hips.
+- A soft ground-shadow disc under `makeCharacter` figures (pedestrians do not have one yet).
