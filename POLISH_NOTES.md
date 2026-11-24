@@ -620,3 +620,18 @@ inside the view cone at five fixed camera spots, `tools/devtests/where2.js`), th
 - Known limits of the prototype: the sides of the head stretch the front photo (the profile photos are not used for
   the sides yet: that needs the head unwrapped round instead of front / back); the beard is cut at the chin (no
   beard shape below it), which leaves the neck looking long; one body build for everyone.
+
+## 106 Photo-faced character, second pass
+- Head texture layout changed (body97.js): the face and headBack regions are now half-cylinder unwraps (180 degrees
+  round the head each, even by angle) instead of flat front / back projections. The sides no longer smear, and a
+  profile photo can cover them. The painted placeholder faces were re-aimed (`FX`); docs/skin_template_*.png redone.
+- tools/make_face.py rewritten: for every texel it finds that point of the head in 3D from the head's ring
+  measurements, then samples the front photo (middle of the face), the profile photo (sides, round toward the back;
+  mirrored to both sides) and plain hat / hair / neck patches (the strip down the back). Blend front to profile
+  between 44 and 60 degrees. No head outline is needed any more.
+- `addBeard(body, material, len)`: a beard shell from under the lip, round the jaw and down past the chin, using the
+  face map's chin strip. `makeCharacter` takes `build` (body breadth; the head bone is scaled back so the face does
+  not widen), `head` (head size), `beard`, `collar`.
+- Still rough: the beard shell is one smooth shape and a little lighter than the cheeks; glasses are only painted
+  on (no frame standing off the face); where front and profile photos meet at the glasses rim there is some doubling;
+  each face still needs landmarks read off by hand.

@@ -58,10 +58,12 @@ function bodyGeometry(sex) { if (_geo[sex]) return _geo[sex]; const S = SPEC[sex
         const w = y < S.hipY + 0.13 ? blend(y, S.hipY + 0.1, 0.06, B.hips, B.spine) : y < S.neckY ? blend(y, (S.hipY + S.shY) / 2 + 0.06, 0.07, B.spine, B.chest) : blend(y, S.neckY + 0.02, 0.025, B.chest, B.neck);
         b.v(x, y, z, ...rect(ATLAS.torso, 0.01 + 0.98 * c / N, (y - y0) / (y1 - y0)), w); }
     b.grid(base, R.length, N + 1, false); }
-  // ---- head: the front half takes the face map straight on (a flat projection), the back half the hair
+  // ---- head: two half-cylinder unwraps. The face region is the front half (-90..+90 degrees from straight ahead, left
+  // to right across the region), the headBack region the back half seen from behind. tools/make_face.py builds both from a
+  // front photo (the middle of the face) and a profile photo (the sides and the back).
   { const R = smooth(HEAD, LOW ? 2 : 3), hs = S.hs, base0 = S.headY, M = LOW ? 12 : 20, half = (front) => { const base = b.p.length / 3, AR = front ? ATLAS.face : ATLAS.headBack;
       for (const [dy, rx, rf, rb] of R) for (let c = 0; c <= M; c++) { const a = (front ? -Math.PI / 2 : Math.PI / 2) + (c / M) * Math.PI, sn = Math.sin(a), cs = Math.cos(a); let x = rx * sn, z = (cs > 0 ? rf : rb) * cs + 0.006;
-          [x, z] = sculptFace(x, dy, z, front ? a : Math.sign(sn) * (Math.PI / 2 - 1e-6), fem); if (!front) z = (cs > 0 ? rf : rb) * cs + 0.006 + (z - ((cs > 0 ? rf : rb) * cs + 0.006)) * Math.max(0, 1 + cs * 6); const u = front ? 0.5 + x / 0.168 : 0.5 - x / 0.168, w = blend(dy, 0.005, 0.02, B.neck, B.head);
+          [x, z] = sculptFace(x, dy, z, front ? a : Math.sign(sn) * (Math.PI / 2 - 1e-6), fem); if (!front) z = (cs > 0 ? rf : rb) * cs + 0.006 + (z - ((cs > 0 ? rf : rb) * cs + 0.006)) * Math.max(0, 1 + cs * 6); const u = c / M, w = blend(dy, 0.005, 0.02, B.neck, B.head);   // across each half the map runs evenly by angle: -90 to +90 degrees
           b.v(x * hs, base0 + dy * hs, z * hs, ...rect(AR, Math.min(1, Math.max(0, u)), (dy + 0.012) / HEAD_H), w); }
       b.grid(base, R.length, M + 1, false); }; half(true); half(false);
     // ears: a small flattened shell each side, painted from the edge of the face map
@@ -126,6 +128,16 @@ function hairGeometry(sex, style) { const key = sex + style; if (_hair[key]) ret
   for (let r = 0; r < rows.length - 1; r++) for (let c = 0; c < N; c++) { const a = r * (N + 1) + c, b = a + 1, d = a + N + 1, e = d + 1; idx.push(a, b, d, b, e, d); }
   { const top = p.length / 3, tr = (rows.length - 1) * (N + 1), cy = (0.229 + th * 0.6) * hs - 0.004; p.push(0, cy, 0.004 * hs); uv.push(...rect(ATLAS.headBack, 0.5, 0.99)); for (let c = 0; c < N; c++) idx.push(tr + c, tr + c + 1, top); }
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals(); return (_hair[key] = g); }
+// a full beard: a shell from the jaw down past the chin, hung from the head bone. It repeats the beard pixels of the face
+// map (the strip between mouth and chin), so it matches whatever beard the face photo has.
+const _beard = {};
+function beardGeometry(sex, len) { const key = sex + len; if (_beard[key]) return _beard[key]; const S = SPEC[sex], hs = S.hs, N = 14, R = smooth(HEAD, 3), at = (dy) => { for (let i = 0; i < R.length - 1; i++) if (dy <= R[i + 1][0]) { const t = Math.max(0, (dy - R[i][0]) / (R[i + 1][0] - R[i][0])); return R[i].map((v, k) => lerp(v, R[i + 1][k], t)); } return R[0]; };
+  const rows = [[0.03, 1.0, 0.001], [0.018, 1.0, 0.007], [0.004, 1.02, 0.011], [-0.012, 1.04, 0.015], [-0.012 - len * 0.5, 1.0, 0.015], [-0.012 - len * 0.85, 0.82, 0.012], [-0.012 - len, 0.45, 0.0]], p = [], uv = [], idx = [], A = 1.22;   // [height, width factor, thickness]
+  for (const [dy, wf, th] of rows) { const q = at(Math.max(dy, 0.012)); for (let c = 0; c <= N; c++) { const a = -A + (c / N) * 2 * A, sn = Math.sin(a), cs = Math.cos(a), edge = Math.min(1, (A - Math.abs(a)) / 0.35); let x = q[1] * sn * wf, z = (q[2] * cs + 0.006) * (dy < 0.012 ? 0.9 + 0.1 * wf : 1); const l = Math.hypot(x, z) || 1; x += x / l * th * edge; z += z / l * th * edge;
+      p.push(x * hs, dy * hs - 0.005, z * hs); uv.push(...rect(ATLAS.face, 0.5 + a / Math.PI, (lerp(0.03, -0.006, Math.min(1, Math.max(0, (0.03 - dy) / (0.042 + len)))) + 0.012) / HEAD_H)); } }
+  for (let r = 0; r < rows.length - 1; r++) for (let c = 0; c < N; c++) { const a = r * (N + 1) + c, b = a + 1, d = a + N + 1, e = d + 1; idx.push(a, d, b, b, d, e); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals(); return (_beard[key] = g); }
+export function addBeard(body, material, len = 0.05) { const m = new THREE.Mesh(beardGeometry(body.userData.sex, len), material); body.userData.bones.head.add(m); return m; }
 export function addHair(body, style, material) { if (!style || style === 'bald') return null; const m = new THREE.Mesh(hairGeometry(body.userData.sex, style), material); body.userData.bones.head.add(m); return m; }
 
 // ---- the UV template: every triangle of the body drawn over the atlas regions (give this to whoever paints a skin)
@@ -159,7 +171,7 @@ export function paintSkin(sex = 'm', { skin = '#d8a880', hair = '#2a1c12', top =
     hgrad(R, [[0, 'rgba(0,0,0,0.22)'], [0.25, 'rgba(0,0,0,0)'], [0.5, 'rgba(255,255,255,0.05)'], [0.75, 'rgba(0,0,0,0)'], [1, 'rgba(0,0,0,0.22)']]); vgrad(R, 0, 0.86, 1, 1, 'rgba(0,0,0,0.25)', 'rgba(0,0,0,0)');
     grain(ATLAS.foot, 0, 0, 1, 1, shoe, 0.08, 500); x.fillStyle = shade(shoe, 0.5); box(ATLAS.foot, 0.42, 0.3, 0.58, 0.62); x.fillStyle = shade(shoe, 1.6); for (let i = 0; i < 4; i++) box(ATLAS.foot, 0.4, 0.34 + i * 0.07, 0.6, 0.355 + i * 0.07); grain(ATLAS.sole, 0, 0, 1, 1, shade(shoe, 0.45), 0.06, 300); }
   // face: placed to the sculpted features (eyes 0.128 up from the chin, nose tip 0.082, mouth 0.046), then hair
-  { const R = ATLAS.face, FY = (dy) => (dy + 0.012) / HEAD_H, FX = (m) => 0.5 + m / 0.168, P = (m, dy) => px(R, FX(m), FY(dy)), u = size * 0.28 / 0.168;   // u: pixels per metre across the face
+  { const R = ATLAS.face, FY = (dy) => (dy + 0.012) / HEAD_H, FX = (m) => 0.5 + Math.asin(Math.max(-1, Math.min(1, m / 0.079))) / Math.PI, P = (m, dy) => px(R, FX(m), FY(dy)), u = size * 0.28 / 0.168;   // u: pixels per metre across the face
     hgrad(R, [[0, 'rgba(0,0,0,0.05)'], [0.5, 'rgba(255,255,255,0.05)'], [1, 'rgba(0,0,0,0.05)']]); hgrad(ATLAS.headBack, [[0, 'rgba(0,0,0,0.05)'], [0.5, 'rgba(0,0,0,0.1)'], [1, 'rgba(0,0,0,0.05)']]); vgrad(ATLAS.headBack, 0, 0, 1, 0.16, 'rgba(0,0,0,0)', 'rgba(0,0,0,0.3)'); vgrad(R, 0, 0, 1, 0.16, 'rgba(0,0,0,0)', 'rgba(0,0,0,0.3)');
     if (!fem) { const [bx, by] = P(0, 0.035); const g = x.createRadialGradient(bx, by, u * 0.01, bx, by, u * 0.06); g.addColorStop(0, 'rgba(40,30,25,0.16)'); g.addColorStop(1, 'rgba(40,30,25,0)'); x.fillStyle = g; x.fillRect(bx - u * 0.07, by - u * 0.05, u * 0.14, u * 0.1); }
     for (const s of [-1, 1]) { const [ex, ey] = P(s * 0.031, 0.128); x.fillStyle = 'rgba(60,30,20,0.22)'; x.beginPath(); x.ellipse(ex, ey, u * 0.02, u * 0.012, 0, 0, 7); x.fill();

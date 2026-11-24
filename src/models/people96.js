@@ -5,7 +5,7 @@
 // The skins here are painted stand-ins (paintSkin): photo skins + face maps replace them.
 import * as THREE from 'three';
 import { rng } from './kit.js';
-import { makeBody, paintSkin, addHair } from './body97.js';
+import { makeBody, paintSkin, addHair, addBeard } from './body97.js';
 
 const SKIN = ['#f0c8a4', '#e0ac80', '#c68a5c', '#a06a40', '#70482a', '#4e3220', '#f2d0b4'];
 const HAIR = ['#1a1410', '#2e1e12', '#5a3a1c', '#8a5a28', '#c8a050', '#8a8a88', '#d8d4cc', '#7a2a18'];
@@ -20,10 +20,12 @@ function look(sex, k, worker) { const key = sex + k + (worker ? 'w' : ''); if (_
 
 // A named character with a photo face (tools/make_face.py made the maps). `who`: { sex, face, back, hat, skin, top, bottom, shoe, sleeves }
 export function makeCharacter(who) { const m = new THREE.MeshStandardMaterial({ map: paintSkin(who.sex || 'm', { seed: 7, legs: 'long', sleeves: 'long', ...who }), roughness: 0.82 }); m.userData.flat = true; const hm = m.clone(); hm.side = THREE.DoubleSide; hm.userData.flat = true;
-  const g = makeBody(who.sex || 'm', m); addHair(g, who.hat || who.hairStyle || 'short', hm); if (who.height) g.scale.setScalar(who.height); return g; }
+  const g = makeBody(who.sex || 'm', m); addHair(g, who.hat || who.hairStyle || 'short', hm); if (who.beard) addBeard(g, hm, who.beard);
+  // build: how broad the body is (1 = the base body); the head keeps its own size (`head`), so a broad build doesn't widen the face
+  const b = who.build || 1, h = who.height || 1, hd = who.head || 1; g.scale.set(h * b, h, h * b); g.userData.bones.head.scale.set(hd / b, hd, hd / b); g.userData.bones.neck.scale.set(1.0, 1, 1.0); return g; }
 export const CHARACTERS = {   // made-up names
   // prototype: the first photo-mapped face (photos/npc-face-a-*.jpg)
-  hank: { sex: 'm', face: 'np_face_a', back: 'np_back_a', hat: 'beanie', skin: '#e4c0b0', top: '#15171d', bottom: '#2a2f3a', shoe: '#1c1814', sleeves: 'long', collar: 'high', height: 1.02 },
+  hank: { sex: 'm', face: 'np_face_a', back: 'np_back_a', hat: 'beanie', skin: '#e4c0b0', top: '#15171d', bottom: '#2a2f3a', shoe: '#1c1814', sleeves: 'long', collar: 'high', height: 1.02, build: 1.16, head: 1.12, beard: 0.06 },
 };
 export function makePerson(seed = 1, { worker = false } = {}) { const r = rng(seed * 104729 + 7), sex = r() < 0.5 ? 'f' : 'm', L = look(sex, worker ? seed : seed % 9, worker), g = makeBody(sex, L.m); addHair(g, L.style, L.hm);
   const sc = 0.95 + r() * 0.1; g.scale.set(sc * (0.96 + r() * 0.1), sc, sc * (0.96 + r() * 0.1)); return g; }
