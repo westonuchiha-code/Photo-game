@@ -2117,18 +2117,28 @@ console.log('auto normal maps:', autoNormals(scene));
 if (!qs0.has('nomergeold')) {
   const t0 = performance.now(), olds = room.children.slice(0, DISTRICT_FROM);
   scene.updateMatrixWorld(true);
-  const snap = new Map(); for (const o of olds) o.traverse((m) => { if (m.isMesh) snap.set(m, { e: m.matrixWorld.elements.slice(), v: m.visible }); });
+  const snap = new Map(), nodeSnap = new Map(); for (const o of olds) o.traverse((m) => { if (m.isMesh) snap.set(m, { e: m.matrixWorld.elements.slice(), v: m.visible }); else nodeSnap.set(m, m.matrixWorld.elements.slice()); });
   const anim = (t) => { try { sky.userData.update(camera, t); alien.userData.update(t); soupPots.forEach((p) => p.userData.update(t)); puffCup.userData.update(t); creep.userData.update(t); cleanBotUpdate(t); mossCreatureUpdate(t);
     (alley.userData.anim || []).forEach((a) => a.userData.update(t)); cart.userData.update(t); walkPoles.forEach((p, i) => p.userData.update(t, i * 0.3));
     scene.traverse((o) => { if (o.userData && typeof o.userData.tick === 'function') o.userData.tick(t, 0.05); }); } catch (e) { console.warn('anim probe', e); } };
   anim(3.7); for (const it of interactables) it.setOpen(1); door.userData.setOpen(1); grocery.userData.update(1.5, true); blueHouse.userData.update(0.7);
   scene.updateMatrixWorld(true);
-  let movers = 0;
-  for (const [m, s0] of snap) { const e = m.matrixWorld.elements; let moved = m.visible !== s0.v; for (let i = 0; i < 16 && !moved; i++) if (Math.abs(e[i] - s0.e[i]) > 1e-5) moved = true; if (moved) { m.userData.noMerge = true; movers++; } }
+  let movers = 0; const rigid = new Map(), dM = new THREE.Matrix4(), b4 = new THREE.Matrix4();
+  const deltaKey = (now, before) => { dM.fromArray(before).invert().premultiply(b4.fromArray(now)); return dM.elements.map((v) => Math.round(v * 2000)).join(','); };   // the world-space move a part made
+  for (const [m, s0] of snap) { const e = m.matrixWorld.elements; let moved = m.visible !== s0.v; for (let i = 0; i < 16 && !moved; i++) if (Math.abs(e[i] - s0.e[i]) > 1e-5) moved = true; if (moved) { m.userData.noMerge = true; movers++;
+      if (m.visible === s0.v && !m.isInstancedMesh && !m.isSkinnedMesh) { const k = deltaKey(e, s0.e); m.userData._dk = k; if (!rigid.has(k)) rigid.set(k, []); rigid.get(k).push(m); } } }
+  // parts that moved as one rigid piece (a door leaf with its knob, plate and bolt): find the node that carries them all
+  // and nothing else, and merge inside it, so an opening door is a mesh or two, not fifteen
+  const rigidRoots = [];
+  for (const [k, list] of rigid) { if (list.length < 2) continue; const seen = new Set();
+    for (const m of list) { let top = null; for (let q = m.parent; q && nodeSnap.has(q); q = q.parent) { if (deltaKey(q.matrixWorld.elements, nodeSnap.get(q)) !== k) break; let ok = true; q.traverse((c) => { if (c.isMesh && c.userData._dk !== k) ok = false; }); if (!ok) break; top = q; }
+      if (top && !seen.has(top)) { seen.add(top); rigidRoots.push(top); } } }
   for (const it of interactables) it.setOpen(it.t); door.userData.setOpen(0); anim(0); grocery.userData.update(5, false);
   for (const o of mall.userData.hideForCapture || []) o.traverse((m) => { m.userData.noMerge = true; });
   neon.traverse((m) => { m.userData.noMerge = true; });   // (its tubes' colours are animated per material)
   scene.updateMatrixWorld(true);
+  let rb = 0, ra = 0; for (const top of rigidRoots) { if (!top.parent) continue; let n = 0; top.traverse((c) => { if (c.isMesh) n++; }); if (n < 2) continue; const r = mergeStatic(top, { force: true, flag: { noMerge: true } }); rb += r.before; ra += r.after; }
+  console.log('merge moving parts:', rb, '->', ra, 'meshes in', rigidRoots.length, 'rigid pieces');
   let before = 0, after = 0; const loose = new THREE.Group(); loose.name = 'old_town_loose';
   for (const o of olds) {
     if (o.isLight || (o.userData.update && o !== grocery && o !== blueHouse) || o.userData.brain || (o.userData.tick && !o.userData.mergeSafe) || o.userData.noMerge) continue;   // (the grocery + blue house only move the parts found above)
@@ -2153,6 +2163,7 @@ afterStart(() => { const t0 = performance.now(), rc = new THREE.Raycaster(), up 
     spots.forEach(([x0, y0, z0, r, lc], i) => { pools.setMatrixAt(i, m4.compose(new THREE.Vector3(x0, y0, z0), q, new THREE.Vector3(r, 1, r))); pools.setColorAt(i, col.copy(lc).multiplyScalar(0.55)); });
     pools.name = 'lamp_pools'; pools.frustumCulled = false; pools.renderOrder = 1; scene.add(pools); }
   console.log('lamp pools:', spots.length, Math.round(performance.now() - t0), 'ms'); });   // (after the world is on screen: the overhead checks take about a second on a slow machine)
+scene.traverse((o) => { if (o.name === 'street_trees') o.userData.streamMax = 230; if (o.name === 'street_services') o.userData.streamMax = 220; });   // (draw-distance limits for the town-wide repeated sets)
 const streamer = makeStreamer(scene, { phone: IS_PHONE });
 console.log('T streamer', Math.round(performance.now()));
 streamer.update(camera.position);

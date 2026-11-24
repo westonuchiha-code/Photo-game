@@ -4,6 +4,7 @@
 //   makeCar(spec) -> Group with userData { spec, wheels: [{ pivot, spin, front, side }], body, brakeMats, lamps }
 //   CAR_TYPES: preset specs (hatch, sedan, coupe, kei, wagon, pickup, van, taxi, police)
 import * as THREE from 'three';
+import { mergeStatic } from '../stream.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { F, fitText } from '../fonts.js';
 
@@ -256,6 +257,10 @@ export function makeCar(opts = {}) {
   for (const [az, front] of [[axF, true], [axR, false]]) for (const s of [-1, 1]) { const w = makeWheel(P.R, tw, s, opts.rim === 'steel' ? 'steel' : 'alloy', rimMat); w.pivot.position.set(s * trackX, axY, az); g.add(w.pivot); wheels.push({ ...w, front, side: s }); }
   if (P.flat !== undefined) { const w = wheels[P.flat]; w.yOff = -0.07; w.pivot.position.y += w.yOff; w.spin.scale.set(1, 0.84, 1); }   // a flat tyre
   if (P.crash) { const w = wheels[1]; w.pivot.rotation.set(0, 0.45, 0.16); w.knocked = true; }                                  // a wheel knocked in
+  // one mesh per material for the sprung body and for each wheel (a car was ~130 separate pieces to draw). The body and
+  // the wheels keep their own groups, so roll, steering and spin still work; lamps glow through their shared materials.
+  for (const sm of body.userData.siren || []) sm.userData.noMerge = true;   // (the two beacons flash in turn)
+  mergeStatic(body); for (const w of wheels) mergeStatic(w.spin);
   g.userData = { noStream: true, spec: P, wheels, body, lamps, paint, axF, axR, axY, half: { x: W, zF, zR } };
   return g;
 }

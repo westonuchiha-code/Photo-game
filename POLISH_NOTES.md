@@ -523,3 +523,28 @@ untextured surfaces and colour maps missing their normal map; unused-export / un
   vertex-coloured material (`det`); the small dressing (det, capd, glow, tile, awnings) is only shown within 150 m
   (`userData.lodTick`). About 1.1 M triangles in total, roughly 200 k of them always candidates for drawing.
 - Not done: blank party walls (sides not on a street) are still plain; real-device frame rate unmeasured.
+
+## 100 Draw less: indoors, by area, merged movers
+Owner's idea: segment the world so the whole of it is not drawn all the time. Measured first (objects and triangles
+inside the view cone at five fixed camera spots, `tools/devtests/where2.js`), then cut what the numbers showed.
+- **Indoors (interiors.js `enclosed`, main.js `setShutIn`):** inside a district building with the street door shut,
+  everything outside is hidden (lights are left alone, so no shader changes) and streaming / LOD bookkeeping pauses.
+  The door now shuts behind you once you are more than 3.2 m inside, and opens as you walk back to it.
+  About 1,500 draw calls and 1.6 M triangles per frame outside a shop become about 40 calls and 27 k triangles inside.
+- **Cars (carbody.js):** each car was ~130 separate meshes. The sprung body and each wheel now merge by material
+  (the body and wheel groups stay, so roll, steering and spin work; siren beacons are left separate). ~43 per car.
+- **Moving parts (main.js step 1c):** parts that move as one rigid piece (a door leaf with knob, plate and bolt) are
+  found by comparing their world-space move in the animation probe, and merged inside the node that carries them:
+  1,093 -> 207 meshes. `mergeStatic` gained `force` and `flag` options for this.
+- **Streamer (stream.js):** tiny parts cull by size (8 + radius x 330 m, a knob at ~25 m, was 70 m); a big building
+  with a few moving parts keeps per-part culling instead of being drawn whole to 450 m; `userData.streamMax` caps a
+  set's draw distance (street trees 230 m, street services 220 m).
+- **Repeated street furniture (kit.js `instanceGroup`):** split into 250 m squares so squares off screen are culled.
+- Result, objects / triangles in view, before -> after: district street 800 / 892 k -> 568 / 723 k; district looking
+  west 1312 / 1.71 M -> 896 / 1.48 M; old town looking east 3025 / 2.06 M -> 1728 / 1.61 M; old town looking west
+  1657 / 2.01 M -> 1407 / 1.82 M; Elm Loop south 536 / 747 k -> 533 / 530 k.
+- Not done: building only the zone you start in (the district is about a third of the start-up build time; it needs
+  main.js reorganised, since the district is assembled inline with dozens of top-level constants used later);
+  old-town interiors as separate cells; the restaurant's 132 chairs and the 2,885-rock river bed are still heavy.
+- Startup timeline in the slow test browser (dev build): old town built at 5.7 s, district grid 7.1 s, district
+  sites 9.3 s, merges done 12 s, downloads 17 s, shaders 19 s.

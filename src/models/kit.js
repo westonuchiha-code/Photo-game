@@ -58,7 +58,8 @@ export function puff(mesh, amount = 0.03, seed = 1) { const g = mesh.geometry, p
 // draw one model many times: the group is flattened to one geometry per material and each becomes an InstancedMesh.
 //   transforms: [{ x, y, z, ry, s }]. Returns a Group (a handful of draw calls however many copies there are).
 import { mergeGeometries as _mergeGeos } from 'three/addons/utils/BufferGeometryUtils.js';
-export function instanceGroup(src, transforms, { shadow = true } = {}) {
+// (the copies are split into `cell`-metre squares, one instanced mesh per square, so squares off screen or far away aren't drawn)
+export function instanceGroup(src, transforms, { shadow = true, cell = 250 } = {}) {
   src.updateMatrixWorld(true); const inv = new THREE.Matrix4().copy(src.matrixWorld).invert(), by = new Map();
   src.traverse((o) => { if (!o.isMesh || o.isInstancedMesh) return; const mats = Array.isArray(o.material) ? o.material : [o.material]; const m4 = new THREE.Matrix4().multiplyMatrices(inv, o.matrixWorld);
     mats.forEach((m, mi) => { let g = o.geometry; if (Array.isArray(o.material)) { const grp = g.groups.filter((q) => q.materialIndex === mi); if (!grp.length) return; const ng = g.index ? g.toNonIndexed() : g.clone(); const pos = [], nor = [], uv = []; for (const q of grp) for (let i = q.start; i < q.start + q.count; i++) { pos.push(ng.attributes.position.getX(i), ng.attributes.position.getY(i), ng.attributes.position.getZ(i)); if (ng.attributes.normal) nor.push(ng.attributes.normal.getX(i), ng.attributes.normal.getY(i), ng.attributes.normal.getZ(i)); if (ng.attributes.uv) uv.push(ng.attributes.uv.getX(i), ng.attributes.uv.getY(i)); } g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); if (nor.length) g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3)); if (uv.length) g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); }
@@ -66,7 +67,8 @@ export function instanceGroup(src, transforms, { shadow = true } = {}) {
       for (const n of Object.keys(g.attributes)) if (n !== 'position' && n !== 'normal' && n !== 'uv') g.deleteAttribute(n); if (!g.attributes.normal) g.computeVertexNormals(); if (!g.attributes.uv) g.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(g.attributes.position.count * 2), 2));
       g.applyMatrix4(m4); if (!by.has(m)) by.set(m, []); by.get(m).push(g); }); });
   const out = new THREE.Group(), M = new THREE.Matrix4(), Q = new THREE.Quaternion(), UP = new THREE.Vector3(0, 1, 0), P = new THREE.Vector3(), S = new THREE.Vector3();
-  for (const [m, geos] of by) { const geo = geos.length > 1 ? _mergeGeos(geos, false) : geos[0]; if (!geo) continue; const im = new THREE.InstancedMesh(geo, m, transforms.length);
-    transforms.forEach((t, i) => { Q.setFromAxisAngle(UP, t.ry || 0); M.compose(P.set(t.x, t.y || 0, t.z), Q, S.setScalar(t.s || 1)); im.setMatrixAt(i, M); }); im.castShadow = shadow; im.receiveShadow = true; im.frustumCulled = false; out.add(im); }
+  const cells = new Map(); for (const t of transforms) { const k = Math.floor(t.x / cell) + ',' + Math.floor(t.z / cell); if (!cells.has(k)) cells.set(k, []); cells.get(k).push(t); }
+  for (const [m, geos] of by) { const geo = geos.length > 1 ? _mergeGeos(geos, false) : geos[0]; if (!geo) continue; for (const list of cells.values()) { const im = new THREE.InstancedMesh(geo, m, list.length);
+    list.forEach((t, i) => { Q.setFromAxisAngle(UP, t.ry || 0); M.compose(P.set(t.x, t.y || 0, t.z), Q, S.setScalar(t.s || 1)); im.setMatrixAt(i, M); }); im.castShadow = shadow; im.receiveShadow = true; im.computeBoundingBox(); im.computeBoundingSphere(); out.add(im); } }
   return out;
 }
