@@ -1,0 +1,103 @@
+// Photo Town, phone test area: a small district assembled from the modular pieces (district generator, on-demand
+// interiors, street services, cars, people), sized for a phone's memory. Its own page (phone.html) and its own build
+// (tools/build_phone.mjs), which packs only the textures this file's imports can ask for.
+// Everything here is placement + plumbing: the pieces themselves are the same code the big town uses.
+import './texcache.js';   // (first: it routes every texture load; phones get textures at 512 px)
+import * as THREE from 'three';
+import { finishLoading } from './loading.js';
+import { fontsReady } from './fonts.js';
+import { WalkControls } from './walk.js';
+import { makeStreamer } from './stream.js';
+import { makeDistrict, configureDistrict, GRID } from './models/district.js';
+import { placeStreetServices } from './models/street92.js';
+import { makeInteriors } from './interiors.js';
+import { makePeople } from './models/people96.js';
+import { useLowDetailBodies } from './models/body97.js';
+import { makeDriver } from './drive.js';
+import { makeCar, LIVERIES, carEnv } from './vehicle/carbody.js';
+import { makeSky } from './models/sky.js';
+await fontsReady;
+
+const qs = new URLSearchParams(location.search), PHONE = matchMedia('(pointer: coarse)').matches;
+// ---- renderer: no post-processing, no shadows; resolution is the main cost on a phone screen, so it is governed below
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance', preserveDrawingBuffer: navigator.webdriver });
+const DPR = Math.min(window.devicePixelRatio || 1, 3); let pr = Math.min(DPR, PHONE ? 1.75 : 2); if (qs.has('pr')) pr = +qs.get('pr');
+renderer.setPixelRatio(pr); renderer.setSize(innerWidth, innerHeight); renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 0.95;
+document.getElementById('app').appendChild(renderer.domElement);
+const scene = new THREE.Scene(); scene.background = new THREE.Color('#0b1018'); scene.fog = new THREE.Fog('#20232c', 90, 520);
+const camera = new THREE.PerspectiveCamera(65, innerWidth / innerHeight, 0.1, 2400);
+addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
+const sky = makeSky(); scene.add(sky);
+const moon = new THREE.DirectionalLight('#b9c6dd', 0.5); moon.position.copy(sky.userData.moonDir).multiplyScalar(50); scene.add(moon);
+scene.add(new THREE.HemisphereLight('#dfe6f0', '#5e544a', 0.75));   // (a little more than the big town: there are no real street lights here, only lamp glow)
+scene.environment = carEnv(renderer); scene.environmentIntensity = 0.14;
+
+// ---- the area: four blocks (three streets each way) with rows of buildings round the outside
+configureDistrict({ xs: [75, 161, 245], zs: [-84, 0, 84], ring: { n: 121, s: -121, e: 282, hw: 9 } });
+const colliders = [];
+const district = makeDistrict(); scene.add(district);
+for (const [x, z] of district.userData.lampPosts) colliders.push({ type: 'circle', x, z, r: 0.18 });
+for (const [x, z] of district.userData.treePosts) colliders.push({ type: 'circle', x, z, r: 0.25 });
+const SW = district.userData.sidewalkY;
+const svc = placeStreetServices({ grid: GRID, sidewalkY: SW }); scene.add(svc.group); colliders.push(...svc.colliders);
+// the streets stop at the edge of the area: a striped barrier across each end
+{ const { xs, zs, walk: WH } = GRID, R = GRID.ring, bm = new THREE.MeshStandardMaterial({ color: '#d8c22a', roughness: 0.6 }), dk = new THREE.MeshStandardMaterial({ color: '#1c1c1e', roughness: 0.7 });
+  const barrier = (x, z, alongX) => { const g = new THREE.Group(), L = WH * 2; for (let i = 0; i < 8; i++) { const m = new THREE.Mesh(new THREE.BoxGeometry(L / 8, 0.22, 0.06), i % 2 ? bm : dk); m.position.set(-L / 2 + (i + 0.5) * L / 8, 0.95, 0); g.add(m); } for (const s of [-1, 0, 1]) { const p = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.1, 0.1), dk); p.position.set(s * (L / 2 - 0.2), 0.55, 0); g.add(p); } g.position.set(x, 0, z); if (!alongX) g.rotation.y = Math.PI / 2; scene.add(g);
+    colliders.push(alongX ? { type: 'box', minX: x - WH, maxX: x + WH, minZ: z - 0.15, maxZ: z + 0.15 } : { type: 'box', minX: x - 0.15, maxX: x + 0.15, minZ: z - WH, maxZ: z + WH }); };
+  for (const x of xs) { barrier(x, R.n - R.hw - 1.2, true); barrier(x, R.s + R.hw + 1.2, true); } for (const z of zs) { barrier(R.e - R.hw - 1.2, z, false); barrier(xs[0] - WH - 0.6 + 1.2, z, false); } }
+
+// ---- walking + driving
+const walk = new WalkControls(camera, renderer.domElement, { bounds: null, areas: [...district.userData.areas], colliders });
+const drive = makeDriver({ scene, camera, areas: walk.areas.slice(), colliders, pads: [], ground: (x, z) => district.userData.floorY(x, z) ?? 0 });
+const interiors = makeInteriors({ scene, district, colliders, areas: walk.areas });   // (cars keep the earlier area list: they can't enter buildings)
+walk.ground = (x, z) => interiors.floorY(x, z) ?? district.userData.floorY(x, z) ?? 0;
+for (const [type, opt, x, z, h] of [
+  ['hatch', { color: '#b3242a', name: 'red hatch', plate: 'ELM 2K7' }, 157.4, 30, 0],
+  ['kei', { color: '#a8d6c6', roofColor: '#f2f0ea', rim: 'steel', name: 'mint kei car', plate: 'ELM 55K', metal: 0.2 }, 157.4, 46, 0],
+  ['sedan', { color: '#f0c41c', rim: 'steel', name: 'cab', plate: 'ELM T41', livery: LIVERIES.taxi, metal: 0.15 }, 120, 3.7, Math.PI / 2],
+  ['pickup', { color: '#5e6e52', rim: 'alloy', name: 'pickup', plate: 'ELM 7P8', chromeGrille: true }, 204, -3.6, -Math.PI / 2],
+  ['coupe', { color: '#1b3a78', rim: 'black', name: 'blue coupe', plate: 'ELM 9C3' }, 164.6, -40, Math.PI],
+]) { const c = makeCar({ type, ...opt }); c.position.set(x, 0, z); c.rotation.y = h; scene.add(c); drive.addCar(c, { name: opt.name }); }
+if (PHONE || qs.has('low')) useLowDetailBodies();
+const people = makePeople({ scene, grid: GRID, sidewalkY: SW, count: PHONE ? 14 : 20 });
+console.log('phone area: buildings', district.userData.buildings.length, 'interiors', JSON.stringify(interiors.stats()));
+
+// ---- modes: on foot, or in a car (the one button gets you in and out)
+let mode = 'walk'; const useBtn = document.getElementById('use');
+const setMode = (m) => { mode = m; walk.enabled = m === 'walk'; document.body.dataset.mode = m; };
+const use = () => { if (mode === 'drive') { const out = drive.exit(); if (out) { walk.position.set(out.x, 0, out.z); walk.yaw = out.yaw; walk.pitch = -0.05; } setMode('walk'); walk.apply(); } else { const c = drive.nearest(walk.position); if (c) { drive.enter(c); setMode('drive'); } } };
+useBtn.addEventListener('click', use); addEventListener('keydown', (e) => { if (e.code === 'KeyE') use(); });
+walk.position.set(+(qs.get('x') ?? 163.5), 0, +(qs.get('z') ?? 20)); walk.yaw = +(qs.get('yaw') ?? 0.15); walk.pitch = 0.02; setMode('walk'); walk.apply();
+
+// ---- drawing less: size-based culling; the outside is not drawn while you're shut indoors; resolution steps down if slow
+const streamer = makeStreamer(scene, { phone: true, max: 300 }); streamer.setScale(PHONE ? 0.8 : 1);
+let shutIn = null; const shutHidden = [];
+function setShutIn(e) { for (const o of shutHidden) o.visible = true; shutHidden.length = 0; shutIn = e; if (!e) return;
+  const keep = new Set([e.group, interiors.doors]), special = (o) => { let f = false; o.traverse((c) => { if (c.isLight || c.isCamera || keep.has(c)) f = true; }); return f; };
+  const walkIn = (node) => { for (const c of node.children) { if (c.isLight || c.isCamera || keep.has(c) || !c.visible) continue; if (special(c)) walkIn(c); else { c.visible = false; shutHidden.push(c); } } }; walkIn(scene); }
+// a readout (?stats, or tap the top-left corner three times): frames per second, resolution scale, draw calls, triangles
+const statEl = document.getElementById('stats'); let statOn = qs.has('stats'), taps = 0; statEl.hidden = !statOn;
+addEventListener('pointerdown', (e) => { if (e.clientX < 70 && e.clientY < 70) { if (++taps >= 3) { taps = 0; statOn = !statOn; statEl.hidden = !statOn; } } else taps = 0; });
+const clock = new THREE.Clock(); let t = 0, tick = 0, acc = 0, frames = 0, fps = 0, slow = 0, fast = 0;
+function frame() {
+  if (window.__loadingHold) { clock.getDelta(); requestAnimationFrame(frame); return; }
+  const raw = clock.getDelta(), dt = Math.min(raw, 0.05); t += dt;
+  if (mode === 'walk') walk.update(dt); else drive.update(dt);
+  sky.userData.update(camera, t);
+  const pos = mode === 'walk' ? walk.position : drive.state;
+  interiors.update(mode === 'walk' ? walk.position : camera.position, dt, mode !== 'drive');
+  { const e = interiors.enclosed(); if (e !== shutIn) setShutIn(e); }
+  if (!shutIn && (tick = (tick + 1) % 10) === 0) { streamer.update(camera.position); district.userData.lodTick(camera.position, PHONE ? 80 : 130); }
+  people.update(pos, dt, mode === 'drive' ? drive.state : null, mode === 'walk');
+  const car = mode === 'walk' ? drive.nearest(walk.position) : null;
+  useBtn.hidden = mode === 'walk' && !car; useBtn.textContent = mode === 'drive' ? 'Get out' : car ? `Drive the ${car.userData.driveName}` : '';
+  renderer.render(scene, camera);
+  // once a second: measure, show, and step the resolution (down fast when slow, back up slowly when there's room)
+  acc += raw; frames++; if (acc >= 1) { fps = frames / acc; acc = 0; frames = 0;
+    if (!qs.has('pr')) { if (fps < 26) { fast = 0; if (++slow >= 2 && pr > 0.8) { pr = Math.max(0.8, pr - 0.25); renderer.setPixelRatio(pr); slow = 0; } } else if (fps > 52) { slow = 0; if (++fast >= 6 && pr < Math.min(DPR, 2)) { pr = Math.min(DPR, 2, pr + 0.25); renderer.setPixelRatio(pr); fast = 0; } } else { slow = 0; fast = 0; } }
+    if (statOn) { const i = renderer.info; statEl.textContent = `${fps.toFixed(0)} fps · res x${pr.toFixed(2)} · ${i.render.calls} draws · ${(i.render.triangles / 1000).toFixed(0)}k tris · ${i.memory.textures} tex · ${i.memory.geometries} geo${shutIn ? ' · indoors' : ''}`; } }
+  requestAnimationFrame(frame);
+}
+window.__scene = { renderer, scene, camera, walk, drive, interiors, people, district, streamer, setMode, use, stats: () => ({ fps, pr, calls: renderer.info.render.calls, tris: renderer.info.render.triangles, tex: renderer.info.memory.textures, geo: renderer.info.memory.geometries }) };
+requestAnimationFrame(frame);
+finishLoading(renderer, scene, camera);

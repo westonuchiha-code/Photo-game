@@ -558,3 +558,24 @@ inside the view cone at five fixed camera spots, `tools/devtests/where2.js`), th
 - This is the "black ground at some viewport sizes" artefact noted earlier and wrongly put down to the test browser.
 - Not changed: unlit windows are still flat black rectangles (loop houses use a plain near-black material; district
   buildings use dark window photos). Waiting for the owner to say whether those are what they meant.
+
+## 102 Phone test area (src/phone.js, phone.html, tools/build_phone.mjs)
+- Why: the owner plays on a phone (Galaxy S21 Ultra) and the town does not load there or runs as a slideshow. Cause:
+  the whole town is in memory at once (532 textures, several million triangles, a 59 MB file). Drawing less did not
+  help; loading less does. The owner also said the current town layout was never an approved level: the pieces are
+  meant to be modular, and worlds built from them afterwards.
+- What: a separate small area assembled from the same modular pieces: 4 district blocks (3 streets each way) with
+  outer rows, 135 enterable buildings, street services, 5 drivable cars, 14 people, barriers where the streets end.
+  `configureDistrict({ xs, zs, ring })` (district.js) makes the generator build any grid; `solo` drops the old-town
+  link and the reserved lots. The big town is untouched (all of this is guarded by `GRID.solo`).
+- Phone budget: no post-processing, no shadows, no real lights outdoors; resolution steps down when under 26 fps and
+  back up over 52; lighter people (`useLowDetailBodies`, about a third of the triangles); every other tree; building
+  detail within 80 m; outside hidden when shut indoors. Readout: `?stats` or three taps in the top-left corner.
+- Build: `node tools/build_phone.mjs` -> dist-phone/photo-town-phone.html, one file. Packs only textures the build
+  can ask for, found by scanning every file phone.js imports for texture names (quoted names, `name.png`, and names
+  built from parts such as `bark_${kind}`). 106 of 532 textures, 11.9 MB against 58.8 MB.
+- Check: `node tools/devtests/phfile.js dist-phone/photo-town-phone.html` opens it from disk at phone size, walks into
+  three buildings of every interior type and must report 0 failed requests (it caught 10 missing textures once).
+- Measured in the slow test browser, phone area vs town: playable 11 s vs 54 s; textures in memory 104 vs 1,478;
+  geometries ~210 vs ~3,800; about 205 draw calls and 400 k triangles in a street view. Real phone numbers unknown.
+- Next for a real game: worlds as layout data (pieces + positions), areas this size joined by a loading step.

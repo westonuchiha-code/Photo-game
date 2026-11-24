@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Photo Town (phone test area)</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #0f1114; touch-action: none; -webkit-user-select: none; user-select: none; }
+  #app, #app canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  #loader { position: fixed; inset: 0; z-index: 9999; display: grid; place-items: center; background: #0f1114; color: #e8e6e0; font: 15px/1.4 system-ui, sans-serif; transition: opacity .6s; }
+  #loader.done { opacity: 0; pointer-events: none; }
+  #loader .box { width: min(360px, 86vw); text-align: center; }
+  #loader .title { font-size: 26px; letter-spacing: .08em; margin-bottom: 18px; }
+  #loader .bar { height: 8px; border-radius: 4px; background: #2a2d33; overflow: hidden; }
+  #loader .bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #d8a840, #f2d27a); transition: width .25s; }
+  #loader .status { margin-top: 12px; color: #c8c4b8; }
+  .help { position: fixed; left: 50%; top: calc(10px + env(safe-area-inset-top, 0px)); transform: translateX(-50%); background: #0008; color: #fff; font: 13px system-ui, sans-serif; padding: 7px 12px; border-radius: 10px; pointer-events: none; white-space: nowrap; }
+  body[data-mode=drive] .help { display: none; }
+  .help .t { display: none; } @media (pointer: coarse) { .help .m { display: none; } .help .t { display: inline; } }
+  #use { position: fixed; left: 50%; bottom: calc(26px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); font: 600 16px system-ui, sans-serif; padding: 13px 20px; border-radius: 14px; border: 2px solid #fff5; background: #000a; color: #fff; }
+  body[data-mode=drive] #use { bottom: auto; top: calc(12px + env(safe-area-inset-top, 0px)); left: auto; right: 12px; transform: none; padding: 10px 14px; }
+  #stick { position: fixed; width: 100px; height: 100px; margin: -50px 0 0 -50px; border-radius: 50%; border: 2px solid rgba(255,255,255,.7); background: rgba(0,0,0,.15); display: none; pointer-events: none; }
+  #stick.on { display: block; }
+  #stick .knob { position: absolute; left: 30px; top: 30px; width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,.85); }
+  /* the driving pads (drive.js) are laid out for a wide screen: fit them to a phone held upright */
+  @media (pointer: coarse) and (max-width: 520px) { #drivehud .pads { grid-template-columns: 54px 54px 1fr 58px 62px 66px !important; gap: 6px !important; left: 8px !important; right: 8px !important; } #drivehud .pads button { font-size: 12px !important; } }
+  #stats { position: fixed; left: 8px; top: calc(44px + env(safe-area-inset-top, 0px)); background: #000b; color: #9f9; font: 12px ui-monospace, monospace; padding: 5px 8px; border-radius: 6px; pointer-events: none; }
+</style>
+<script type="importmap">{ "imports": { "three": "./vendor/three/three.module.js", "three/addons/": "./vendor/three/addons/" } }</script>
+</head>
+<body data-mode="walk">
+<div id="loader"><div class="box"><div class="title">Photo Town</div><div class="bar"><i></i></div><div class="status">Building the area…</div></div></div>
+<div id="app"></div>
+<div class="help"><span class="m"><b>WASD</b> move · <b>drag</b> look · <b>E</b> car</span><span class="t"><b>Left thumb</b> move · <b>right thumb</b> look</span></div>
+<div id="stats" hidden></div>
+<button id="use" hidden></button>
+<div id="stick"><div class="knob"></div></div>
+<script type="module" src="src/phone.js"></script>
+</body>
+</html>

@@ -21,6 +21,9 @@ export const GRID = {
   ring: { n: 212, s: -212, e: 462, hw: 9 },   // Elm Loop, the boulevard round the district (see roads.js): centre lines + half-width
 };
 const SW_H = 0.14;                // sidewalk top
+// A smaller, self-contained district (the phone test area): call before makeDistrict(). Replaces the street lines and
+// the ring the edge streets run out to, drops the reserved lots, and (`solo`) builds no link to the old town.
+export function configureDistrict({ xs, zs, ring, solo = true }) { GRID.xs = xs; GRID.zs = zs; if (ring) GRID.ring = ring; GRID.solo = solo; LOTS.length = 0; }
 // reserved lots: kept empty of generated buildings (front = the street side)
 export const LOTS = [
   { id: 'dentist', x0: 82, x1: 108, z0: 28, z1: 50, face: 'w', built: true },   // Brightwater Dental (item 57)
@@ -314,8 +317,9 @@ export function makeDistrict() {
   for (const [a, b] of spans(ZMIN, ZMAX, zs)) fillBlock(bin, r, XMAX, XMAX + 16, a, b, ['w'], 0.6);
   for (const [a, b] of spans(XMIN, XMAX, xs)) fillBlock(bin, r, a, b, ZMIN - 16, ZMIN, ['s'], 0.6);
   for (const [a, b] of spans(XMIN, XMAX, xs)) fillBlock(bin, r, a, b, ZMAX, ZMAX + 16, ['n'], 0.6);
-  fillBlock(bin, r, 50, XMIN, ZMIN, -70, ['e'], 0.6);
-  fillBlock(bin, r, 50, XMIN, 14, ZMAX, ['e'], 0.6);
+  if (GRID.solo) fillBlock(bin, r, 50, XMIN, ZMIN, ZMAX, ['e'], 0.6);   // (no old town to leave a gap for)
+  else { fillBlock(bin, r, 50, XMIN, ZMIN, -70, ['e'], 0.6);
+  fillBlock(bin, r, 50, XMIN, 14, ZMAX, ['e'], 0.6); }
 
   // ---- streets: roads (segments between intersections + the intersections), sidewalks, curbs, markings
   const segs = []; // [x0,x1,z0,z1] road rects
@@ -323,7 +327,7 @@ export function makeDistrict() {
   for (const z of zs) { let xa = xs[0] + RH; for (const x of xs.slice(1)) { segs.push([xa, x - RH, z - RH, z + RH]); xa = x + RH; } }
   for (const x of xs) for (const z of zs) segs.push([x - RH, x + RH, z - RH, z + RH]);
   // the E-W main street at z = 0 also runs west from the avenue into the old town's road
-  segs.push([62.4, xs[0] - RH, -RH, RH]);
+  if (!GRID.solo) segs.push([62.4, xs[0] - RH, -RH, RH]);
   // connectors out to Elm Loop: each N-S street north + south, each E-W street east
   const RG = GRID.ring, cut = (list, a, b, gaps, w) => { let p = a; for (const g0 of gaps) { if (g0 - w > p) list.push([p, g0 - w]); p = g0 + w; } if (b > p) list.push([p, b]); };
   for (const x of xs) { segs.push([x - RH, x + RH, ZMAX - 2, RG.n - RG.hw + 0.05]); segs.push([x - RH, x + RH, RG.s + RG.hw - 0.05, ZMIN + 2]); }
@@ -377,7 +381,7 @@ export function makeDistrict() {
   const far = [];
   for (let k = 0; k < 900 && far.length < 260; k++) {
     const a = r() * Math.PI * 2, d = 300 + r() * 650, cx = 180 + Math.cos(a) * d, cz = Math.sin(a) * d;
-    if (cx > -100 && cx < 660 && cz > GRID.ring.s - 40 && cz < GRID.ring.n + 40) continue;   // keep out of the town, its rows, Elm Loop + the stunt lot
+    if (cx > (GRID.solo ? xs[0] - 70 : -100) && cx < (GRID.solo ? GRID.ring.e + 50 : 660) && cz > GRID.ring.s - 40 && cz < GRID.ring.n + 40) continue;   // keep out of the town, its rows, Elm Loop + the stunt lot
     if (cx > -110 && cx < 80 && cz > -90 && cz < 100) continue;                       // and the old town
     const w = 14 + r() * 26, dd = 14 + r() * 26, h = 14 + r() * r() * 95;
     const fg = boxGeo(cx - w / 2, cx + w / 2, 0, h, cz - dd / 2, cz + dd / 2, 16, 16); const fu = fg.attributes.uv, ou = r(), ov = r(); for (let q = 0; q < fu.count; q++) fu.setXY(q, fu.getX(q) + ou, fu.getY(q) + ov); far.push(fg);
@@ -448,6 +452,7 @@ export function makeDistrict() {
   const treePts = [];
   for (let z = ZMIN + 6; z < ZMAX - 6; z += 14) { if (zs.some((q) => Math.abs(z - q) < WH + 3)) continue; treePts.push([xs[0] + RH + 1.0, z + 7], [xs[0] - RH - 1.0, z]); }
   for (const z of [0]) for (let x = xs[0] + 20; x < XMAX - 10; x += 14) { if (xs.some((q) => Math.abs(x - q) < WH + 3)) continue; if (!(x + 7 > 98 && x + 7 < 124)) treePts.push([x + 7, z - RH - 1.0]); treePts.push([x, z + RH + 1.0]); }   // (no trees in front of the izakaya + pottery)
+  if (GRID.solo) { const keep = treePts.filter((_, i) => i % 2 === 0); treePts.length = 0; treePts.push(...keep); }   // (the phone area: every other tree)
   // real grown trees (oak / cherry / pale, from trees.js), baked + instanced
   g.add(placeStreetTrees(treePts, [streetTreeParts('oak', 7), streetTreeParts('cherry', 4), streetTreeParts('pale', 9), streetTreeParts('oak', 12)], { baseY: SW_H }));
 
@@ -455,7 +460,7 @@ export function makeDistrict() {
   const areas = [];
   for (const x of xs) areas.push({ minX: x - WH + 0.3, maxX: x + WH - 0.3, minZ: ZMIN + 0.3, maxZ: ZMAX - 0.3 });
   for (const z of zs) areas.push({ minX: XMIN + 0.3, maxX: XMAX - 0.3, minZ: z - WH + 0.3, maxZ: z + WH - 0.3 });
-  areas.push({ minX: 60, maxX: XMIN + 1, minZ: -47.5, maxZ: 11.7 });
+  if (!GRID.solo) areas.push({ minX: 60, maxX: XMIN + 1, minZ: -47.5, maxZ: 11.7 });
   { const RG = GRID.ring;   // the connectors out to Elm Loop
     for (const x of xs) { areas.push({ minX: x - WH + 0.3, maxX: x + WH - 0.3, minZ: ZMAX - 1, maxZ: RG.n - RG.hw + 0.5 }, { minX: x - WH + 0.3, maxX: x + WH - 0.3, minZ: RG.s + RG.hw - 0.5, maxZ: ZMIN + 1 }); }
     for (const z of zs) areas.push({ minX: XMAX - 1, maxX: RG.e - RG.hw + 0.5, minZ: z - WH + 0.3, maxZ: z + WH - 0.3 }); }   // the old town's east edge opens onto the avenue

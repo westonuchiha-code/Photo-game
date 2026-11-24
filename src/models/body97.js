@@ -46,10 +46,12 @@ const lerp = (a, b, t) => a + (b - a) * t, rect = (R, s, t) => [lerp(R[0], R[2],
 function smooth(rings, sub) { const out = [], n = rings.length, cr = (p0, p1, p2, p3, t) => 0.5 * ((2 * p1) + (-p0 + p2) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t * t + (-p0 + 3 * p1 - 3 * p2 + p3) * t * t * t);
   for (let i = 0; i < n - 1; i++) { const a = rings[Math.max(0, i - 1)], b = rings[i], c = rings[i + 1], d = rings[Math.min(n - 1, i + 2)]; for (let s = 0; s < sub; s++) { const t = s / sub; out.push(b.map((_, k) => k === 0 ? lerp(b[0], c[0], t) : Math.max(0, cr(a[k], b[k], c[k], d[k], t)))); } } out.push(rings[n - 1].slice()); return out; }
 
+// (phones: a lighter mesh, about a third of the triangles; set once before any body is made)
+let LOW = false; export function useLowDetailBodies(v = true) { LOW = v; }
 const _geo = {};
-function bodyGeometry(sex) { if (_geo[sex]) return _geo[sex]; const S = SPEC[sex], fem = sex === 'f', b = new Builder(), N = 16;
+function bodyGeometry(sex) { if (_geo[sex]) return _geo[sex]; const S = SPEC[sex], fem = sex === 'f', b = new Builder(), N = LOW ? 10 : 16, SUB = LOW ? 1 : 2;
   // ---- torso + neck: unwrapped round the body, the seam down the spine
-  { const R = smooth(S.torso, 2), y0 = R[0][0], y1 = R[R.length - 1][0], base = b.p.length / 3;
+  { const R = smooth(S.torso, SUB), y0 = R[0][0], y1 = R[R.length - 1][0], base = b.p.length / 3;
     for (const [y, rx, rf, rb, cz] of R) for (let c = 0; c <= N; c++) { const a = -Math.PI + (c / N) * Math.PI * 2, sn = Math.sin(a), cs = Math.cos(a); let x = rx * Math.sign(sn) * Math.abs(sn) ** 0.85, z = cz + (cs > 0 ? rf : rb) * cs;
         if (cs > 0) { const ch = fem ? 0.034 * G2(Math.abs(x), 0.072, 0.05) * (y > S.shY - 0.2 ? G2(y, S.shY - 0.2, 0.075) : G2(y, S.shY - 0.2, 0.04)) : 0.012 * G2(Math.abs(x), 0.085, 0.07) * G2(y, S.shY - 0.14, 0.07); z += ch; z -= 0.004 * G2(x, 0, 0.012) * G2(y, S.shY - 0.2, 0.2); }
         else { z += 0.006 * G2(x, 0, 0.014) * G2(y, (S.hipY + S.shY) / 2 + 0.05, 0.22); z -= (fem ? 0.014 : 0.01) * G2(Math.abs(x), 0.08, 0.06) * G2(y, S.hipY - 0.03, 0.06); }
@@ -57,7 +59,7 @@ function bodyGeometry(sex) { if (_geo[sex]) return _geo[sex]; const S = SPEC[sex
         b.v(x, y, z, ...rect(ATLAS.torso, 0.01 + 0.98 * c / N, (y - y0) / (y1 - y0)), w); }
     b.grid(base, R.length, N + 1, false); }
   // ---- head: the front half takes the face map straight on (a flat projection), the back half the hair
-  { const R = smooth(HEAD, 3), hs = S.hs, base0 = S.headY, M = 20, half = (front) => { const base = b.p.length / 3, AR = front ? ATLAS.face : ATLAS.headBack;
+  { const R = smooth(HEAD, LOW ? 2 : 3), hs = S.hs, base0 = S.headY, M = LOW ? 12 : 20, half = (front) => { const base = b.p.length / 3, AR = front ? ATLAS.face : ATLAS.headBack;
       for (const [dy, rx, rf, rb] of R) for (let c = 0; c <= M; c++) { const a = (front ? -Math.PI / 2 : Math.PI / 2) + (c / M) * Math.PI, sn = Math.sin(a), cs = Math.cos(a); let x = rx * sn, z = (cs > 0 ? rf : rb) * cs + 0.006;
           [x, z] = sculptFace(x, dy, z, front ? a : Math.sign(sn) * (Math.PI / 2 - 1e-6), fem); if (!front) z = (cs > 0 ? rf : rb) * cs + 0.006 + (z - ((cs > 0 ? rf : rb) * cs + 0.006)) * Math.max(0, 1 + cs * 6); const u = front ? 0.5 + x / 0.168 : 0.5 - x / 0.168, w = blend(dy, 0.005, 0.02, B.neck, B.head);
           b.v(x * hs, base0 + dy * hs, z * hs, ...rect(AR, Math.min(1, Math.max(0, u)), (dy + 0.012) / HEAD_H), w); }
@@ -66,28 +68,28 @@ function bodyGeometry(sex) { if (_geo[sex]) return _geo[sex]; const S = SPEC[sex
     for (const s of [-1, 1]) { const base = b.p.length / 3, E = 6; for (let r = 0; r <= 4; r++) for (let c = 0; c <= E; c++) { const th = (r / 4) * Math.PI, ph = (c / E) * Math.PI * 2, ex = Math.sin(th) * Math.cos(ph), ey = Math.cos(th), ez = Math.sin(th) * Math.sin(ph);
         b.v(s * (0.079 + 0.002 + ex * 0.006 * s - ez * 0.005) * hs, S.headY + (0.108 + ey * 0.027) * hs, (-0.004 + ez * 0.013 - Math.abs(ey) * 0.004) * hs, ...rect(ATLAS.face, s > 0 ? 0.97 : 0.03, (0.112 + ey * 0.02 + 0.012) / HEAD_H), [[B.head, 1]]); } b.grid(base, 5, E + 1, false); } }
   // ---- arms (hanging in a slight A-pose; both share the arm strip of the atlas, mirrored) with hands
-  for (const s of [-1, 1]) { const R = smooth(S.arm, 2), A = S.armA * s, ca = Math.cos(A), sa = Math.sin(A), sx = s * S.shX, bU = s < 0 ? B.armL : B.armR, base = b.p.length / 3, L = S.wrist + 0.2 * S.hand, AN = 10;
+  for (const s of [-1, 1]) { const R = smooth(S.arm, SUB), A = S.armA * s, ca = Math.cos(A), sa = Math.sin(A), sx = s * S.shX, bU = s < 0 ? B.armL : B.armR, base = b.p.length / 3, L = S.wrist + 0.2 * S.hand, AN = LOW ? 7 : 10;
     const put = (lx, t, lz, u, v, w) => b.v(sx + lx * ca + t * sa, S.shY - t * ca + lx * sa, lz, ...rect(ATLAS.arm, u, 1 - v), w);
     for (const [t, rx, rz] of R) for (let c = 0; c <= AN; c++) { const a = -Math.PI + (c / AN) * Math.PI * 2; const w = t < 0.035 ? blend(t, 0.0, 0.035, B.chest, bU) : t < S.elbow + 0.08 ? blend(t, S.elbow, 0.045, bU, bU + 1) : blend(t, S.wrist, 0.02, bU + 1, bU + 2), lean = t < 0.03 ? (0.03 - t) * 0.95 : 0;
         put(rx * Math.sin(a) * s - s * lean, t + lean * S.armA, rz * Math.cos(a) + (t > S.elbow ? 0.004 : -0.004), c / AN * 0.62, (t + 0.05) / (L + 0.05), w); }
     b.grid(base, R.length, AN + 1, s > 0);
     // hand: a palm, four separate fingers (index at the front, each with two knuckle rings, lightly curled), a thumb
-    { const h = S.hand, V0 = (tt) => (S.wrist + tt * h + 0.05) / (L + 0.05), PR = smooth([[0, 0.022, 0.027], [0.025, 0.0145, 0.036], [0.06, 0.0135, 0.043], [0.092, 0.012, 0.042], [0.104, 0.0085, 0.039]], 2), hb = b.p.length / 3, hw = [[bU + 2, 1]];
+    { const h = S.hand, V0 = (tt) => (S.wrist + tt * h + 0.05) / (L + 0.05), PR = smooth([[0, 0.022, 0.027], [0.025, 0.0145, 0.036], [0.06, 0.0135, 0.043], [0.092, 0.012, 0.042], [0.104, 0.0085, 0.039]], SUB), hb = b.p.length / 3, hw = [[bU + 2, 1]];
       for (const [t, rx, rz] of PR) for (let c = 0; c <= AN; c++) { const a = -Math.PI + (c / AN) * Math.PI * 2, cs = Math.cos(a), sn = Math.sin(a); put(rx * sn * s * h, S.wrist + t * h, (rz * Math.sign(cs) * Math.abs(cs) ** 0.6 + 0.008) * h, c / AN * 0.62, V0(t), hw); }
       b.grid(hb, PR.length, AN + 1, s > 0);
-      const FN = 6; [[0.031, 0.07, 0.0102, 0.094], [0.0105, 0.078, 0.0106, 0.096], [-0.0098, 0.072, 0.0102, 0.094], [-0.0295, 0.056, 0.0092, 0.088]].forEach(([zc, len, fr, t0], fi) => { const fb = b.p.length / 3, FRg = [[0, 1.0], [0.3, 1.02], [0.38, 0.94], [0.66, 0.9], [0.72, 0.84], [0.9, 0.78], [0.97, 0.52], [1.0, 0.0]];
+      const FN = LOW ? 4 : 6; [[0.031, 0.07, 0.0102, 0.094], [0.0105, 0.078, 0.0106, 0.096], [-0.0098, 0.072, 0.0102, 0.094], [-0.0295, 0.056, 0.0092, 0.088]].forEach(([zc, len, fr, t0], fi) => { const fb = b.p.length / 3, FRg = [[0, 1.0], [0.3, 1.02], [0.38, 0.94], [0.66, 0.9], [0.72, 0.84], [0.9, 0.78], [0.97, 0.52], [1.0, 0.0]];
         for (const [k, rr] of FRg) for (let c = 0; c <= FN; c++) { const a = (c / FN) * Math.PI * 2, sn = Math.sin(a), cs = Math.cos(a), curl = (k * len) ** 2 * (2.2 + fi * 0.5), spread = (zc - 0.001) * k * 0.12, lx = fr * rr * 1.05 * sn, lz = fr * rr * 0.98 * cs;
             put((lx * s - curl * s) * h, S.wrist + (t0 + k * len) * h, (zc + 0.008 + spread + lz) * h, sn > 0 ? 0.465 - (zc + lz) * 3.4 : 0.155 + (zc + lz) * 3.4, V0(t0 + k * len), hw); }
         b.grid(fb, FRg.length, FN + 1, s < 0); });
       const TR = [[0, 0.008, 0.009], [0.02, 0.0102, 0.0115], [0.045, 0.0096, 0.0105], [0.066, 0.0086, 0.0092], [0.08, 0.006, 0.0062], [0.085, 0, 0.001]], tb = b.p.length / 3; for (const [t, rx, rz] of TR) for (let c = 0; c <= 6; c++) { const a = (c / 6) * Math.PI * 2; put((rx * Math.sin(a) * s - 0.004 * s) * h, S.wrist + (0.03 + t * 0.8) * h, (0.038 + t * 0.42 + rz * Math.cos(a)) * h, 0.66 + c / 6 * 0.3, V0(0.03 + t), hw); }
       b.grid(tb, TR.length, 7, s > 0); } }
   // ---- legs (share the leg strip, mirrored) and feet
-  for (const s of [-1, 1]) { const R = smooth(S.leg, 2), sx = s * S.hipX, bU = s < 0 ? B.thighL : B.thighR, base = b.p.length / 3, LN = 12, L = S.ankle;
+  for (const s of [-1, 1]) { const R = smooth(S.leg, SUB), sx = s * S.hipX, bU = s < 0 ? B.thighL : B.thighR, base = b.p.length / 3, LN = LOW ? 8 : 12, L = S.ankle;
     for (const [t, rx, rf, rb] of R) for (let c = 0; c <= LN; c++) { const a = -Math.PI + (c / LN) * Math.PI * 2, cs = Math.cos(a), sn = Math.sin(a), y = S.hipY - t; let w = t < S.knee + 0.1 ? blend(t, S.knee, 0.05, bU, bU + 1) : blend(t, S.ankle - 0.01, 0.02, bU + 1, bU + 2); if (t < 0.03) w = blend(t, 0.0, 0.03, B.hips, bU);
         const inx = t < 0.2 ? (0.2 - t) * 0.12 : 0, kn = 0.006 * G2(t, S.knee, 0.03) * Math.max(0, cs);
         b.v(sx + (rx * sn + inx * 0) * 1 + s * t * 0.012 * 0, y, (cs > 0 ? rf : rb) * cs + kn - 0.004, ...rect(ATLAS.leg, 0.01 + 0.98 * c / LN, 1 - (t + 0.07) / (L + 0.07)), w); }
     b.grid(base, R.length, LN + 1, true);
-    { const f = S.foot, ay = S.hipY - S.ankle, FR = smooth([[-0.062, 0.0, 0.012, 0.02], [-0.052, 0.026, 0.03, 0.032], [-0.02, 0.036, 0.052, 0.052], [0.02, 0.04, 0.05, 0.05], [0.06, 0.045, 0.036, 0.036], [0.11, 0.05, 0.027, 0.027], [0.155, 0.047, 0.021, 0.021], [0.185, 0.034, 0.016, 0.016], [0.196, 0.0, 0.008, 0.009]], 2), fb = b.p.length / 3, FN = 10;
+    { const f = S.foot, ay = S.hipY - S.ankle, FR = smooth([[-0.062, 0.0, 0.012, 0.02], [-0.052, 0.026, 0.03, 0.032], [-0.02, 0.036, 0.052, 0.052], [0.02, 0.04, 0.05, 0.05], [0.06, 0.045, 0.036, 0.036], [0.11, 0.05, 0.027, 0.027], [0.155, 0.047, 0.021, 0.021], [0.185, 0.034, 0.016, 0.016], [0.196, 0.0, 0.008, 0.009]], SUB), fb = b.p.length / 3, FN = LOW ? 7 : 10;
       for (const [z, rx, ry, cy] of FR) for (let c = 0; c <= FN; c++) { const a = -Math.PI + (c / FN) * Math.PI * 2, cs = Math.cos(a), sn = Math.sin(a), top = cs > -0.3; const yy = Math.max(0.004, (cy + ry * cs) * f * (ay / 0.075) * 0.72);
           b.v(sx + rx * sn * f * (1 + (sn * s > 0 ? 0.0 : 0.08)), yy, z * f + 0.012, ...rect(top ? ATLAS.foot : ATLAS.sole, 0.5 + sn * rx / 0.13, (z + 0.07) / 0.28), [[bU + 2, 1]]); }
       b.grid(fb, FR.length, FN + 1, false); } }

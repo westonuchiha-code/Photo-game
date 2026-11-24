@@ -48,6 +48,9 @@ def encode(name):
 
 if __name__ == '__main__':
     names = sorted(os.listdir(SRC))
+    # optional third argument: a JSON list of file names; only those are packed, all as 'core' (tools/build_phone.mjs)
+    ONLY = set(json.load(open(sys.argv[3]))) if len(sys.argv) > 3 else None
+    if ONLY is not None: names = [n for n in names if n in ONLY]
     with Pool() as pool: res = pool.map(encode, names)
     # each file goes to a fixed pack chosen by a hash of its name, so adding or changing one texture only changes one
     # pack (and the published update stays small); packs are written in name order inside
@@ -57,7 +60,7 @@ if __name__ == '__main__':
     # that stream in the background after the game has started. Within a zone a file's pack is a hash of its name, so
     # adding a texture only changes one pack.
     zf = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'texture_zones.json')
-    zj = json.load(open(zf)) if os.path.exists(zf) else {}
+    zj = json.load(open(zf)) if os.path.exists(zf) and ONLY is None else {}
     district = set(zj.get('district', [])); corelist = set(zj.get('core', []))
     if corelist:   # files the game never asks for (tools/record_zones.js saw no request) are left out of the packs
         unused = [n for n, _, _, _ in res if n not in corelist and n not in district and n.endswith('.png')]

@@ -3,3 +3,5 @@ tools/node/node_modules/
 dist/
 photo-town.html
 handoff/
+dist-phone/
+photo-town-phone.html

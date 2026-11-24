@@ -1,0 +1,15 @@
+// node ph.js <url> [prefix]  : phone-sized (412x915, touch) load of the phone area; timings, stats, screenshots
+const { chromium } = require('playwright');
+(async () => { const url = process.argv[2], pre = process.argv[3] || 'shots_tmp/p'; const b = await chromium.launch(); const ctx = await b.newContext({ viewport: { width: 412, height: 915 }, deviceScaleFactor: 1, hasTouch: true, isMobile: true }); const p = await ctx.newPage(); const t0 = Date.now();
+  p.on('pageerror', (e) => console.log('PAGEERR', e.message, (e.stack || '').split('\n').slice(1, 3).join(' | '))); p.on('console', (m) => { const t = m.text(); if (m.type() === 'error' || /^T |phone area|merge/.test(t)) console.log(((Date.now() - t0) / 1000).toFixed(1) + 's', m.type() === 'error' ? 'ERR ' : '', t.slice(0, 200)); }); p.on('requestfailed', (r) => console.log('FAIL', r.url().slice(-70)));
+  await p.goto(url, { waitUntil: 'commit', timeout: 300000 });
+  await p.waitForFunction(() => window.__scene && !document.getElementById('loader'), null, { timeout: 300000, polling: 500 }); console.log('PLAYABLE', ((Date.now() - t0) / 1000).toFixed(1), 's');
+  const shot = async (n) => { await p.waitForTimeout(1500); await p.screenshot({ path: `${pre}_${n}.jpg`, type: 'jpeg', quality: 85, timeout: 300000 }); };
+  const st = () => p.evaluate(() => { const S = window.__scene; let meshes = 0, tris = 0; S.scene.traverse((o) => { if (o.isMesh && o.geometry) { meshes++; const g = o.geometry; tris += (g.index ? g.index.count : g.attributes.position.count) / 3 * (o.isInstancedMesh ? o.count : 1); } }); return { ...S.stats(), meshesTotal: meshes, trisTotal: Math.round(tris), programs: S.renderer.info.programs.length }; });
+  await shot('start'); console.log('start', JSON.stringify(await st()));
+  await p.evaluate(() => { const S = window.__scene; S.walk.position.set(161, 0, -2); S.walk.yaw = -Math.PI / 2; S.walk.apply(); }); await shot('cross'); console.log('cross', JSON.stringify(await st()));
+  // walk into the nearest building with an interior: stand inside, door shut
+  const info = await p.evaluate(async () => { const S = window.__scene, L = S.interiors.list; let best = null, bd = 1e9; for (const e of L) { const d = Math.hypot(e.door[0] - 161, e.door[1] - 20); if (d < bd) { bd = d; best = e; } } const [x, z] = best.W(best.U * 0.5, best.V * 0.6); S.walk.position.set(x, 0, z); S.walk.yaw = best.th + Math.PI; S.walk.apply(); await new Promise((r) => setTimeout(r, 6000)); return { type: best.type, built: !!best.group, shut: !!S.interiors.enclosed() }; });
+  await shot('inside'); console.log('inside', JSON.stringify(info), JSON.stringify(await st()));
+  await p.evaluate(() => { const S = window.__scene; S.walk.position.set(159, 0, 34); S.walk.apply(); }); await p.waitForTimeout(1500); await p.evaluate(() => window.__scene.use()); await p.waitForTimeout(800); await p.evaluate(() => window.__scene.drive.sim(2, { gas: 1 })); await shot('drive'); console.log('drive', await p.evaluate(() => document.body.dataset.mode), JSON.stringify(await st()));
+  await b.close(); })();
