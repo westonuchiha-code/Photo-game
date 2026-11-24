@@ -548,3 +548,13 @@ inside the view cone at five fixed camera spots, `tools/devtests/where2.js`), th
   old-town interiors as separate cells; the restaurant's 132 chairs and the 2,885-rock river bed are still heavy.
 - Startup timeline in the slow test browser (dev build): old town built at 5.7 s, district grid 7.1 s, district
   sites 9.3 s, merges done 12 s, downloads 17 s, shaders 19 s.
+
+## 101 Black rectangles on the ground
+- Owner reported "a lot of black blank squares and rectangles". Found: roads, lane paint, crosswalks and lawns were
+  being overdrawn in places by the district's dark base plane. It was one 4,200 m square (two triangles) only 4 cm
+  below the road surface; depth across a triangle that large is imprecise enough to beat the road. Shown by hiding
+  the plane (road reappears) while changing the road's own material did nothing.
+- Fix (district.js): the base plane is cut into 70 m squares and sits at y = -0.14.
+- This is the "black ground at some viewport sizes" artefact noted earlier and wrongly put down to the test browser.
+- Not changed: unlit windows are still flat black rectangles (loop houses use a plain near-black material; district
+  buildings use dark window photos). Waiting for the owner to say whether those are what they meant.

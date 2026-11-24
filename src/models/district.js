@@ -422,8 +422,10 @@ export function makeDistrict() {
     g.add(m);
   }
   const hm = new THREE.Mesh(hills, new THREE.MeshStandardMaterial({ color: '#1a1d22', roughness: 1, side: THREE.DoubleSide })); hm.name = 'district_hills'; g.add(hm);
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(4200, 4200), new THREE.MeshStandardMaterial({ color: '#232428', roughness: 1 }));
-  ground.rotation.x = -Math.PI / 2; ground.position.set(180, -0.03, 0); g.add(ground);
+  // the dark base under everything. Cut into 70 m squares and set well below the roads: as one 4 km square 4 cm under
+  // them, its depth was imprecise enough to be drawn over roads and lawns in places (flat black rectangles)
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(4200, 4200, 60, 60), new THREE.MeshStandardMaterial({ color: '#232428', roughness: 1 }));
+  ground.rotation.x = -Math.PI / 2; ground.position.set(180, -0.14, 0); g.add(ground);
 
   // ---- street lamps (instanced) along the curbs, with a soft light pool decal; trees on the avenue
   const lampPts = [];
