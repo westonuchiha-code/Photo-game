@@ -603,3 +603,20 @@ inside the view cone at five fixed camera spots, `tools/devtests/where2.js`), th
   fault and is left as it is (frozen reference).
 - `tools/devtests/phchk.js` checks: nothing standing in a roadway, every alley touches a court and crosses no
   building, walk speed.
+
+## 105 Phone area: dark-glass windows, dressed alleys + courts, first photo-faced character
+- Unlit windows (phone area): the window material is smooth glass with strong environment reflection, so dark panes
+  get a sheen that moves with the view instead of being flat black. Subtle in screenshots; to be judged on the phone.
+- Courts: pallet stack, cartons, an air-conditioning condenser, two utility poles with crossarms and sagging wires,
+  one drivable car parked in a bay of each court (phone.js). Alleys: a bulkhead wall lamp, sometimes a crate stack.
+  Back doors are still dummies (interiors only reach 9 m in from the front, so they cannot connect).
+- Face mapping prototype. Owner supplied three photos of one face (front, both profiles): photos/npc-face-a-*.jpg.
+  `tools/make_face.py` crops the front photo to the head's face layout (scaled across by the eye spacing, up by the
+  eyes-to-mouth distance; phone photos need the rotation tag applied; `--view` lets coordinates be read off a scaled
+  view), mirrors the head over the background outside a hand-given outline, samples the skin colour, and builds a
+  back-of-head map from patches of a profile photo (hat, hair, neck). Output: np_face_a.png, np_back_a.png.
+  `paintSkin({ face, back, collar })` lays the maps into the atlas; hair style `beanie` is a hat shell;
+  `makeCharacter(CHARACTERS.hank)` (people96.js) builds him. He stands by the start and turns his head to watch you.
+- Known limits of the prototype: the sides of the head stretch the front photo (the profile photos are not used for
+  the sides yet: that needs the head unwrapped round instead of front / back); the beard is cut at the chin (no
+  beard shape below it), which leaves the neck looking long; one body build for everyone.

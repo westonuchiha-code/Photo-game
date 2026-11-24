@@ -18,6 +18,13 @@ function look(sex, k, worker) { const key = sex + k + (worker ? 'w' : ''); if (_
   const m = new THREE.MeshStandardMaterial({ map: paintSkin(sex, o), roughness: 0.82 }); m.userData.flat = true; const hm = m.clone(); hm.side = THREE.DoubleSide; hm.userData.flat = true;
   const L = { m, hm, style: sex === 'f' ? pick(['long', 'long', 'bob', 'bob', 'short']) : pick(['short', 'short', 'crop', 'crop', 'bald']) }; _looks.set(key, L); return L; }
 
+// A named character with a photo face (tools/make_face.py made the maps). `who`: { sex, face, back, hat, skin, top, bottom, shoe, sleeves }
+export function makeCharacter(who) { const m = new THREE.MeshStandardMaterial({ map: paintSkin(who.sex || 'm', { seed: 7, legs: 'long', sleeves: 'long', ...who }), roughness: 0.82 }); m.userData.flat = true; const hm = m.clone(); hm.side = THREE.DoubleSide; hm.userData.flat = true;
+  const g = makeBody(who.sex || 'm', m); addHair(g, who.hat || who.hairStyle || 'short', hm); if (who.height) g.scale.setScalar(who.height); return g; }
+export const CHARACTERS = {   // made-up names
+  // prototype: the first photo-mapped face (photos/npc-face-a-*.jpg)
+  hank: { sex: 'm', face: 'np_face_a', back: 'np_back_a', hat: 'beanie', skin: '#e4c0b0', top: '#15171d', bottom: '#2a2f3a', shoe: '#1c1814', sleeves: 'long', collar: 'high', height: 1.02 },
+};
 export function makePerson(seed = 1, { worker = false } = {}) { const r = rng(seed * 104729 + 7), sex = r() < 0.5 ? 'f' : 'm', L = look(sex, worker ? seed : seed % 9, worker), g = makeBody(sex, L.m); addHair(g, L.style, L.hm);
   const sc = 0.95 + r() * 0.1; g.scale.set(sc * (0.96 + r() * 0.1), sc, sc * (0.96 + r() * 0.1)); return g; }
 

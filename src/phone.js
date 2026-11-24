@@ -11,7 +11,7 @@ import { makeStreamer } from './stream.js';
 import { makeDistrict, configureDistrict, GRID } from './models/district.js';
 import { placeStreetServices } from './models/street92.js';
 import { makeInteriors } from './interiors.js';
-import { makePeople } from './models/people96.js';
+import { makePeople, makeCharacter, CHARACTERS } from './models/people96.js';
 import { useLowDetailBodies } from './models/body97.js';
 import { makeDriver } from './drive.js';
 import { makeCar, LIVERIES, carEnv } from './vehicle/carbody.js';
@@ -59,8 +59,13 @@ for (const [type, opt, x, z, h] of [
   ['pickup', { color: '#5e6e52', rim: 'alloy', name: 'pickup', plate: 'ELM 7P8', chromeGrille: true }, 204, -3.6, -Math.PI / 2],
   ['coupe', { color: '#1b3a78', rim: 'black', name: 'blue coupe', plate: 'ELM 9C3' }, 164.6, -40, Math.PI],
 ]) { const c = makeCar({ type, ...opt }); c.position.set(x, 0, z); c.rotation.y = h; scene.add(c); drive.addCar(c, { name: opt.name }); }
+// one more car parked in a bay of each back court
+{ const PARK = [['sedan', { color: '#2a2c30', name: 'black sedan', plate: 'ELM 4B1', rim: 'alloy' }], ['hatch', { color: '#d8d4c8', name: 'white hatch', plate: 'ELM 8W2', rim: 'steel' }], ['kei', { color: '#c87a2a', name: 'orange kei car', plate: 'ELM 3K9', rim: 'steel' }], ['pickup', { color: '#6a2a26', name: 'red pickup', plate: 'ELM 6R5', rim: 'steel' }]];
+  district.userData.courts.forEach((ct, i) => { const [type, opt] = PARK[i % PARK.length], [x, z] = ct.bays[(i * 2 + 1) % ct.bays.length], c = makeCar({ type, ...opt }); c.position.set(x, 0, z); c.rotation.y = i % 2 ? Math.PI : 0; scene.add(c); drive.addCar(c, { name: opt.name }); }); }
 if (PHONE || qs.has('low')) useLowDetailBodies();
 const people = makePeople({ scene, grid: GRID, sidewalkY: SW, count: PHONE ? 14 : 20 });
+// the first photo-faced character, standing on the sidewalk by the start (he turns his head to watch you)
+const hank = makeCharacter(CHARACTERS.hank); hank.position.set(166.4, SW, 25.5); hank.rotation.y = Math.PI * 0.82; scene.add(hank); colliders.push({ type: 'circle', x: 166.4, z: 25.5, r: 0.3 });
 console.log('phone area: buildings', district.userData.buildings.length, 'interiors', JSON.stringify(interiors.stats()));
 
 // ---- modes: on foot, or in a car (the one button gets you in and out)
@@ -89,6 +94,7 @@ function frame() {
   interiors.update(mode === 'walk' ? walk.position : camera.position, dt, mode !== 'drive');
   { const e = interiors.enclosed(); if (e !== shutIn) setShutIn(e); }
   if (!shutIn && (tick = (tick + 1) % 10) === 0) { streamer.update(camera.position); district.userData.lodTick(camera.position, PHONE ? 80 : 130); }
+  { const hb = hank.userData.bones, dx = camera.position.x - hank.position.x, dz = camera.position.z - hank.position.z; if (dx * dx + dz * dz < 144) { let a = Math.atan2(dx, dz) - hank.rotation.y; a = Math.atan2(Math.sin(a), Math.cos(a)); const want = Math.max(-1.1, Math.min(1.1, a)); hb.head.rotation.y += (want * 0.7 - hb.head.rotation.y) * Math.min(1, dt * 5); hb.neck.rotation.y = hb.head.rotation.y * 0.4; } }
   people.update(pos, dt, mode === 'drive' ? drive.state : null, mode === 'walk');
   const car = mode === 'walk' ? drive.nearest(walk.position) : null;
   useBtn.hidden = mode === 'walk' && !car; useBtn.textContent = mode === 'drive' ? 'Get out' : car ? `Drive the ${car.userData.driveName}` : '';

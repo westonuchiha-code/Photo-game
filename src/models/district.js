@@ -64,7 +64,7 @@ const FACADES = [
 ];
 
 // small parts that share the one vertex-coloured 'det' material (colour per part, linear RGB)
-const DET = Object.fromEntries(Object.entries({ frame: '#3a3c42', iron: '#232326', trim: '#e8e4da', shut0: '#4a7a5a', shut1: '#4a6a94', shut2: '#c8b08a', dumpA: '#2e5a3c', dumpB: '#2c4468', equip: '#a8aaac', tank: '#a07a54', riser: '#7aa09a' }).map(([k, v]) => { const c = new THREE.Color(v); return [k, [c.r, c.g, c.b]]; }));
+const DET = Object.fromEntries(Object.entries({ frame: '#3a3c42', iron: '#232326', trim: '#e8e4da', shut0: '#4a7a5a', shut1: '#4a6a94', shut2: '#c8b08a', dumpA: '#2e5a3c', dumpB: '#2c4468', wood: '#8a6a44', carton: '#a8824e', equip: '#a8aaac', tank: '#a07a54', riser: '#7aa09a' }).map(([k, v]) => { const c = new THREE.Color(v); return [k, [c.r, c.g, c.b]]; }));
 // ---- geometry helpers: quads / boxes with world-metre UVs, collected per material ------------------------------
 class Bin {
   constructor() { this.parts = new Map(); }
@@ -296,7 +296,7 @@ function fillFrontage(bin, r, side, bx0, bx1, bz0, bz1, a, b, depth, blockStreet
 // from the sidewalk behind a forecourt, depths differ, and the middle of the block is an open back court the alleys
 // lead to. A side that faces an alley, and every back, is a real wall with windows. What this adds for the rest of
 // makeDistrict (walkable rectangles, raised paving, lamps, trees, colliders) is collected in SOLO.
-const SOLO = { areas: [], walks: [], lamps: [], trees: [], cols: [] };
+const SOLO = { areas: [], walks: [], lamps: [], trees: [], cols: [], courts: [] };
 function fillFrontageSolo(bin, r, side, bx0, bx1, bz0, bz1, a, b, blockStreets, tallness) {
   const D = 16, ns = side === 'n' || side === 's', lowS = ns ? 'w' : 'n', highS = ns ? 'e' : 's', opp = { n: 's', s: 'n', w: 'e', e: 'w' }[side];
   let t = a, prevGap = false;
@@ -318,7 +318,9 @@ function fillFrontageSolo(bin, r, side, bx0, bx1, bz0, bz1, a, b, blockStreets, 
     const area = (u0, u1, v0, v1) => { const [x0, x1, z0, z1] = R(u0, u1, v0, v1); SOLO.areas.push({ minX: x0, maxX: x1, minZ: z0, maxZ: z1 }); };
     if (gap) { area(hi + 0.3, hi + gap - 0.3, -0.6, D + 0.6);   // the alley: walkable from the sidewalk through to the back court
       for (let i = 0, nb = 1 + Math.floor(r() * 3), v = 3 + r() * 5; i < nb; i++, v += 0.75) { const [x0, x1, z0, z1] = R(hi + 0.08, hi + 0.68, v, v + 0.62), col = r() < 0.5 ? 'dumpA' : 'dumpB';   // wheelie bins along one wall
-        bin.push(col, boxGeo(x0, x1, 0.06, 1.0, z0, z1)); bin.push('iron', boxGeo(x0 - 0.02, x1 + 0.02, 1.0, 1.06, z0 - 0.02, z1 + 0.02)); SOLO.cols.push({ type: 'box', minX: x0, maxX: x1, minZ: z0, maxZ: z1 }); } }
+        bin.push(col, boxGeo(x0, x1, 0.06, 1.0, z0, z1)); bin.push('iron', boxGeo(x0 - 0.02, x1 + 0.02, 1.0, 1.06, z0 - 0.02, z1 + 0.02)); SOLO.cols.push({ type: 'box', minX: x0, maxX: x1, minZ: z0, maxZ: z1 }); }
+      { const [x0, x1, z0, z1] = R(hi + gap - 0.3, hi + gap, 7.6, 7.9); bin.push('iron', boxGeo(x0, x1, 3.05, 3.2, z0, z1)); const [g0, g1, g2, g3] = R(hi + gap - 0.28, hi + gap - 0.04, 7.62, 7.88); bin.push('glow', boxGeo(g0, g1, 2.95, 3.05, g2, g3)); }   // a bulkhead lamp on the wall
+      if (r() < 0.6) { const v = 11 + r() * 3; for (let i = 0; i < 3; i++) { const sz = 0.45 + r() * 0.2, [x0, x1, z0, z1] = R(hi + gap - 0.1 - sz, hi + gap - 0.1, v + (i === 2 ? 0.1 : i * 0.7), v + (i === 2 ? 0.1 : i * 0.7) + sz); bin.push(i === 1 ? 'wood' : 'carton', boxGeo(x0, x1, i === 2 ? 0.48 : 0, (i === 2 ? 0.48 : 0) + sz, z0, z1)); if (i < 2) SOLO.cols.push({ type: 'box', minX: x0, maxX: x1, minZ: z0, maxZ: z1 }); } } }
     if (sb) { SOLO.walks.push(R(lo, hi, 0, sb)); area(lo + 0.3, hi - 0.3, -0.6, sb - 0.3); }   // the forecourt: paving level with the sidewalk
     if (sb + dep < D - 0.5) area(lo + 0.3, hi - 0.3, sb + dep + 0.35, D + 0.6);   // the yard behind a shallow building opens onto the court
     prevGap = gap > 0;
@@ -333,6 +335,15 @@ function backCourt(bin, r, bx0, bx1, bz0, bz1) {
     for (const sx of [-1, 1]) for (const sz of [-1, 1]) bin.push('iron', boxGeo(x + sx * (hx - 0.15) - 0.06, x + sx * (hx - 0.15) + 0.06, 0, 0.12, z + sz * (hz - 0.15) - 0.06, z + sz * (hz - 0.15) + 0.06));
     bin.push('iron', alongX ? boxGeo(x - hx - 0.1, x - hx, 0.7, 0.8, z - 0.25, z + 0.25) : boxGeo(x - 0.25, x + 0.25, 0.7, 0.8, z - hz - 0.1, z - hz)); SOLO.cols.push({ type: 'box', minX: x - hx, maxX: x + hx, minZ: z - hz, maxZ: z + hz }); };
   dumpster(cx0 + 1.2, cz0 + 9 + r() * 14, false); dumpster(cx1 - 1.2, cz0 + 6 + r() * 16, false); dumpster(cx0 + 8 + r() * 18, cz1 - 1.0, true); if (r() < 0.6) dumpster(cx0 + 4 + r() * 6, cz1 - 1.0, true);
+  // a pallet stack and loose cartons by one wall, an air-conditioning condenser by another
+  { const px = cx1 - 2.2, pz = cz1 - 4 - r() * 8, n = 3 + Math.floor(r() * 5); for (let i = 0; i < n; i++) { const o = (r() - 0.5) * 0.08; bin.push('wood', boxGeo(px - 0.6 + o, px + 0.6 + o, i * 0.15, i * 0.15 + 0.12, pz - 0.5, pz + 0.5)); }
+    SOLO.cols.push({ type: 'box', minX: px - 0.65, maxX: px + 0.65, minZ: pz - 0.55, maxZ: pz + 0.55 });
+    for (let i = 0, cxx = px - 1.4; i < 3; i++) { const sz = 0.4 + r() * 0.25; bin.push('carton', boxGeo(cxx - sz / 2, cxx + sz / 2, i === 2 ? 0.45 : 0, (i === 2 ? 0.45 : 0) + sz, pz + 1.2 - sz / 2, pz + 1.2 + sz / 2)); if (i === 0) cxx += 0.05; } SOLO.cols.push({ type: 'box', minX: px - 1.75, maxX: px - 1.0, minZ: pz + 0.8, maxZ: pz + 1.6 });
+    const ax = cx0 + 3 + r() * 10, az = cz0 + 0.75; bin.push('equip', boxGeo(ax - 0.55, ax + 0.55, 0.1, 0.95, az - 0.4, az + 0.4)); bin.push('iron', boxGeo(ax - 0.6, ax + 0.6, 0, 0.1, az - 0.45, az + 0.45)); bin.push('iron', cylGeo(0.3, 0.3, 0.04, ax, 0.95, az, 12)); SOLO.cols.push({ type: 'box', minX: ax - 0.6, maxX: ax + 0.6, minZ: az - 0.45, maxZ: az + 0.45 }); }
+  // two utility poles with crossarms and sagging wires strung across the court
+  { const P = [[cx0 + 2.2, cz0 + 2.2], [cx1 - 2.6, cz1 - 2.4]], H = 7.6; for (const [x, z] of P) { bin.push('wood', cylGeo(0.1, 0.13, H, x, 0, z, 8)); bin.push('wood', boxGeo(x - 0.9, x + 0.9, H - 0.75, H - 0.63, z - 0.05, z + 0.05)); for (const o of [-0.8, 0, 0.8]) bin.push('iron', cylGeo(0.03, 0.03, 0.14, x + o, H - 0.63, z, 6)); bin.push('equip', cylGeo(0.2, 0.2, 0.55, x + 0.28, H - 1.9, z, 10)); SOLO.cols.push({ type: 'circle', x, z, r: 0.2 }); }
+    for (const o of [-0.8, 0, 0.8]) { const N = 8; let prev = null; for (let i = 0; i <= N; i++) { const t = i / N, p = [P[0][0] + o + (P[1][0] - P[0][0]) * t, H - 0.5 - Math.sin(Math.PI * t) * 1.1, P[0][1] + (P[1][1] - P[0][1]) * t]; if (prev) bin.push('iron', barGeo(prev, p, 0.022, 0.022)); prev = p; } } }
+  SOLO.courts.push({ bays: Array.from({ length: 6 }, (_, i) => [mx - 8.1 + 2.7 * (i + 0.5), cz0 + 3.7]) });
   SOLO.lamps.push([mx + 6, mz + 3, 1]); SOLO.cols.push({ type: 'circle', x: mx + 6, z: mz + 3, r: 0.18 });
   const tx = mx - 8 + r() * 4, tz = mz + 6 + r() * 5; SOLO.trees.push([tx, tz]); SOLO.cols.push({ type: 'circle', x: tx, z: tz, r: 0.9 });
   bin.push('curb', boxGeo(tx - 1.1, tx + 1.1, 0, SW_H, tz - 1.1, tz + 1.1, 1, 1)); bin.push('lot', flatQuad(tx - 0.95, tx + 0.95, tz - 0.95, tz + 0.95, SW_H + 0.004, 2.4, 2.4));
@@ -448,6 +459,9 @@ export function makeDistrict() {
   // ---- materials + merge
   const facMats = FACADES.map(([file, , , n]) => new THREE.MeshStandardMaterial({ map: tex(file), normalMap: n ? tex(typeof n === 'string' ? n : file + '_normal', false) : null, normalScale: new THREE.Vector2(0.6, 0.6), roughness: 0.9 }));
   const win = new THREE.MeshStandardMaterial({ map: tex('city_windows'), emissiveMap: tex('city_windows_e'), emissive: '#ffffff', emissiveIntensity: 0.9, roughness: 0.25, metalness: 0.1 });
+  // (phone area) unlit windows were flat black cut-outs: as smooth glass they pick up a sheen from the surroundings that
+  // shifts as you move, strongest at a glancing angle; lit ones are unchanged (their own glow dominates)
+  if (GRID.solo) { win.roughness = 0.06; win.metalness = 0; win.envMapIntensity = 16; }
   const sa = shopAtlas();
   const MATS = {
     roof: new THREE.MeshStandardMaterial({ map: tex('b83_gravel'), normalMap: tex('b83_gravel_n', false), color: '#5a5c60', roughness: 0.95 }),   // ballasted flat roofs
@@ -525,7 +539,7 @@ export function makeDistrict() {
     for (const z of zs) areas.push({ minX: XMAX - 1, maxX: RG.e - RG.hw + 0.5, minZ: z - WH + 0.3, maxZ: z + WH - 0.3 }); }   // the old town's east edge opens onto the avenue
   areas.push(...SOLO.areas);
   g.userData = {
-    colliders: SOLO.cols.slice(),
+    colliders: SOLO.cols.slice(), courts: SOLO.courts.slice(),
     lodTick: (pos, reach = 150) => { for (const m of lod) { const bs = m.geometry.boundingSphere; m.visible = Math.hypot(bs.center.x - pos.x, bs.center.z - pos.z) - bs.radius < reach; } },
     buildings: BUILDINGS, sidewalkY: SW_H,
     areas, lots: LOTS,

@@ -111,13 +111,14 @@ export function makeBody(sex = 'm', material) { const S = SPEC[sex], geo = bodyG
     hips.position.y = S.hipY + (Math.abs(cs) * 0.03 - 0.03) * k; hips.rotation.y = sn * 0.08 * k; spine.rotation.y = -sn * 0.14 * k; hips.rotation.z = cs * 0.02 * k; neck.rotation.y = sn * 0.05 * k; };
   g.userData.sex = sex; g.userData.bones = { hips, spine, chest, neck, head, L, R }; g.userData.mesh = mesh; g.userData.spec = S; g.userData.noFinish = true; g.userData.pose(0, 0); return g; }
 
-// ---- hair: a shell over the scalp, hung from the head bone. Styles: 'short', 'crop', 'bob', 'long', 'bald' (none)
+// ---- hair: a shell over the scalp, hung from the head bone. Styles: 'short', 'crop', 'bob', 'long', 'beanie' (a hat), 'bald' (none)
 const _hair = {};
-function hairGeometry(sex, style) { const key = sex + style; if (_hair[key]) return _hair[key]; const S = SPEC[sex], hs = S.hs, N = 28, R = smooth(HEAD, 3), shortS = style === 'short' || style === 'crop', low = style === 'long' ? -0.17 : style === 'bob' ? -0.03 : 0.058, th = style === 'crop' ? 0.004 : style === 'short' ? 0.008 : 0.014;
+function hairGeometry(sex, style) { const key = sex + style; if (_hair[key]) return _hair[key]; const S = SPEC[sex], hs = S.hs, N = 28, R = smooth(HEAD, 3), hat = style === 'beanie', shortS = style === 'short' || style === 'crop' || hat, low = hat ? 0.072 : style === 'long' ? -0.17 : style === 'bob' ? -0.03 : 0.058, th = hat ? 0.013 : style === 'crop' ? 0.004 : style === 'short' ? 0.008 : 0.014;
   const ringAt = (dy) => { if (dy <= 0.06) return R.find((r) => r[0] >= 0.06); for (let i = 0; i < R.length - 1; i++) if (dy <= R[i + 1][0]) { const t = (dy - R[i][0]) / (R[i + 1][0] - R[i][0]); return R[i].map((v, k) => lerp(v, R[i + 1][k], t)); } return R[R.length - 1]; };
   const ss = (x) => { x = Math.min(1, Math.max(0, x)); return x * x * (3 - 2 * x); };
   // the hairline, by angle from straight ahead: forehead, temple, over the ear, down to the nape (or the hair's length)
-  const line = (a) => { const d = Math.abs(a) * 180 / Math.PI; if (shortS) return d < 40 ? 0.17 : d < 72 ? lerp(0.17, 0.128, ss((d - 40) / 32)) : d < 100 ? 0.128 : lerp(0.128, low, ss((d - 100) / 35)); return d < 45 ? 0.17 - 0.01 * (d / 45) : lerp(0.16, low, ss((d - 45) / 40)); };
+  const line = (a) => { const d = Math.abs(a) * 180 / Math.PI; if (hat) return d < 50 ? 0.155 : d < 95 ? lerp(0.155, 0.098, ss((d - 50) / 45)) : lerp(0.098, low, ss((d - 95) / 40));   // a knit hat: low on the brow, over the tops of the ears, down the back
+    if (shortS) return d < 40 ? 0.17 : d < 72 ? lerp(0.17, 0.128, ss((d - 40) / 32)) : d < 100 ? 0.128 : lerp(0.128, low, ss((d - 100) / 35)); return d < 45 ? 0.17 - 0.01 * (d / 45) : lerp(0.16, low, ss((d - 45) / 40)); };
   const rows = []; for (let dy = low; dy < 0.058; dy += 0.02) rows.push(dy); for (let dy = 0.058; dy < 0.2295; dy += 0.0086) rows.push(dy);
   const p = [], uv = [], idx = []; for (const dy of rows) for (let c = 0; c <= N; c++) { const a = -Math.PI + (c / N) * Math.PI * 2, sn = Math.sin(a), cs = Math.cos(a), ln = line(a), de = Math.max(dy, ln), q = ringAt(de), drop = de < 0.06 ? (0.06 - de) * 0.12 : 0, edge = Math.min(1, 0.12 + (de - ln) / 0.03), t2 = th * edge;
       let x = q[1] * sn, z = (cs > 0 ? q[2] : q[3]) * cs + 0.006; const len = Math.hypot(x, z) || 1; x = (x + x / len * t2) * (1 - drop); z = (z + z / len * t2) * (1 - drop * 0.4);
@@ -135,7 +136,9 @@ export function drawTemplate(sex = 'm', size = 1024) { const c = document.create
 
 // ---- a stand-in skin, painted in the atlas layout: skin tone with soft shading, a drawn face, hair, simple clothes.
 // (Photo skins replace this: a skin photo for the tone, a face photo fitted to the face region, clothes from fabric.)
-export function paintSkin(sex = 'm', { skin = '#d8a880', hair = '#2a1c12', top = '#7a8a9a', bottom = '#34425e', shoe = '#2a2420', sleeves = 'short', legs = 'long', seed = 1, size = 512 } = {}) {
+// `face` / `back`: names of photo maps made by tools/make_face.py (np_face_<name>, np_back_<name>). They replace the
+// drawn face and the painted hair, and are laid in when their images arrive.
+export function paintSkin(sex = 'm', { skin = '#d8a880', hair = '#2a1c12', top = '#7a8a9a', bottom = '#34425e', shoe = '#2a2420', sleeves = 'short', legs = 'long', seed = 1, size = 512, face = null, back = null, collar = 'open' } = {}) {   // collar 'high': the top covers the neck (a hoodie, a roll-neck)
   const c = document.createElement('canvas'); c.width = c.height = size; const x = c.getContext('2d'), fem = sex === 'f', S = SPEC[sex], px = (R, s, t) => [lerp(R[0], R[2], s) * size, (1 - lerp(R[1], R[3], t)) * size], box = (R, s0, t0, s1, t1) => { const [ax, ay] = px(R, s0, t1), [bx, by] = px(R, s1, t0); x.fillRect(ax, ay, bx - ax, by - ay); };
   let sd = seed * 9301 + 49297; const rnd = () => ((sd = (sd * 16807) % 2147483647) / 2147483647), shade = (col, k) => { const c3 = new THREE.Color(col); c3.multiplyScalar(k); return '#' + c3.getHexString(); };
   const grain = (R, s0, t0, s1, t1, col, amt = 0.07, n = 900) => { x.fillStyle = col; box(R, s0, t0, s1, t1); const [ax, ay] = px(R, s0, t1), [bx, by] = px(R, s1, t0); for (let i = 0; i < n; i++) { x.fillStyle = rnd() < 0.5 ? `rgba(0,0,0,${amt * rnd()})` : `rgba(255,255,255,${amt * rnd()})`; x.fillRect(ax + rnd() * (bx - ax), ay + rnd() * (by - ay), 1 + rnd() * 2, 1 + rnd() * 3); } };
@@ -143,9 +146,9 @@ export function paintSkin(sex = 'm', { skin = '#d8a880', hair = '#2a1c12', top =
   const hgrad = (R, stops) => { const [ax, ay] = px(R, 0, 1), [bx, by] = px(R, 1, 0), g = x.createLinearGradient(ax, 0, bx, 0); for (const [o, col] of stops) g.addColorStop(o, col); x.fillStyle = g; x.fillRect(ax, ay, bx - ax, by - ay); };
   x.fillStyle = skin; x.fillRect(0, 0, size, size); for (const R of Object.values(ATLAS)) grain(R, 0, 0, 1, 1, skin, 0.035, 500);
   // torso: top (neckline leaves the neck + collarbone bare), bottom's waistband below
-  { const R = ATLAS.torso, y0 = S.torso[0][0], y1 = S.torso[S.torso.length - 1][0], T = (y) => (y - y0) / (y1 - y0), waist = T(S.hipY + 0.1), neck = T(S.neckY - 0.012);
+  { const R = ATLAS.torso, y0 = S.torso[0][0], y1 = S.torso[S.torso.length - 1][0], T = (y) => (y - y0) / (y1 - y0), waist = T(S.hipY + 0.1), neck = collar === 'high' ? 1 : T(S.neckY - 0.012);
     grain(R, 0, waist, 1, neck, top, 0.09, 2600); grain(R, 0, 0, 1, waist, bottom, 0.08, 1400); x.fillStyle = shade(bottom, 0.6); box(R, 0, waist - 0.012, 1, waist + 0.004);
-    const [nx, ny] = px(R, 0.5, neck); x.fillStyle = skin; x.beginPath(); x.ellipse(nx, ny, size * 0.6 * (fem ? 0.085 : 0.06), size * 0.36 * (fem ? 0.07 : 0.04), 0, 0, Math.PI); x.fill(); x.strokeStyle = shade(top, 0.7); x.lineWidth = size / 220; x.beginPath(); x.ellipse(nx, ny, size * 0.6 * (fem ? 0.085 : 0.06), size * 0.36 * (fem ? 0.07 : 0.04), 0, 0, Math.PI); x.stroke();
+    const [nx, ny] = px(R, 0.5, neck); x.fillStyle = collar === 'high' ? top : skin; x.beginPath(); x.ellipse(nx, ny, size * 0.6 * (fem ? 0.085 : 0.06), size * 0.36 * (fem ? 0.07 : 0.04), 0, 0, Math.PI); x.fill(); x.strokeStyle = shade(top, 0.7); x.lineWidth = size / 220; x.beginPath(); x.ellipse(nx, ny, size * 0.6 * (fem ? 0.085 : 0.06), size * 0.36 * (fem ? 0.07 : 0.04), 0, 0, Math.PI); x.stroke();
     hgrad(R, [[0, 'rgba(0,0,0,0.22)'], [0.12, 'rgba(0,0,0,0.0)'], [0.25, 'rgba(0,0,0,0.16)'], [0.5, 'rgba(255,255,255,0.06)'], [0.75, 'rgba(0,0,0,0.16)'], [0.88, 'rgba(0,0,0,0)'], [1, 'rgba(0,0,0,0.22)']]);
     for (let i = 0; i < 9; i++) { const [fx, fy] = px(R, 0.3 + rnd() * 0.4, waist + 0.05 + rnd() * 0.25); x.strokeStyle = 'rgba(0,0,0,0.10)'; x.lineWidth = size / 300; x.beginPath(); x.moveTo(fx - size * 0.03, fy); x.quadraticCurveTo(fx, fy + size * 0.012 * (rnd() - 0.5) * 2, fx + size * 0.03, fy + size * 0.006); x.stroke(); } }
   // arms: sleeve to mid upper arm or to the wrist; legs: trousers or shorts; socks + shoes
@@ -170,4 +173,6 @@ export function paintSkin(sex = 'm', { skin = '#d8a880', hair = '#2a1c12', top =
     const hl = fem ? 0.172 : 0.178; x.fillStyle = hair; { const [ax, ay] = px(R, 0, 1), [bx] = px(R, 1, 1), [, hy] = P(0, hl); x.beginPath(); x.moveTo(ax, ay); x.lineTo(bx, ay); x.lineTo(bx, P(0, fem ? 0.06 : 0.13)[1]); x.lineTo(P(0.068, 0)[0], P(0, fem ? 0.1 : 0.14)[1]); x.quadraticCurveTo(P(0.06, 0)[0], hy, P(0, 0)[0], hy + u * 0.004); x.quadraticCurveTo(P(-0.06, 0)[0], hy, P(-0.068, 0)[0], P(0, fem ? 0.1 : 0.14)[1]); x.lineTo(ax, P(0, fem ? 0.06 : 0.13)[1]); x.closePath(); x.fill(); }
     const RB = ATLAS.headBack; grain(RB, 0, fem ? 0.0 : 0.3, 1, 1, hair, 0.12, 900); if (!fem) vgrad(RB, 0, 0.22, 1, 0.34, 'rgba(0,0,0,0)', 'rgba(0,0,0,0)');
     x.strokeStyle = 'rgba(255,255,255,0.06)'; x.lineWidth = 1; for (let i = 0; i < 60; i++) { const [sx2, sy2] = px(RB, rnd(), 0.4 + rnd() * 0.6); x.beginPath(); x.moveTo(sx2, sy2); x.lineTo(sx2 + (rnd() - 0.5) * 6, sy2 + 14); x.stroke(); } }
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+  for (const [name, R] of [[face, ATLAS.face], [back, ATLAS.headBack]]) { if (!name) continue; const im = new Image(); im.onload = () => { const [ax, ay] = px(R, 0, 1), [bx, by] = px(R, 1, 0); x.drawImage(im, ax, ay, bx - ax, by - ay); t.needsUpdate = true; }; im.src = `assets/textures/${name}.png`; }
+  return t; }
