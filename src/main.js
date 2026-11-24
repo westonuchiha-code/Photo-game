@@ -2197,6 +2197,15 @@ neon.traverse((o) => { if (o.isMesh && o.material.isMeshBasicMaterial && o.mater
 // polish pass: anything with userData.tick(t, dt) animates (message boards, creek water, arcade screens...)
 let tickers = null;
 let lodN = 0;
+// Indoors with the street door shut, nothing outside can be seen: the outside world is not drawn at all (and its
+// streaming / detail bookkeeping pauses). Lights are left alone, so the light count (and every shader) stays the same.
+let shutIn = null; const shutHidden = [];
+function setShutIn(e) {
+  for (const o of shutHidden) o.visible = true; shutHidden.length = 0; shutIn = e; if (!e) return;
+  const keep = new Set([e.group, interiors.doors]), special = (o) => { let f = false; o.traverse((c) => { if (c.isLight || c.isCamera || keep.has(c)) f = true; }); return f; };
+  const walkIn = (node) => { for (const c of node.children) { if (c.isLight || c.isCamera || keep.has(c) || !c.visible) continue; if (special(c)) walkIn(c); else { c.visible = false; shutHidden.push(c); } } };
+  walkIn(scene);
+}
 function frame() {
   if (window.__loadingHold) { clock.getDelta(); requestAnimationFrame(frame); return; }   // (loading screen up: see loading.js)
   const rawDt = clock.getDelta(), dt = Math.min(rawDt, 0.05);
@@ -2221,7 +2230,7 @@ function frame() {
     blueHouse.userData.update(dt);
     groceryDoor.active = !grocery.userData.doorsOpen();
   }
-  if ((lightTimer += dt) > 0.3) { lightTimer = 0; streamer.update(camera.position); updateLightBudget(); }
+  if (!shutIn && (lightTimer += dt) > 0.3) { lightTimer = 0; streamer.update(camera.position); updateLightBudget(); }
   walkPoles.forEach((p, i) => p.userData.update(t, i * 0.3));
   // Doors swing open when you walk up to them (inside or out).
   const near = mode === 'walk' && Math.hypot(walk.position.x - X1, walk.position.z - DOOR_Z) < 2.3;
@@ -2248,7 +2257,8 @@ function frame() {
   const f = 0.94 + 0.06 * Math.sin(t * 31) * Math.sin(t * 7.3); // subtle neon buzz
   for (const m of amberMats) m.color.setRGB(2.0 * f, 0.42 * f, 0.0);
   interiors.update(mode === 'walk' ? walk.position : camera.position, dt, mode !== 'drive');
-  if ((lodN = (lodN + 1) % 12) === 0) district.userData.lodTick(camera.position);
+  { const e = interiors.enclosed(); if (e !== shutIn) setShutIn(e); }
+  if (!shutIn && (lodN = (lodN + 1) % 12) === 0) district.userData.lodTick(camera.position);
   people.update(mode === 'walk' ? walk.position : mode === 'drive' ? drive.state : camera.position, dt, mode === 'drive' ? drive.state : null, mode === 'walk');
   // the diner's key light is the only shadow caster: its shadow map is redrawn only while you're near the diner
   renderer.shadowMap.needsUpdate = renderer.shadowMap.enabled && Math.abs(camera.position.x) < 45 && Math.abs(camera.position.z) < 40;
@@ -2273,4 +2283,4 @@ window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
   composer.setSize(window.innerWidth, window.innerHeight);
 });
-window.__scene = { people, interiors, refresh: () => { streamer.update(camera.position); updateLightBudget(); }, composer, drive, enterCar, scene, camera, walk, setMode, interactables, walkPoles, creep, renderer, streamer };
+window.__scene = { renderer, shutState: () => ({ shut: !!shutIn, hidden: shutHidden.length }), people, interiors, refresh: () => { streamer.update(camera.position); updateLightBudget(); }, composer, drive, enterCar, scene, camera, walk, setMode, interactables, walkPoles, creep, renderer, streamer };

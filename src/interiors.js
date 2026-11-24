@@ -60,7 +60,7 @@ export function makeInteriors({ scene, district, colliders, areas }) {
     for (const col of e.cols) { const i = colliders.indexOf(col); if (i >= 0) colliders.splice(i, 1); } e.cols = []; e.group = null; if (litFor === e) { litFor = null; for (const l of lamps) l.position.set(0, -200, 0); }
   }
   const inside = (e, x, z) => x > e.inner.minX - 0.3 && x < e.inner.maxX + 0.3 && z > e.inner.minZ - 0.3 && z < e.inner.maxZ + 0.3;
-  let scanT = 0, near = [];
+  let scanT = 0, near = [], encl = null;
   function update(pos, dt, canOpen) {
     if ((scanT -= dt) <= 0) { scanT = 0.25; near = []; let want = null, wd = 1e9;
       for (const e of list) { const d = Math.hypot(pos.x - e.door[0], pos.z - e.door[1]); e.d = d; if (d < 30 || e.t > 0) near.push(e);
@@ -70,9 +70,11 @@ export function makeInteriors({ scene, district, colliders, areas }) {
       let best = null; for (const e of near) if (e.group && (inside(e, pos.x, pos.z) || e.d < 5) && (!best || e.d < best.d)) best = e;
       if (best && best !== litFor) { litFor = best; best.lights.forEach((p, i) => lamps[i].position.set(p[0], p[1], p[2])); } }
     let changed = false;
-    for (const e of near) { e.target = canOpen && e.group && (e.d < 3.2 || inside(e, pos.x, pos.z)) ? 1 : 0; if (e.t !== e.target) { e.t += Math.sign(e.target - e.t) * Math.min(Math.abs(e.target - e.t), dt * 2.8); e.doorCol.active = e.t < 0.6; setDoor(list.indexOf(e)); changed = true; } }
+    for (const e of near) { e.target = canOpen && e.group && e.d < 3.2 ? 1 : 0; /* (the door shuts behind you once you're well inside: see `enclosed`) */ if (e.t !== e.target) { e.t += Math.sign(e.target - e.t) * Math.min(Math.abs(e.target - e.t), dt * 2.8); e.doorCol.active = e.t < 0.6; setDoor(list.indexOf(e)); changed = true; } }
     if (changed) doors.instanceMatrix.needsUpdate = true;
+    // shut in: inside a built interior with its street door fully closed. Nothing outside can be seen, so main.js stops drawing it.
+    encl = null; for (const e of near) if (e.group && e.t === 0 && pos.x > e.inner.minX && pos.x < e.inner.maxX && pos.z > e.inner.minZ && pos.z < e.inner.maxZ) { encl = e; break; }
   }
   const floorY = (x, z) => { for (const e of list) { const r = e.inner; if (x > r.minX - 0.25 && x < r.maxX + 0.25 && z > r.minZ - 0.25 && z < r.maxZ + 0.25) return FY; } return null; };
-  return { update, floorY, list, lamps, stats: () => ({ buildings: list.length, built: list.filter((e) => e.group).length }) };
+  return { update, floorY, list, lamps, doors, enclosed: () => encl, stats: () => ({ buildings: list.length, built: list.filter((e) => e.group).length }) };
 }
