@@ -6,7 +6,8 @@ const EYE = 1.62;
 const SPEED = 2.2;
 
 export class WalkControls {
-  constructor(camera, dom, { bounds, colliders = [], areas = null }) {
+  constructor(camera, dom, { bounds, colliders = [], areas = null, speed = SPEED }) {
+    this.speed = speed;   // walking speed, m/s (the phone area walks faster than the big town)
     this.camera = camera;
     this.dom = dom;
     this.bounds = bounds;
@@ -101,7 +102,7 @@ export class WalkControls {
     if (k.has('KeyA') || k.has('ArrowLeft')) s -= 1;
     const len = Math.hypot(f, s);
     if (len > 1) { f /= len; s /= len; }
-    const sp = SPEED * (k.has('ShiftLeft') || k.has('ShiftRight') ? 2.6 : 1) * dt;
+    const sp = this.speed * (k.has('ShiftLeft') || k.has('ShiftRight') ? 2.6 : 1) * dt;
     const sin = Math.sin(this.yaw), cos = Math.cos(this.yaw);
     const ox = this.position.x, oz = this.position.z;
     this.position.x += (-sin * f + cos * s) * sp;

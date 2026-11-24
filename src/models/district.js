@@ -303,8 +303,11 @@ function fillFrontageSolo(bin, r, side, bx0, bx1, bz0, bz1, a, b, blockStreets, 
   while (t < b - 3) {
     let w = 7 + r() * 9; if (b - t - w < 6) w = b - t;
     const lo = t, hi = t + w, corner = ns && (Math.abs(lo - bx0) < 0.01 || Math.abs(hi - bx1) < 0.01);
-    const gap = hi < b - 11 && r() < 0.36 ? 3.2 + r() * 1.3 : 0; t = hi + gap;
-    const sb = !corner && r() < 0.3 ? 1.6 + r() * 1.8 : 0, dep = Math.min(D - sb, 11 + r() * 5);
+    // an alley must come out in the back court: along the north + south rows that means clear of the corner zones,
+    // where the west + east rows stand behind (an alley there ran into a side wall)
+    let gap = hi < b - 9 && r() < 0.62 ? 3.2 + r() * 1.3 : 0; if (gap && ns && (hi < bx0 + D + 0.4 || hi + gap > bx1 - D - 0.4)) gap = 0; t = hi + gap;
+    // corner buildings are full depth with no forecourt, so the corner is solid (a shallow one left a blind slot behind it)
+    const sbR = r(), depR = r(), sb = !corner && sbR < 0.3 ? 1.6 + r() * 1.8 : 0, dep = corner ? D : Math.min(D - sb, 11 + depR * 5);
     const fp = side === 'n' ? { x0: lo, x1: hi, z0: bz0 + sb, z1: bz0 + sb + dep } : side === 's' ? { x0: lo, x1: hi, z0: bz1 - sb - dep, z1: bz1 - sb } : side === 'w' ? { x0: bx0 + sb, x1: bx0 + sb + dep, z0: lo, z1: hi } : { x0: bx1 - sb - dep, x1: bx1 - sb, z0: lo, z1: hi };
     // every side is a finished wall: with alleys, forecourts, shallower and lower neighbours, any of them can be seen
     const street = new Set(['n', 's', 'w', 'e']); void lowS; void highS; void opp;
@@ -486,6 +489,10 @@ export function makeDistrict() {
   const lampPts = [];
   for (const x of xs) for (let z = ZMIN + 10; z < ZMAX - 10; z += 28) { if (zs.some((q) => Math.abs(z - q) < WH + 2)) continue; lampPts.push([x - RH - 0.5, z, 1], [x + RH + 0.5, z + 14, -1]); }
   for (const z of zs) for (let x = xs[0] + 18; x < XMAX - 10; x += 28) { if (xs.some((q) => Math.abs(x - q) < WH + 2)) continue; lampPts.push([x, z - RH - 0.5, 2], [x + 14, z + RH + 0.5, -2]); }
+  // (phone area) nothing stands where a cross street comes through: the second lamp / tree of each pair was placed
+  // a fixed step along from the first without that check, which put some in the roadway
+  const inCrossing = (x, z) => xs.some((q) => Math.abs(x - q) < WH + 1.5) && zs.some((q) => Math.abs(z - q) < WH + 1.5);
+  if (GRID.solo) { const keep = lampPts.filter(([x, z]) => !inCrossing(x, z)); lampPts.length = 0; lampPts.push(...keep); }
   lampPts.push(...SOLO.lamps);   // (phone area: one in each back court)
   const poleG = new THREE.CylinderGeometry(0.07, 0.1, 6.5, 8); poleG.translate(0, 3.25 + SW_H, 0);
   const armG = new THREE.BoxGeometry(1.6, 0.08, 0.08); armG.translate(0.8, 6.5 + SW_H, 0);
@@ -504,7 +511,7 @@ export function makeDistrict() {
   const treePts = [];
   for (let z = ZMIN + 6; z < ZMAX - 6; z += 14) { if (zs.some((q) => Math.abs(z - q) < WH + 3)) continue; treePts.push([xs[0] + RH + 1.0, z + 7], [xs[0] - RH - 1.0, z]); }
   for (const z of [0]) for (let x = xs[0] + 20; x < XMAX - 10; x += 14) { if (xs.some((q) => Math.abs(x - q) < WH + 3)) continue; if (!(x + 7 > 98 && x + 7 < 124)) treePts.push([x + 7, z - RH - 1.0]); treePts.push([x, z + RH + 1.0]); }   // (no trees in front of the izakaya + pottery)
-  if (GRID.solo) { const keep = treePts.filter((_, i) => i % 2 === 0); treePts.length = 0; treePts.push(...keep, ...SOLO.trees); }   // (the phone area: every other tree)
+  if (GRID.solo) { const keep = treePts.filter(([x, z]) => !inCrossing(x, z)).filter((_, i) => i % 2 === 0); treePts.length = 0; treePts.push(...keep, ...SOLO.trees); }   // (the phone area: every other tree)
   // real grown trees (oak / cherry / pale, from trees.js), baked + instanced
   g.add(placeStreetTrees(treePts, [streetTreeParts('oak', 7), streetTreeParts('cherry', 4), streetTreeParts('pale', 9), streetTreeParts('oak', 12)], { baseY: SW_H }));
 

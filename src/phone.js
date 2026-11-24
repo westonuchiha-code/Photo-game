@@ -48,7 +48,7 @@ const svc = placeStreetServices({ grid: GRID, sidewalkY: SW }); scene.add(svc.gr
   for (const x of xs) { barrier(x, R.n - R.hw - 1.2, true); barrier(x, R.s + R.hw + 1.2, true); } for (const z of zs) { barrier(R.e - R.hw - 1.2, z, false); barrier(xs[0] - WH - 0.6 + 1.2, z, false); } }
 
 // ---- walking + driving
-const walk = new WalkControls(camera, renderer.domElement, { bounds: null, areas: [...district.userData.areas], colliders });
+const walk = new WalkControls(camera, renderer.domElement, { bounds: null, areas: [...district.userData.areas], colliders, speed: 2.75 });   // (25% faster than the big town's 2.2 m/s)
 const drive = makeDriver({ scene, camera, areas: walk.areas.slice(), colliders, pads: [], ground: (x, z) => district.userData.floorY(x, z) ?? 0 });
 const interiors = makeInteriors({ scene, district, colliders, areas: walk.areas });   // (cars keep the earlier area list: they can't enter buildings)
 walk.ground = (x, z) => interiors.floorY(x, z) ?? district.userData.floorY(x, z) ?? 0;

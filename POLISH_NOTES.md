@@ -591,3 +591,15 @@ inside the view cone at five fixed camera spots, `tools/devtests/where2.js`), th
   walkable (and drivable); `SOLO` carries the extra areas, paving, lamps, trees and colliders to makeDistrict.
 - 124 buildings, 21 alleys, 4 courts. Triangles in view: about 500 k in an alley, up to 700 k in a court (all four
   sides detailed costs more than the old joined rows). Not yet tuned against real phone frame rates.
+
+## 104 Phone area: fixes from the first play on the owner's phone
+- It loads and runs on the Galaxy S21 Ultra ("loads pretty good"). Owner's screenshots showed three faults.
+- Walking 25% faster: `WalkControls` takes a `speed` option (default 2.2 m/s, unchanged for the big town); phone 2.75.
+- Blind slots that looked like alleys but could not be entered: a shallow corner building left a 5 m gap behind it,
+  open to the side street. Corner buildings are now full depth. Alleys along the north and south rows are only made
+  clear of the corner zones, so each one comes out in the back court. Alley chance raised to keep the count (23).
+- Lamps and trees in the roadway: each pair's second lamp / tree was placed a fixed step from the first without the
+  crossing check. Phone area now drops any lamp or tree inside a crossing (`inCrossing`). The big town has the same
+  fault and is left as it is (frozen reference).
+- `tools/devtests/phchk.js` checks: nothing standing in a roadway, every alley touches a court and crosses no
+  building, walk speed.
