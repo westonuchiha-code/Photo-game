@@ -36,6 +36,7 @@ scene.environment = carEnv(renderer); scene.environmentIntensity = 0.14;
 configureDistrict({ xs: [75, 161, 245], zs: [-84, 0, 84], ring: { n: 121, s: -121, e: 282, hw: 9 } });
 const colliders = [];
 const district = makeDistrict(); scene.add(district);
+colliders.push(...district.userData.colliders);   // (dumpsters, court lamps and tree beds)
 for (const [x, z] of district.userData.lampPosts) colliders.push({ type: 'circle', x, z, r: 0.18 });
 for (const [x, z] of district.userData.treePosts) colliders.push({ type: 'circle', x, z, r: 0.25 });
 const SW = district.userData.sidewalkY;

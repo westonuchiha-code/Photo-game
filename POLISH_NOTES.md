@@ -579,3 +579,15 @@ inside the view cone at five fixed camera spots, `tools/devtests/where2.js`), th
 - Measured in the slow test browser, phone area vs town: playable 11 s vs 54 s; textures in memory 104 vs 1,478;
   geometries ~210 vs ~3,800; about 205 draw calls and 400 k triangles in a street view. Real phone numbers unknown.
 - Next for a real game: worlds as layout data (pieces + positions), areas this size joined by a loading step.
+
+## 103 Phone area: alleys, freestanding buildings, back courts
+- Decision (owner): development moves to the phone area; the big town stays frozen as a reference.
+- Owner: "every single building is connected... no alleyways... none of the buildings have corners."
+- district.js, phone area only (`GRID.solo`, full blocks): `fillFrontageSolo` leaves an alley (3.2-4.5 m) after about
+  a third of the buildings, sets about 30% back 1.6-3.4 m behind a paved forecourt, and varies depth 11-16 m. All
+  four sides of every building are finished walls with windows. Backs get a steel door with a step and a lamp.
+  `backCourt` makes the middle of each block an open court: asphalt, parking bays, dumpsters, a lamp, a tree in a
+  kerbed bed. Wheelie bins stand in the alleys. Alleys, forecourts, yards behind shallow buildings and courts are
+  walkable (and drivable); `SOLO` carries the extra areas, paving, lamps, trees and colliders to makeDistrict.
+- 124 buildings, 21 alleys, 4 courts. Triangles in view: about 500 k in an alley, up to 700 k in a court (all four
+  sides detailed costs more than the old joined rows). Not yet tuned against real phone frame rates.

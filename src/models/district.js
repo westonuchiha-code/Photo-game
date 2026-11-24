@@ -64,7 +64,7 @@ const FACADES = [
 ];
 
 // small parts that share the one vertex-coloured 'det' material (colour per part, linear RGB)
-const DET = Object.fromEntries(Object.entries({ frame: '#3a3c42', iron: '#232326', trim: '#e8e4da', shut0: '#4a7a5a', shut1: '#4a6a94', shut2: '#c8b08a', equip: '#a8aaac', tank: '#a07a54', riser: '#7aa09a' }).map(([k, v]) => { const c = new THREE.Color(v); return [k, [c.r, c.g, c.b]]; }));
+const DET = Object.fromEntries(Object.entries({ frame: '#3a3c42', iron: '#232326', trim: '#e8e4da', shut0: '#4a7a5a', shut1: '#4a6a94', shut2: '#c8b08a', dumpA: '#2e5a3c', dumpB: '#2c4468', equip: '#a8aaac', tank: '#a07a54', riser: '#7aa09a' }).map(([k, v]) => { const c = new THREE.Color(v); return [k, [c.r, c.g, c.b]]; }));
 // ---- geometry helpers: quads / boxes with world-metre UVs, collected per material ------------------------------
 class Bin {
   constructor() { this.parts = new Map(); }
@@ -162,6 +162,7 @@ function quad4(p, want, tw = 1, th = 1) {
 function barGeo(p, q, w, h) { const a = new THREE.Vector3(...p), c = new THREE.Vector3(...q), d = c.clone().sub(a), g = new THREE.BoxGeometry(w, d.length(), h); g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.clone().normalize())); const m = a.add(c).multiplyScalar(0.5); g.translate(m.x, m.y, m.z); return g; }
 const cylGeo = (r0, r1, h, x, y, z, seg = 12) => { const g = new THREE.CylinderGeometry(r0, r1, h, seg); g.translate(x, y + h / 2, z); return g; };
 // what kind of building a facade material makes: decides the windows, trim and roofline
+const OPP = { n: 's', s: 'n', w: 'e', e: 'w' };
 const STYLE = { wall_red_brick: 'brick', wall_gray_brick: 'brick', hs_brick: 'brick', hs_ybrick: 'brick', sg_darkbrick: 'brick', cy_brick: 'brick', wall_olive_stucco: 'stucco', wall_teal_stucco: 'stucco', ab_stucco: 'stucco', th_plaster: 'stucco', tx_stucco: 'stucco',
   wall_red_sandstone: 'stone', tx_stone: 'stone', wall_gray_tile: 'stone', concrete_cracked: 'modern', tx_fins: 'modern', hs_siding: 'modern' };
 
@@ -209,11 +210,11 @@ function building(bin, b, r) {
     const K = kit(k), L = K.L;
     if (!b.street.includes(k)) { K.Q(0, L, 0, H + PAR, 0, FK); continue; }
     const isFront = k === face, n = Math.max(1, Math.floor((L - 1.2) / 2.6)), step = L / n, modern = style === 'modern';
-    const ww = modern ? Math.min(2.2, step * 0.82) : style === 'brick' ? Math.min(1.25, step * 0.55) : Math.min(1.4, step * 0.58), wh = modern ? 1.6 : style === 'brick' ? 1.9 : 1.7, dep = modern ? 0.22 : 0.16, ops = [], wins = [];
+    const ww = modern ? Math.min(2.2, step * 0.82) : style === 'brick' ? Math.min(1.25, step * 0.55) : Math.min(1.4, step * 0.58), wh = modern ? 1.6 : style === 'brick' ? 1.9 : 1.7, dep = modern ? 0.22 : 0.16, ops = [], wins = []; let backU = null;
     for (let f = 1; f < floors; f++) { const y = GF + (f - 1) * FH + (style === 'brick' ? 0.7 : 0.8); for (let i = 0; i < n; i++) { const u = step * (i + 0.5), lit = r() < 0.32, cell = lit ? Math.floor(r() * 7) : 7 + Math.floor(r() * 9); wins.push({ u0: u - ww / 2, u1: u + ww / 2, y0: y, y1: y + wh, cell, f, i }); } }
     let shopOp = null;
     if (isFront && shop >= 0) { const sw = Math.max(2.5, Math.min(L - 0.8 - 1.9, 11)), u0 = Math.max(0.4, (L - 1.9 - sw) / 2); shopOp = { u0, u1: u0 + sw, y0: SW_H, y1: 3.5 }; ops.push(shopOp); }
-    else for (let i = 0; i < n; i++) { const u = step * (i + 0.5), cell = r() < 0.25 ? Math.floor(r() * 7) : 7 + Math.floor(r() * 9); if (isFront && Math.abs(u - b.doorU) < 0.01) continue; wins.push({ u0: u - ww / 2, u1: u + ww / 2, y0: 1.1, y1: 2.9, cell, f: 0, i }); }
+    else for (let i = 0; i < n; i++) { const u = step * (i + 0.5), cell = r() < 0.25 ? Math.floor(r() * 7) : 7 + Math.floor(r() * 9); if (isFront && Math.abs(u - b.doorU) < 0.01) continue; if (b.backDoor && k === OPP[face] && i === n - 1) { backU = u; continue; } wins.push({ u0: u - ww / 2, u1: u + ww / 2, y0: 1.1, y1: 2.9, cell, f: 0, i }); }
     if (isFront) ops.push({ u0: b.doorU - DOOR.w / 2, u1: b.doorU + DOOR.w / 2, y0: 0, y1: SW_H + DOOR.h, door: true });
     ops.push(...wins); K.wall(0, H + PAR, ops);
     // windows: glass set back in the wall, reveals, a frame, a sill; then each style's own dressing
@@ -230,6 +231,9 @@ function building(bin, b, r) {
       if (balconies && w.f >= 1 && (w.i + w.f) % 2 === 0) { const a = u0 - 0.35, c = u1 + 0.35, by = y0 - 0.75; K.BX(a, c, by - 0.12, by, 0, 0.85, 'cap'); for (const [p, q2] of [[a, a + 0.04], [c - 0.04, c]]) { K.BX(p, q2, by + 0.95, by + 1.0, 0, 0.85, 'iron'); K.BX(p, q2, by, by + 0.06, 0, 0.85, 'iron'); } K.BX(a, c, by + 0.95, by + 1.0, 0.81, 0.85, 'iron'); K.BX(a, c, by, by + 0.06, 0.81, 0.85, 'iron');
         for (let t = a + 0.02; t < c; t += 0.2) K.BX(t, t + 0.025, by, by + 0.97, 0.82, 0.845, 'iron'); for (let t = 0.2; t < 0.8; t += 0.27) for (const p of [a + 0.01, c - 0.035]) K.BX(p, p + 0.025, by, by + 0.97, t, t + 0.025, 'iron'); }
       else if (acs && w.f >= 1 && (w.i * 7 + w.f * 3 + b.index) % 5 === 0) { K.BX((u0 + u1) / 2 - 0.36, (u0 + u1) / 2 + 0.36, y0, y0 + 0.42, -0.05, 0.38, 'equip'); K.BX((u0 + u1) / 2 - 0.3, (u0 + u1) / 2 + 0.3, y0 + 0.05, y0 + 0.37, 0.38, 0.39, 'iron'); } }   // a window air conditioner
+    // ---- a back door onto the court (phone area): a plain steel door, a step, a lamp over it
+    if (backU !== null) { K.BX(backU - 0.5, backU + 0.5, 0.1, 2.15, 0, 0.035, 'frame'); K.BX(backU - 0.6, backU - 0.5, 0, 2.25, 0, 0.07, 'cap'); K.BX(backU + 0.5, backU + 0.6, 0, 2.25, 0, 0.07, 'cap'); K.BX(backU - 0.6, backU + 0.6, 2.15, 2.25, 0, 0.07, 'cap');
+      K.BX(backU - 0.7, backU + 0.7, 0, 0.1, 0, 0.6, 'cap'); K.BX(backU + 0.3, backU + 0.36, 1.0, 1.12, 0.035, 0.08, 'iron'); K.BX(backU - 0.12, backU + 0.12, 2.45, 2.6, 0, 0.2, 'iron'); K.BX(backU - 0.09, backU + 0.09, 2.38, 2.45, 0.05, 0.18, 'glow'); }
     // ---- the base: a plinth course either side of the door / shopfront
     { const gaps = ops.filter((o) => o.y0 < 0.6).sort((p, q) => p.u0 - q.u0); let u = 0; for (const o of gaps) { if (o.u0 - 0.1 > u + 0.05) K.BX(u, o.u0 - 0.1, 0, 0.55, 0, 0.06, 'cap'); u = o.u1 + 0.1; } if (L > u + 0.05) K.BX(u, L, 0, 0.55, 0, 0.06, 'cap'); }
     // ---- the shopfront: pilasters, a tiled stall riser, glass set back behind mullions, a sign fascia, maybe an awning
@@ -288,12 +292,58 @@ function fillFrontage(bin, r, side, bx0, bx1, bz0, bz1, a, b, depth, blockStreet
     building(bin, { ...fp, face: side, floors, fac: Math.floor(r() * FACADES.length), shop: r() < 0.7 ? Math.floor(r() * 15) : -1, street }, r);
   }
 }
+// ---- the phone area's blocks (GRID.solo): buildings stand as buildings. Some have an alley beside them, some sit back
+// from the sidewalk behind a forecourt, depths differ, and the middle of the block is an open back court the alleys
+// lead to. A side that faces an alley, and every back, is a real wall with windows. What this adds for the rest of
+// makeDistrict (walkable rectangles, raised paving, lamps, trees, colliders) is collected in SOLO.
+const SOLO = { areas: [], walks: [], lamps: [], trees: [], cols: [] };
+function fillFrontageSolo(bin, r, side, bx0, bx1, bz0, bz1, a, b, blockStreets, tallness) {
+  const D = 16, ns = side === 'n' || side === 's', lowS = ns ? 'w' : 'n', highS = ns ? 'e' : 's', opp = { n: 's', s: 'n', w: 'e', e: 'w' }[side];
+  let t = a, prevGap = false;
+  while (t < b - 3) {
+    let w = 7 + r() * 9; if (b - t - w < 6) w = b - t;
+    const lo = t, hi = t + w, corner = ns && (Math.abs(lo - bx0) < 0.01 || Math.abs(hi - bx1) < 0.01);
+    const gap = hi < b - 11 && r() < 0.36 ? 3.2 + r() * 1.3 : 0; t = hi + gap;
+    const sb = !corner && r() < 0.3 ? 1.6 + r() * 1.8 : 0, dep = Math.min(D - sb, 11 + r() * 5);
+    const fp = side === 'n' ? { x0: lo, x1: hi, z0: bz0 + sb, z1: bz0 + sb + dep } : side === 's' ? { x0: lo, x1: hi, z0: bz1 - sb - dep, z1: bz1 - sb } : side === 'w' ? { x0: bx0 + sb, x1: bx0 + sb + dep, z0: lo, z1: hi } : { x0: bx1 - sb - dep, x1: bx1 - sb, z0: lo, z1: hi };
+    // every side is a finished wall: with alleys, forecourts, shallower and lower neighbours, any of them can be seen
+    const street = new Set(['n', 's', 'w', 'e']); void lowS; void highS; void opp;
+    const floors = Math.max(2, Math.round(2 + r() * 3 + (r() < 0.18 ? 3 + r() * 5 : 0) * tallness));
+    building(bin, { ...fp, face: side, floors, fac: Math.floor(r() * FACADES.length), shop: r() < 0.7 ? Math.floor(r() * 15) : -1, street: [...street], backDoor: true }, r);
+    // rectangles in the block's own frame (u along the frontage, v in from the sidewalk) -> world
+    const R = (u0, u1, v0, v1) => side === 'n' ? [u0, u1, bz0 + v0, bz0 + v1] : side === 's' ? [u0, u1, bz1 - v1, bz1 - v0] : side === 'w' ? [bx0 + v0, bx0 + v1, u0, u1] : [bx1 - v1, bx1 - v0, u0, u1];
+    const area = (u0, u1, v0, v1) => { const [x0, x1, z0, z1] = R(u0, u1, v0, v1); SOLO.areas.push({ minX: x0, maxX: x1, minZ: z0, maxZ: z1 }); };
+    if (gap) { area(hi + 0.3, hi + gap - 0.3, -0.6, D + 0.6);   // the alley: walkable from the sidewalk through to the back court
+      for (let i = 0, nb = 1 + Math.floor(r() * 3), v = 3 + r() * 5; i < nb; i++, v += 0.75) { const [x0, x1, z0, z1] = R(hi + 0.08, hi + 0.68, v, v + 0.62), col = r() < 0.5 ? 'dumpA' : 'dumpB';   // wheelie bins along one wall
+        bin.push(col, boxGeo(x0, x1, 0.06, 1.0, z0, z1)); bin.push('iron', boxGeo(x0 - 0.02, x1 + 0.02, 1.0, 1.06, z0 - 0.02, z1 + 0.02)); SOLO.cols.push({ type: 'box', minX: x0, maxX: x1, minZ: z0, maxZ: z1 }); } }
+    if (sb) { SOLO.walks.push(R(lo, hi, 0, sb)); area(lo + 0.3, hi - 0.3, -0.6, sb - 0.3); }   // the forecourt: paving level with the sidewalk
+    if (sb + dep < D - 0.5) area(lo + 0.3, hi - 0.3, sb + dep + 0.35, D + 0.6);   // the yard behind a shallow building opens onto the court
+    prevGap = gap > 0;
+  }
+}
+// a block's back court: asphalt under the whole block, parking bays, dumpsters against the backs, a lamp, a tree in a kerbed bed
+function backCourt(bin, r, bx0, bx1, bz0, bz1) {
+  const D = 16, cx0 = bx0 + D, cx1 = bx1 - D, cz0 = bz0 + D, cz1 = bz1 - D, mx = (cx0 + cx1) / 2, mz = (cz0 + cz1) / 2;
+  bin.push('asphalt', flatQuad(bx0, bx1, bz0, bz1, 0.014, 3, 3)); SOLO.areas.push({ minX: cx0 + 0.3, maxX: cx1 - 0.3, minZ: cz0 + 0.3, maxZ: cz1 - 0.3 });
+  for (let i = 0; i <= 6; i++) bin.push('paint_w', flatQuad(mx - 8.1 + i * 2.7 - 0.05, mx - 8.1 + i * 2.7 + 0.05, cz0 + 1.2, cz0 + 6.0, 0.022));
+  const dumpster = (x, z, alongX) => { const hx = alongX ? 0.95 : 0.6, hz = alongX ? 0.6 : 0.95, col = r() < 0.5 ? 'dumpA' : 'dumpB'; bin.push(col, boxGeo(x - hx, x + hx, 0.12, 1.15, z - hz, z + hz)); bin.push('iron', boxGeo(x - hx - 0.04, x + hx + 0.04, 1.15, 1.22, z - hz - 0.04, z + hz + 0.04));
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) bin.push('iron', boxGeo(x + sx * (hx - 0.15) - 0.06, x + sx * (hx - 0.15) + 0.06, 0, 0.12, z + sz * (hz - 0.15) - 0.06, z + sz * (hz - 0.15) + 0.06));
+    bin.push('iron', alongX ? boxGeo(x - hx - 0.1, x - hx, 0.7, 0.8, z - 0.25, z + 0.25) : boxGeo(x - 0.25, x + 0.25, 0.7, 0.8, z - hz - 0.1, z - hz)); SOLO.cols.push({ type: 'box', minX: x - hx, maxX: x + hx, minZ: z - hz, maxZ: z + hz }); };
+  dumpster(cx0 + 1.2, cz0 + 9 + r() * 14, false); dumpster(cx1 - 1.2, cz0 + 6 + r() * 16, false); dumpster(cx0 + 8 + r() * 18, cz1 - 1.0, true); if (r() < 0.6) dumpster(cx0 + 4 + r() * 6, cz1 - 1.0, true);
+  SOLO.lamps.push([mx + 6, mz + 3, 1]); SOLO.cols.push({ type: 'circle', x: mx + 6, z: mz + 3, r: 0.18 });
+  const tx = mx - 8 + r() * 4, tz = mz + 6 + r() * 5; SOLO.trees.push([tx, tz]); SOLO.cols.push({ type: 'circle', x: tx, z: tz, r: 0.9 });
+  bin.push('curb', boxGeo(tx - 1.1, tx + 1.1, 0, SW_H, tz - 1.1, tz + 1.1, 1, 1)); bin.push('lot', flatQuad(tx - 0.95, tx + 0.95, tz - 0.95, tz + 0.95, SW_H + 0.004, 2.4, 2.4));
+}
 let _blk = 0;
 function fillBlock(bin, r, bx0, bx1, bz0, bz1, streets, tallness = 1) {
   bin.tag = 'b' + (_blk++); try { fillBlock0(bin, r, bx0, bx1, bz0, bz1, streets, tallness); } finally { bin.tag = ''; }
 }
 function fillBlock0(bin, r, bx0, bx1, bz0, bz1, streets, tallness) {
   const D = 16;
+  if (GRID.solo && streets.length === 4) {   // a full block of the phone area
+    fillFrontageSolo(bin, r, 'n', bx0, bx1, bz0, bz1, bx0, bx1, streets, tallness); fillFrontageSolo(bin, r, 's', bx0, bx1, bz0, bz1, bx0, bx1, streets, tallness);
+    fillFrontageSolo(bin, r, 'w', bx0, bx1, bz0, bz1, bz0 + D, bz1 - D, streets, tallness); fillFrontageSolo(bin, r, 'e', bx0, bx1, bz0, bz1, bz0 + D, bz1 - D, streets, tallness);
+    backCourt(bin, r, bx0, bx1, bz0, bz1); return; }
   // n and s rows run the full width; w and e rows fill between them
   if (streets.includes('n')) fillFrontage(bin, r, 'n', bx0, bx1, bz0, bz1, bx0, bx1, D, streets, LOTS, tallness);
   if (streets.includes('s')) fillFrontage(bin, r, 's', bx0, bx1, bz0, bz1, bx0, bx1, D, streets, LOTS, tallness);
@@ -303,7 +353,7 @@ function fillBlock0(bin, r, bx0, bx1, bz0, bz1, streets, tallness) {
 }
 
 export function makeDistrict() {
-  BUILDINGS.length = 0; _blk = 0;
+  BUILDINGS.length = 0; _blk = 0; for (const k in SOLO) SOLO[k].length = 0;
   const g = new THREE.Group(); g.name = 'city_district';
   const bin = new Bin(); const r = rng(2026);
   const { xs, zs, road: RH, walk: WH } = GRID;
@@ -344,6 +394,7 @@ export function makeDistrict() {
     // sidewalks along the connectors, through the outer rows
     for (const x of xs) for (const sd of [-1, 1]) { const a = x + sd * RH, b = x + sd * WH; walks.push([Math.min(a, b), Math.max(a, b), ZMAX, ZMAX + 16], [Math.min(a, b), Math.max(a, b), ZMIN - 16, ZMIN]); }
     for (const z of zs) for (const sd of [-1, 1]) { const a = z + sd * RH, b = z + sd * WH; walks.push([XMAX, XMAX + 16, Math.min(a, b), Math.max(a, b)]); } }
+  walks.push(...SOLO.walks);   // (phone area: forecourts)
   walks.push([XMIN, XMIN + 2, ZMIN + 2, -RH], [XMIN, XMIN + 2, RH, ZMAX - 2]);   // avenue west sidewalk (gap where the main street comes in)
   for (const [a, b, c, d] of walks) { bin.push('walk', flatQuad(a, b, c, d, SW_H, 2, 2)); bin.push('curb', boxGeo(a, b, 0, SW_H - 0.005, c, d, 1, 1)); }
   // lane markings: dashed centre lines, stop bars and zebra crosswalks at every intersection
@@ -435,6 +486,7 @@ export function makeDistrict() {
   const lampPts = [];
   for (const x of xs) for (let z = ZMIN + 10; z < ZMAX - 10; z += 28) { if (zs.some((q) => Math.abs(z - q) < WH + 2)) continue; lampPts.push([x - RH - 0.5, z, 1], [x + RH + 0.5, z + 14, -1]); }
   for (const z of zs) for (let x = xs[0] + 18; x < XMAX - 10; x += 28) { if (xs.some((q) => Math.abs(x - q) < WH + 2)) continue; lampPts.push([x, z - RH - 0.5, 2], [x + 14, z + RH + 0.5, -2]); }
+  lampPts.push(...SOLO.lamps);   // (phone area: one in each back court)
   const poleG = new THREE.CylinderGeometry(0.07, 0.1, 6.5, 8); poleG.translate(0, 3.25 + SW_H, 0);
   const armG = new THREE.BoxGeometry(1.6, 0.08, 0.08); armG.translate(0.8, 6.5 + SW_H, 0);
   const headG = new THREE.BoxGeometry(0.6, 0.12, 0.3); headG.translate(1.5, 6.4 + SW_H, 0);
@@ -452,7 +504,7 @@ export function makeDistrict() {
   const treePts = [];
   for (let z = ZMIN + 6; z < ZMAX - 6; z += 14) { if (zs.some((q) => Math.abs(z - q) < WH + 3)) continue; treePts.push([xs[0] + RH + 1.0, z + 7], [xs[0] - RH - 1.0, z]); }
   for (const z of [0]) for (let x = xs[0] + 20; x < XMAX - 10; x += 14) { if (xs.some((q) => Math.abs(x - q) < WH + 3)) continue; if (!(x + 7 > 98 && x + 7 < 124)) treePts.push([x + 7, z - RH - 1.0]); treePts.push([x, z + RH + 1.0]); }   // (no trees in front of the izakaya + pottery)
-  if (GRID.solo) { const keep = treePts.filter((_, i) => i % 2 === 0); treePts.length = 0; treePts.push(...keep); }   // (the phone area: every other tree)
+  if (GRID.solo) { const keep = treePts.filter((_, i) => i % 2 === 0); treePts.length = 0; treePts.push(...keep, ...SOLO.trees); }   // (the phone area: every other tree)
   // real grown trees (oak / cherry / pale, from trees.js), baked + instanced
   g.add(placeStreetTrees(treePts, [streetTreeParts('oak', 7), streetTreeParts('cherry', 4), streetTreeParts('pale', 9), streetTreeParts('oak', 12)], { baseY: SW_H }));
 
@@ -464,7 +516,9 @@ export function makeDistrict() {
   { const RG = GRID.ring;   // the connectors out to Elm Loop
     for (const x of xs) { areas.push({ minX: x - WH + 0.3, maxX: x + WH - 0.3, minZ: ZMAX - 1, maxZ: RG.n - RG.hw + 0.5 }, { minX: x - WH + 0.3, maxX: x + WH - 0.3, minZ: RG.s + RG.hw - 0.5, maxZ: ZMIN + 1 }); }
     for (const z of zs) areas.push({ minX: XMAX - 1, maxX: RG.e - RG.hw + 0.5, minZ: z - WH + 0.3, maxZ: z + WH - 0.3 }); }   // the old town's east edge opens onto the avenue
+  areas.push(...SOLO.areas);
   g.userData = {
+    colliders: SOLO.cols.slice(),
     lodTick: (pos, reach = 150) => { for (const m of lod) { const bs = m.geometry.boundingSphere; m.visible = Math.hypot(bs.center.x - pos.x, bs.center.z - pos.z) - bs.radius < reach; } },
     buildings: BUILDINGS, sidewalkY: SW_H,
     areas, lots: LOTS,
