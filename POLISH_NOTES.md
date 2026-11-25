@@ -852,3 +852,7 @@ inside the view cone at five fixed camera spots, `tools/devtests/where2.js`), th
   Changed: hitting a person cost the car far too much (about 75 a hit at 100 km/h; a few people wrecked it); now
   about 20. Under about 40 km/h most people hit are knocked down, get up and run instead of dying.
 - Still true: lamp posts, poles and trees are solid and do not fall or shake; nothing on the street breaks.
+- 120b (owner: pushing a person into a wall seemed to let the car through). `tools/devtests/pin.js` drives at
+  people standing in front of a wall: 10 to 100 km/h, forward and reversing, 61 runs. The car never went through
+  (the fix above covers it). People did: nothing stopped a pushed, diving or thrown person at a wall. Now walls
+  stop people as well (`makePeople({ ok })`): after the change, 0 of 61 ended up through one.

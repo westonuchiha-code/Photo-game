@@ -164,7 +164,7 @@ function buildArea(id, carried) {
   district.userData.courts.forEach((ct, i) => { const [type, opt] = PARK[(i + (id === 'east' ? 2 : 0)) % PARK.length], [x, z] = ct.bays[(i * 2 + 1) % ct.bays.length]; addCar([type, opt, x, z, i % 2 ? Math.PI : 0]); });   // one more in a bay of each back court
   if (carried) { root.add(carried); drive.adopt(carried); }
   drive.rebuild();
-  const people = makePeople({ scene: root, grid: GRID, sidewalkY: SW, count: PHONE ? 14 : 20 });
+  const people = makePeople({ scene: root, grid: GRID, sidewalkY: SW, count: PHONE ? 14 : 20, ok: (x, z) => driveAreas.some((a) => x >= a.minX && x <= a.maxX && z >= a.minZ && z <= a.maxZ) });
   const streamer = makeStreamer(root, { phone: true, max: 300 }); streamer.setScale(PHONE ? 0.8 : 1);
   console.log('area', id, ': buildings', district.userData.buildings.length, 'interiors', JSON.stringify(interiors.stats()));
   return { id, def, root, district, interiors, people, streamer, floors: S.floors, tick: S.tick, npcs: S.npcs };

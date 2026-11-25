@@ -34,7 +34,7 @@ export const CHARACTERS = {   // made-up names
 export function makePerson(seed = 1, { worker = false } = {}) { const r = rng(seed * 104729 + 7), sex = r() < 0.5 ? 'f' : 'm', L = look(sex, worker ? seed : seed % 9, worker), g = makeBody(sex, L.m); addHair(g, L.style, L.hm);
   const sc = 0.95 + r() * 0.1; g.scale.set(sc * (0.96 + r() * 0.1), sc, sc * (0.96 + r() * 0.1)); return g; }
 
-export function makePeople({ scene, grid, sidewalkY = 0.14, count = 40 }) {
+export function makePeople({ scene, grid, sidewalkY = 0.14, count = 40, ok = null }) {
   const group = new THREE.Group(); group.name = 'people'; scene.add(group); const { xs, zs } = grid, r = rng(9601), P = [];
   const poolM = new THREE.MeshBasicMaterial({ color: '#3a0a0c', transparent: true, opacity: 0.7, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3 }), poolG = new THREE.CircleGeometry(0.55, 14); poolG.rotateX(-Math.PI / 2);
   for (let i = 0; i < count; i++) { const mesh = makePerson(i + 1); mesh.visible = false; group.add(mesh); const pool = new THREE.Mesh(poolG, poolM); pool.visible = false; group.add(pool);
@@ -46,7 +46,7 @@ export function makePeople({ scene, grid, sidewalkY = 0.14, count = 40 }) {
   const stand = (p) => { p.st = 'walk'; p.t = 0; p.y = 0; p.tum = 0; p.mesh.rotation.set(0, p.h, 0); p.pool.visible = false; const b = p.mesh.userData.bones; if (b) { b.L.a.rotation.z = 0; b.R.a.rotation.z = 0; } };
   const spawn = (p, cx, cz, near) => { for (let t = 0; t < 6; t++) { const i = Math.floor(r() * (xs.length - 1)), j = Math.floor(r() * (zs.length - 1)); if (Math.abs((xs[i] + xs[i + 1]) / 2 - cx) > 150 || Math.abs((zs[j] + zs[j + 1]) / 2 - cz) > 150) continue;
       p.blk = [i, j]; p.lane = r() * 0.6; p.u = r() * 400; p.dir = r() < 0.5 ? 1 : -1; const [x, z, h] = ring(p), dd = Math.hypot(x - cx, z - cz); if (dd < near || dd > 72) continue;
-      p.active = true; p.sp = 1.05 + r() * 0.6; p.v = p.sp; p.h = h; p.ox = p.oz = 0; stand(p); p.mesh.position.set(x, sidewalkY, z); p.mesh.rotation.y = h; return true; } return false; };
+      p.active = true; p.lox = p.loz = 0; p.sp = 1.05 + r() * 0.6; p.v = p.sp; p.h = h; p.ox = p.oz = 0; stand(p); p.mesh.position.set(x, sidewalkY, z); p.mesh.rotation.y = h; return true; } return false; };
   // thrown by a car or a blast: (vx, vz) the push, `dead` whether they get up again
   const strike = (p, vx, vz, vy, dead) => { p.st = 'fly'; p.t = 0; p.vx = vx; p.vz = vz; p.vy = vy; p.dead = dead; p.tum = (r() - 0.5) * 14; };
   const scare = (p, fx, fz, secs = 5) => { if (p.st !== 'walk' && p.st !== 'flee') return; const [x, z, h] = ring(p); if (Math.sin(h) * (x - fx) + Math.cos(h) * (z - fz) < 0) p.dir = -p.dir; p.st = 'flee'; p.t = secs; };   // run along the sidewalk, away from it
@@ -58,7 +58,10 @@ export function makePeople({ scene, grid, sidewalkY = 0.14, count = 40 }) {
     for (const p of P) { const m = p.mesh;
       if (p.active && Math.hypot(m.position.x - cx, m.position.z - cz) > 84) { p.active = false; m.visible = false; p.pool.visible = false; }
       if (!p.active) { if (budget > 0) { budget--; spawn(p, cx, cz, first ? 8 : 34); } if (!p.active) continue; }
-      let [x, z, h] = ring(p); x += p.ox; z += p.oz; const dd = Math.hypot(x - cx, z - cz); m.visible = true;
+      let [x, z, h] = ring(p); x += p.ox; z += p.oz;
+      /* walls stop people too: pushed, diving or thrown, nobody goes through one (`ok` says where a person can be) */
+      if (ok) { if (ok(x, z)) { p.lox = p.ox; p.loz = p.oz; } else if (p.lox !== undefined) { x += p.lox - p.ox; z += p.loz - p.oz; p.ox = p.lox; p.oz = p.loz; p.vx *= -0.2; p.vz *= -0.2; if (!ok(x, z)) { x -= p.ox * 0.2; z -= p.oz * 0.2; p.ox *= 0.8; p.oz *= 0.8; p.lox = p.ox; p.loz = p.oz; } } }   /* (still out: they have walked on round a corner, so ease back onto the sidewalk) */
+      const dd = Math.hypot(x - cx, z - cz); m.visible = true;
       // ---- off their feet: flying, lying, getting up
       if (p.st === 'fly') { p.t += dt; p.vy -= 16 * dt; p.y += p.vy * dt; p.ox += p.vx * dt; p.oz += p.vz * dt; m.rotation.x += p.tum * dt; m.rotation.z += p.tum * 0.4 * dt;
         if (p.y <= 0 && p.vy < 0) { p.y = 0; if (Math.abs(p.vy) > 3) { p.vy *= -0.3; p.vx *= 0.6; p.vz *= 0.6; p.tum *= 0.5; } else { p.st = p.dead ? 'dead' : 'down'; p.t = 0; m.rotation.set(-Math.PI / 2, p.h + (r() - 0.5), 0); const b = m.userData.bones; if (b) { b.L.a.rotation.z = -0.9; b.R.a.rotation.z = 1.0; } m.userData.pose(1.1, 0.5); if (p.dead) { p.pool.position.set(x, sidewalkY + 0.012, z); p.pool.scale.setScalar(0.3); p.pool.visible = true; } } }
