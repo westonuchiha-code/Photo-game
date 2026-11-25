@@ -328,8 +328,8 @@ export function makeDriver2({ scene, camera, areas, colliders, ground, hooks = {
         for (let py = 0; py < CH; py++) for (let px = 0; px < CW; px++) { const v = 1 - py / (CH - 1), u = (px / (CW - 1)) * 2 - 1, w = 0.1 + 0.72 * v, lat = Math.exp(-((u / w) ** 2) * 2.6), edge = Math.max(0, 1 - Math.abs(u)) ** 0.6;
           const along = Math.min(1, v / 0.05) * (1 - v) ** 1.7, hot = 1 + 1.3 * Math.exp(-(((v - 0.2) / 0.14) ** 2)), a = Math.min(1, lat * edge * along * hot * 0.75), k = (py * CW + px) * 4; im.data[k] = 255; im.data[k + 1] = 244; im.data[k + 2] = 222; im.data[k + 3] = Math.round(a * 255); }
         x.putImageData(im, 0, 0);
-        const mat = new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.5, polygonOffset: true, polygonOffsetFactor: -6 }); headLight = new THREE.Group();
-        for (const s of [-1, 1]) { const geo = new THREE.PlaneGeometry(7, 17); geo.translate(0, 8.5, 0); const b = new THREE.Mesh(geo, mat); b.rotation.x = -Math.PI / 2; b.rotation.z = s * -0.045; b.position.set(s * 0.55, 0.035, -0.1); headLight.add(b); } }
+        const mat = new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.5, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -6 }); headLight = new THREE.Group();
+        for (const s of [-1, 1]) { const geo = new THREE.PlaneGeometry(7, 17); geo.translate(0, 8.5, 0); const b = new THREE.Mesh(geo, mat); b.rotation.x = Math.PI / 2; b.rotation.z = s * -0.045; b.position.set(s * 0.55, 0.035, -0.1);   /* (turned so the cone runs forward from the lamps) */ headLight.add(b); } }
       g.add(headLight); headLight.position.set(0, 0, g.userData.half.zF); const a = audio(); a?.ctx.resume?.(); chase(0, true); },
     // getting out: at speed the car rolls on by itself
     exit() { const g = car; if (!g) return null; api.active = false; const u = g.userData, s = Math.sin(S.h), c = Math.cos(S.h);

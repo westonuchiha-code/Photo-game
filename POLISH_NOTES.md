@@ -795,3 +795,5 @@ inside the view cone at five fixed camera spots, `tools/devtests/where2.js`), th
 ## 116 Headlight beams
 - The light on the road was two hard-edged rectangles. Now one soft cone a lamp: narrow at the car, widening and
   fading to nothing ahead and at the sides, brightest a few metres out. Smashed lamps throw no light.
+- 116b: the new cones were laid out backwards (running under the car). Turned to run forward from the lamps;
+  `tools/devtests/beamshots.js` photographs them from above, the side and the front.
