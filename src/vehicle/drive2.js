@@ -37,7 +37,7 @@ const TYPE_CLASS = { coupe: 'sports', keisport: 'sports', sedan: 'sedan', wagon:
 export function handlingFor(type, spec) { const cls = TYPE_CLASS[type] || 'sedan', c = CLASS[cls], WB = spec.WB, a = WB * (c.drive === 'fwd' ? 0.42 : 0.47);
   return { ...c, cls, a, b: WB - a, track: spec.W * 0.84, mass: spec.mass, power: spec.power, vmax: c.vtop * (0.92 + Math.min(0.16, spec.power / 2000)), hpMax: Math.round(1000 * c.tough) }; }
 
-export function makeDriver2({ scene, camera, areas, colliders, ground, hooks = {}, driver = null }) {
+export function makeDriver2({ scene, camera, areas, colliders, ground, hooks = {} }) {
   const cars = []; let car = null;   // `car`: the one being driven
   const keys = new Set();
   addEventListener('keydown', (e) => { keys.add(e.code); if (api.active && ['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault(); });
@@ -57,9 +57,9 @@ export function makeDriver2({ scene, camera, areas, colliders, ground, hooks = {
   // where it lands: the further, the more lock); gas, brake and handbrake are on the right; drag the top of the screen to look round.
   const hud = document.createElement('div'); hud.id = 'drivehud';
   hud.innerHTML = `<div class="spd"><b>0</b><i>km/h</i></div><div class="hp"><i></i></div><div class="msg"></div>
-    <div class="tip help-mouse"><b>W/S</b> gas / brake + reverse · <b>A/D</b> steer · <b>Space</b> handbrake · <b>E</b> get out · <b>H</b> horn · hold <b>C</b> look back · gas + brake: burnout</div>
+    <div class="tip help-mouse"><b>W/S</b> gas / brake + reverse · <b>A/D</b> steer · <b>Space</b> handbrake · <b>E</b> get out · <b>H</b> horn (touch: both arrows) · hold <b>C</b> look back · gas + brake: burnout</div>
     <div class="dpad"><button data-k="left">&#9664;</button><button data-k="right">&#9654;</button></div>
-    <div class="pads"><button data-k="out" class="y">Y<i>get out</i></button><button data-k="brake" class="x">X<i>brake / reverse</i></button><button data-k="hand" class="b">B<i>handbrake</i></button><button data-k="gas" class="a">A<i>accelerate</i></button><button data-k="horn" class="h">HORN</button></div>
+    <div class="pads"><button data-k="out" class="y">Y<i>get out</i></button><button data-k="brake" class="x">X<i>brake / reverse</i></button><button data-k="hand" class="b">B<i>handbrake</i></button><button data-k="gas" class="a">A<i>accelerate</i></button></div>
     <button class="look">&#8635;</button>`;
   const css = document.createElement('style');
   css.textContent = `#drivehud{position:fixed;inset:0;pointer-events:none;display:none;font-family:system-ui,sans-serif;color:#fff;user-select:none;-webkit-user-select:none}
@@ -77,7 +77,6 @@ export function makeDriver2({ scene, camera, areas, colliders, ground, hooks = {
   #drivehud .pads button i{display:block;font:600 8.5px/1.1 system-ui;font-style:normal;opacity:.85;margin-top:2px;white-space:nowrap}
   #drivehud .pads .a{left:63px;top:126px;border-color:#5fd05a;color:#8be886} #drivehud .pads .b{left:126px;top:63px;border-color:#e0524a;color:#ff8a82}
   #drivehud .pads .x{left:0;top:63px;border-color:#4a8ae0;color:#8ab8ff} #drivehud .pads .y{left:63px;top:0;border-color:#e0c040;color:#ffe27a}
-  #drivehud .pads .h{left:-6px;top:-4px;width:56px;height:56px;font-size:11px;border-color:#fff8}
   #drivehud .pads button.on,#drivehud .dpad button.on{background:#fff5}
   #drivehud .dpad{display:block;position:absolute;left:10px;bottom:calc(52px + env(safe-area-inset-bottom,0px));width:180px;height:84px}
   #drivehud .dpad button{width:84px;height:84px;border-radius:18px;font-size:30px} #drivehud .dpad [data-k=right]{left:96px}
@@ -85,7 +84,7 @@ export function makeDriver2({ scene, camera, areas, colliders, ground, hooks = {
   #drivehud .spd{right:auto;left:16px;text-align:left;bottom:calc(150px + env(safe-area-inset-bottom,0px))} #drivehud .hp{right:auto;left:16px;bottom:calc(206px + env(safe-area-inset-bottom,0px))}}`;
   document.head.appendChild(css); document.body.appendChild(hud);
   const touch = { steer: 0, gas: 0, brake: 0, hand: 0, left: 0, right: 0, horn: 0 }; let hornOn = false, anim = null;
-  hud.querySelectorAll('.pads button, .dpad button').forEach((b) => { const k = b.dataset.k, on = (v) => (e) => { e.preventDefault(); b.classList.toggle('on', !!v); if (k === 'out') { if (v) document.getElementById('use')?.click(); return; } touch[k] = v; touch.steer = touch.right - touch.left; };
+  hud.querySelectorAll('.pads button, .dpad button').forEach((b) => { const k = b.dataset.k, on = (v) => (e) => { e.preventDefault(); b.classList.toggle('on', !!v); if (k === 'out') { if (v) document.getElementById('use')?.click(); return; } touch[k] = v; touch.horn = touch.left && touch.right ? 1 : 0; touch.steer = touch.horn ? 0 : touch.right - touch.left; };   // (both arrows at once: the horn, like clicking the stick)
     b.addEventListener('touchstart', on(1), { passive: false }); b.addEventListener('touchend', on(0)); b.addEventListener('touchcancel', on(0)); b.addEventListener('mousedown', on(1)); b.addEventListener('mouseup', on(0)); b.addEventListener('mouseleave', on(0)); });
   const spdEl = hud.querySelector('.spd b'), hpBar = hud.querySelector('.hp i'), msgEl = hud.querySelector('.msg'), lookBtn = hud.querySelector('.look');
   { const on = (v) => (e) => { S.camMode = v; e.preventDefault(); }; lookBtn.addEventListener('touchstart', on(1), { passive: false }); lookBtn.addEventListener('touchend', on(0)); lookBtn.addEventListener('touchcancel', on(0)); }
@@ -328,10 +327,9 @@ export function makeDriver2({ scene, camera, areas, colliders, ground, hooks = {
   const doorJobs = [];
   const swing = (g, to, delay = 0, dur = 0.3) => { if (!g.userData.door || !g.userData.door.length) return; doorJobs.push({ g, to, delay, dur, on: false }); };
   function tickDoors(dt) { for (let i = doorJobs.length - 1; i >= 0; i--) { const j = doorJobs[i]; if ((j.delay -= dt) > 0) continue; if (!j.on) { j.on = true; for (const o of doorJobs) if (o !== j && o.g === j.g && o.on) o.dead = true; } if (j.dead) { doorJobs.splice(i, 1); continue; } const u = j.g.userData; if (u.wreck) { doorJobs.splice(i, 1); continue; } const a0 = u.doorA || 0, st = dt / j.dur, a = Math.abs(j.to - a0) <= st ? j.to : a0 + Math.sign(j.to - a0) * st; u.doorA = a; const e = a * a * (3 - 2 * a); for (const m of u.door) m.rotation.y = -e * 1.12; if (a === j.to) { doorJobs.splice(i, 1); if (j.to === 0 && au) thud(0.12, 420, 0.07); } } }
-  function sit(g) { const st = g.userData.seat; if (!st || !driver || !driver.userData.bones) return; const b = driver.userData.bones, sp = driver.userData.spec, hipY = st.y + 0.06, torso = (sp.headY || sp.hipY + 0.72) + 0.2 - sp.hipY, rec = Math.max(0.16, Math.acos(clamp((g.userData.spec.H - 0.13 - hipY) / torso, 0.35, 1)));
-    driver.userData.pose(0, 0); g.userData.body.add(driver); driver.position.set(st.x, hipY - sp.hipY, st.z - 0.04); driver.rotation.set(0, 0, 0); driver.visible = true;
-    b.hips.rotation.x = -rec; for (const L of [b.L, b.R]) { L.t.rotation.x = -1.42 + rec; L.s.rotation.x = 1.15; L.a.rotation.x = -1.05 + rec * 0.6; L.f.rotation.x = -0.5; } b.L.a.rotation.z = 0.12; b.R.a.rotation.z = -0.12; b.neck.rotation.x = rec * 0.8; }
-  const unsit = () => { if (driver && driver.parent) driver.parent.remove(driver); };
+  // where your head is when you sit at the wheel (world), looking down the bonnet
+  const _hp = new THREE.Vector3(), _hq = new THREE.Quaternion(), _e = new THREE.Euler();
+  function headAt(g) { const u = g.userData, st = u.seat || { x: u.half.x * 0.45, y: 0.5, z: 0 }; _hp.set(st.x, Math.min(st.y + 0.62, u.spec.H - 0.14), st.z - 0.02); u.body.updateMatrixWorld(true); u.body.localToWorld(_hp); _hq.setFromEuler(_e.set(-0.04, g.rotation.y + Math.PI, 0, 'YXZ')); }
   const _p0 = new THREE.Vector3(), _q0 = new THREE.Quaternion();
   const api = {
     active: false, cars, state: S, rebuild: fileColliders,
@@ -351,20 +349,24 @@ export function makeDriver2({ scene, camera, areas, colliders, ground, hooks = {
         const mat = new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.5, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -6 }); headLight = new THREE.Group();
         for (const s of [-1, 1]) { const geo = new THREE.PlaneGeometry(7, 17); geo.translate(0, 8.5, 0); const b = new THREE.Mesh(geo, mat); b.rotation.x = Math.PI / 2; b.rotation.z = s * -0.045; b.position.set(s * 0.55, 0.035, -0.1);   /* (turned so the cone runs forward from the lamps) */ headLight.add(b); } }
       g.add(headLight); headLight.position.set(0, 0, g.userData.half.zF); const a = audio(); a?.ctx.resume?.(); chase(0, true);
-      if (g.userData.door && g.userData.door.length && !g.userData.wreck) { anim = { kind: 'in', t: 0 }; swing(g, 1); swing(g, 0, 0.6); camera.position.copy(_p0); camera.quaternion.copy(_q0); } else { anim = null; sit(g); } },
+      if (g.userData.door && g.userData.door.length && !g.userData.wreck) { anim = { kind: 'in', t: 0 }; swing(g, 1, 0, 0.25); swing(g, 0, 0.62); camera.position.copy(_p0); camera.quaternion.copy(_q0); } else anim = null; },
     // get out with the door (standing still, on its wheels); otherwise straight out. `done` does the actual leaving.
-    leave(done) { const g = car; if (!g) return; if (anim) { if (anim.kind === 'in') return; return; } if (g.userData.wreck || S.mode !== 'wheels' || Math.hypot(S.vx, S.vz) > 2.5 || !g.userData.door || !g.userData.door.length) { done(); return; } anim = { kind: 'out', t: 0, done }; swing(g, 1); swing(g, 0, 0.75); },
+    leave(done) { const g = car; if (!g) return; if (anim) { if (anim.kind === 'in') return; return; } if (g.userData.wreck || S.mode !== 'wheels' || Math.hypot(S.vx, S.vz) > 2.5 || !g.userData.door || !g.userData.door.length) { done(); return; } _p0.copy(camera.position); _q0.copy(camera.quaternion); anim = { kind: 'out', t: 0, done }; swing(g, 1, 0.1, 0.25); swing(g, 0, 1.0); },
     // getting out: at speed the car rolls on by itself
-    exit() { const g = car; if (!g) return null; api.active = false; anim = null; unsit(); const u = g.userData, s = Math.sin(S.h), c = Math.cos(S.h);
+    exit() { const g = car; if (!g) return null; api.active = false; anim = null; const u = g.userData, s = Math.sin(S.h), c = Math.cos(S.h);
       if (S.mode === 'wheels') { const d = dyn(g); d.vx = S.vx; d.vz = S.vz; d.w = S.r; } pose(0.016); api.syncCols(g); for (const k of u.cols) k.active = true; if (headLight) g.remove(headLight);
       if (au) { au.master.gain.setTargetAtTime(0, au.ctx.currentTime, 0.1); au.sq.gain.setTargetAtTime(0, au.ctx.currentTime, 0.05); } camera.fov = 62; camera.updateProjectionMatrix(); car = null; touch.steer = touch.gas = touch.brake = touch.hand = touch.left = touch.right = touch.horn = 0; if (au) au.horn.gain.setTargetAtTime(0, au.ctx.currentTime, 0.01); hornOn = false; hud.querySelectorAll('button.on').forEach((b) => b.classList.remove('on'));
       for (const [lx, lz] of [[u.half.x + 0.8, 0.3], [-u.half.x - 0.8, 0.3], [0, u.half.zR - 1.0], [0, u.half.zF + 1.0]]) { const x = S.x + lx * c + lz * s, z = S.z - lx * s + lz * c; if (inArea(x, z)) return { x, z, yaw: S.h + Math.PI }; }
       return { x: S.x + (u.half.x + 0.8) * c, z: S.z - (u.half.x + 0.8) * s, yaw: S.h + Math.PI }; },
     // every frame, driving or not: the other cars, fires, smoke; and the driven car when there is one
     update(dt) { tickOthers(dt); tickParts(dt); tickDoors(dt); if (msgT > 0 && (msgT -= dt) <= 0) msgEl.style.opacity = 0; if (!car) return;
-      if (anim) { anim.t += dt; if (anim.kind === 'in') { if (anim.t > 0.45 && !anim.sat) { anim.sat = true; sit(car); } } else if (anim.t > 0.5) { const d = anim.done; anim = null; d(); return; } }
-      const inp = input(), n = 4; for (let i = 0; i < n; i++) step(dt / n, inp); pose(dt); chase(dt, !!(anim && anim.kind === 'in')); fx(dt);
-      if (anim && anim.kind === 'in') { const k = clamp(anim.t / 0.95, 0, 1), e = k * k * (3 - 2 * k); camera.position.lerpVectors(_p0, camera.position, e); camera.quaternion.slerpQuaternions(_q0, camera.quaternion, e); if (k >= 1) anim = null; }
+      if (anim) { anim.t += dt; if (anim.kind === 'out' && anim.t > 0.45) { const d = anim.done; anim = null; headAt(car); camera.position.copy(_hp); camera.quaternion.copy(_hq); d(); return; } }
+      const inp = input(), n = 4; for (let i = 0; i < n; i++) step(dt / n, inp); pose(dt); chase(dt, !!anim); fx(dt);
+      // first person: getting in, your head goes from where you stood down into the seat, the door shuts, and the view
+      // draws back to behind the car; getting out, it comes forward into the seat first (then you stand up: see the caller)
+      if (anim) { const ease = (k) => { k = clamp(k, 0, 1); return k * k * (3 - 2 * k); }; headAt(car);
+        if (anim.kind === 'in') { if (anim.t < 0.6) { const e = ease(anim.t / 0.6); camera.position.lerpVectors(_p0, _hp, e); camera.position.y -= Math.sin(e * Math.PI) * 0.12; camera.quaternion.slerpQuaternions(_q0, _hq, e); } else { const e = ease((anim.t - 0.6) / 0.55); camera.position.lerpVectors(_hp, camera.position, e); camera.quaternion.slerpQuaternions(_hq, camera.quaternion, e); if (e >= 1) anim = null; } }
+        else { const e = ease(anim.t / 0.45); camera.position.lerpVectors(_p0, _hp, e); camera.quaternion.slerpQuaternions(_q0, _hq, e); } }
       if (S.mode === 'tumble' && Math.abs(Math.abs(wrapA(S.phi)) - Math.PI / 2) < 0.2) car.userData.flipped = true; },
     sim(secs, force) { api.force = force; for (let i = 0; i < secs * 60; i++) api.update(1 / 60); api.force = null; },
     hurt, explode, say, input,

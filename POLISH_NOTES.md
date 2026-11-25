@@ -817,3 +817,13 @@ inside the view cone at five fixed camera spots, `tools/devtests/where2.js`), th
   hubcaps, window tint, and so on). `carbody2.js` already takes these as plain options (color, rim, rimColor, wing,
   roofSpoiler, lip, rails, fog), so the shop would rebuild the car from its spec with the options changed.
 - `tools/devtests/caranim.js` photographs the door, the driver, both burnouts and counts who runs from the horn.
+
+## 118 First person in and out of the car; no horn button
+- Owner: this is a first-person game. No figure in the car (the player has no model); getting in and out is head
+  movement. And the pad is a standard controller: no extra buttons.
+- The driver figure is removed. Getting in: the door opens, your view goes from where you stood down through the
+  door into the seat, the door shuts, then the view draws back to behind the car. Getting out: the view comes
+  forward into the seat, the door opens, and you rise to standing beside the car.
+- The HORN button is removed. Horn = both steering arrows pressed together (as clicking the stick would be), or H.
+- Rule for later work: copy an idea from a third-person game only after turning it into what you would see in
+  first person.
