@@ -267,7 +267,7 @@ export function makeDriver2({ scene, camera, areas, colliders, ground, hooks = {
     if (S.air) { S.vy -= G * 1.35 * dt; S.y += S.vy * dt; if (S.y <= yT) { if (S.vy < -3) { S.shake = Math.min(1, -S.vy * 0.07); S.pitchV -= S.vy * 0.25; thud(Math.min(0.3, -S.vy * 0.03), 260, 0.2); if (S.vy < -7) hurt(car, S.vy * S.vy * 2.5, S.x, S.z, 0.3); } S.y = yT; S.air = false; S.vy = 0; S.vyG = 0; } }
     else { if (yT < S.y - 0.12 && S.vyG > 1.2) { S.air = true; S.vy = S.vyG * 1.05; } else { S.vyG = damp(S.vyG, clamp((yT - S.lastG) / Math.max(dt, 1e-3), -20, 20), 20, dt); S.y = damp(S.y, yT, 18, dt); } }
     S.lastG = yT;
-    if (headLight) headLight.visible = !S.air && S.mode === 'wheels';
+    if (headLight) headLight.visible = !S.air && S.mode === 'wheels' && !car.userData.lamps.head[0].userData.dead;   // (smashed lamps throw no light)
     const spdH = Math.hypot(S.vx, S.vz), tp = S.air ? -Math.atan2(S.vy, Math.max(6, spdH)) * 0.8 : Math.atan2(yR - yF, u.axF - u.axR), tr = S.air ? 0 : Math.atan2(yLft - yRgt, 2 * Math.abs(u.wheels[0].pivot.position.x));
     // the body on its springs: it pitches under braking / power and leans in corners, more in a soft or tall car
     const k = 60, dd = 9, pT = clamp(-S.aLong * 0.0065 * hd.roll, -0.07, 0.07), rT = clamp(S.aLat * 0.0075 * hd.roll, -0.12, 0.12);
@@ -323,8 +323,13 @@ export function makeDriver2({ scene, camera, areas, colliders, ground, hooks = {
     nearest(p) { let best = null, bd = 3.6; for (const g of cars) { if (g.userData.wreck) continue; const d = Math.hypot(p.x - g.position.x, p.z - g.position.z) - g.userData.half.x; if (d < bd) { bd = d; best = g; } } return best; },
     enter(g) { car = g; api.active = true; const d = g.userData.dyn; S.x = g.position.x; S.z = g.position.z; S.h = g.rotation.y; S.vx = d ? d.vx : 0; S.vz = d ? d.vz : 0; if (d) d.vx = d.vz = d.w = 0; S.r = S.steer = 0; S.y = g.position.y; S.drift = 0; S.camMode = 0; S.air = false; S.vy = S.vyG = 0; S.lastG = S.y; S.mode = 'wheels'; S.phi = S.phiV = 0; S.roll = S.rollV = S.pitch = S.pitchV = 0; S.lookYaw = S.lookPitch = 0; S.spinExtra = 0; S.stuckT = 0; S.tipT = 0;
       for (const k of g.userData.cols) k.active = false; g.userData.lamps.head.forEach((h) => { if (!h.userData.dead) h.material.emissiveIntensity = 2.4; });
-      if (!headLight) { const c = document.createElement('canvas'); c.width = 128; c.height = 256; const x = c.getContext('2d'), gr = x.createRadialGradient(64, 250, 4, 64, 200, 200); gr.addColorStop(0, 'rgba(255,244,220,0.9)'); gr.addColorStop(0.5, 'rgba(255,240,210,0.35)'); gr.addColorStop(1, 'rgba(255,240,210,0)'); x.fillStyle = gr; x.fillRect(0, 0, 128, 256);
-        const mat = new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.55, polygonOffset: true, polygonOffsetFactor: -6 }); headLight = new THREE.Group(); for (const s of [-1, 1]) { const b = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 11), mat); b.rotation.x = -Math.PI / 2; b.rotation.z = s * -0.05; b.position.set(s * 0.55, 0.035, 5.3); headLight.add(b); } }
+      if (!headLight) {   // the light the lamps throw on the road: one soft cone a lamp, narrow at the car, wide and fading out ahead, no edges
+        const c = document.createElement('canvas'), CW = 128, CH = 256; c.width = CW; c.height = CH; const x = c.getContext('2d'), im = x.createImageData(CW, CH);
+        for (let py = 0; py < CH; py++) for (let px = 0; px < CW; px++) { const v = 1 - py / (CH - 1), u = (px / (CW - 1)) * 2 - 1, w = 0.1 + 0.72 * v, lat = Math.exp(-((u / w) ** 2) * 2.6), edge = Math.max(0, 1 - Math.abs(u)) ** 0.6;
+          const along = Math.min(1, v / 0.05) * (1 - v) ** 1.7, hot = 1 + 1.3 * Math.exp(-(((v - 0.2) / 0.14) ** 2)), a = Math.min(1, lat * edge * along * hot * 0.75), k = (py * CW + px) * 4; im.data[k] = 255; im.data[k + 1] = 244; im.data[k + 2] = 222; im.data[k + 3] = Math.round(a * 255); }
+        x.putImageData(im, 0, 0);
+        const mat = new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.5, polygonOffset: true, polygonOffsetFactor: -6 }); headLight = new THREE.Group();
+        for (const s of [-1, 1]) { const geo = new THREE.PlaneGeometry(7, 17); geo.translate(0, 8.5, 0); const b = new THREE.Mesh(geo, mat); b.rotation.x = -Math.PI / 2; b.rotation.z = s * -0.045; b.position.set(s * 0.55, 0.035, -0.1); headLight.add(b); } }
       g.add(headLight); headLight.position.set(0, 0, g.userData.half.zF); const a = audio(); a?.ctx.resume?.(); chase(0, true); },
     // getting out: at speed the car rolls on by itself
     exit() { const g = car; if (!g) return null; api.active = false; const u = g.userData, s = Math.sin(S.h), c = Math.cos(S.h);
