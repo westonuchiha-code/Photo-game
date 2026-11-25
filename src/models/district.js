@@ -23,7 +23,8 @@ export const GRID = {
 const SW_H = 0.14;                // sidewalk top
 // A smaller, self-contained district (the phone test area): call before makeDistrict(). Replaces the street lines and
 // the ring the edge streets run out to, drops the reserved lots, and (`solo`) builds no link to the old town.
-export function configureDistrict({ xs, zs, ring, solo = true }) { GRID.xs = xs; GRID.zs = zs; if (ring) GRID.ring = ring; GRID.solo = solo; LOTS.length = 0; }
+// `lots`: ids of the reserved lots to keep (places built by hand stand on them; the generator leaves them empty).
+export function configureDistrict({ xs, zs, ring, solo = true, lots = [] }) { GRID.xs = xs; GRID.zs = zs; if (ring) GRID.ring = ring; GRID.solo = solo; const keep = LOTS.filter((l) => lots.includes(l.id)); LOTS.length = 0; LOTS.push(...keep); }
 // reserved lots: kept empty of generated buildings (front = the street side)
 export const LOTS = [
   { id: 'dentist', x0: 82, x1: 108, z0: 28, z1: 50, face: 'w', built: true },   // Brightwater Dental (item 57)
@@ -69,7 +70,8 @@ const DET = Object.fromEntries(Object.entries({ frame: '#3a3c42', iron: '#232326
 class Bin {
   constructor() { this.parts = new Map(); }
   push(key, geo) { const dc = DET[key]; if (dc) { const n = geo.attributes.position.count, c = new Float32Array(n * 3); for (let i = 0; i < n; i++) { c[i * 3] = dc[0]; c[i * 3 + 1] = dc[1]; c[i * 3 + 2] = dc[2]; } geo.setAttribute('color', new THREE.BufferAttribute(c, 3)); key = 'det'; }
-    if (this.tag) key += '@' + this.tag; if (!this.parts.has(key)) this.parts.set(key, []); this.parts.get(key).push(geo); }   // (tag: buildings are merged per block, so whole blocks cull)
+    // (phone area) the fine dressing is grouped in 28 m squares, not whole blocks, so only what's near is drawn
+    if (this.tag) key += '@' + this.tag + (this.cell && /^(det|capd|glow|tile|awn\d)$/.test(key) ? '_' + this.cell : ''); if (!this.parts.has(key)) this.parts.set(key, []); this.parts.get(key).push(geo); }   // (tag: buildings are merged per block, so whole blocks cull)
 }
 // a vertical quad from (x0,z0) to (x1,z1) along the ground, y from ya to yb, normal to the right of the a->b
 // direction... we pass the outward normal explicitly. UV: u along the wall (m / tw), v up (m / th) with offsets
@@ -176,6 +178,7 @@ function building(bin, b, r) {
   { const [ax, az, bx, bz] = sides[face]; const L = Math.hypot(bx - ax, bz - az); const n = Math.max(1, Math.floor((L - 1.2) / 2.6)), step = L / n;
     b.doorU = shop >= 0 ? L - 1.3 : step * (Math.floor(n / 2) + 0.5); b.L = L; b.front = [ax, az, bx, bz]; b.index = BUILDINGS.length; BUILDINGS.push(b); }
   const d = rng(b.index * 9973 + 17);   // detail choices (separate from r, which lays the town out)
+  bin.cell = GRID.solo ? Math.floor((x0 + x1) / 56) + 'x' + Math.floor((z0 + z1) / 56) : '';
   const shutters = style === 'stucco' && d() < 0.5 ? 'shut' + Math.floor(d() * 3) : null, balconies = style === 'stucco' && floors >= 3 && d() < 0.45, escape = style === 'brick' && floors >= 3 && floors <= 7 && d() < 0.6, awning = shop >= 0 && d() < 0.45 ? 'awn' + Math.floor(d() * 4) : null, acs = d() < 0.5;
   // a wall's own frame: u along it, y up, o outward
   const kit = (k) => { const [ax, az, bx, bz] = sides[k], L = Math.hypot(bx - ax, bz - az), dx = (bx - ax) / L, dz = (bz - az) / L, nx = -dz, nz = dx, uo = (ax + az) * 0.37 % 7, P = (u, o = 0) => [ax + dx * u + nx * o, az + dz * u + nz * o];
@@ -269,6 +272,7 @@ function building(bin, b, r) {
         if (f < floors - 1) { const s0 = V(a + 0.5, y, W * 0.5), s1 = V(c - 0.5, y + FH, W * 0.5); for (const o of [-0.26, 0.26]) bin.push('iron', barGeo([s0[0] + K.n[0] * o, s0[1], s0[2] + K.n[2] * o], [s1[0] + K.n[0] * o, s1[1], s1[2] + K.n[2] * o], 0.05, 0.12)); for (let q = 1; q < 9; q++) { const t = q / 9, ux = a + 0.5 + (c - a - 1) * t; K.BX(ux - 0.11, ux + 0.11, y + FH * t - 0.02, y + FH * t + 0.01, W * 0.5 - 0.26, W * 0.5 + 0.26, 'iron'); } } }
       const y1 = GF + 0.55; for (const o of [0, 0.42]) K.BX(a + 0.2 + o, a + 0.24 + o, y1 - 1.9, y1 + 0.9, W - 0.1, W - 0.06, 'iron'); for (let y = y1 - 1.8; y < y1 + 0.9; y += 0.3) K.BX(a + 0.2, a + 0.66, y, y + 0.03, W - 0.1, W - 0.06, 'iron'); }
   }
+  bin.cell = '';
 }
 
 // fill one side of a block with buildings. The frontage runs a..b along the street; depth goes inward.
@@ -355,8 +359,11 @@ function fillBlock(bin, r, bx0, bx1, bz0, bz1, streets, tallness = 1) {
 function fillBlock0(bin, r, bx0, bx1, bz0, bz1, streets, tallness) {
   const D = 16;
   if (GRID.solo && streets.length === 4) {   // a full block of the phone area
-    fillFrontageSolo(bin, r, 'n', bx0, bx1, bz0, bz1, bx0, bx1, streets, tallness); fillFrontageSolo(bin, r, 's', bx0, bx1, bz0, bz1, bx0, bx1, streets, tallness);
-    fillFrontageSolo(bin, r, 'w', bx0, bx1, bz0, bz1, bz0 + D, bz1 - D, streets, tallness); fillFrontageSolo(bin, r, 'e', bx0, bx1, bz0, bz1, bz0 + D, bz1 - D, streets, tallness);
+    // each row is built in the stretches between reserved lots (a lot on that edge of the block is left clear)
+    const row = (side, a, b) => { const ns = side === 'n' || side === 's', strip = side === 'n' ? [bx0, bx1, bz0, bz0 + D] : side === 's' ? [bx0, bx1, bz1 - D, bz1] : side === 'w' ? [bx0, bx0 + D, bz0, bz1] : [bx1 - D, bx1, bz0, bz1];
+      const cuts = LOTS.filter((l) => l.x0 < strip[1] && l.x1 > strip[0] && l.z0 < strip[3] && l.z1 > strip[2]).map((l) => (ns ? [l.x0, l.x1] : [l.z0, l.z1])).sort((p, q) => p[0] - q[0]);
+      let t = a; for (const [c0, c1] of cuts) { if (c0 - t > 3) fillFrontageSolo(bin, r, side, bx0, bx1, bz0, bz1, t, Math.min(b, c0), streets, tallness); t = Math.max(t, c1); } if (b - t > 3) fillFrontageSolo(bin, r, side, bx0, bx1, bz0, bz1, t, b, streets, tallness); };
+    row('n', bx0, bx1); row('s', bx0, bx1); row('w', bz0 + D, bz1 - D); row('e', bz0 + D, bz1 - D);
     backCourt(bin, r, bx0, bx1, bz0, bz1); return; }
   // n and s rows run the full width; w and e rows fill between them
   if (streets.includes('n')) fillFrontage(bin, r, 'n', bx0, bx1, bz0, bz1, bx0, bx1, D, streets, LOTS, tallness);

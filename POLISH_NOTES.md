@@ -648,3 +648,17 @@ inside the view cone at five fixed camera spots, `tools/devtests/where2.js`), th
 - Hoodie: `addHood` (a roll of cloth behind the neck, on the chest bone); `paintSkin({ hoodie })` paints a ribbed
   hem, front pocket and drawstrings and lets the top hang over the hips.
 - A soft ground-shadow disc under `makeCharacter` figures (pedestrians do not have one yet).
+
+## 108 Phone area: the first photo-built places, and finer detail culling
+- Five hand-built sets from the photo batches now stand in the phone area, on the same reserved lots and at the same
+  coordinates as in the big town (the phone grid is the big district's western half): Kiln & Co. pottery, the old
+  izakaya, the aqueduct ruins garden, the small plaza with the rainbow mural (benches, planters, maple), the pink
+  bungalow, the kei car garage with its dusty kei car (drivable). Street props from the same batch on the sidewalk.
+  `configureDistrict({ lots: [...] })` keeps those lots; the phone rows are built in the stretches between lots.
+  Each set is merged by material when placed (`mergeStatic`). Not brought over yet: the corner store (about 330 k
+  triangles and three more texture sets), dentist, self storage, canal park and everything outside this grid.
+- Phone build: 130 of 534 textures, 14.8 MB (was 106 textures, 12.1 MB).
+- Finer culling of building detail: a street view had crept to about 800 k triangles because each block's fine
+  dressing (frames, sills, ironwork) was one mesh, so all four blocks' detail was drawn at once. In the phone area
+  it is now grouped in 28 m squares (`bin.cell`), shown within 55 m. Street views about 400 k, a back court 180 k.
+- `tools/devtests/phspot.js` reports draw calls / triangles / textures standing at given spots.
