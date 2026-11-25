@@ -1002,3 +1002,28 @@ inside the view cone at five fixed camera spots, `tools/devtests/where2.js`), th
      is gone once it is away from you (14 people -> 2, 4 cars -> 0 in the test), then it fills again.
 - `tools/devtests/mood.js` and `watcher.js` check each of these; `docs/mood.png` shows them.
 - Not judged by ear: every sound here was only checked as "running", in a browser with no speakers.
+
+## 129. Shops you can use (owner's answers: shelves + keeper's menu; clothes seen and reacted to; hunger; torch, map, radio)
+
+Asked first, built to the answers.
+
+- **Goods on the shelves** (`src/shop/goods.js`): every generated shop puts two of each thing it sells on its wall
+  shelving as real objects (one merged mesh each, 43 models). Look at one and the button reads "Take the jacket · $45";
+  taking it is free (stealing). Owner: no karma and no reaction from anyone yet. Taken things stay gone for ten minutes.
+  The keeper's buy / sell list (Barter) is unchanged. The four hand-built places (kiln, izakaya, gallery, temple) have
+  no shelf goods yet.
+- **Clothes** (`WEAR`, `DRESS` in lines.js): Clean shirt, Jacket, Scarf and Umbrella are worn from the bag. Each moves
+  what a person thinks of you by temperament while it is on, and each person remarks on it the first time they see it.
+- **Hands** (`src/player/hands.js`): forearms on the camera, seen only when doing something: taking from a shelf,
+  pushing a door, reaching for a car door, eating, holding the torch, holding the umbrella (canopy over the view).
+  Sleeve follows what is worn (grey sweatshirt / white shirt / navy jacket). The scarf is not visible on you.
+  Not done: hands on the steering wheel (driving is seen from behind the car). Skin tone is one constant (`SKIN`).
+- **Hunger**: `wallet.hunger` 0..100, full to starving in 30 minutes; past 60 the walk slows, to six tenths at 100.
+  Food from the bag is eaten (dearer = more filling); drinks still quicken the step. `wallet.stats.eaten / walked`
+  are counted for later use (owner mentioned a fat stat like San Andreas). Nothing reads them yet.
+- **Flashlight**: a real spot lamp carried on the camera (always present, dark when off). Bag, or F.
+- **Town map** (`src/player/map.js`): drawn from the area as built: roads, pavements, buildings, shops by trade,
+  ways out, you. Drag to move. Bag, or M. Needs the map (bookseller).
+- **Pocket radio** (in `mood/sound.js`): one synthesized tune, static, and breaks (dropout / half speed / a flat
+  counting voice); static rises near the ajar door, behind it, and near the people who do not walk. Bag, or R.
+- Test: `tools/devtests/goods.js`. Headless only; the radio was confirmed running, not heard.

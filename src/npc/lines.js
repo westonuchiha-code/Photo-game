@@ -275,11 +275,25 @@ export const PLACES = {
 // things only found, not sold (starting kit and, later, things picked up in the world)
 export const EXTRA_ITEMS = [['Pocket radio', 18, 'media']];
 // what a thing does when you use it from your bag: 'brisk' (walk faster for a while), 'mend' (patch up the car beside you),
-// 'luck' (a ticket: scratch it). Everything can be given as a gift.
-// 'eat' (food: some health back), 'heal' (from the pharmacy: more)
+// 'luck' (a ticket: scratch it), 'wear' (put it on / take it off), 'torch', 'map', 'radio' (switch on and off; kept).
+// Anything that is food and has no other use is eaten ('eat'). Everything can be given as a gift.
+export const WEAR = { 'Clean shirt': 'shirt', 'Jacket': 'coat', 'Scarf': 'neck', 'Umbrella': 'hand' };   // (what goes where: one thing in each place)
+// what people make of what you have on: `like` moves what they think of you while you wear it; `says` is the remark
+// they make the first time they see you in it
+export const DRESS = {
+  'Clean shirt': { on: 'You put on the clean shirt.', off: 'You take the shirt off.', like: { warm: 3, gruff: 2, gossip: 3, nervous: 2, proud: 4, dreamy: 1 },
+    says: { warm: "A clean shirt. Somebody's looking after themselves.", gruff: "Shirt's clean. Makes a change round here.", gossip: "Ooh, pressed. Who's it for?", nervous: "You look... official. Are you official?", proud: "A clean collar. Good. Standards.", dreamy: "White. You'll show up in the dark, you know." } },
+  'Jacket': { on: 'You put on the jacket.', off: 'You take the jacket off.', like: { warm: 3, gruff: 2, gossip: 4, nervous: -1, proud: 8, dreamy: 0 },
+    says: { warm: "That's a good jacket. Keeps the night off.", gruff: "Tailor's work. Cost you, I'll bet.", gossip: "That's off the tailor's rail, isn't it. I know exactly what you paid. Or didn't.", nervous: "A dark jacket. People in dark jackets came round asking, once. Not you. Was it you?", proud: "Now that is a proper jacket. I can talk to a person in a proper jacket.", dreamy: "It had someone else's shape in it before yours. Can you feel that?" } },
+  'Scarf': { on: 'You wind the scarf round your neck.', off: 'You take the scarf off.', like: { warm: 4, gruff: 0, gossip: 2, nervous: 0, proud: 2, dreamy: 4 },
+    says: { warm: "Lovely scarf. My mother knitted one that colour.", gruff: "Scarf. It's not that cold.", gossip: "A red scarf! You'll be seen coming from three streets off.", nervous: "Don't let the ends hang. Things catch.", proud: "A little colour at the neck. Acceptable.", dreamy: "I had that scarf. Or I will. It's the same scarf." } },
+  'Umbrella': { on: 'You put the umbrella up.', off: 'You fold the umbrella.', like: { warm: 0, gruff: -3, gossip: 3, nervous: -4, proud: -5, dreamy: 7 },
+    says: { warm: "It's not raining, dear. ...Is it? You'd know better than me.", gruff: "Put that thing down. It's dry.", gossip: "An umbrella, up, on a dry night. Oh, I am going to enjoy telling people.", nervous: "Why is it up? What do you know? What's coming down?", proud: "You look ridiculous.", dreamy: "Good. You've noticed it too. Most people don't bother keeping it off." } },
+};
 export const USES = { 'Coffee': 'brisk', 'Soda': 'brisk', 'Milkshake': 'brisk', 'Bottle of tea': 'brisk', 'Cold barley tea': 'brisk', 'Duct tape': 'mend', 'Hammer': 'mend', 'Lottery ticket': 'luck',
+  'Clean shirt': 'wear', 'Jacket': 'wear', 'Scarf': 'wear', 'Umbrella': 'wear', 'Flashlight': 'torch', 'Town map': 'map', 'Pocket radio': 'radio',
  };
-// (parked with the health bar: 'heal' for Bandages / Painkillers / Vitamins and 'eat' for the food)
+// (parked with the health bar: 'heal' for Bandages / Painkillers / Vitamins)
 export const ITEM = (() => { const m = new Map(); for (const k of [...SHOP_KINDS, ...Object.values(PLACES)]) for (const g of k.goods) m.set(g[0], { price: g[1], cat: g[2] }); for (const g of EXTRA_ITEMS) m.set(g[0], { price: g[1], cat: g[2] }); return m; })();
 
 // ---- people with a part of their own. `answers` override the area's; `topics` are extra topics only they have.

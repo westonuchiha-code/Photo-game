@@ -9,7 +9,7 @@
 // What they think of you ("liking", 0..100): starts from their temperament, moved by the area's opinion of you (people
 // talk), by gifts, and by what they have seen you do. It sets how they greet you, whether they will talk at all, what
 // they charge, and whether you get the tip they keep for friends. It is remembered with your money and things.
-import { TEMPERS, NAMES, JOBS, VOICE, RUMOURS, AREAS, TOPIC_INDEX, SHOP_KINDS, PLACES, ITEM, USES, CHARACTERS } from './lines.js';
+import { TEMPERS, NAMES, JOBS, VOICE, RUMOURS, AREAS, TOPIC_INDEX, SHOP_KINDS, PLACES, ITEM, USES, WEAR, DRESS, CHARACTERS } from './lines.js';
 
 const hash = (s) => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
 const pick = (arr, h, salt = 0) => arr[(h + Math.imul(salt + 1, 2654435761) >>> 0) % arr.length];
@@ -24,7 +24,7 @@ export function character(id) { const c = CHARACTERS[id], h = hash('c:' + id), k
 
 // ---- money, things carried, and what people think of you (kept between visits where the browser allows it)
 const KEY = 'phototown.wallet.v1';
-function loadWallet() { let w = null; try { w = JSON.parse(localStorage.getItem(KEY)); } catch (e) { /* no storage: start fresh each time */ } if (!w || typeof w.money !== 'number' || !w.items) w = { money: 60, items: { 'Pocket radio': 1 } }; w.people = w.people || {}; w.rep = w.rep || {}; return w; }
+function loadWallet() { let w = null; try { w = JSON.parse(localStorage.getItem(KEY)); } catch (e) { /* no storage: start fresh each time */ } if (!w || typeof w.money !== 'number' || !w.items) w = { money: 60, items: { 'Pocket radio': 1 } }; w.people = w.people || {}; w.rep = w.rep || {}; w.wear = w.wear || {}; if (typeof w.hunger !== 'number') w.hunger = 25; w.stats = w.stats || { eaten: 0, walked: 0 };   /* (hunger: 0 full .. 100 starving; stats: kept for later, e.g. what eating and walking do to you) */ return w; }
 function saveWallet(w) { try { localStorage.setItem(KEY, JSON.stringify(w)); } catch (e) { /* ignore */ } }
 
 const CSS = `
@@ -59,12 +59,14 @@ export function makeTalk({ onOpen = null, onClose = null, onSay = null, use = {}
   const purse = document.createElement('button'); purse.id = 'purse'; document.body.appendChild(purse);
   const $ = (q) => el.querySelector(q), log = $('.log'), topicsEl = $('.topics'), barterEl = $('.barter'), tradeBtn = $('.trade'), giftBtn = $('.gift');
   const wallet = loadWallet(); let who = null, areaId = null, asked = 0, known = [], view = 'talk';   // view: talk | barter | gift | bag
-  const cash = () => { $('.cash').textContent = '$' + wallet.money; const n = Object.values(wallet.items).reduce((a, b) => a + b, 0); purse.textContent = '$' + wallet.money + (n ? ' · ' + n + (n === 1 ? ' thing' : ' things') : ''); }; cash();
+  const cash = () => { $('.cash').textContent = '$' + wallet.money; const n = Object.values(wallet.items).reduce((a, b) => a + b, 0); purse.textContent = '$' + wallet.money + (n ? ' · ' + n + (n === 1 ? ' thing' : ' things') : '') + (wallet.hunger >= 85 ? ' · starving' : wallet.hunger >= 60 ? ' · hungry' : ''); }; cash();
   for (const ev of ['pointerdown', 'pointermove', 'pointerup', 'touchstart', 'touchmove', 'touchend', 'mousedown', 'wheel']) for (const e of [el, purse]) e.addEventListener(ev, (x) => x.stopPropagation());   // (not the game's look / move surface)
 
   // ---- what they think of you
   const mem = (id) => wallet.people[id] || (wallet.people[id] = { d: 0, met: 0 });
-  const liking = (w, area = areaId) => clamp((VOICE[w.temper].base || 50) + (wallet.rep[area] || 0) + (wallet.people[w.id] ? wallet.people[w.id].d : 0), 0, 100);
+  const dress = (w) => { let d = 0; for (const n of Object.values(wallet.wear)) if (DRESS[n]) d += DRESS[n].like[w.temper] || 0; return d; };   // (what you have on)
+  const useOf = (name) => USES[name] || (ITEM.get(name) && ITEM.get(name).cat === 'food' ? 'eat' : null);
+  const liking = (w, area = areaId) => clamp((VOICE[w.temper].base || 50) + (wallet.rep[area] || 0) + (wallet.people[w.id] ? wallet.people[w.id].d : 0) + dress(w), 0, 100);
   const showLike = () => { if (!who) return; $('.like').hidden = false; $('.like i').style.width = liking(who) + '%'; $('.like i').style.background = liking(who) < 25 ? '#b0412e' : liking(who) > 69 ? '#7fbf6a' : '#c9a24a'; };
   // prices: liked, you pay up to 15% less and are paid more; disliked, the other way
   const lean = (w) => 1.15 - 0.3 * liking(w) / 100;
@@ -105,16 +107,17 @@ export function makeTalk({ onOpen = null, onClose = null, onSay = null, use = {}
     for (const [name, n] of mine) { const label = name + (n > 1 ? ' ×' + n : '');
       if (view === 'barter') { const p = sellPrice(who, name); yours.appendChild(row(label, p ? '$' + p : 'no', () => { if (!p || !wallet.items[name]) return; wallet.money += p; take(name); done(); }, !p)); }
       else if (view === 'gift') yours.appendChild(row(label, 'give', () => give(name)));
-      else yours.appendChild(row(label, USES[name] ? 'use' : '', () => useItem(name), !USES[name])); } }
-  const take = (name) => { if (--wallet.items[name] <= 0) delete wallet.items[name]; };
+      else { const k = useOf(name), lab = !k ? '' : k === 'wear' ? (wallet.wear[WEAR[name]] === name ? 'take off' : name === 'Umbrella' ? 'put up' : 'wear') : k === 'torch' || k === 'radio' ? (use.state && use.state(k) ? 'switch off' : 'switch on') : k === 'map' ? 'open' : k === 'eat' ? 'eat' : 'use'; yours.appendChild(row(label, lab, () => useItem(name), !k)); } } }
+  const take = (name) => { if (--wallet.items[name] <= 0) { delete wallet.items[name]; const s = WEAR[name]; if (s && wallet.wear[s] === name) delete wallet.wear[s]; } if (use.changed) use.changed(); };
   const done = () => { saveWallet(wallet); cash(); drawLists(); };
   // a gift: worth more the dearer it is, half as much again if it is the kind of thing they like
   function give(name) { const it = ITEM.get(name); if (!it || !wallet.items[name]) return; take(name); const liked = it.cat === who.likes, d = Math.round(clamp(3 + it.price * 0.35, 3, 14) * (liked ? 1.5 : 1)); mem(who.id).d += d; saveWallet(wallet); cash(); setView('talk');
     say(`You give ${esc(who.name.split(' ')[0])} the ${esc(name.toLowerCase())}.`, 'sys'); say(esc(VOICE[who.temper].thanks) + (liked ? ' Just the thing.' : '')); if (onSay) onSay(who, VOICE[who.temper].thanks); showLike(); drawTopics(); }
-  function useItem(name) { const kind = USES[name]; if (!kind || !wallet.items[name]) return; let msg = null;
+  function useItem(name) { const kind = useOf(name); if (!kind || !wallet.items[name]) return; let msg = null, keep = false;
     if (kind === 'luck') { const r = Math.random(), win = r < 0.55 ? 0 : r < 0.85 ? 5 : r < 0.97 ? 20 : 100; wallet.money += win; msg = win ? `You scratch the ticket: $${win}!` : 'You scratch the ticket. Nothing.'; }
-    else if (use[kind]) msg = use[kind](name);
-    if (msg === null || msg === undefined) { say("There's nothing to use that on here.", 'sys'); return; } take(name); say(esc(msg), 'sys'); done(); }
+    else if (kind === 'wear') { const s = WEAR[name]; keep = true; if (wallet.wear[s] === name) { delete wallet.wear[s]; msg = DRESS[name].off; } else { wallet.wear[s] = name; msg = DRESS[name].on; } if (use.changed) use.changed(); }
+    else if (use[kind]) { const r = use[kind](name); if (r && typeof r === 'object') { msg = r.msg; keep = !!r.keep; if (r.close) { saveWallet(wallet); api.close(); r.close(); return; } } else msg = r; }   /* (kept things: { msg, keep: true }) */
+    if (msg === null || msg === undefined) { say("There's nothing to use that on here.", 'sys'); return; } if (!keep) take(name); say(esc(msg), 'sys'); done(); }
   tradeBtn.addEventListener('click', () => setView(view === 'barter' ? 'talk' : 'barter'));
   giftBtn.addEventListener('click', () => setView(view === 'gift' ? 'talk' : 'gift'));
   $('.bye').addEventListener('click', () => api.close());
@@ -124,13 +127,16 @@ export function makeTalk({ onOpen = null, onClose = null, onSay = null, use = {}
   const api = { active: false, wallet, get who() { return who; }, liking,
     open(w, area) { who = w; areaId = area; asked = 0; known = []; api.active = true; document.body.dataset.talk = '1'; el.hidden = false; log.innerHTML = ''; setView('talk');
       $('.hd b').textContent = who.name; $('.hd .tt').textContent = who.title || ''; tradeBtn.hidden = !who.kind || !who.kind.goods.length; giftBtn.hidden = false; $('.bye').textContent = 'Goodbye'; cash(); showLike();
-      const m = mem(who.id), v = VOICE[who.temper], L = liking(who); { const hi = L < 25 ? v.cold : m.met ? pick(v.again, who.h, m.met) : pick(who.hello || v.hello, who.h, 7); say(esc(hi)); if (onSay) onSay(who, hi); } if (!m.met) m.d += 1; m.met++; saveWallet(wallet); drawTopics(); if (onOpen) onOpen(who); },
+      const m = mem(who.id), v = VOICE[who.temper], L = liking(who); { const hi = L < 25 ? v.cold : m.met ? pick(v.again, who.h, m.met) : pick(who.hello || v.hello, who.h, 7); say(esc(hi)); if (onSay) onSay(who, hi); }
+      { const worn = ['Umbrella', 'Jacket', 'Scarf', 'Clean shirt'].find((n) => wallet.wear[WEAR[n]] === n); m.saw = m.saw || {}; if (worn && L >= 25 && !m.saw[worn]) { m.saw[worn] = 1; say(esc(DRESS[worn].says[who.temper])); } }   /* (the first time they see you in it) */
+      if (!m.met) m.d += 1; m.met++; saveWallet(wallet); drawTopics(); if (onOpen) onOpen(who); },
     // your own things, away from anyone: tap one to use it
     openBag() { who = null; api.active = true; document.body.dataset.talk = '1'; el.hidden = false; log.innerHTML = ''; $('.hd b').textContent = 'Your things'; $('.hd .tt').textContent = ''; $('.like').hidden = true; tradeBtn.hidden = giftBtn.hidden = true; $('.bye').textContent = 'Close'; cash(); setView('bag'); if (onOpen) onOpen(null); },
     close() { if (!api.active) return; api.active = false; delete document.body.dataset.talk; el.hidden = true; const w = who; who = null; if (onClose) onClose(w); },
     // someone was run down in front of these people (their ids): they think less of you, and the area hears of it
     witness(ids, area, dead) { for (const id of ids) mem(id).d -= dead ? 22 : 12; wallet.rep[area] = clamp((wallet.rep[area] || 0) - (dead ? 2 : 1), -30, 10); saveWallet(wallet); },
     sync() { saveWallet(wallet); cash(); },
-    reset() { wallet.money = 60; wallet.items = { 'Pocket radio': 1 }; wallet.people = {}; wallet.rep = {}; saveWallet(wallet); cash(); } };
+    gain(name) { wallet.items[name] = (wallet.items[name] || 0) + 1; saveWallet(wallet); cash(); },   // (a thing picked up)
+    reset() { wallet.money = 60; wallet.items = { 'Pocket radio': 1 }; wallet.people = {}; wallet.rep = {}; wallet.wear = {}; wallet.hunger = 25; wallet.stats = { eaten: 0, walked: 0 }; if (use.changed) use.changed(); saveWallet(wallet); cash(); } };
   return api;
 }

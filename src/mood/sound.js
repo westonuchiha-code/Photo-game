@@ -1,6 +1,6 @@
 // Sound on foot: the tone of the room you are in, your footsteps, and the murmur of whoever is speaking.
 // Everything is made here (oscillators and filtered noise); there are no sound files. Outdoors is left silent on purpose.
-//   makeSound() -> { tick(dt, { inside, shut, speed, surface, onFoot }), voice(who, text), hush() }
+//   makeSound() -> { tick(dt, { inside, shut, speed, surface, onFoot, interference }), voice(who, text), hush(), radio(on) }
 //     inside: null outdoors, else the kind of room ('shop' | 'office' | 'flat' | 'studio' | 'clinic' | 'police' |
 //             'school' | 'hall' | 'wrong'); shut: the street door is closed behind you; speed: m/s over the ground;
 //     surface: 'street' | 'tile' | 'carpet' | 'wood' | 'stone'
@@ -33,7 +33,7 @@ export function makeSound() {
   for (const ev of ['pointerdown', 'touchstart', 'keydown']) addEventListener(ev, start, { passive: true });   // (a browser only lets sound begin on a touch or a key)
   const burst = (freq, q, vol, len, when = 0) => { const t = ctx.currentTime + when, s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain(); s.buffer = noiseBuf; s.loopStart = Math.random(); f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = q; g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0006, t + len); s.connect(f); f.connect(g); g.connect(ctx.destination); s.start(t, Math.random()); s.stop(t + len + 0.02); };
   const thump = (freq, vol, len) => { const t = ctx.currentTime, o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(freq, t); o.frequency.exponentialRampToValueAtTime(freq * 0.5, t + len); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0006, t + len); o.connect(g); g.connect(ctx.destination); o.start(t); o.stop(t + len + 0.02); };
-  function tick(dt, st) { if (!ctx || ctx.state !== 'running') return; const t = ctx.currentTime;
+  function tick(dt, st) { if (!ctx || ctx.state !== 'running') return; const t = ctx.currentTime; if (rad) radioTick(dt, st.interference || 0);
     // the room's tone: set up when you come into a kind of room, faded by whether you are in one and whether the door is shut
     const kind = st.inside && ROOMS[st.inside] ? st.inside : null;
     if (kind && kind !== cur) { cur = kind; const R = ROOMS[kind]; G.o1.frequency.setTargetAtTime(R.hum[0], t, 0.3); G.o2.frequency.setTargetAtTime(R.hum[0] * 2, t, 0.3); G.o3.frequency.setTargetAtTime(R.hum[0] + (R.beat || 0), t, 0.3); G.gH.gain.setTargetAtTime(R.hum[1], t, 0.4); G.gH2.gain.setTargetAtTime(R.beat ? R.hum[1] : 0, t, 0.4); G.gB.gain.setTargetAtTime(R.buzz, t, 0.4); G.lp.frequency.setTargetAtTime(R.air[1], t, 0.4); G.gA.gain.setTargetAtTime(R.air[0], t, 0.4); }
@@ -50,5 +50,24 @@ export function makeSound() {
       f.type = 'bandpass'; f.frequency.value = 500 + Math.random() * 900; f.Q.value = 4; e.gain.setValueAtTime(0.0001, t); e.gain.linearRampToValueAtTime(1, t + 0.012); e.gain.linearRampToValueAtTime(0.0001, t + len); o.connect(f); f.connect(e); e.connect(g); o.start(t); o.stop(t + len + 0.02);
       t += len + (Math.random() < 0.18 ? 0.16 : 0.02) / T[1]; } }
   function hush() { if (voiceGain && ctx) { voiceGain.gain.setTargetAtTime(0, ctx.currentTime, 0.02); voiceGain = null; } }
-  return { tick, voice, hush, get running() { return !!ctx && ctx.state === 'running'; } };
+  // the pocket radio: one thin little tune from one station, static under it, and breaks in the signal (the tune drops
+  // out; or it runs down to half speed; or a flat voice counts). `interference` (0..1) from the game buries it in static.
+  let rad = null; const SCALE = [220, 261.6, 293.7, 329.6, 392, 440, 523.3, 587.3], TUNE = [4, -1, 5, 4, 2, -1, 1, 2, 4, -1, 2, 1, 0, -1, -1, -1, 5, -1, 7, 5, 4, -1, 2, 4, 5, 4, 2, 1, 2, -1, -1, -1], BASS = [0, 0, 3, 3, 2, 2, 0, 0];
+  function radio(on) { start(); if (!ctx) return false;
+    if (on && !rad) { const out = ctx.createGain(), hp = ctx.createBiquadFilter(), lp = ctx.createBiquadFilter(), mus = ctx.createGain(); out.gain.value = 0; hp.type = 'highpass'; hp.frequency.value = 420; lp.type = 'lowpass'; lp.frequency.value = 2600; mus.connect(hp); hp.connect(lp); lp.connect(out); out.connect(ctx.destination);
+      const ns = ctx.createBufferSource(), nf = ctx.createBiquadFilter(), ng = ctx.createGain(); ns.buffer = noiseBuf; ns.loop = true; nf.type = 'bandpass'; nf.frequency.value = 2200; nf.Q.value = 0.6; ng.gain.value = 0.12; ns.connect(nf); nf.connect(ng); ng.connect(out); ns.start();
+      out.gain.setTargetAtTime(0.07, ctx.currentTime, 0.1); rad = { out, mus, hp, ng, ns, next: ctx.currentTime + 0.1, step: 0, brk: 14 + Math.random() * 20, left: 0, kind: null, rate: 1, breaks: 0 }; }
+    else if (!on && rad) { const r = rad; rad = null; r.out.gain.setTargetAtTime(0, ctx.currentTime, 0.05); setTimeout(() => { try { r.ns.stop(); r.out.disconnect(); } catch (e) { /* gone already */ } }, 400); }
+    return !!rad; }
+  const note = (t, f, len, type, vol, dest) => { const o = ctx.createOscillator(), g = ctx.createGain(); o.type = type; o.frequency.value = f; g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol, t + 0.015); g.gain.exponentialRampToValueAtTime(0.0008, t + len); o.connect(g); g.connect(dest); o.start(t); o.stop(t + len + 0.03); };
+  function radioTick(dt, interference) { const r = rad, t = ctx.currentTime;
+    if (r.left > 0) { if ((r.left -= dt) <= 0) { r.kind = null; r.rate = 1; r.brk = 18 + Math.random() * 34; } } else if ((r.brk -= dt) <= 0) { r.breaks++; r.left = 2 + Math.random() * 4; r.kind = ['static', 'slow', 'voice'][Math.floor(Math.random() * 3)]; if (r.kind === 'slow') { r.rate = 0.5; r.left += 3; } }
+    const lost = r.kind === 'static' || r.kind === 'voice';
+    r.mus.gain.setTargetAtTime(lost ? 0.03 : Math.max(0.12, 1 - interference), t, 0.15); r.ng.gain.setTargetAtTime(lost ? 0.9 : 0.1 + interference * 0.9 + (r.kind === 'slow' ? 0.25 : 0), t, 0.12);
+    const beat = 0.34 / r.rate;
+    while (r.next < t + 0.25) { const i = r.step++;
+      if (r.kind === 'voice') { if (i % 8 < 5) note(r.next, 138, 0.2, 'sawtooth', 0.5, r.hp); }
+      else { const d = TUNE[i % TUNE.length]; if (d >= 0) note(r.next, SCALE[d] * 2 * r.rate, beat * 1.6, 'triangle', 0.5, r.mus); if (i % 4 === 0) note(r.next, SCALE[BASS[(i >> 2) % BASS.length]] * r.rate, beat * 3.5, 'sine', 0.6, r.mus); }
+      r.next += beat; } }
+  return { tick, voice, hush, radio, get radioOn() { return !!rad; }, get radioState() { return rad ? { kind: rad.kind, breaks: rad.breaks, step: rad.step } : null; }, breakNow() { if (rad) rad.brk = 0; }, get running() { return !!ctx && ctx.state === 'running'; } };
 }

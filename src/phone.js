@@ -15,10 +15,13 @@ import { placeStreetServices } from './models/street92.js';
 import { makeInteriors } from './interiors.js';
 import { makePeople, makePerson, makeCharacter, CHARACTERS } from './models/people96.js';
 import { makeTalk, whoIs, keeperOf, character } from './npc/talk.js';
-import { SHOP_KINDS } from './npc/lines.js';
+import { SHOP_KINDS, ITEM } from './npc/lines.js';
 import { makeBooth, makeShopMenu } from './shop/bodyshop.js';
 import { makeTraffic } from './vehicle/traffic.js';
 import { makeSound } from './mood/sound.js';
+import { makeHands } from './player/hands.js';
+import { makeMap } from './player/map.js';
+import { stockShop } from './shop/goods.js';
 import { makeWrongPlace } from './mood/wrong.js';
 import { useLowDetailBodies } from './models/body97.js';
 import { makeDriver2 } from './vehicle/drive2.js';
@@ -47,7 +50,7 @@ const camera = new THREE.PerspectiveCamera(65, innerWidth / innerHeight, 0.1, 24
 addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
 const sky = makeSky(); scene.add(sky);
 const moon = new THREE.DirectionalLight('#b9c6dd', 0.5); moon.position.copy(sky.userData.moonDir).multiplyScalar(50); scene.add(moon);
-const hemi = new THREE.HemisphereLight('#dfe6f0', '#5e544a', 0.75); scene.add(hemi);   // (there are no real street lights here, only lamp glow)
+const hemi = new THREE.HemisphereLight('#dfe6f0', '#5e544a', 0.75); scene.add(hemi); scene.add(camera);   /* (the camera carries your hands and the torch) */   // (there are no real street lights here, only lamp glow)
 scene.environment = carEnv(renderer); scene.environmentIntensity = 0.14;
 // the walker and the driver keep these three arrays for good: an area fills them, leaving it empties them
 const colliders = [], walkAreas = [], driveAreas = [];
@@ -196,7 +199,10 @@ function buildArea(id, carried) {
   walkAreas.push(...district.userData.areas, ...S.areas); driveAreas.push(...walkAreas);   // (cars keep this list: interiors are added to the walker's only)
   // someone serves behind the counter of every shop: made when its interior is built, gone when it is let go
   const onBuild = (e, g) => { const k = g.userData.keeper; if (!k || e.b.shop < 0 || !SHOP_KINDS[e.b.shop]) return; const body = makePerson(300 + e.b.index * 3 + (id === 'east' ? 1 : 0)); body.position.set(k[0], 0, k[1]); body.rotation.y = Math.PI; g.add(body);
-    const [x, z] = e.W(k[0], k[1]); e.npc = { who: keeperOf(id, e.b.shop, e.b.index, body.userData.sex), x, z, mesh: body, reach: 2.9, room: e }; };
+    const [x, z] = e.W(k[0], k[1]); e.npc = { who: keeperOf(id, e.b.shop, e.b.index, body.userData.sex), x, z, mesh: body, reach: 2.9, room: e };
+    // the goods on the shelves: real things that can be taken (what was taken stays gone for ten minutes)
+    const key = id + ':' + e.b.index, gm = goneAt.get(key) || new Map(); for (const [s, tt] of gm) if (t - tt > 600) gm.delete(s); goneAt.set(key, gm);
+    e.goods = stockShop(g, SHOP_KINDS[e.b.shop], e.U, e.V, e.b.index, gm).map((q) => { const [wx, wz] = e.W(q.x, q.z); return { ...q, wx, wy: g.position.y + q.y, wz, key }; }); };
   const interiors = makeInteriors({ scene: root, district, colliders, areas: walkAreas, onBuild });
   const addCar = ([type, opt, x, z, h]) => { const c = makeCar({ type, ...opt }); c.position.set(x, 0, z); c.rotation.y = h; root.add(c); drive.addCar(c, { name: opt.name }); };
   for (const c of S.cars) { if (carried && Math.hypot(c[2] - carried.position.x, c[3] - carried.position.z) < 6) continue; addCar(c); }
@@ -232,7 +238,7 @@ function clearArea(carried) {
 // ---- modes: on foot, or in a car (the one button gets you in and out)
 let mode = 'walk', myCar = null; const useBtn = document.getElementById('use');
 const setMode = (m) => { mode = m; walk.enabled = m === 'walk'; document.body.dataset.mode = m; };
-const use = () => { if (busy || talk.active || shop.active || downT > 0) return; if (mode === 'walk' && talkTo && !useCar) { startTalk(talkTo); return; } if (mode === 'drive') { drive.leave(() => { rise = { p: camera.position.clone(), q: camera.quaternion.clone(), t: 0 }; const out = drive.exit(); if (out) { walk.position.set(out.x, 0, out.z); walk.yaw = out.yaw; walk.pitch = -0.05; } myCar = null; setMode('walk'); walk.apply(); }); } else { const c = drive.nearest(walk.position); if (c) { const t = c.userData.trafficRef; if (t) crime(t.police ? 2 : 1);   /* (taking a car that someone is driving) */ drive.enter(c); myCar = c; setMode('drive'); } } };
+const use = () => { if (busy || talk.active || shop.active || downT > 0 || townMap.active) return; if (mode === 'walk' && pick) { takeGood(pick); return; } if (mode === 'walk' && talkTo && !useCar) { startTalk(talkTo); return; } if (mode === 'drive') { drive.leave(() => { rise = { p: camera.position.clone(), q: camera.quaternion.clone(), t: 0 }; const out = drive.exit(); if (out) { walk.position.set(out.x, 0, out.z); walk.yaw = out.yaw; walk.pitch = -0.05; } myCar = null; setMode('walk'); walk.apply(); }); } else { const c = drive.nearest(walk.position); if (c) { const t = c.userData.trafficRef; if (t) crime(t.police ? 2 : 1);   /* (taking a car that someone is driving) */ hands.play('reach'); handT = 0.55; drive.enter(c); myCar = c; setMode('drive'); } } };
 // ---- the law, and your own skin
 // heat: what the police know you have done lately (0..8): a star at 1, two at 3, three at 6. It only cools while no police
 // car is near enough to see you. Stopped with one beside you for a couple of seconds, you are taken in: BUSTED, a fine.
@@ -289,7 +295,7 @@ function tickMood(dt) {
   // sound: what room you are in, how fast you are walking and on what
   let inside = null; if (w && w.inside) inside = w.kind === 'hall' ? 'wrong' : 'wrong'; else if (onFoot && A.interiors) for (const e of A.interiors.list) if (e.group && inRoom(e, p)) { inside = e.type; break; }
   const speed = onFoot && dt > 0 ? Math.hypot(p.x - lastPos.x, p.z - lastPos.z) / dt : 0; lastPos.copy(p);
-  sound.tick(dt, { inside, shut: !!shutIn || !!(w && w.inside), speed: speed > 12 ? 0 : speed, onFoot: onFoot && !talk.active, surface: w && w.inside ? (w.kind === 'hall' ? 'wood' : 'carpet') : inside ? ROOM_FLOOR[inside] || 'tile' : A.district ? 'street' : 'stone' });
+  sound.tick(dt, { interference: fuzz(), inside, shut: !!shutIn || !!(w && w.inside), speed: speed > 12 ? 0 : speed, onFoot: onFoot && !talk.active, surface: w && w.inside ? (w.kind === 'hall' ? 'wood' : 'carpet') : inside ? ROOM_FLOOR[inside] || 'tile' : A.district ? 'street' : 'stone' });
   if (!A.district || (w && w.inside)) return;
   // quiet spells: every few minutes the street empties (nobody new comes, the cars are gone), and later fills again
   if (quietLeft > 0) { if ((quietLeft -= dt) <= 0) { A.people.quiet = false; A.traffic.quiet = false; quietT = 240 + Math.random() * 200; } } else if ((quietT -= dt) <= 0) { quietLeft = 70 + Math.random() * 45; A.people.quiet = true; A.traffic.quiet = true; }
@@ -302,14 +308,48 @@ function tickMood(dt) {
       if (c.length) { const g = c[Math.floor(Math.random() * c.length)], h = g.rotation.y, step = (Math.random() < 0.5 ? -1 : 1) * (1.2 + Math.random() * 2.6), nx = g.position.x + Math.sin(h) * step, nz = g.position.z + Math.cos(h) * step, u = g.userData;
         const fits = [u.half.zF, u.half.zR, 0].every((lz) => driveAreas.some((a) => nx + Math.sin(h) * lz >= a.minX + 0.9 && nx + Math.sin(h) * lz <= a.maxX - 0.9 && nz + Math.cos(h) * lz >= a.minZ + 0.9 && nz + Math.cos(h) * lz <= a.maxZ - 0.9)) && !drive.cars.some((o) => o !== g && Math.hypot(o.position.x - nx, o.position.z - nz) < 5.5) && !colliders.some((k) => !k.car && k.active !== false && (k.type === 'circle' ? Math.hypot(k.x - nx, k.z - nz) < k.r + 2.6 : nx > k.minX - 2.6 && nx < k.maxX + 2.6 && nz > k.minZ - 2.6 && nz < k.maxZ + 2.6));
         if (fits) { g.position.x = nx; g.position.z = nz; drive.syncCols(g); } } } } }
+// ---- your own body: hunger, what you wear, your hands, the torch, the map, the radio
+// hunger (0 full .. 100 starving) climbs slowly all the time; past 60 it slows your walk, down to six tenths at 100.
+// What you eat and how far you walk are counted (wallet.stats) for whatever they are made to do to you later.
+const hands = makeHands(camera), goneAt = new Map(), fwd = new THREE.Vector3(), bodyLast = new THREE.Vector3();
+let pick = null, saveT = 30, handT = 0;
+const townMap = makeMap({ onOpen: () => { walk.enabled = false; }, onClose: () => { walk.enabled = mode === 'walk' && !talk.active; } });
+function wearNow() { const w = talk.wallet, has = (n) => w.items[n] > 0; hands.dress({ coat: w.wear.coat === 'Jacket', shirt: w.wear.shirt === 'Clean shirt' }); hands.umbrella(w.wear.hand === 'Umbrella'); if (hands.torchOn && !has('Flashlight')) hands.torch(false); if (sound.radioOn && !has('Pocket radio')) sound.radio(false); }
+function openMap() { const far = A.wrong ? A.wrong.oz + 200 : -1e9, ok = (r) => r.minZ > far, B = A.district ? A.district.userData.buildings : [];
+  const roads = driveAreas.filter(ok), paths = walkAreas.filter(ok), buildings = B.map((b) => ({ x0: b.x0, x1: b.x1, z0: b.z0, z1: b.z1, label: b.shop >= 0 && SHOP_KINDS[b.shop] ? SHOP_KINDS[b.shop].title : null }));
+  let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; for (const r of roads.concat(paths)) { x0 = Math.min(x0, r.minX); x1 = Math.max(x1, r.maxX); z0 = Math.min(z0, r.minZ); z1 = Math.max(z1, r.maxZ); }
+  // a way out is wherever its test comes true: the middle of that stretch of ground is where its name goes
+  const exits = []; for (const ex of A.def.exits) { let sx = 0, sz = 0, n = 0; for (let i = 0; i <= 40; i++) for (let j = 0; j <= 40; j++) { const x = x0 - 3 + (x1 - x0 + 6) * i / 40, z = z0 - 3 + (z1 - z0 + 6) * j / 40; if (ex.test(x, z)) { sx += x; sz += z; n++; } } if (n) exits.push({ x: sx / n, z: sz / n, label: 'to ' + AREAS[ex.to].name }); }
+  const marks = (A.npcs || []).filter((n) => n.who && n.who.kind).map((n) => ({ x: n.x, z: n.z, label: n.who.title }));
+  if (A.shopPad) marks.push({ x: (A.shopPad[0] + A.shopPad[1]) / 2, z: (A.shopPad[2] + A.shopPad[3]) / 2, label: 'body shop' });
+  townMap.open({ name: A.def.name, roads, paths, buildings, marks, exits, you: { x: walk.position.x, z: walk.position.z, yaw: walk.yaw } }); }
+function takeGood(q) { const e = q.room; e.goods.splice(e.goods.indexOf(q), 1); q.obj.parent.remove(q.obj); goneAt.get(q.key).set(q.slot, t); talk.gain(q.name); hands.play('reach', q.name); handT = 0.6; drive.say('Taken: ' + q.name, 1.8); pick = null; }
+function tickBody(dt) { const w = talk.wallet, h0 = w.hunger; w.hunger = Math.min(100, w.hunger + dt * (100 / 1800));
+  walk.speed = 2.75 * (briskT > 0 ? 1.25 : 1) * (1 - 0.4 * Math.max(0, Math.min(1, (w.hunger - 60) / 40)));
+  if ((h0 < 60 && w.hunger >= 60) || (h0 < 85 && w.hunger >= 85)) { talk.sync(); drive.say(w.hunger >= 85 ? 'You are starving. You can hardly walk.' : 'You are hungry. It is slowing you down.', 4); }
+  const p = walk.position, d = mode === 'walk' ? Math.hypot(p.x - bodyLast.x, p.z - bodyLast.z) : 0; bodyLast.copy(p); if (d < 2) w.stats.walked += d;
+  if ((saveT -= dt) <= 0) { saveT = 30; talk.sync(); }
+  // a door you push open as you come to it
+  if (mode === 'walk' && A.interiors) for (const e of A.interiors.list) { const open = e.target > 0.9; if (open && !e._open && e.d < 2.6 && !hands.busy) hands.play('push'); e._open = open; }
+  // the thing on a shelf you are looking at
+  pick = null; if (mode === 'walk' && !talk.active && !townMap.active && A.interiors) for (const e of A.interiors.list) if (e.group && e.goods && e.goods.length && inRoom(e, p)) { camera.getWorldDirection(fwd); let bc = 0.95; const c0 = camera.position; for (const q of e.goods) { const dx = q.wx - c0.x, dy = q.wy - c0.y, dz = q.wz - c0.z, dd = Math.hypot(dx, dy, dz); if (dd > 2.1) continue; const c = (dx * fwd.x + dy * fwd.y + dz * fwd.z) / dd; if (c > bc) { bc = c; pick = q; q.room = e; } } break; }
+  if (handT > 0) handT -= dt; hands.hidden = (mode === 'drive' && handT <= 0) || !!(rise); hands.update(dt, d / Math.max(dt, 1e-4) > 0.4); }
+// the radio breaks up near the door that is ajar, in the place behind it, and near the people who do not walk
+function fuzz() { if (!sound.radioOn) return 0; const p = mode === 'walk' ? walk.position : drive.state, w = A.wrong; let f = 0; if (w) f = w.inside ? 0.9 : Math.max(0, 1 - Math.hypot(p.x - w.e.door[0], p.z - w.e.door[1]) / 22) * 0.85; if (A.people) for (const q of A.people.list) if (q.odd && q.active) f = Math.max(f, Math.max(0, 1 - Math.hypot(p.x - q.mesh.position.x, p.z - q.mesh.position.z) / 9) * 0.6); return f; }
+addEventListener('keydown', (e) => { if (mode !== 'walk' || talk.active || townMap.active) return; const w = talk.wallet; if (e.code === 'KeyF' && w.items['Flashlight']) hands.torch(!hands.torchOn); if (e.code === 'KeyR' && w.items['Pocket radio']) sound.radio(!sound.radioOn); if (e.code === 'KeyM' && w.items['Town map']) openMap(); });
 // ---- talking: the nearest person in reach (someone on the street, a shopkeeper across their counter, a character)
 let talkTo = null, useCar = false, talkPed = null, rise = null;   // rise: standing up out of a car (the view comes up from the seat)
 let briskT = 0, shopUsed = false;
 const talk = makeTalk({ onSay: (who, text) => sound.voice(who, text), onOpen: () => { walk.enabled = false; }, onClose: () => { sound.hush(); if (talkPed && talkPed.st === 'talk') talkPed.st = 'walk'; talkPed = null; walk.enabled = mode === 'walk'; },
   // things used from the bag: tape or a hammer patch up the car you are standing by; a drink quickens your step for a while
   use: { mend: (name) => { const c = drive.nearest(walk.position); if (!c || c.userData.wreck) return null; const u = c.userData, add = name === 'Hammer' ? 0.15 : 0.3; if (u.hp >= u.hd.hpMax) return null; u.hp = Math.min(u.hd.hpMax, u.hp + u.hd.hpMax * add); return `You patch up the ${u.driveName}. It will hold.`; },
-    brisk: () => { briskT = 90; walk.speed = 2.75 * 1.25; return 'That wakes you up. You walk faster for a while.'; },
-    eat: () => { if (!LAW_ON || health >= 100) return null; health = Math.min(100, health + 22); return 'That is better.'; }, heal: (name) => { if (!LAW_ON || health >= 100) return null; health = Math.min(100, health + (name === 'Painkillers' ? 55 : name === 'Bandages' ? 40 : 18)); return 'Patched up.'; } } });
+    brisk: (name) => { briskT = 90; const w = talk.wallet; w.hunger = Math.max(0, w.hunger - 6); w.stats.eaten += ITEM.get(name).price; hands.play('eat', name); return 'That wakes you up. You walk faster for a while.'; },
+    // food: the dearer the meal the longer it keeps you
+    eat: (name) => { const w = talk.wallet; if (w.hunger < 8) return { msg: 'You are not hungry.', keep: true }; const p = ITEM.get(name).price, was = w.hunger; w.hunger = Math.max(0, w.hunger - Math.max(14, Math.min(75, p * 6))); w.stats.eaten += p; hands.play('eat', name); return w.hunger < 8 ? 'You eat. You are full.' : was >= 60 && w.hunger < 60 ? 'You eat. That is better.' : 'You eat. It takes the edge off.'; },
+    torch: () => { hands.torch(!hands.torchOn); return { msg: hands.torchOn ? 'You switch the flashlight on.' : 'You switch the flashlight off.', keep: true }; },
+    radio: () => { const on = sound.radio(!sound.radioOn); return { msg: on ? 'You switch the radio on.' : 'You switch the radio off.', keep: true }; },
+    map: () => ({ keep: true, msg: '', close: openMap }), state: (k) => (k === 'torch' ? hands.torchOn : sound.radioOn), changed: () => wearNow(),
+    heal: (name) => { if (!LAW_ON || health >= 100) return null; health = Math.min(100, health + (name === 'Painkillers' ? 55 : name === 'Bandages' ? 40 : 18)); return 'Patched up.'; } } });
 const shop = makeShopMenu({ drive, makeCar, wallet: talk.wallet, paid: () => talk.sync(), resprayed: () => { if (law.heat > 0 && policeNear() > 30) { law.heat = 0; drive.say('THEY HAVE LOST YOU', 3); } } });
 const inRoom = (e, p) => p.x > e.inner.minX && p.x < e.inner.maxX && p.z > e.inner.minZ && p.z < e.inner.maxZ;
 function findTalk() { const p = walk.position; let best = null, bd = 1e9; const tryN = (n, d, reach) => { if (d < reach && d < bd) { bd = d; best = n; } };
@@ -349,7 +389,7 @@ function peopleTick(pos, dt) { if (!A.people) return; let ci = null; if (mode ==
 function frame() {
   if (window.__loadingHold || busy || !A) { clock.getDelta(); requestAnimationFrame(frame); return; }
   const raw = clock.getDelta(), dt = Math.min(raw, 0.05); t += dt;
-  if (briskT > 0 && (briskT -= dt) <= 0) walk.speed = 2.75;
+  if (briskT > 0) briskT -= dt; tickBody(dt);
   // parked in the spray booth: the shop opens (once; drive out and back in to open it again)
   if (A.shopPad && mode === 'drive' && drive.car && !shop.active) { const S = drive.state, p = A.shopPad, inside = S.x > p[0] && S.x < p[1] && S.z > p[2] && S.z < p[3]; if (!inside) shopUsed = false; else if (!shopUsed && Math.hypot(S.vx, S.vz) < 1.2 && S.mode === 'wheels' && !drive.car.userData.wreck) { shopUsed = true; S.vx = S.vz = 0; shop.open(drive.car, p.room); } }
   if (mode === 'walk') walk.update(dt); drive.update(dt); if (falls.length) tickFalls(dt);
@@ -371,7 +411,7 @@ function frame() {
   if (A.interiors && mode === 'walk') for (const e of A.interiors.list) if (e.group && e.npc && inRoom(e, walk.position)) { const hb = e.npc.mesh.userData.bones; let a = Math.atan2(walk.position.x - e.npc.x, walk.position.z - e.npc.z) - (e.th + Math.PI); a = Math.atan2(Math.sin(a), Math.cos(a)); hb.head.rotation.y += (Math.max(-1, Math.min(1, a)) * 0.7 - hb.head.rotation.y) * Math.min(1, dt * 5); }
   for (const n of A.npcs || []) if (n.ry !== undefined) { const hb = n.mesh.userData.bones, dx = camera.position.x - n.x, dz = camera.position.z - n.z; if (dx * dx + dz * dz < 64) { let a = Math.atan2(dx, dz) - n.ry; a = Math.atan2(Math.sin(a), Math.cos(a)); hb.head.rotation.y += (Math.max(-1, Math.min(1, a)) * 0.7 - hb.head.rotation.y) * Math.min(1, dt * 5); } }
   useCar = !!car && !(talkTo && talkD < 1.6 + (car ? Math.hypot(walk.position.x - car.position.x, walk.position.z - car.position.z) - car.userData.half.x : 0));
-  useBtn.hidden = mode === 'walk' && !car && !talkTo; useBtn.textContent = mode === 'drive' ? 'Get out' : car && useCar ? `Drive the ${car.userData.driveName}` : talkTo ? `Talk to ${talkTo.who.known ? talkTo.who.name : talkTo.who.kind ? 'the ' + talkTo.who.title : talkTo.who.sex === 'f' ? 'the woman' : 'the man'}` : '';
+  useBtn.hidden = mode === 'walk' && !car && !talkTo && !pick; useBtn.textContent = mode === 'drive' ? 'Get out' : pick ? `Take the ${pick.name.toLowerCase()} · $${ITEM.get(pick.name).price}` : car && useCar ? `Drive the ${car.userData.driveName}` : talkTo ? `Talk to ${talkTo.who.known ? talkTo.who.name : talkTo.who.kind ? 'the ' + talkTo.who.title : talkTo.who.sex === 'f' ? 'the woman' : 'the man'}` : '';
   renderer.render(scene, camera);
   for (const ex of A.def.exits) if (ex.test(pos.x, pos.z) && !(ex.onFoot && mode === 'drive')) { travel(ex); break; }
   // once a second: measure, show, and step the resolution (down fast when slow, back up slowly when there's room)
@@ -383,8 +423,8 @@ function frame() {
 // ---- start: ?area=east starts in the other area
 { const id = AREAS[qs.get('area')] ? qs.get('area') : 'west'; A = buildArea(id, null);
   walk.position.set(+(qs.get('x') ?? (id === 'west' ? 163.5 : id === 'old' ? -20 : id === 'south' ? 20 : 327)), 0, +(qs.get('z') ?? (id === 'old' ? 4 : id === 'south' ? 3 : 20))); walk.yaw = +(qs.get('yaw') ?? 0.15); walk.pitch = 0.02; setMode('walk'); walk.apply(); }
-window.tickLaw = tickLaw; window.tickMood = tickMood;
-window.__scene = { renderer, scene, camera, walk, drive, setMode, use, talk, shop, sound, get wrong() { return A.wrong; }, get quiet() { return quietLeft > 0; }, startQuiet() { quietT = 0; }, strangeNow() { strangeT = 0; }, get ajar() { return ajar.length; }, law, crime, hurtPlayer, get health() { return health; }, get stars() { return stars(); }, get traffic() { return A.traffic; }, get shopPad() { return A.shopPad; }, get talkTo() { return talkTo; }, get npcs() { return A.npcs || []; }, travel: (to) => travel({ to, label: 'Going' }), peopleTick: (dt) => peopleTick(mode === 'walk' ? walk.position : drive.state, dt), areaIds: Object.keys(AREAS), get area() { return A.id; }, get busy() { return busy; }, get interiors() { return A.interiors; }, get people() { return A.people; }, get district() { return A.district; }, get areaRoot() { return A.root; }, get streamer() { return A.streamer; },
+window.tickLaw = tickLaw; window.tickMood = tickMood; window.tickBody = tickBody; wearNow();
+window.__scene = { renderer, scene, camera, walk, drive, setMode, use, talk, shop, sound, hands, townMap, openMap, get pick() { return pick; }, get wrong() { return A.wrong; }, get quiet() { return quietLeft > 0; }, startQuiet() { quietT = 0; }, strangeNow() { strangeT = 0; }, get ajar() { return ajar.length; }, law, crime, hurtPlayer, get health() { return health; }, get stars() { return stars(); }, get traffic() { return A.traffic; }, get shopPad() { return A.shopPad; }, get talkTo() { return talkTo; }, get npcs() { return A.npcs || []; }, travel: (to) => travel({ to, label: 'Going' }), peopleTick: (dt) => peopleTick(mode === 'walk' ? walk.position : drive.state, dt), areaIds: Object.keys(AREAS), get area() { return A.id; }, get busy() { return busy; }, get interiors() { return A.interiors; }, get people() { return A.people; }, get district() { return A.district; }, get areaRoot() { return A.root; }, get streamer() { return A.streamer; },
   stats: () => ({ area: A.id, fps, pr, calls: renderer.info.render.calls, tris: renderer.info.render.triangles, tex: renderer.info.memory.textures, geo: renderer.info.memory.geometries }) };
 requestAnimationFrame(frame);
 finishLoading(renderer, scene, camera);
