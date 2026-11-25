@@ -264,7 +264,11 @@ export function makeDriver2({ scene, camera, areas, colliders, ground, hooks = {
     if (!S.air && ground(S.x + fxS * (zB + dirS * 0.4), S.z + fzS * (zB + dirS * 0.4)) - ground(S.x + fxS * zB * 0.9, S.z + fzS * zB * 0.9) > 0.25) { S.x = ox; S.z = oz; const v = Math.hypot(S.vx, S.vz) || 1; bump({ nx: -S.vx / v, nz: -S.vz / v, pen: 0.1, px: S.x + fxS * zB, pz: S.z + fzS * zB, lz: zB }); }
     // the edge of the drivable ground is a wall too
     const ok = (x, z) => corners(x, z, S.h, u).every(([a, b]) => inArea(a, b));
-    if (!ok(S.x, S.z) && ok(ox, oz)) { const edge = (nx, nz) => bump({ nx, nz, pen: 0.1, px: S.x - nx * u.half.x, pz: S.z - nz * u.half.x, lz: 0 });
+    // ...and a car that is already over the edge (spun or shoved or rolled across it: the test above only stops a car that
+    // was inside a moment ago) is pushed back to the nearest drivable ground, so nothing can be driven through
+    if (!ok(S.x, S.z) && !ok(ox, oz)) { for (let pass = 0; pass < 2; pass++) { let w = null; for (const [a, b] of corners(S.x, S.z, S.h, u)) { if (inArea(a, b)) continue; let bd = 1e9, bx = 0, bz = 0; for (const ar of areas) { if (ar.y0 !== undefined) continue; const cx = clamp(a, ar.minX, ar.maxX), cz = clamp(b, ar.minZ, ar.maxZ), d = (cx - a) ** 2 + (cz - b) ** 2; if (d < bd) { bd = d; bx = cx - a; bz = cz - b; } } if (!w || bd > w.d) w = { d: bd, x: bx, z: bz, a, b }; }
+        if (!w) break; const d = Math.sqrt(w.d) || 1e-6; S.x += w.x * 1.02; S.z += w.z * 1.02; bump({ nx: w.x / d, nz: w.z / d, pen: d, px: w.a, pz: w.b, lz: (w.a - S.x) * Math.sin(S.h) + (w.b - S.z) * Math.cos(S.h) }); } }
+    else if (!ok(S.x, S.z) && ok(ox, oz)) { const edge = (nx, nz) => bump({ nx, nz, pen: 0.1, px: S.x - nx * u.half.x, pz: S.z - nz * u.half.x, lz: 0 });
       if (ok(S.x, oz)) { S.z = oz; edge(0, -Math.sign(S.vz)); } else if (ok(ox, S.z)) { S.x = ox; edge(-Math.sign(S.vx), 0); } else { S.x = ox; S.z = oz; S.h -= S.r * dt; const v = Math.hypot(S.vx, S.vz) || 1; edge(-S.vx / v, -S.vz / v); S.r *= -0.3; } }
   }
 
@@ -339,7 +343,7 @@ export function makeDriver2({ scene, camera, areas, colliders, ground, hooks = {
   const click = (v) => thud(v, 1800, 0.03);
   function starter() { if (!au) return; for (let i = 0; i < 5; i++) setTimeout(() => thud(0.07, 700, 0.05), i * 75); setTimeout(() => { S.shake = Math.max(S.shake, 0.12); }, 380); }
   const api = {
-    active: false, cars, state: S, rebuild: fileColliders,
+    active: false, cars, state: S, rebuild: fileColliders, areas, colliders,
     addCar(g, { name = 'car' } = {}) { const u = g.userData; u.driveName = name; u.hd = handlingFor(u.spec.type || 'sedan', u.spec); u.hp = u.hd.hpMax; cars.push(g); u.cols = [];
       for (let i = 0; i < 3; i++) { const c = { type: 'circle', x: 0, z: 0, r: u.half.x * 0.96, car: g, active: true }; colliders.push(c); u.cols.push(c); } api.syncCols(g); return g; },
     adopt(g) { if (!cars.includes(g)) cars.push(g); for (const c of g.userData.cols) if (!colliders.includes(c)) colliders.push(c); api.syncCols(g); },

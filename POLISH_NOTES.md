@@ -836,3 +836,19 @@ inside the view cone at five fixed camera spots, `tools/devtests/where2.js`), th
 - Out: the view comes forward into the seat, the engine stops, you look to the door and open it, swing out and up,
   stand beside the car, and the door shuts behind you.
 - `tools/devtests/carfp.js` steps through both and saves the frames.
+
+## 120 Chaos run: driving through walls fixed; people and car damage rebalanced
+- Owner: "I seem to go through a lot of walls". `tools/devtests/chaos.js <url> <area> <secs> <seed>` drives every
+  car with random hard inputs (full gas, handbrake turns, reversing) and checks every frame that the car is on
+  drivable ground and not inside anything solid.
+- Before: in 4 minutes in Midtown the car spent 3,288 frames outside the drivable ground, up to 12 m inside
+  buildings. Cause: the edge of the road only stopped a car that had been fully inside a moment before. Once a
+  corner was over the line (spun there, shoved by a hit, rolled) nothing stopped it again.
+- Fix: a car found over the edge is pushed back to the nearest drivable ground and takes the hit as a wall.
+  After: 24 minutes of chaos over both areas, five seeds: 0 frames through a wall (2 frames 0.25 m over a kerb line),
+  0 inside a solid, never trapped (when stuck nose-in, reversing always got it out), no errors.
+- Walls (cab, 35-60 km/h, square on / 45 / 15 degrees / reversing): stops, dents, never through.
+- People (tools/devtests/pedtest.js forward, pedrev.js reversing): they react the same to a car backing at them.
+  Changed: hitting a person cost the car far too much (about 75 a hit at 100 km/h; a few people wrecked it); now
+  about 20. Under about 40 km/h most people hit are knocked down, get up and run instead of dying.
+- Still true: lamp posts, poles and trees are solid and do not fall or shake; nothing on the street breaks.

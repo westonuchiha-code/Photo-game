@@ -51,7 +51,7 @@ const walk = new WalkControls(camera, renderer.domElement, { bounds: null, areas
 const drive = makeDriver2({ scene, camera, areas: driveAreas, colliders, ground: (x, z) => (A && A.district ? A.district.userData.floorY(x, z) ?? 0 : 0),
   hooks: { blast: (x, z, r) => { if (A && A.people) A.people.blast(x, z, r); }, wrecked: () => { if (mode === 'drive') use(); }, horn: (x, z, h) => { if (A && A.people) A.people.honk(x, z, h); } } });
 // what the pedestrians are told about the car being driven, and what hitting one does to it
-const carInfo = { x: 0, z: 0, vx: 0, vz: 0, h: 0, half: null, onHit: (speed, dead, x, z) => { const S = drive.state; S.vx *= 0.94; S.vz *= 0.94; S.shake = Math.min(1, S.shake + 0.25); if (drive.car) drive.hurt(drive.car, 14 + speed * 2.2, x, z, 0.7); } };
+const carInfo = { x: 0, z: 0, vx: 0, vz: 0, h: 0, half: null, onHit: (speed, dead, x, z) => { const S = drive.state; S.vx *= 0.94; S.vz *= 0.94; S.shake = Math.min(1, S.shake + 0.25); if (drive.car) drive.hurt(drive.car, 4 + speed * 0.6, x, z, 0.7);   /* (a person dents a car; it takes a wall to wreck one) */ } };
 walk.ground = (x, z, prevY) => { if (!A) return 0; if (A.ground) return A.ground(x, z, prevY); for (const [x0, x1, z0, z1, y] of A.floors) if (x > x0 && x < x1 && z > z0 && z < z1) return typeof y === 'function' ? y(x, z) : y; return A.interiors.floorY(x, z) ?? A.district.userData.floorY(x, z) ?? 0; };
 
 // ---- the areas. Both are halves of the big town's district, at the same coordinates, so a street keeps its place

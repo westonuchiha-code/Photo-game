@@ -75,7 +75,7 @@ export function makePeople({ scene, grid, sidewalkY = 0.14, count = 40 }) {
         if (live) {
           // struck: inside the car's outline while it is moving. Slow, it shoulders them aside; faster, it throws them.
           const al = kx * sh + kz * ch, sd = kx * ch - kz * sh, inside = Math.abs(sd) < car.half.x + 0.3 && al > car.half.zR - 0.3 && al < car.half.zF + 0.3;
-          if (inside && ks > 2.4) { const dead = ks > 7.5 || r() < 0.25; strike(p, car.vx * 0.85 + ch * Math.sign(sd || 1) * 1.6, car.vz * 0.85 - sh * Math.sign(sd || 1) * 1.6, 2.4 + ks * 0.2, dead); if (car.onHit) car.onHit(ks, dead, x, z); for (const q of P) if (q !== p && q.active && Math.hypot(q.mesh.position.x - x, q.mesh.position.z - z) < 22) scare(q, car.x, car.z, 6); continue; }
+          if (inside && ks > 2.4) { const dead = ks > 11.5 || r() < 0.12;   /* (under about 40 km/h most are knocked down, get up and run) */ strike(p, car.vx * 0.85 + ch * Math.sign(sd || 1) * 1.6, car.vz * 0.85 - sh * Math.sign(sd || 1) * 1.6, 2.4 + ks * 0.2, dead); if (car.onHit) car.onHit(ks, dead, x, z); for (const q of P) if (q !== p && q.active && Math.hypot(q.mesh.position.x - x, q.mesh.position.z - z) < 22) scare(q, car.x, car.z, 6); continue; }
           if (inside) { const push = 3 * dt + ks * dt; p.ox += ch * Math.sign(sd || 1) * push; p.oz -= sh * Math.sign(sd || 1) * push; }
           // a car coming at them: most see it and throw themselves clear; the faster it comes, the fewer manage
           if (ks > 4.5 && p.st !== 'dive') { const vx = car.vx / ks, vz = car.vz / ks, along = kx * vx + kz * vz, miss = kx * vz - kz * vx, tt = along / ks;
