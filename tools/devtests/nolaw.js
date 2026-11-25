@@ -1,0 +1,6 @@
+const { chromium } = require('playwright');
+(async () => { const b = await chromium.launch(); const p = await b.newPage({ viewport: { width: 412, height: 800 } }); const errs = []; p.on('pageerror', (e) => errs.push(e.message));
+  await p.goto(process.argv[2], { waitUntil: 'commit', timeout: 300000 }); await p.waitForFunction(() => window.__scene && !document.getElementById('loader'), null, { timeout: 300000, polling: 500 }); await p.waitForTimeout(800);
+  console.log(JSON.stringify(await p.evaluate(() => { window.__loadingHold = true; const S = window.__scene, D = S.drive, T = S.traffic; S.crime(8); S.hurtPlayer(500); for (let f = 0; f < 1800; f++) { D.update(1 / 60); T.update(1 / 60); window.tickLaw(1 / 60); } const vis = (id) => { const e = document.getElementById(id); return !!e && getComputedStyle(e).display !== 'none' && e.textContent !== ''; };
+    return { heat: S.law.heat, stars: S.stars, health: S.health, police: T.cars.filter((c) => c.police).length, traffic: T.cars.length, starsShown: vis('wanted'), hpShown: getComputedStyle(document.getElementById('hpbar')).display !== 'none', bigmsg: document.getElementById('bigmsg').textContent }; })));
+  console.log('errors', errs.length); await b.close(); })();

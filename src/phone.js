@@ -206,7 +206,7 @@ function buildArea(id, carried) {
   drive.rebuild();
   // traffic: a few cars that drive the grid by themselves (see vehicle/traffic.js)
   const traffic = makeTraffic({ xs: def.xs, zs: def.zs, drive, count: PHONE ? 4 : 6, onFoot: () => (mode === 'walk' ? walk.position : null),
-    police: { want: () => stars(), target: () => (stars() && downT <= 0 ? (mode === 'drive' ? { x: drive.state.x, z: drive.state.z, v: Math.hypot(drive.state.vx, drive.state.vz), foot: false } : { x: walk.position.x, z: walk.position.z, v: 0, foot: true }) : null),
+    police: !LAW_ON ? null : { want: () => stars(), target: () => (stars() && downT <= 0 ? (mode === 'drive' ? { x: drive.state.x, z: drive.state.z, v: Math.hypot(drive.state.vx, drive.state.vz), foot: false } : { x: walk.position.x, z: walk.position.z, v: 0, foot: true }) : null),
       spawn: (i) => { const c = makeCar({ type: 'sedan', color: '#eef0f2', roofColor: '#15171a', rim: 'steel', livery: LIVERIES.police, name: 'police car', plate: 'ELM P' + (10 + i % 90) }); root.add(c); drive.addCar(c, { name: 'police car' }); return c; } },
     spawn: (i) => { const [type, opt] = TRAFFIC[(i * 5 + (id === 'east' ? 3 : 0)) % TRAFFIC.length], c = makeCar({ type, ...opt, plate: 'ELM ' + (100 + (i * 37) % 900) }); root.add(c); drive.addCar(c, { name: opt.name }); return c; } });
   const people = makePeople({ scene: root, grid: GRID, sidewalkY: SW, count: PHONE ? 14 : 20, ok: (x, z) => driveAreas.some((a) => x >= a.minX && x <= a.maxX && z >= a.minZ && z <= a.maxZ) });
@@ -230,11 +230,14 @@ const use = () => { if (busy || talk.active || shop.active || downT > 0) return;
 // heat: what the police know you have done lately (0..8): a star at 1, two at 3, three at 6. It only cools while no police
 // car is near enough to see you. Stopped with one beside you for a couple of seconds, you are taken in: BUSTED, a fine.
 // health: crashes, explosions. At nothing: WASTED, a tenth of your money, and you come round where the area begins.
+// PARKED (owner, after 126): this is not that kind of game. No police, no wanted stars, no arrests, no health bar, no
+// WASTED. The code stays here, switched off; `?law` in the address turns it on for anyone who wants to look at it.
+const LAW_ON = qs.has('law');
 const law = { heat: 0, bustT: 0 }; let health = 100, hurtT = 0, downT = 0;
 const stars = () => (law.heat >= 6 ? 3 : law.heat >= 3 ? 2 : law.heat >= 1 ? 1 : 0);
-const crime = (n) => { if (downT > 0) return; law.heat = Math.min(8, law.heat + n); };
+const crime = (n) => { if (!LAW_ON || downT > 0) return; law.heat = Math.min(8, law.heat + n); };
 const policeNear = () => { let d = 1e9; if (A && A.traffic) { const me = mode === 'drive' ? drive.state : walk.position; for (const c of A.traffic.cars) if (c.police) d = Math.min(d, Math.hypot(c.x - me.x, c.z - me.z)); } return d; };
-function hurtPlayer(n) { if (n <= 0 || downT > 0) return; health = Math.max(0, health - n); hurtT = 10; redEl.style.opacity = Math.min(0.6, 0.15 + n / 90); setTimeout(() => { redEl.style.opacity = 0; }, 140); if (health <= 0) down('WASTED'); }
+function hurtPlayer(n) { if (!LAW_ON || n <= 0 || downT > 0) return; health = Math.max(0, health - n); hurtT = 10; redEl.style.opacity = Math.min(0.6, 0.15 + n / 90); setTimeout(() => { redEl.style.opacity = 0; }, 140); if (health <= 0) down('WASTED'); }
 const START = { west: [163.5, 20], east: [327, 20], old: [-20, 4], south: [20, 3] };
 const lawEl = document.createElement('div'), hpEl = document.createElement('div'), bigEl = document.createElement('div'), redEl = document.createElement('div');
 { const st = document.createElement('style'); st.textContent = [
@@ -245,13 +248,14 @@ const lawEl = document.createElement('div'), hpEl = document.createElement('div'
     '#bigmsg{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#000c;color:#fff;font:800 54px system-ui;letter-spacing:6px;z-index:40;opacity:0;pointer-events:none;transition:opacity .5s}',
     '#bigmsg i{font:500 17px system-ui;letter-spacing:1px;margin-top:10px;opacity:.85;font-style:normal}',
     '#redflash{position:fixed;inset:0;background:#c00;opacity:0;pointer-events:none;z-index:7;transition:opacity .25s}'].join('\n'); document.head.appendChild(st);
+  if (!LAW_ON) { lawEl.hidden = hpEl.hidden = true; lawEl.style.display = hpEl.style.display = 'none'; }
   lawEl.id = 'wanted'; hpEl.id = 'hpbar'; hpEl.innerHTML = '<i></i>'; bigEl.id = 'bigmsg'; redEl.id = 'redflash'; document.body.append(lawEl, hpEl, bigEl, redEl); }
 // taken in, or knocked out: the screen goes dark with the word on it, then you are on foot again
 function down(word) { if (downT > 0) return; const fine = word === 'BUSTED' ? Math.min(talk.wallet.money, 40 * Math.max(1, stars())) : Math.round(talk.wallet.money * 0.1); talk.wallet.money -= fine; talk.sync(); talk.close(); shop.close();
   bigEl.innerHTML = word + '<i>' + (word === 'BUSTED' ? 'Fined' : 'It cost you') + ' $' + fine + '</i>'; bigEl.style.opacity = 1; downT = 2.8; law.heat = 0; law.bustT = 0; drive.lock = true; walk.enabled = false;
   downWord = word; downMoved = false; }
 let downWord = '', downMoved = false;
-function tickLaw(dt) {
+function tickLaw(dt) { if (!LAW_ON) return;
   if (downT > 0) { downT -= dt;   // dark screen: half way through you are put on your feet; at the end it lifts
     if (downT < 1.9 && !downMoved) { downMoved = true; if (mode === 'drive') { const out = drive.exit(); if (out) { walk.position.set(out.x, 0, out.z); walk.yaw = out.yaw; } myCar = null; setMode('walk'); }
       if (downWord === 'WASTED') { const s0 = START[A.id]; if (s0) walk.position.set(s0[0], 0, s0[1]); health = 100; } else health = Math.max(health, 30); walk.enabled = false; walk.apply(); }
@@ -270,7 +274,7 @@ const talk = makeTalk({ onOpen: () => { walk.enabled = false; }, onClose: () => 
   // things used from the bag: tape or a hammer patch up the car you are standing by; a drink quickens your step for a while
   use: { mend: (name) => { const c = drive.nearest(walk.position); if (!c || c.userData.wreck) return null; const u = c.userData, add = name === 'Hammer' ? 0.15 : 0.3; if (u.hp >= u.hd.hpMax) return null; u.hp = Math.min(u.hd.hpMax, u.hp + u.hd.hpMax * add); return `You patch up the ${u.driveName}. It will hold.`; },
     brisk: () => { briskT = 90; walk.speed = 2.75 * 1.25; return 'That wakes you up. You walk faster for a while.'; },
-    eat: () => { if (health >= 100) return null; health = Math.min(100, health + 22); return 'That is better.'; }, heal: (name) => { if (health >= 100) return null; health = Math.min(100, health + (name === 'Painkillers' ? 55 : name === 'Bandages' ? 40 : 18)); return 'Patched up.'; } } });
+    eat: () => { if (!LAW_ON || health >= 100) return null; health = Math.min(100, health + 22); return 'That is better.'; }, heal: (name) => { if (!LAW_ON || health >= 100) return null; health = Math.min(100, health + (name === 'Painkillers' ? 55 : name === 'Bandages' ? 40 : 18)); return 'Patched up.'; } } });
 const shop = makeShopMenu({ drive, makeCar, wallet: talk.wallet, paid: () => talk.sync(), resprayed: () => { if (law.heat > 0 && policeNear() > 30) { law.heat = 0; drive.say('THEY HAVE LOST YOU', 3); } } });
 const inRoom = (e, p) => p.x > e.inner.minX && p.x < e.inner.maxX && p.z > e.inner.minZ && p.z < e.inner.maxZ;
 function findTalk() { const p = walk.position; let best = null, bd = 1e9; const tryN = (n, d, reach) => { if (d < reach && d < bd) { bd = d; best = n; } };

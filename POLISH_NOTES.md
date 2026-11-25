@@ -957,3 +957,22 @@ inside the view cone at five fixed camera spots, `tools/devtests/where2.js`), th
   it reported was the body-shop menu opening on a car that stopped in the booth.
 - Not done: no officers on foot (a car beside you is the arrest); no sirens to hear; nothing on foot hurts you except
   explosions; pedestrians and shopkeepers do not react to your stars.
+
+## 127 Police, wanted stars, arrests and health: parked. What this game is.
+- Owner: number 2 on the list ("consequences") was left out on purpose and should not have been built. All of 126
+  is switched off (`LAW_ON` in phone.js, false unless the address has `?law`): no police cars, no stars, no BUSTED,
+  no health bar, no WASTED, food and medicine have no "use" again. Nothing is deleted. People still run from a car
+  and still remember being run at (that is the conversation system, not a warrant system).
+  `tools/devtests/nolaw.js` commits every crime and checks nothing happens.
+- Rule, again: build only what was asked for. A bare "continue" after a list is finished means ask what is next.
+- What the game is (owner's words, condensed): a first-person game. Morrowind's way of dealing with people, in a
+  modern city simulated the way an open-city game simulates one (walk, drive, go into shops, buy ordinary things),
+  with the mood of Germs: Nerawareta Machi: a strange, creepy, interesting place to walk round and look at. It will
+  not be as big as Morrowind, as deep, or do as much as an open-city sandbox, so the reason to play it is the world
+  itself: odd, surreal, built from photographs, people worth talking to. Not shooting, not running from police.
+  The other games are inspirations, not things to copy; when unsure which way a feature should lean, ask.
+- Germs: Nerawareta Machi (PS1, 1999, KAJ), from reviews: first person throughout; a reporter back in his home town
+  as something strange spreads; walk, drive, bus, subway, train; information from a computer at your office, from
+  people, from what you find; a clock with day and night; exteriors almost black and white, interiors in colour;
+  no other cars or people on the streets, which reviewers say is what makes it eerie; rough and unfinished, and
+  remembered for its atmosphere, not its systems.

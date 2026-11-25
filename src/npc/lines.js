@@ -44,8 +44,6 @@ export const RUMOURS = [
   "The noodle place changed cooks again. Third one since spring.",
   "Someone left a kei car in the garage off the main street and never came back. It's grey with dust.",
   "Half these shops keep the stock-room door locked even from their own staff.",
-  "If the police are after you, get out of their sight and stay out. Or get the car resprayed. They are looking for a colour.",
-  "The pharmacy's bandages will put you right faster than a burger will. A burger's nicer, mind.",
   "There's a spray booth in one of the back courts. Drive in, and you drive out another colour with the dents gone.",
 ];
 
@@ -243,8 +241,8 @@ export const EXTRA_ITEMS = [['Pocket radio', 18, 'media']];
 // 'luck' (a ticket: scratch it). Everything can be given as a gift.
 // 'eat' (food: some health back), 'heal' (from the pharmacy: more)
 export const USES = { 'Coffee': 'brisk', 'Soda': 'brisk', 'Milkshake': 'brisk', 'Bottle of tea': 'brisk', 'Cold barley tea': 'brisk', 'Duct tape': 'mend', 'Hammer': 'mend', 'Lottery ticket': 'luck',
-  'Bandages': 'heal', 'Painkillers': 'heal', 'Vitamins': 'heal',
-  'Bowl of noodles': 'eat', 'Dumplings': 'eat', 'Pastry': 'eat', 'Snack bar': 'eat', 'Hot pot': 'eat', 'Burger': 'eat', 'Slice of pie': 'eat', 'Sausages': 'eat', 'Steak': 'eat', 'Popcorn': 'eat', 'Grilled skewers': 'eat', 'Pickles': 'eat' };
+ };
+// (parked with the health bar: 'heal' for Bandages / Painkillers / Vitamins and 'eat' for the food)
 export const ITEM = (() => { const m = new Map(); for (const k of [...SHOP_KINDS, ...Object.values(PLACES)]) for (const g of k.goods) m.set(g[0], { price: g[1], cat: g[2] }); for (const g of EXTRA_ITEMS) m.set(g[0], { price: g[1], cat: g[2] }); return m; })();
 
 // ---- people with a part of their own. `answers` override the area's; `topics` are extra topics only they have.
