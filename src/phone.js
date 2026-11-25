@@ -51,7 +51,8 @@ const walk = new WalkControls(camera, renderer.domElement, { bounds: null, areas
 const drive = makeDriver2({ scene, camera, areas: driveAreas, colliders, ground: (x, z) => (A && A.district ? A.district.userData.floorY(x, z) ?? 0 : 0),
   hooks: { blast: (x, z, r) => { if (A && A.people) A.people.blast(x, z, r); }, wrecked: () => { if (mode === 'drive') use(); }, horn: (x, z, h) => { if (A && A.people) A.people.honk(x, z, h); } } });
 // what the pedestrians are told about the car being driven, and what hitting one does to it
-const carInfo = { x: 0, z: 0, vx: 0, vz: 0, h: 0, half: null, onHit: (speed, dead, x, z) => { const S = drive.state; S.vx *= 0.94; S.vz *= 0.94; S.shake = Math.min(1, S.shake + 0.25); if (drive.car) drive.hurt(drive.car, 4 + speed * 0.6, x, z, 0.7);   /* (a person dents a car; it takes a wall to wreck one) */ } };
+const carInfo = { x: 0, z: 0, vx: 0, vz: 0, h: 0, half: null, onHit: (speed, dead, x, z) => { const S = drive.state; S.vx *= 0.94; S.vz *= 0.94; S.shake = Math.min(1, S.shake + 0.25); if (drive.car) drive.hurt(drive.car, 4 + speed * 0.6, x, z, 0.7);
+  /* everyone near enough to see it remembers, and the area hears */ if (A && A.people) talk.witness(A.people.list.filter((q) => q.active && Math.hypot(q.mesh.position.x - x, q.mesh.position.z - z) < 25).map((q) => 'p:' + A.id + ':' + q.seed), A.id, dead);   /* (a person dents a car; it takes a wall to wreck one) */ } };
 walk.ground = (x, z, prevY) => { if (!A) return 0; if (A.ground) return A.ground(x, z, prevY); for (const [x0, x1, z0, z1, y] of A.floors) if (x > x0 && x < x1 && z > z0 && z < z1) return typeof y === 'function' ? y(x, z) : y; return A.interiors.floorY(x, z) ?? A.district.userData.floorY(x, z) ?? 0; };
 
 // ---- the areas. Both are halves of the big town's district, at the same coordinates, so a street keeps its place
@@ -78,12 +79,14 @@ const AREAS = {
       { const KG = { x: 186.5, z: 77 }, kgar = makeKeiGarage({ car: false }); kgar.position.set(KG.x, 0.02, KG.z); for (const [x0, x1, z0, z1] of kgar.userData.colliders) rect(KG.x + x0, KG.x + x1, KG.z + z0, KG.z + z1); for (const a of kgar.userData.areas) areas.push({ minX: a.minX + KG.x, maxX: a.maxX + KG.x, minZ: a.minZ + KG.z, maxZ: a.maxZ + KG.z });
         S.cars.push(['keiold', { name: 'dusty kei car', color: '#4a78b8', dust: 0.9, rim: 'steel', plate: 'ELM 360' }, KG.x + kgar.userData.carPose.x, KG.z + kgar.userData.carPose.z, 0]); put(kgar); }
       // the first photo-faced character, standing on the sidewalk by the start (he turns his head to watch you)
+      stand(S, 'potter', 108.0, -13.0, 0, 0.16); stand(S, 'host', 118.3, -6.0, 0, S.SW);
       const hank = makeCharacter(CHARACTERS.hank); hank.position.set(166.4, S.SW, 25.5); hank.rotation.y = Math.PI * 0.82; S.root.add(hank); colliders.push({ type: 'circle', x: 166.4, z: 25.5, r: 0.3 }); S.npcs.push({ who: character('hank'), x: 166.4, z: 25.5, mesh: hank, reach: 2.4 });
       S.tick = (dt) => { const hb = hank.userData.bones, dx = camera.position.x - hank.position.x, dz = camera.position.z - hank.position.z; if (dx * dx + dz * dz < 144) { let a = Math.atan2(dx, dz) - hank.rotation.y; a = Math.atan2(Math.sin(a), Math.cos(a)); const want = Math.max(-1.1, Math.min(1.1, a)); hb.head.rotation.y += (want * 0.7 - hb.head.rotation.y) * Math.min(1, dt * 5); hb.neck.rotation.y = hb.head.rotation.y * 0.4; } }; } },
   east: { name: 'Eastside', xs: [245, 329, 413], zs: [-84, 0, 84], ring: RING_E, lots: ['gallery', 'temple', 'pocketpark', 'nakamachi'], westStub: true,
     exits: [{ to: 'west', side: 'w', test: (x) => x < 229, label: 'Heading west' }], open: { w: true },
     cars: [['sedan', { color: '#7a1c22', name: 'maroon sedan', plate: 'ELM 5M3', rim: 'alloy' }, 325.4, 30, 0], ['hatch', { color: '#e8e2d0', name: 'cream hatch', plate: 'ELM 1H8', rim: 'steel' }, 290, 3.7, Math.PI / 2], ['kei', { color: '#3a6a8a', name: 'blue kei car', plate: 'ELM 7K2', rim: 'steel' }, 332.6, -44, Math.PI]],
-    sites(S) { const { put, rect, areas, floors } = S, piMap = (X, Z, c) => [X - c[1], X - c[0], Z - c[3], Z - c[2]];   // local rect -> world for a set turned half round
+    sites(S) { stand(S, 'attendant', 339.6, 10.6, Math.PI, 0.16); stand(S, 'keeper', 389.6, -8.6, 0, 0.08);
+      const { put, rect, areas, floors } = S, piMap = (X, Z, c) => [X - c[1], X - c[0], Z - c[3], Z - c[2]];   // local rect -> world for a set turned half round
       // the art gallery (the owner's paintings), facing the main street
       { const AG = { x: 344, z: 13 }, g = makeArtGallery(); g.position.set(AG.x, 0.14, AG.z); g.rotation.y = Math.PI; for (const c of g.userData.colliders) rect(...piMap(AG.x, AG.z, c)); for (const a of g.userData.areas) { const [minX, maxX, minZ, maxZ] = piMap(AG.x, AG.z, [a.minX, a.maxX, a.minZ, a.maxZ]); areas.push({ minX, maxX, minZ, maxZ }); } put(g); floors.push([337, 351, 7.9, 18, 0.14]); }
       // the lantern temple: plaza, stairs and platform, on the main street
@@ -103,6 +106,8 @@ const AREAS = {
 };
 
 const PARK = [['sedan', { color: '#2a2c30', name: 'black sedan', plate: 'ELM 4B1', rim: 'alloy' }], ['hatch', { color: '#d8d4c8', name: 'white hatch', plate: 'ELM 8W2', rim: 'steel' }], ['kei', { color: '#c87a2a', name: 'orange kei car', plate: 'ELM 3K9', rim: 'steel' }], ['pickup', { color: '#6a2a26', name: 'red pickup', plate: 'ELM 6R5', rim: 'steel' }], ['van', { color: '#d9d6cc', name: 'white van', plate: 'ELM 2V6', rim: 'steel' }], ['scout', { color: '#3f5a46', name: 'green 4x4', plate: 'ELM 9S4', rim: 'steel' }], ['wagon', { color: '#6f7f8c', name: 'grey estate', plate: 'ELM 5E1', rails: true }]];
+// someone who stands at a place: a body of the right sex, a collider, and their part from lines.js
+function stand(S, id, x, z, ry, y) { const who = character(id); let body = null; for (let sd = 500 + id.length * 7, k = 0; k < 40; sd++, k++) { const b = makePerson(sd); if (b.userData.sex === who.sex) { body = b; break; } } if (!body) return; body.position.set(x, y, z); body.rotation.y = ry; S.root.add(body); colliders.push({ type: 'circle', x, z, r: 0.3 }); S.npcs.push({ who, x, z, mesh: body, reach: 2.7, ry }); }
 // things knocked over by a car, falling: each { a (angle), v (its speed), set(angle) } drops under its own weight, bounces once, and lies still
 const falls = [];
 function tickFalls(dt) { for (let i = falls.length - 1; i >= 0; i--) { const f = falls[i]; f.v += (0.4 + Math.sin(f.a) * 5.5) * dt; f.a += f.v * dt; if (f.a >= 1.5) { f.a = 1.5; if (f.v > 1.2 && !f.b) { f.b = true; f.v *= -0.25; } else { f.set(1.5); falls.splice(i, 1); continue; } } f.set(f.a); } }
@@ -191,7 +196,11 @@ const setMode = (m) => { mode = m; walk.enabled = m === 'walk'; document.body.da
 const use = () => { if (busy || talk.active) return; if (mode === 'walk' && talkTo && !useCar) { startTalk(talkTo); return; } if (mode === 'drive') { drive.leave(() => { rise = { p: camera.position.clone(), q: camera.quaternion.clone(), t: 0 }; const out = drive.exit(); if (out) { walk.position.set(out.x, 0, out.z); walk.yaw = out.yaw; walk.pitch = -0.05; } myCar = null; setMode('walk'); walk.apply(); }); } else { const c = drive.nearest(walk.position); if (c) { drive.enter(c); myCar = c; setMode('drive'); } } };
 // ---- talking: the nearest person in reach (someone on the street, a shopkeeper across their counter, a character)
 let talkTo = null, useCar = false, talkPed = null, rise = null;   // rise: standing up out of a car (the view comes up from the seat)
-const talk = makeTalk({ onClose: () => { if (talkPed && talkPed.st === 'talk') talkPed.st = 'walk'; talkPed = null; walk.enabled = mode === 'walk'; } });
+let briskT = 0;
+const talk = makeTalk({ onOpen: () => { walk.enabled = false; }, onClose: () => { if (talkPed && talkPed.st === 'talk') talkPed.st = 'walk'; talkPed = null; walk.enabled = mode === 'walk'; },
+  // things used from the bag: tape or a hammer patch up the car you are standing by; a drink quickens your step for a while
+  use: { mend: (name) => { const c = drive.nearest(walk.position); if (!c || c.userData.wreck) return null; const u = c.userData, add = name === 'Hammer' ? 0.15 : 0.3; if (u.hp >= u.hd.hpMax) return null; u.hp = Math.min(u.hd.hpMax, u.hp + u.hd.hpMax * add); return `You patch up the ${u.driveName}. It will hold.`; },
+    brisk: () => { briskT = 90; walk.speed = 2.75 * 1.25; return 'That wakes you up. You walk faster for a while.'; } } });
 const inRoom = (e, p) => p.x > e.inner.minX && p.x < e.inner.maxX && p.z > e.inner.minZ && p.z < e.inner.maxZ;
 function findTalk() { const p = walk.position; let best = null, bd = 1e9; const tryN = (n, d, reach) => { if (d < reach && d < bd) { bd = d; best = n; } };
   for (const n of A.npcs || []) tryN(n, Math.hypot(n.x - p.x, n.z - p.z), n.reach);
@@ -230,6 +239,7 @@ function peopleTick(pos, dt) { if (!A.people) return; let ci = null; if (mode ==
 function frame() {
   if (window.__loadingHold || busy || !A) { clock.getDelta(); requestAnimationFrame(frame); return; }
   const raw = clock.getDelta(), dt = Math.min(raw, 0.05); t += dt;
+  if (briskT > 0 && (briskT -= dt) <= 0) walk.speed = 2.75;
   if (mode === 'walk') walk.update(dt); drive.update(dt); if (falls.length) tickFalls(dt);
   if (rise) { rise.t += dt; const k = Math.min(1, rise.t / 0.5), e = k * k * (3 - 2 * k); if (mode === 'walk' && k < 1) { camera.position.lerpVectors(rise.p, camera.position, e); camera.position.y += Math.sin(e * Math.PI) * 0.1; camera.quaternion.slerpQuaternions(rise.q, camera.quaternion, e); } else rise = null; }   // (the driver runs every frame: parked cars that were hit, fires, smoke)
   sky.userData.update(camera, t);
@@ -246,8 +256,9 @@ function frame() {
   if (talk.active && talkPed && talkPed.st !== 'talk') talk.close();   // (knocked down or scared off mid-sentence)
   // a keeper turns their head to whoever is in the shop
   if (A.interiors && mode === 'walk') for (const e of A.interiors.list) if (e.group && e.npc && inRoom(e, walk.position)) { const hb = e.npc.mesh.userData.bones; let a = Math.atan2(walk.position.x - e.npc.x, walk.position.z - e.npc.z) - (e.th + Math.PI); a = Math.atan2(Math.sin(a), Math.cos(a)); hb.head.rotation.y += (Math.max(-1, Math.min(1, a)) * 0.7 - hb.head.rotation.y) * Math.min(1, dt * 5); }
+  for (const n of A.npcs || []) if (n.ry !== undefined) { const hb = n.mesh.userData.bones, dx = camera.position.x - n.x, dz = camera.position.z - n.z; if (dx * dx + dz * dz < 64) { let a = Math.atan2(dx, dz) - n.ry; a = Math.atan2(Math.sin(a), Math.cos(a)); hb.head.rotation.y += (Math.max(-1, Math.min(1, a)) * 0.7 - hb.head.rotation.y) * Math.min(1, dt * 5); } }
   useCar = !!car && !(talkTo && talkD < 1.6 + (car ? Math.hypot(walk.position.x - car.position.x, walk.position.z - car.position.z) - car.userData.half.x : 0));
-  useBtn.hidden = mode === 'walk' && !car && !talkTo; useBtn.textContent = mode === 'drive' ? 'Get out' : car && useCar ? `Drive the ${car.userData.driveName}` : talkTo ? `Talk to ${talkTo.who.known ? talkTo.who.name : talkTo.who.shop !== undefined ? 'the ' + talkTo.who.title : talkTo.who.sex === 'f' ? 'the woman' : 'the man'}` : '';
+  useBtn.hidden = mode === 'walk' && !car && !talkTo; useBtn.textContent = mode === 'drive' ? 'Get out' : car && useCar ? `Drive the ${car.userData.driveName}` : talkTo ? `Talk to ${talkTo.who.known ? talkTo.who.name : talkTo.who.kind ? 'the ' + talkTo.who.title : talkTo.who.sex === 'f' ? 'the woman' : 'the man'}` : '';
   renderer.render(scene, camera);
   for (const ex of A.def.exits) if (ex.test(pos.x, pos.z) && !(ex.onFoot && mode === 'drive')) { travel(ex); break; }
   // once a second: measure, show, and step the resolution (down fast when slow, back up slowly when there's room)
@@ -259,7 +270,7 @@ function frame() {
 // ---- start: ?area=east starts in the other area
 { const id = AREAS[qs.get('area')] ? qs.get('area') : 'west'; A = buildArea(id, null);
   walk.position.set(+(qs.get('x') ?? (id === 'west' ? 163.5 : id === 'old' ? -20 : 327)), 0, +(qs.get('z') ?? (id === 'old' ? 4 : 20))); walk.yaw = +(qs.get('yaw') ?? 0.15); walk.pitch = 0.02; setMode('walk'); walk.apply(); }
-window.__scene = { renderer, scene, camera, walk, drive, setMode, use, talk, get talkTo() { return talkTo; }, travel: (to) => travel({ to, label: 'Going' }), peopleTick: (dt) => peopleTick(mode === 'walk' ? walk.position : drive.state, dt), areaIds: Object.keys(AREAS), get area() { return A.id; }, get busy() { return busy; }, get interiors() { return A.interiors; }, get people() { return A.people; }, get district() { return A.district; }, get areaRoot() { return A.root; }, get streamer() { return A.streamer; },
+window.__scene = { renderer, scene, camera, walk, drive, setMode, use, talk, get talkTo() { return talkTo; }, get npcs() { return A.npcs || []; }, travel: (to) => travel({ to, label: 'Going' }), peopleTick: (dt) => peopleTick(mode === 'walk' ? walk.position : drive.state, dt), areaIds: Object.keys(AREAS), get area() { return A.id; }, get busy() { return busy; }, get interiors() { return A.interiors; }, get people() { return A.people; }, get district() { return A.district; }, get areaRoot() { return A.root; }, get streamer() { return A.streamer; },
   stats: () => ({ area: A.id, fps, pr, calls: renderer.info.render.calls, tris: renderer.info.render.triangles, tex: renderer.info.memory.textures, geo: renderer.info.memory.geometries }) };
 requestAnimationFrame(frame);
 finishLoading(renderer, scene, camera);

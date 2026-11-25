@@ -16,17 +16,17 @@ export const JOBS = ['courier', 'student', 'line cook', 'bookkeeper', 'retired m
 
 // how each temperament opens, closes and talks about itself. {name} {job} {area} are filled in.
 export const VOICE = {
-  warm:    { hello: ['Hello there! Lovely night for a walk.', 'Oh, hello. What can I do for you?'], bye: 'Take care of yourself.', self: "I'm {name}. {Job}, and happy enough with it. I've lived in {area} most of my life.", price: 0.9,
+  warm:    { base: 60, again: ['Hello again! Good to see you.', 'There you are. How have you been?'], cold: "I'd rather not talk to you. I saw what you did.", thanks: "Oh, you shouldn't have. Thank you, truly.", tip: "Between us: the mart on the corner pays for anything, but take your good things to the shop that deals in them. You'll get half as much again.", hello: ['Hello there! Lovely night for a walk.', 'Oh, hello. What can I do for you?'], bye: 'Take care of yourself.', self: "I'm {name}. {Job}, and happy enough with it. I've lived in {area} most of my life.", price: 0.9,
     away: "That's not round here, dear. Ask someone who lives over that way.", no: "I wish I could tell you something about that." },
-  gruff:   { hello: ['Yeah?', 'Make it quick.'], bye: 'Right.', self: "{name}. {Job}. That's all you need.", price: 1.1,
+  gruff:   { base: 40, again: ['You again.', 'Back, are you.'], cold: 'Get lost.', thanks: "Hm. All right. That's decent of you.", tip: "You're all right. Listen: a lamp post gives if you hit it fast enough. A wall doesn't. Remember which is which.", hello: ['Yeah?', 'Make it quick.'], bye: 'Right.', self: "{name}. {Job}. That's all you need.", price: 1.1,
     away: "Wrong part of town. Go and ask them.", no: "Don't know. Don't care." },
-  gossip:  { hello: ['Ooh, a new face! Come here, come here.', "You didn't hear this from me, but hello."], bye: "Come back, I'll have more by tomorrow.", self: "{name}, {job}, and I hear everything that goes on in {area}. Everything.", price: 1.0,
+  gossip:  { base: 55, again: ['Oh good, it’s you. Sit, sit.', 'I was just talking about you. Nicely!'], cold: "Oh no. No, no. Everyone knows about you now. I made sure.", thanks: "For me? Oh, I'm telling everyone how generous you are.", tip: "Since it's you: the shopkeepers talk to each other. Be good to one and the rest hear of it. Be bad to one...", hello: ['Ooh, a new face! Come here, come here.', "You didn't hear this from me, but hello."], bye: "Come back, I'll have more by tomorrow.", self: "{name}, {job}, and I hear everything that goes on in {area}. Everything.", price: 1.0,
     away: "Oh, that's across town. I only have second-hand news from there, and I never pass on second-hand news. Much.", no: "Nothing on that. Yet." },
-  nervous: { hello: ['Oh! You startled me.', 'Yes? Is something wrong?'], bye: 'Mind how you go. Please.', self: "Me? {name}. I'm {a job}. Why do you ask?", price: 1.0,
+  nervous: { base: 45, again: ['Oh. It’s you. That’s all right then.', 'Hello again. You gave me a start.'], cold: 'Please. Just leave me alone.', thanks: "Is this... for me? Nobody gives me things. Thank you.", tip: "I trust you, so: if a car goes over on its roof, don't look for the driver. Run. I've seen it.", hello: ['Oh! You startled me.', 'Yes? Is something wrong?'], bye: 'Mind how you go. Please.', self: "Me? {name}. I'm {a job}. Why do you ask?", price: 1.0,
     away: "I don't go that far. Not after dark.", no: "I'd rather not say. I don't know, I mean." },
-  proud:   { hello: ['Good evening.', 'You may speak.'], bye: 'Good evening to you.', self: "{name}. {Job}, and a good one. People in {area} know my name.", price: 1.15,
+  proud:   { base: 45, again: ['Ah. You return.', 'Good evening again.'], cold: 'I do not speak to your sort.', thanks: "Acceptable. More than acceptable. You have manners.", tip: "I shall tell you something I tell few: the tailor in town gives a fair price for good cloth, and a poor one for everything else.", hello: ['Good evening.', 'You may speak.'], bye: 'Good evening to you.', self: "{name}. {Job}, and a good one. People in {area} know my name.", price: 1.15,
     away: "I do not concern myself with other districts.", no: "That is beneath my notice." },
-  dreamy:  { hello: ['Hm? Oh. Hello.', 'The lamps are nice tonight, aren’t they.'], bye: 'Mm. See you in the morning, maybe.', self: "{name}, I think. {Job}, when I remember to go.", price: 0.95,
+  dreamy:  { base: 55, again: ['Oh, you. I dreamt about you, I think.', 'Hello again. Or is it still the first time?'], cold: 'You feel like bad weather. Go away, please.', thanks: "A present. I'll keep it on the windowsill with the others.", tip: "Here's a thing I noticed: the coffee makes your feet quicker. Try it and walk somewhere.", hello: ['Hm? Oh. Hello.', 'The lamps are nice tonight, aren’t they.'], bye: 'Mm. See you in the morning, maybe.', self: "{name}, I think. {Job}, when I remember to go.", price: 0.95,
     away: "Is that far? Everything feels far.", no: "I had a thought about that once. It's gone." },
 };
 
@@ -149,12 +149,34 @@ export const SHOP_KINDS = [
   { title: 'butcher', buys: ['food'], line: "Cut to order. Tell me how thick.", goods: [['Sausages', 8, 'food'], ['Steak', 16, 'food']] },
   { title: 'video shop clerk', buys: ['media'], line: "Rentals are due back by midnight. Nobody brings them back by midnight.", goods: [['Video tape', 6, 'media'], ['Blank tape', 3, 'media'], ['Popcorn', 3, 'food']] },
 ];
+// the hand-built places: their keepers are written people (CHARACTERS below) with a counter of their own
+export const PLACES = {
+  kiln: { title: 'potter', buys: ['gift', 'home'], line: "Everything here came out of the one kiln. The glaze never does the same thing twice, which is the point.", goods: [['Tea bowl', 22, 'gift'], ['Small vase', 30, 'gift'], ['Lopsided bowl', 6, 'gift']] },
+  izakaya: { title: 'izakaya host', buys: ['food'], line: "Skewers off the grill, something cold to go with them. No menu. You get what's good.", goods: [['Grilled skewers', 9, 'food'], ['Pickles', 4, 'food'], ['Cold barley tea', 3, 'food']] },
+  gallery: { title: 'gallery attendant', buys: [], line: "The paintings aren't for sale. I'm allowed to sell the postcards.", goods: [['Postcard of the street', 3, 'media'], ['Exhibition booklet', 8, 'media']] },
+  temple: { title: 'temple keeper', buys: [], line: "A charm for the road, a fortune for the year. The lanterns are free.", goods: [['Road-safety charm', 10, 'gift'], ['Paper fortune', 2, 'gift']] },
+};
 // things only found, not sold (starting kit and, later, things picked up in the world)
 export const EXTRA_ITEMS = [['Pocket radio', 18, 'media']];
-export const ITEM = (() => { const m = new Map(); for (const k of SHOP_KINDS) for (const g of k.goods) m.set(g[0], { price: g[1], cat: g[2] }); for (const g of EXTRA_ITEMS) m.set(g[0], { price: g[1], cat: g[2] }); return m; })();
+// what a thing does when you use it from your bag: 'brisk' (walk faster for a while), 'mend' (patch up the car beside you),
+// 'luck' (a ticket: scratch it). Everything can be given as a gift.
+export const USES = { 'Coffee': 'brisk', 'Soda': 'brisk', 'Milkshake': 'brisk', 'Bottle of tea': 'brisk', 'Duct tape': 'mend', 'Hammer': 'mend', 'Lottery ticket': 'luck' };
+export const ITEM = (() => { const m = new Map(); for (const k of [...SHOP_KINDS, ...Object.values(PLACES)]) for (const g of k.goods) m.set(g[0], { price: g[1], cat: g[2] }); for (const g of EXTRA_ITEMS) m.set(g[0], { price: g[1], cat: g[2] }); return m; })();
 
 // ---- people with a part of their own. `answers` override the area's; `topics` are extra topics only they have.
 export const CHARACTERS = {
+  potter: { name: 'Ines Carrow', title: 'potter, Kiln & Co.', temper: 'dreamy', sex: 'f', place: 'kiln', hello: ['Mind the bottom shelf. Those are my favourites.'],
+    self: "Ines. I'm the 'Kiln' and the '& Co.' both. I throw in the morning and fire at night, which is why I look like this.",
+    answers: { kiln: "That's me, and that's it behind me. People say it's on its last legs. It has been on its last legs for nine years.", aqueduct: "They found it under my floor. I didn't mind. The arches and the kiln are the same shape, if you look." } },
+  host: { name: 'Kenji Sato', title: 'host of the old izakaya', temper: 'warm', sex: 'm', place: 'izakaya', hello: ['Welcome, welcome. Cold out, warm in.'],
+    self: "Kenji. My grandfather hung that lantern. I just keep it lit and keep the grill going.",
+    answers: { midtown: "I've watched this street from this door for thirty years. It gets louder and I get deafer, so it evens out." } },
+  attendant: { name: 'Farah Quill', title: 'gallery attendant', temper: 'proud', sex: 'f', place: 'gallery', hello: ['Please do not touch the paintings.'],
+    self: "Farah Quill. I look after the collection. The painter doesn't come in; I do, every day.",
+    answers: { gallery: "Every picture here is by the one hand, and every one is of this town. Nothing is for sale. I have turned down sums that would embarrass you." } },
+  keeper: { name: 'Abe Imai', title: 'temple keeper', temper: 'gruff', sex: 'm', place: 'temple', hello: ['Stairs are behind me. Take your time on them.'],
+    self: "Abe. I keep the lanterns. Kept them with oil for forty years, and now it's a switch. My knees chose the switch.",
+    answers: { temple: "Go up if you like. Anyone can. Leave the noise down here.", traffic: "Nobody drives fast past the temple. Not twice." } },
   hank: { name: 'Hank', title: 'keeps an eye on the street', temper: 'gruff', hello: ["Evening. You're new."],
     self: "Hank. I look after the kei garage round the corner. Mostly I stand here and watch who drives what.",
     topics: [['garage', 'kei garage']],

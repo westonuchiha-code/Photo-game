@@ -865,3 +865,19 @@ inside the view cone at five fixed camera spots, `tools/devtests/where2.js`), th
   light goes out) give way above about 20 km/h; the green signposts above about 13. At walking pace both still
   stop the car. Trees, utility poles, dumpsters and the rest stay solid.
 - `tools/devtests/lamp.js`: 12 km/h stops; 30, 60, 100 km/h knock it down and carry on.
+
+## 122 People, second pass: keepers for the hand-built places, gifts, things that do something, memory
+- Keepers with parts of their own (lines.js CHARACTERS + PLACES): Ines Carrow the potter inside Kiln & Co. (bowls,
+  vases), Kenji Sato at the izakaya door (skewers, pickles, tea), Farah Quill in the art gallery (postcards; the
+  paintings are not for sale), Abe Imai at the foot of the temple stairs (charms, fortunes). Each has their own
+  greeting, background and a few answers; the rest come from the area like anyone's. They turn their heads to you.
+- What people think of you (a bar by their name, 0..100): starts from temperament; +1 for meeting; a gift raises it
+  (more for a dear one, half as much again for the kind of thing they like); being nearby when you run someone down
+  lowers it (12, or 22 if the person died) and the whole area's opinion drops a little each time. Under 25 they
+  greet you coldly, under 20 they will only give their name. From 70 a new topic appears, "A word of advice".
+  Prices move up to 15% either way with it. They remember having met you and greet you differently.
+- "Give a gift" in the talk panel. Your things are on the purse button (top left on foot, or I): tap to use.
+  Drinks (coffee, soda, milkshake, tea): walk 25% faster for 90 s. Duct tape / hammer: patch up the car you are
+  standing by (30% / 15% of its health). Lottery ticket: scratch it.
+- Stored with the wallet (`phototown.wallet.v1`: money, items, people, rep).
+- `tools/devtests/npc2.js` visits every standing person, gives gifts, uses the bag, mends a car, checks witnesses.
