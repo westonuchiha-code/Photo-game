@@ -916,3 +916,21 @@ inside the view cone at five fixed camera spots, `tools/devtests/where2.js`), th
 - The single file is 43.1 MB (was 35.3): 350 of 534 textures.
 - `tools/devtests/walkthru.js` walks Midtown -> lot -> square -> lot -> Midtown and pokes the doors;
   `draws.js <url> <area> <scale...>` measures the worst view from eight spots.
+
+## 125 Traffic
+- `src/vehicle/traffic.js`: cars that drive the street grid of Midtown and Eastside by themselves (4 on a phone, 6
+  on a desktop). The crossings of the grid are nodes; a car goes node to node in the right-hand lane, chooses a way on
+  at each crossing (not straight back unless it must) and steers at a point a few metres ahead on its lane, which
+  rounds the corners. It slows for corners, stops for whatever is in front of it (traffic, a car pushed into the
+  road, the car you drive, you on foot), gives way at a crossing to whoever is in it or nearer to it, and after nine
+  seconds stuck behind something turns round and goes another way.
+- Each is an ordinary drivable car. Hit one, wreck it or get into it and it stops being traffic (it is then just a
+  car in the road); a new one starts somewhere out of sight a little later.
+- `drive.moving(g, on)` / `drive.follow(g)`: a self-driven car's colliders leave the 8 m grid and are simply always
+  tested (re-filing them every frame was the expensive part).
+- `tools/devtests/traffic.js <url> <area> <secs>`: 4 minutes in each area: never off the road, no two cars
+  overlapping, moving 96-97% of the time, none stopped for 10 s; a car coming at you on foot stops 4.8 m short; a
+  rammed one drops out of traffic and takes damage; a taken one drives. The chaos run now has traffic in it and still
+  never leaves the road.
+- Not done: they do not obey the traffic lights, signal, park or pull out; they do not run people over; no drivers
+  are shown in them; nobody reacts to being rammed or having their car taken (no police, no anger).

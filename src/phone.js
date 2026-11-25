@@ -17,6 +17,7 @@ import { makePeople, makePerson, makeCharacter, CHARACTERS } from './models/peop
 import { makeTalk, whoIs, keeperOf, character } from './npc/talk.js';
 import { SHOP_KINDS } from './npc/lines.js';
 import { makeBooth, makeShopMenu } from './shop/bodyshop.js';
+import { makeTraffic } from './vehicle/traffic.js';
 import { useLowDetailBodies } from './models/body97.js';
 import { makeDriver2 } from './vehicle/drive2.js';
 import { makeCar, LIVERIES, carEnv } from './vehicle/carbody2.js';
@@ -118,6 +119,8 @@ const AREAS = {
       return r; } },
 };
 
+// what drives about: [type, options]
+const TRAFFIC = [['sedan', { color: '#8a8f96', name: 'grey sedan' }], ['hatch', { color: '#2f5a8a', name: 'blue hatch', rim: 'steel' }], ['kei', { color: '#e8e2d0', name: 'white kei car', rim: 'steel' }], ['wagon', { color: '#5a3a2a', name: 'brown estate' }], ['van', { color: '#c8ccd0', name: 'delivery van', rim: 'steel' }], ['sedan', { color: '#f0c41c', name: 'cab', rim: 'steel', livery: LIVERIES.taxi, metal: 0.15 }], ['pickup', { color: '#2a2c30', name: 'black pickup' }], ['coupe', { color: '#a8201e', name: 'red coupe', rim: 'black' }], ['hatch', { color: '#3f6a4a', name: 'green hatch' }], ['scout', { color: '#b8a888', name: 'tan 4x4', rim: 'steel' }]];
 const PARK = [['sedan', { color: '#2a2c30', name: 'black sedan', plate: 'ELM 4B1', rim: 'alloy' }], ['hatch', { color: '#d8d4c8', name: 'white hatch', plate: 'ELM 8W2', rim: 'steel' }], ['kei', { color: '#c87a2a', name: 'orange kei car', plate: 'ELM 3K9', rim: 'steel' }], ['pickup', { color: '#6a2a26', name: 'red pickup', plate: 'ELM 6R5', rim: 'steel' }], ['van', { color: '#d9d6cc', name: 'white van', plate: 'ELM 2V6', rim: 'steel' }], ['scout', { color: '#3f5a46', name: 'green 4x4', plate: 'ELM 9S4', rim: 'steel' }], ['wagon', { color: '#6f7f8c', name: 'grey estate', plate: 'ELM 5E1', rails: true }]];
 // someone who stands at a place: a body of the right sex, a collider, and their part from lines.js
 function stand(S, id, x, z, ry, y) { const who = character(id); let body = null; for (let sd = 500 + id.length * 7, k = 0; k < 40; sd++, k++) { const b = makePerson(sd); if (b.userData.sex === who.sex) { body = b; break; } } if (!body) return; body.position.set(x, y, z); body.rotation.y = ry; S.root.add(body); colliders.push({ type: 'circle', x, z, r: 0.3 }); S.npcs.push({ who, x, z, mesh: body, reach: 2.7, ry }); }
@@ -199,10 +202,13 @@ function buildArea(id, carried) {
       for (const [x0, x1, z0, z1] of booth.userData.colliders) colliders.push({ type: 'box', minX: bx + x0, maxX: bx + x1, minZ: bz + z0, maxZ: bz + z1 }); const p = booth.userData.pad; shopPad = [bx + p[0], bx + p[1], bz + p[2], bz + p[3]]; shopPad.room = [bx - 2.15, bx + 2.15, bz - 5, bz + 6.7]; } }
   if (carried) { root.add(carried); drive.adopt(carried); }
   drive.rebuild();
+  // traffic: a few cars that drive the grid by themselves (see vehicle/traffic.js)
+  const traffic = makeTraffic({ xs: def.xs, zs: def.zs, drive, count: PHONE ? 4 : 6, onFoot: () => (mode === 'walk' ? walk.position : null),
+    spawn: (i) => { const [type, opt] = TRAFFIC[(i * 5 + (id === 'east' ? 3 : 0)) % TRAFFIC.length], c = makeCar({ type, ...opt, plate: 'ELM ' + (100 + (i * 37) % 900) }); root.add(c); drive.addCar(c, { name: opt.name }); return c; } });
   const people = makePeople({ scene: root, grid: GRID, sidewalkY: SW, count: PHONE ? 14 : 20, ok: (x, z) => driveAreas.some((a) => x >= a.minX && x <= a.maxX && z >= a.minZ && z <= a.maxZ) });
   const streamer = makeStreamer(root, { phone: true, max: 300 }); streamer.setScale(PHONE ? 0.8 : 1);
   console.log('area', id, ': buildings', district.userData.buildings.length, 'interiors', JSON.stringify(interiors.stats()));
-  return { id, def, root, district, interiors, people, streamer, floors: S.floors, tick: S.tick, npcs: S.npcs, shopPad };
+  return { id, def, root, district, interiors, people, streamer, floors: S.floors, tick: S.tick, npcs: S.npcs, shopPad, traffic };
 }
 // leaving an area: everything it built comes off the graphics card, and the shared lists are emptied
 function clearArea(carried) {
@@ -273,6 +279,7 @@ function frame() {
   if (!shutIn && (tick = (tick + 1) % 10) === 0) { A.streamer.update(camera.position); if (A.district) A.district.userData.lodTick(camera.position, PHONE ? 55 : 110);
     // real lights (the old town's lamps and rooms): only the nearest three are lit, always exactly that many, so no shader changes
     if (A.lights && A.lights.length) { const P3 = camera.position, W = new THREE.Vector3(); for (const l of A.lights) { l.getWorldPosition(W); l.userData._d = W.distanceToSquared(P3); } A.lights.sort((a, b) => a.userData._d - b.userData._d); A.lights.forEach((l, i) => { l.visible = i < 3; }); } }
+  if (A.traffic) A.traffic.update(dt);
   if (A.tick) A.tick(dt);
   if (A.tickers) for (const o of A.tickers) o.userData.tick(t, dt);
   peopleTick(pos, dt);
@@ -295,7 +302,7 @@ function frame() {
 // ---- start: ?area=east starts in the other area
 { const id = AREAS[qs.get('area')] ? qs.get('area') : 'west'; A = buildArea(id, null);
   walk.position.set(+(qs.get('x') ?? (id === 'west' ? 163.5 : id === 'old' ? -20 : id === 'south' ? 20 : 327)), 0, +(qs.get('z') ?? (id === 'old' ? 4 : id === 'south' ? 3 : 20))); walk.yaw = +(qs.get('yaw') ?? 0.15); walk.pitch = 0.02; setMode('walk'); walk.apply(); }
-window.__scene = { renderer, scene, camera, walk, drive, setMode, use, talk, shop, get shopPad() { return A.shopPad; }, get talkTo() { return talkTo; }, get npcs() { return A.npcs || []; }, travel: (to) => travel({ to, label: 'Going' }), peopleTick: (dt) => peopleTick(mode === 'walk' ? walk.position : drive.state, dt), areaIds: Object.keys(AREAS), get area() { return A.id; }, get busy() { return busy; }, get interiors() { return A.interiors; }, get people() { return A.people; }, get district() { return A.district; }, get areaRoot() { return A.root; }, get streamer() { return A.streamer; },
+window.__scene = { renderer, scene, camera, walk, drive, setMode, use, talk, shop, get traffic() { return A.traffic; }, get shopPad() { return A.shopPad; }, get talkTo() { return talkTo; }, get npcs() { return A.npcs || []; }, travel: (to) => travel({ to, label: 'Going' }), peopleTick: (dt) => peopleTick(mode === 'walk' ? walk.position : drive.state, dt), areaIds: Object.keys(AREAS), get area() { return A.id; }, get busy() { return busy; }, get interiors() { return A.interiors; }, get people() { return A.people; }, get district() { return A.district; }, get areaRoot() { return A.root; }, get streamer() { return A.streamer; },
   stats: () => ({ area: A.id, fps, pr, calls: renderer.info.render.calls, tris: renderer.info.render.triangles, tex: renderer.info.memory.textures, geo: renderer.info.memory.geometries }) };
 requestAnimationFrame(frame);
 finishLoading(renderer, scene, camera);

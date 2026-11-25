@@ -45,11 +45,12 @@ export function makeDriver2({ scene, camera, areas, colliders, ground, hooks = {
   addEventListener('blur', () => keys.clear());
 
   // ---- collider grid (8 m cells) so a car only tests what's nearby; rebuilt when the area changes
+  const movers = [];   // colliders of cars that drive themselves: few, moved every frame, so kept out of the grid and always tested
   const CELL = 8, grid = new Map(), cellKey = (i, j) => i * 100003 + j;
-  const fileColliders = () => { grid.clear(); for (const c of colliders) { if (c.y0 !== undefined && c.y0 > 1.0) continue; const [x0, x1, z0, z1] = c.type === 'circle' ? [c.x - c.r, c.x + c.r, c.z - c.r, c.z + c.r] : [c.minX, c.maxX, c.minZ, c.maxZ]; if (x1 - x0 > 400 || z1 - z0 > 400) continue;
+  const fileColliders = () => { grid.clear(); movers.length = 0; for (const c of colliders) { if (c.y0 !== undefined && c.y0 > 1.0) continue; const [x0, x1, z0, z1] = c.type === 'circle' ? [c.x - c.r, c.x + c.r, c.z - c.r, c.z + c.r] : [c.minX, c.maxX, c.minZ, c.maxZ]; if (x1 - x0 > 400 || z1 - z0 > 400) continue;
     for (let i = Math.floor(x0 / CELL); i <= Math.floor(x1 / CELL); i++) for (let j = Math.floor(z0 / CELL); j <= Math.floor(z1 / CELL); j++) { const k = cellKey(i, j); if (!grid.has(k)) grid.set(k, []); grid.get(k).push(c); } } };
   fileColliders();
-  const nearCols = (x, z) => { const out = new Set(), i0 = Math.floor(x / CELL), j0 = Math.floor(z / CELL); for (let i = i0 - 1; i <= i0 + 1; i++) for (let j = j0 - 1; j <= j0 + 1; j++) { const l = grid.get(cellKey(i, j)); if (l) for (const c of l) out.add(c); } return out; };
+  const nearCols = (x, z) => { const out = new Set(), i0 = Math.floor(x / CELL), j0 = Math.floor(z / CELL); for (let i = i0 - 1; i <= i0 + 1; i++) for (let j = j0 - 1; j <= j0 + 1; j++) { const l = grid.get(cellKey(i, j)); if (l) for (const c of l) out.add(c); } for (const c of movers) out.add(c); return out; };
   const inArea = (x, z) => areas.some((a) => a.y0 === undefined && x >= a.minX && x <= a.maxX && z >= a.minZ && z <= a.maxZ);
   const corners = (x, z, h, u) => { const s = Math.sin(h), c = Math.cos(h); return [[u.half.x, u.half.zF], [-u.half.x, u.half.zF], [u.half.x, u.half.zR], [-u.half.x, u.half.zR], [u.half.x, 0], [-u.half.x, 0]].map(([lx, lz]) => [x + lx * c + lz * s, z - lx * s + lz * c]); };
 
@@ -392,7 +393,10 @@ export function makeDriver2({ scene, camera, areas, colliders, ground, hooks = {
         hud.style.opacity = a.kind === 'out' || a.t < a.tC + 0.2 ? 0 : 1; } else if (hud.style.opacity !== '') hud.style.opacity = '';
       if (S.mode === 'tumble' && Math.abs(Math.abs(wrapA(S.phi)) - Math.PI / 2) < 0.2) car.userData.flipped = true; },
     sim(secs, force) { api.force = force; for (let i = 0; i < secs * 60; i++) api.update(1 / 60); api.force = null; },
-    hurt, explode, say, input, lock: false, view: null,   // lock: the car is held (a shop menu is up); view(camera, dt): someone else aims the camera
+    hurt, explode, say, input, lock: false, view: null,
+    // a car that drives itself (traffic): its colliders leave the grid and follow it cheaply; off: it is an ordinary car again
+    moving(g, on) { const u = g.userData; for (const k of u.cols) { for (const l of grid.values()) { const q = l.indexOf(k); if (q >= 0) l.splice(q, 1); } const q = movers.indexOf(k); if (q >= 0) movers.splice(q, 1); } u.selfDriven = on; if (on) { movers.push(...u.cols); api.follow(g); } else api.syncCols(g); },
+    follow(g) { const u = g.userData, s = Math.sin(g.rotation.y), c = Math.cos(g.rotation.y), W = u.half.x * 0.96, zs = [u.half.zF - W, (u.half.zF + u.half.zR) / 2, u.half.zR + W]; for (let i = 0; i < 3; i++) { u.cols[i].x = g.position.x + zs[i] * s; u.cols[i].z = g.position.z + zs[i] * c; } },   // lock: the car is held (a shop menu is up); view(camera, dt): someone else aims the camera
     // a car rebuilt in place (resprayed, repaired, new parts): `fresh` is a new makeCar(); the old group keeps its identity
     refit(g, fresh) { const u = g.userData, f = fresh.userData; g.remove(u.body); for (const w of u.wheels) g.remove(w.pivot); u.body.traverse((o) => { if (o.geometry) o.geometry.dispose(); }); for (const w of u.wheels) w.pivot.traverse((o) => { if (o.geometry) o.geometry.dispose(); });
       g.add(f.body); for (const w of f.wheels) g.add(w.pivot); for (const k of ['spec', 'opts', 'wheels', 'body', 'lamps', 'door', 'steer', 'seat', 'paint', 'axF', 'axR', 'axY', 'half']) u[k] = f[k]; u.doorA = 0; u.dented = false; u.warned = false; u.hd = handlingFor(u.spec.type || 'sedan', u.spec); if (g === car) u.lamps.head.forEach((h) => { h.material.emissiveIntensity = 2.4; }); },
