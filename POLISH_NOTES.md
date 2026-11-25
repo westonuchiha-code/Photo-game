@@ -934,3 +934,26 @@ inside the view cone at five fixed camera spots, `tools/devtests/where2.js`), th
   never leaves the road.
 - Not done: they do not obey the traffic lights, signal, park or pull out; they do not run people over; no drivers
   are shown in them; nobody reacts to being rammed or having their car taken (no police, no anger).
+
+## 126 Consequences: police, wanted stars, your health
+- Heat (0..8) is what the police know you have done lately: knocking someone down 0.6, killing 1.5, ramming a
+  driven car 0.5 (a parked one 0.12, a police car 1.2), taking a car someone is driving 1 (a police car 2).
+  One star at 1, two at 3, three at 6, shown top centre; they flash while a police car has sight of you (50 m).
+- Police cars (white sedans, black roof, light bar) are part of `vehicle/traffic.js`: as many as you have stars. With
+  a target they take the shortest way through the grid, fast, and from about 30 m drive straight at you: to stop
+  beside you if you are on foot or stopped, to ram you if you are moving. They keep to ground a car can be on; held
+  against a wall they go round by the streets. A knock does not stop them; wrecking one or taking it does. With no
+  target they drive like anyone and are removed once out of your sight.
+- BUSTED: stopped (or on foot) with one within 8.5 m for 2.5 s. Dark screen, a fine of $40 a star, stars gone, you
+  are put on your feet. Losing them: heat only cools once they have had no sight of you for 26 s (about 45 s to
+  shed two stars). A respray at the body shop with none within 30 m clears it at once.
+- Health (bar under the purse, only shown when hurt): a crash above about 40 km/h of impact, an explosion nearby,
+  being in a car when it blows (70). It comes back slowly after ten quiet seconds; food gives 22, vitamins 18,
+  bandages 40, painkillers 55 (used from your bag). At nothing: WASTED, a tenth of your money, and you come round
+  where the area begins.
+- `tools/devtests/law.js`: on foot one star, a car arrives and you are taken in at 16 s; three stars driving: three
+  cars, closest 4.5 m, none ever off the road; losing two stars out of sight 45 s; respray clears; crash, blast and
+  WASTED. The chaos run (now with traffic and the law running) still never leaves the road. The one "trapped" case
+  it reported was the body-shop menu opening on a car that stopped in the booth.
+- Not done: no officers on foot (a car beside you is the arrest); no sirens to hear; nothing on foot hurts you except
+  explosions; pedestrians and shopkeepers do not react to your stars.

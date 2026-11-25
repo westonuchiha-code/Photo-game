@@ -52,9 +52,11 @@ const colliders = [], walkAreas = [], driveAreas = [];
 let A = null;   // the area that is built now
 const walk = new WalkControls(camera, renderer.domElement, { bounds: null, areas: walkAreas, colliders, speed: 2.75 });   // (25% faster than the big town's 2.2 m/s)
 const drive = makeDriver2({ scene, camera, areas: driveAreas, colliders, ground: (x, z) => (A && A.district ? A.district.userData.floorY(x, z) ?? 0 : 0),
-  hooks: { blast: (x, z, r) => { if (A && A.people) A.people.blast(x, z, r); }, wrecked: () => { if (mode === 'drive') use(); }, horn: (x, z, h) => { if (A && A.people) A.people.honk(x, z, h); } } });
+  hooks: { blast: (x, z, r) => { if (A && A.people) A.people.blast(x, z, r); const me = mode === 'drive' ? drive.state : walk.position, d = Math.hypot(me.x - x, me.z - z); if (d < 1.5 && mode === 'drive') hurtPlayer(70); else if (d < r) hurtPlayer(85 * (1 - d / r)); },
+    crash: (imp) => hurtPlayer((imp - 11) * 3.5), rammed: (o, imp) => { const t = o.userData.trafficRef; crime(t && t.police ? 1.2 : t ? 0.5 : 0.12); }, wrecked: () => { if (mode === 'drive') use(); }, horn: (x, z, h) => { if (A && A.people) A.people.honk(x, z, h); } } });
 // what the pedestrians are told about the car being driven, and what hitting one does to it
 const carInfo = { x: 0, z: 0, vx: 0, vz: 0, h: 0, half: null, onHit: (speed, dead, x, z) => { const S = drive.state; S.vx *= 0.94; S.vz *= 0.94; S.shake = Math.min(1, S.shake + 0.25); if (drive.car) drive.hurt(drive.car, 4 + speed * 0.6, x, z, 0.7);
+  crime(dead ? 1.5 : 0.6);
   /* everyone near enough to see it remembers, and the area hears */ if (A && A.people) talk.witness(A.people.list.filter((q) => q.active && Math.hypot(q.mesh.position.x - x, q.mesh.position.z - z) < 25).map((q) => 'p:' + A.id + ':' + q.seed), A.id, dead);   /* (a person dents a car; it takes a wall to wreck one) */ } };
 walk.ground = (x, z, prevY) => { if (!A) return 0; if (A.ground) return A.ground(x, z, prevY); for (const [x0, x1, z0, z1, y] of A.floors) if (x > x0 && x < x1 && z > z0 && z < z1) return typeof y === 'function' ? y(x, z) : y; return A.interiors.floorY(x, z) ?? A.district.userData.floorY(x, z) ?? 0; };
 
@@ -204,6 +206,8 @@ function buildArea(id, carried) {
   drive.rebuild();
   // traffic: a few cars that drive the grid by themselves (see vehicle/traffic.js)
   const traffic = makeTraffic({ xs: def.xs, zs: def.zs, drive, count: PHONE ? 4 : 6, onFoot: () => (mode === 'walk' ? walk.position : null),
+    police: { want: () => stars(), target: () => (stars() && downT <= 0 ? (mode === 'drive' ? { x: drive.state.x, z: drive.state.z, v: Math.hypot(drive.state.vx, drive.state.vz), foot: false } : { x: walk.position.x, z: walk.position.z, v: 0, foot: true }) : null),
+      spawn: (i) => { const c = makeCar({ type: 'sedan', color: '#eef0f2', roofColor: '#15171a', rim: 'steel', livery: LIVERIES.police, name: 'police car', plate: 'ELM P' + (10 + i % 90) }); root.add(c); drive.addCar(c, { name: 'police car' }); return c; } },
     spawn: (i) => { const [type, opt] = TRAFFIC[(i * 5 + (id === 'east' ? 3 : 0)) % TRAFFIC.length], c = makeCar({ type, ...opt, plate: 'ELM ' + (100 + (i * 37) % 900) }); root.add(c); drive.addCar(c, { name: opt.name }); return c; } });
   const people = makePeople({ scene: root, grid: GRID, sidewalkY: SW, count: PHONE ? 14 : 20, ok: (x, z) => driveAreas.some((a) => x >= a.minX && x <= a.maxX && z >= a.minZ && z <= a.maxZ) });
   const streamer = makeStreamer(root, { phone: true, max: 300 }); streamer.setScale(PHONE ? 0.8 : 1);
@@ -221,15 +225,53 @@ function clearArea(carried) {
 // ---- modes: on foot, or in a car (the one button gets you in and out)
 let mode = 'walk', myCar = null; const useBtn = document.getElementById('use');
 const setMode = (m) => { mode = m; walk.enabled = m === 'walk'; document.body.dataset.mode = m; };
-const use = () => { if (busy || talk.active || shop.active) return; if (mode === 'walk' && talkTo && !useCar) { startTalk(talkTo); return; } if (mode === 'drive') { drive.leave(() => { rise = { p: camera.position.clone(), q: camera.quaternion.clone(), t: 0 }; const out = drive.exit(); if (out) { walk.position.set(out.x, 0, out.z); walk.yaw = out.yaw; walk.pitch = -0.05; } myCar = null; setMode('walk'); walk.apply(); }); } else { const c = drive.nearest(walk.position); if (c) { drive.enter(c); myCar = c; setMode('drive'); } } };
+const use = () => { if (busy || talk.active || shop.active || downT > 0) return; if (mode === 'walk' && talkTo && !useCar) { startTalk(talkTo); return; } if (mode === 'drive') { drive.leave(() => { rise = { p: camera.position.clone(), q: camera.quaternion.clone(), t: 0 }; const out = drive.exit(); if (out) { walk.position.set(out.x, 0, out.z); walk.yaw = out.yaw; walk.pitch = -0.05; } myCar = null; setMode('walk'); walk.apply(); }); } else { const c = drive.nearest(walk.position); if (c) { const t = c.userData.trafficRef; if (t) crime(t.police ? 2 : 1);   /* (taking a car that someone is driving) */ drive.enter(c); myCar = c; setMode('drive'); } } };
+// ---- the law, and your own skin
+// heat: what the police know you have done lately (0..8): a star at 1, two at 3, three at 6. It only cools while no police
+// car is near enough to see you. Stopped with one beside you for a couple of seconds, you are taken in: BUSTED, a fine.
+// health: crashes, explosions. At nothing: WASTED, a tenth of your money, and you come round where the area begins.
+const law = { heat: 0, bustT: 0 }; let health = 100, hurtT = 0, downT = 0;
+const stars = () => (law.heat >= 6 ? 3 : law.heat >= 3 ? 2 : law.heat >= 1 ? 1 : 0);
+const crime = (n) => { if (downT > 0) return; law.heat = Math.min(8, law.heat + n); };
+const policeNear = () => { let d = 1e9; if (A && A.traffic) { const me = mode === 'drive' ? drive.state : walk.position; for (const c of A.traffic.cars) if (c.police) d = Math.min(d, Math.hypot(c.x - me.x, c.z - me.z)); } return d; };
+function hurtPlayer(n) { if (n <= 0 || downT > 0) return; health = Math.max(0, health - n); hurtT = 10; redEl.style.opacity = Math.min(0.6, 0.15 + n / 90); setTimeout(() => { redEl.style.opacity = 0; }, 140); if (health <= 0) down('WASTED'); }
+const START = { west: [163.5, 20], east: [327, 20], old: [-20, 4], south: [20, 3] };
+const lawEl = document.createElement('div'), hpEl = document.createElement('div'), bigEl = document.createElement('div'), redEl = document.createElement('div');
+{ const st = document.createElement('style'); st.textContent = [
+    '#wanted{position:fixed;left:50%;top:calc(44px + env(safe-area-inset-top,0px));transform:translateX(-50%);font:700 22px system-ui;letter-spacing:4px;color:#ffd24a;text-shadow:0 2px 6px #000;pointer-events:none;z-index:6}',
+    '#wanted.seen{animation:wb .5s steps(2) infinite}', '@keyframes wb{50%{color:#ff5a4a}}',
+    '#hpbar{position:fixed;left:10px;top:calc(84px + env(safe-area-inset-top,0px));width:92px;height:8px;border-radius:4px;background:#000a;border:1px solid #fff5;overflow:hidden;z-index:5;pointer-events:none}', '#hpbar i{display:block;height:100%;background:#e0524a}',
+    'body[data-mode=drive] #hpbar{top:calc(66px + env(safe-area-inset-top,0px));left:70px}',
+    '#bigmsg{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#000c;color:#fff;font:800 54px system-ui;letter-spacing:6px;z-index:40;opacity:0;pointer-events:none;transition:opacity .5s}',
+    '#bigmsg i{font:500 17px system-ui;letter-spacing:1px;margin-top:10px;opacity:.85;font-style:normal}',
+    '#redflash{position:fixed;inset:0;background:#c00;opacity:0;pointer-events:none;z-index:7;transition:opacity .25s}'].join('\n'); document.head.appendChild(st);
+  lawEl.id = 'wanted'; hpEl.id = 'hpbar'; hpEl.innerHTML = '<i></i>'; bigEl.id = 'bigmsg'; redEl.id = 'redflash'; document.body.append(lawEl, hpEl, bigEl, redEl); }
+// taken in, or knocked out: the screen goes dark with the word on it, then you are on foot again
+function down(word) { if (downT > 0) return; const fine = word === 'BUSTED' ? Math.min(talk.wallet.money, 40 * Math.max(1, stars())) : Math.round(talk.wallet.money * 0.1); talk.wallet.money -= fine; talk.sync(); talk.close(); shop.close();
+  bigEl.innerHTML = word + '<i>' + (word === 'BUSTED' ? 'Fined' : 'It cost you') + ' $' + fine + '</i>'; bigEl.style.opacity = 1; downT = 2.8; law.heat = 0; law.bustT = 0; drive.lock = true; walk.enabled = false;
+  downWord = word; downMoved = false; }
+let downWord = '', downMoved = false;
+function tickLaw(dt) {
+  if (downT > 0) { downT -= dt;   // dark screen: half way through you are put on your feet; at the end it lifts
+    if (downT < 1.9 && !downMoved) { downMoved = true; if (mode === 'drive') { const out = drive.exit(); if (out) { walk.position.set(out.x, 0, out.z); walk.yaw = out.yaw; } myCar = null; setMode('walk'); }
+      if (downWord === 'WASTED') { const s0 = START[A.id]; if (s0) walk.position.set(s0[0], 0, s0[1]); health = 100; } else health = Math.max(health, 30); walk.enabled = false; walk.apply(); }
+    if (downT <= 0) { bigEl.style.opacity = 0; drive.lock = false; walk.enabled = mode === 'walk'; } return; }
+  const dP = policeNear(), seen = dP < 50, sp = mode === 'drive' ? Math.hypot(drive.state.vx, drive.state.vz) : 0, n = stars();
+  // (it cools only once they have had no sight of you for a while: time enough for a car to get to where you were)
+  law.unseen = seen || n === 0 ? 0 : (law.unseen || 0) + dt; if (n === 0) law.heat = Math.max(0, law.heat - dt * 0.05); else if (!seen && (law.unseen > 26 || !A.traffic)) law.heat = Math.max(0, law.heat - dt * 0.12);
+  if (n > 0 && dP < 8.5 && sp < 2 && !shutIn) { if ((law.bustT += dt) > 2.5) down('BUSTED'); } else law.bustT = Math.max(0, law.bustT - dt * 0.5);
+  lawEl.textContent = n ? '★'.repeat(n) + '☆'.repeat(3 - n) : ''; lawEl.className = n && seen ? 'seen' : '';
+  if (hurtT > 0) hurtT -= dt; else if (health < 100) health = Math.min(100, health + dt * 1.2);
+  hpEl.style.display = health < 99.5 ? '' : 'none'; hpEl.firstChild.style.width = health + '%'; }
 // ---- talking: the nearest person in reach (someone on the street, a shopkeeper across their counter, a character)
 let talkTo = null, useCar = false, talkPed = null, rise = null;   // rise: standing up out of a car (the view comes up from the seat)
 let briskT = 0, shopUsed = false;
 const talk = makeTalk({ onOpen: () => { walk.enabled = false; }, onClose: () => { if (talkPed && talkPed.st === 'talk') talkPed.st = 'walk'; talkPed = null; walk.enabled = mode === 'walk'; },
   // things used from the bag: tape or a hammer patch up the car you are standing by; a drink quickens your step for a while
   use: { mend: (name) => { const c = drive.nearest(walk.position); if (!c || c.userData.wreck) return null; const u = c.userData, add = name === 'Hammer' ? 0.15 : 0.3; if (u.hp >= u.hd.hpMax) return null; u.hp = Math.min(u.hd.hpMax, u.hp + u.hd.hpMax * add); return `You patch up the ${u.driveName}. It will hold.`; },
-    brisk: () => { briskT = 90; walk.speed = 2.75 * 1.25; return 'That wakes you up. You walk faster for a while.'; } } });
-const shop = makeShopMenu({ drive, makeCar, wallet: talk.wallet, paid: () => talk.sync() });
+    brisk: () => { briskT = 90; walk.speed = 2.75 * 1.25; return 'That wakes you up. You walk faster for a while.'; },
+    eat: () => { if (health >= 100) return null; health = Math.min(100, health + 22); return 'That is better.'; }, heal: (name) => { if (health >= 100) return null; health = Math.min(100, health + (name === 'Painkillers' ? 55 : name === 'Bandages' ? 40 : 18)); return 'Patched up.'; } } });
+const shop = makeShopMenu({ drive, makeCar, wallet: talk.wallet, paid: () => talk.sync(), resprayed: () => { if (law.heat > 0 && policeNear() > 30) { law.heat = 0; drive.say('THEY HAVE LOST YOU', 3); } } });
 const inRoom = (e, p) => p.x > e.inner.minX && p.x < e.inner.maxX && p.z > e.inner.minZ && p.z < e.inner.maxZ;
 function findTalk() { const p = walk.position; let best = null, bd = 1e9; const tryN = (n, d, reach) => { if (d < reach && d < bd) { bd = d; best = n; } };
   for (const n of A.npcs || []) tryN(n, Math.hypot(n.x - p.x, n.z - p.z), n.reach);
@@ -279,7 +321,7 @@ function frame() {
   if (!shutIn && (tick = (tick + 1) % 10) === 0) { A.streamer.update(camera.position); if (A.district) A.district.userData.lodTick(camera.position, PHONE ? 55 : 110);
     // real lights (the old town's lamps and rooms): only the nearest three are lit, always exactly that many, so no shader changes
     if (A.lights && A.lights.length) { const P3 = camera.position, W = new THREE.Vector3(); for (const l of A.lights) { l.getWorldPosition(W); l.userData._d = W.distanceToSquared(P3); } A.lights.sort((a, b) => a.userData._d - b.userData._d); A.lights.forEach((l, i) => { l.visible = i < 3; }); } }
-  if (A.traffic) A.traffic.update(dt);
+  if (A.traffic) A.traffic.update(dt); tickLaw(dt);
   if (A.tick) A.tick(dt);
   if (A.tickers) for (const o of A.tickers) o.userData.tick(t, dt);
   peopleTick(pos, dt);
@@ -302,7 +344,8 @@ function frame() {
 // ---- start: ?area=east starts in the other area
 { const id = AREAS[qs.get('area')] ? qs.get('area') : 'west'; A = buildArea(id, null);
   walk.position.set(+(qs.get('x') ?? (id === 'west' ? 163.5 : id === 'old' ? -20 : id === 'south' ? 20 : 327)), 0, +(qs.get('z') ?? (id === 'old' ? 4 : id === 'south' ? 3 : 20))); walk.yaw = +(qs.get('yaw') ?? 0.15); walk.pitch = 0.02; setMode('walk'); walk.apply(); }
-window.__scene = { renderer, scene, camera, walk, drive, setMode, use, talk, shop, get traffic() { return A.traffic; }, get shopPad() { return A.shopPad; }, get talkTo() { return talkTo; }, get npcs() { return A.npcs || []; }, travel: (to) => travel({ to, label: 'Going' }), peopleTick: (dt) => peopleTick(mode === 'walk' ? walk.position : drive.state, dt), areaIds: Object.keys(AREAS), get area() { return A.id; }, get busy() { return busy; }, get interiors() { return A.interiors; }, get people() { return A.people; }, get district() { return A.district; }, get areaRoot() { return A.root; }, get streamer() { return A.streamer; },
+window.tickLaw = tickLaw;
+window.__scene = { renderer, scene, camera, walk, drive, setMode, use, talk, shop, law, crime, hurtPlayer, get health() { return health; }, get stars() { return stars(); }, get traffic() { return A.traffic; }, get shopPad() { return A.shopPad; }, get talkTo() { return talkTo; }, get npcs() { return A.npcs || []; }, travel: (to) => travel({ to, label: 'Going' }), peopleTick: (dt) => peopleTick(mode === 'walk' ? walk.position : drive.state, dt), areaIds: Object.keys(AREAS), get area() { return A.id; }, get busy() { return busy; }, get interiors() { return A.interiors; }, get people() { return A.people; }, get district() { return A.district; }, get areaRoot() { return A.root; }, get streamer() { return A.streamer; },
   stats: () => ({ area: A.id, fps, pr, calls: renderer.info.render.calls, tris: renderer.info.render.triangles, tex: renderer.info.memory.textures, geo: renderer.info.memory.geometries }) };
 requestAnimationFrame(frame);
 finishLoading(renderer, scene, camera);

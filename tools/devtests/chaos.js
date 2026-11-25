@@ -11,7 +11,7 @@ const { chromium } = require('playwright');
     if (!next()) return out;
     for (let f = 0; f < secs * 60; f++) {
       if (tIn <= 0) { const m = rnd(); inp = m < 0.5 ? { gas: 1, steer: (rnd() - 0.5) * (rnd() < 0.6 ? 0.15 : 2) } : m < 0.65 ? { brake: 1, steer: (rnd() - 0.5) * 2 } : m < 0.78 ? { gas: 1, hand: true, steer: rnd() < 0.5 ? 1 : -1 } : m < 0.9 ? { gas: 1 } : { brake: 1 }; inp.steer = Math.max(-1, Math.min(1, inp.steer || 0)); tIn = 0.4 + rnd() * 2.6; }
-      tIn -= 1 / 60; tCar += 1 / 60; D.force = inp; D.update(1 / 60); D.force = null; if (S.traffic) S.traffic.update(1 / 60); S.peopleTick(1 / 60); out.frames++;
+      tIn -= 1 / 60; tCar += 1 / 60; D.force = inp; D.update(1 / 60); D.force = null; if (S.traffic) S.traffic.update(1 / 60); if (window.tickLaw) window.tickLaw(1 / 60); S.peopleTick(1 / 60); out.frames++;
       if (!D.car) { if (!next()) break; continue; }
       const u = D.car.userData; if (![st.x, st.z, st.h, st.vx, st.vz].every(Number.isFinite)) { out.nan++; break; }
       const kmh = Math.hypot(st.vx, st.vz) * 3.6; out.topKmh = Math.max(out.topKmh, kmh); if (st.mode === 'tumble') out.tumbles++;

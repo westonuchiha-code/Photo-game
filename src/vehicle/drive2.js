@@ -183,10 +183,11 @@ export function makeDriver2({ scene, camera, areas, colliders, ground, hooks = {
     let e = 0.22, keep = 0.86;
     if (col && col.car) {   // another car: it takes part of the blow and moves off; the lighter car comes off worse
       const o = col.car, od = dyn(o), mr = hd.mass / (hd.mass + o.userData.hd.mass); od.vx -= nx * imp * mr * 1.5; od.vz -= nz * imp * mr * 1.5; od.w += ((hit.px - o.position.x) * -nz - (hit.pz - o.position.z) * -nx) * imp * mr * 0.35;
-      if (imp > 2) hurt(o, imp * imp * 0.7 * mr, hit.px, hit.pz); e = 0.05; keep = 0.55 + 0.4 * mr; }
+      if (imp > 2) hurt(o, imp * imp * 0.7 * mr, hit.px, hit.pz); e = 0.05; keep = 0.55 + 0.4 * mr; if (imp > 4.5 && hooks.rammed) hooks.rammed(o, imp); }
     S.vx -= (1 + e) * vn * nx; S.vz -= (1 + e) * vn * nz; S.vx *= keep; S.vz *= keep;
     // an off-centre blow spins the car; a hard sideways one can tip a top-heavy car
     const sh = Math.sin(S.h), ch = Math.cos(S.h), side = nx * ch - nz * sh; S.r += hit.lz * side * imp * 0.05;
+    if (imp > 11 && hooks.crash) hooks.crash(imp);
     if (imp > 2) { hurt(car, imp * imp * (col && col.car ? 0.3 : 0.38), hit.px, hit.pz); S.shake = Math.min(1, S.shake + imp * 0.07); thud(Math.min(0.4, imp * 0.03), 380 + Math.random() * 200, 0.18); for (let i = 0; i < Math.min(5, imp * 0.4); i++) puff(hit.px, S.y + 0.5, hit.pz, { color: '#ffd28a', size: 0.12, grow: 0.1, life: 0.3, vy: 2, spread: 5, glow: true, a: 0.9 }); }
     if (S.mode === 'wheels' && Math.abs(side) > 0.7 && imp > 7.5 * (0.8 / hd.cg) * 0.8) tip(-Math.sign(side) * clamp(imp * 0.22, 1.2, 4)); }
   function tip(v) { if (S.mode !== 'wheels') return; S.mode = 'tumble'; S.phi = S.roll; S.phiV = v; S.tipT = 0; S.stuckT = 0; }
@@ -396,6 +397,8 @@ export function makeDriver2({ scene, camera, areas, colliders, ground, hooks = {
     hurt, explode, say, input, lock: false, view: null,
     // a car that drives itself (traffic): its colliders leave the grid and follow it cheaply; off: it is an ordinary car again
     moving(g, on) { const u = g.userData; for (const k of u.cols) { for (const l of grid.values()) { const q = l.indexOf(k); if (q >= 0) l.splice(q, 1); } const q = movers.indexOf(k); if (q >= 0) movers.splice(q, 1); } u.selfDriven = on; if (on) { movers.push(...u.cols); api.follow(g); } else api.syncCols(g); },
+    // take a car out of the world altogether
+    remove(g) { const u = g.userData; api.moving(g, false); for (const k of u.cols) { for (const l of grid.values()) { const q = l.indexOf(k); if (q >= 0) l.splice(q, 1); } const q = colliders.indexOf(k); if (q >= 0) colliders.splice(q, 1); } const i = cars.indexOf(g); if (i >= 0) cars.splice(i, 1); if (g.parent) g.parent.remove(g); g.traverse((o) => { if (o.geometry) o.geometry.dispose(); }); },
     follow(g) { const u = g.userData, s = Math.sin(g.rotation.y), c = Math.cos(g.rotation.y), W = u.half.x * 0.96, zs = [u.half.zF - W, (u.half.zF + u.half.zR) / 2, u.half.zR + W]; for (let i = 0; i < 3; i++) { u.cols[i].x = g.position.x + zs[i] * s; u.cols[i].z = g.position.z + zs[i] * c; } },   // lock: the car is held (a shop menu is up); view(camera, dt): someone else aims the camera
     // a car rebuilt in place (resprayed, repaired, new parts): `fresh` is a new makeCar(); the old group keeps its identity
     refit(g, fresh) { const u = g.userData, f = fresh.userData; g.remove(u.body); for (const w of u.wheels) g.remove(w.pivot); u.body.traverse((o) => { if (o.geometry) o.geometry.dispose(); }); for (const w of u.wheels) w.pivot.traverse((o) => { if (o.geometry) o.geometry.dispose(); });
