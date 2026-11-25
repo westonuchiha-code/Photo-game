@@ -1,0 +1,10 @@
+const { chromium } = require('playwright');
+(async () => { const b = await chromium.launch(); const ctx = await b.newContext({ viewport: { width: 800, height: 412 }, hasTouch: true, isMobile: true }); const p = await ctx.newPage(); const errs = [], bad = [];
+  p.on('pageerror', (e) => errs.push(e.message + ' @ ' + (e.stack || '').split('\n')[1])); p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text().slice(0, 200)); }); p.on('requestfailed', (r) => bad.push(r.url().split('/').pop())); p.on('response', (r) => { if (r.status() >= 400) bad.push(r.status() + ' ' + r.url().split('/').pop()); });
+  const area = process.argv[3] || 'south';
+  await p.goto(process.argv[2] + '?area=' + area + '&stats', { waitUntil: 'commit', timeout: 300000 }); await p.waitForFunction(() => window.__scene && !document.getElementById('loader'), null, { timeout: 300000, polling: 500 }).catch((e) => console.log('LOAD FAIL')); await p.waitForTimeout(4000);
+  console.log('errors', errs.length, errs.slice(0, 5).join(' || ')); console.log('bad requests', bad.length, [...new Set(bad)].slice(0, 12).join(', '));
+  const ev = (f, a) => p.evaluate(f, a); let n = 0; console.log('stats0', JSON.stringify(await ev(() => window.__scene.stats())));
+  for (const [x, z, yaw, name] of (area === 'south' ? [[62, 2, 1.57, 'from_midtown'], [22, 4, 0.8, 'lot'], [26, -8, 0, 'tireshop'], [30, 8.5, 3.14, 'row'], [50, -20, 1.2, 'east'], [46, -50, 0.3, 'dirt'], [12, 8.5, 1.57, 'to_square']] : [[-24, -1, 0.5, 'plaza'], [-27, 28, 3.14, 'street'], [4, 62, -1.5, 'forecourt']])) { await ev(([x, z, yaw]) => { const S = window.__scene; S.walk.position.set(x, 0, z); S.walk.yaw = yaw; S.walk.pitch = 0; S.walk.apply(); }, [x, z, yaw]); await p.waitForTimeout(2200); await p.screenshot({ path: `np/so_${area}_${n++}_${name}.jpg`, type: 'jpeg', quality: 85, timeout: 300000 }); }
+  console.log('stats', JSON.stringify(await ev(() => ({ ...window.__scene.stats(), npcs: window.__scene.npcs.map((q) => q.who.name), mem: performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1e6) : 0 }))));
+  console.log('errors', errs.length, errs.slice(0, 5).join(' || ')); await b.close(); })();

@@ -896,3 +896,23 @@ inside the view cone at five fixed camera spots, `tools/devtests/where2.js`), th
 - `drive.lock` holds the car; `drive.view(camera, dt)` lets something else aim the camera.
 - `tools/devtests/shop.js` crashes a cab, drives it in, repairs, resprays, fits parts, drives out.
 - Not done: the fitted parts are not saved between visits; no previews before paying; one booth an area.
+
+## 124 Old Town South; people in both old-town areas
+- `src/areas/oldsouth.js`: the southern old town lifted across the way Old Town Square was (main.js lines 457-640,
+  656-680, 708-844, 846-974 unchanged, plus what they lean on): the lot and boarded-up storefront, tire shop, street
+  row, rocks and trees, the apartment building, junked van, tree with a door, alien formation, scooter, wheel display,
+  the hooded figure, police vehicles, grocery, roadside shrines, house fronts, boarded blue house, dirt site.
+  Not brought: the restaurant's inside (its block stands shut, in brick) and the nature trail.
+- The areas now join as the town does: Midtown's west end -> Old Town South (the lot) -> Old Town Square. On foot.
+- Doors there (tire shop, apartments, grocery, scooter seat) open as you walk up; the big town asks for a key press.
+- Too much for a phone as it stood: about 1,230 separate meshes (the apartments and grocery alone use some 300
+  different materials). Multi-material meshes are now split and merged for every hand-built area, and this area
+  draws its small parts from much nearer (`streamScale: 0.35`). Measured at phone size from eight spots, worst view
+  each: 126-299 draws and about 180-620k triangles (Midtown is about 216 / 390k). Texture memory by the same
+  estimate: Midtown 262 MB, Old Town Square 432 MB, Old Town South 300 MB. Not yet tried on the real phone.
+- People: five stand about in each old-town area (no sidewalk grid to walk), each with a name, job and temperament
+  like anyone. Topics, five an area, six answers each: Old Town Square (the square, underground mall, bar alley,
+  lotus pond, the station), Old Town South (the lot, tire shop, the restaurant, the grocery, roadside shrines).
+- The single file is 43.1 MB (was 35.3): 350 of 534 textures.
+- `tools/devtests/walkthru.js` walks Midtown -> lot -> square -> lot -> Midtown and pokes the doors;
+  `draws.js <url> <area> <scale...>` measures the worst view from eight spots.

@@ -29,6 +29,7 @@ import { makeTempleFront } from './models/inspo72.js';
 import { makePocketPark } from './models/batch73.js';
 import { makeMallPassage } from './models/batch75.js';
 import { buildOldSquare } from './areas/oldsquare.js';
+import { buildOldSouth } from './areas/oldsouth.js';
 await fontsReady;
 
 const qs = new URLSearchParams(location.search), PHONE = matchMedia('(pointer: coarse)').matches;
@@ -61,7 +62,7 @@ walk.ground = (x, z, prevY) => { if (!A) return 0; if (A.ground) return A.ground
 const RING_W = { n: 121, s: -121, e: 282, hw: 9 }, RING_E = { n: 121, s: -121, e: 450, hw: 9 };
 const AREAS = {
   west: { name: 'Midtown', xs: [75, 161, 245], zs: [-84, 0, 84], ring: RING_W, lots: ['pottery', 'izakaya', 'ruins', 'pinkhouse', 'keigarage'], westStub: true,
-    exits: [{ to: 'east', side: 'e', test: (x) => x > 262, label: 'Heading east' }, { to: 'old', side: 'w', test: (x) => x < 56.5, label: 'Walking into the old town', onFoot: true, spawn: [6.2, 8.6, Math.PI / 2] }], open: { e: true, w: true },
+    exits: [{ to: 'east', side: 'e', test: (x) => x > 262, label: 'Heading east' }, { to: 'south', side: 'w', test: (x) => x < 56.5, label: 'Walking into the old town', onFoot: true, spawn: [63.2, 2.0, Math.PI / 2] }], open: { e: true, w: true },
     cars: [['hatch', { color: '#b3242a', name: 'red hatch', plate: 'ELM 2K7' }, 157.4, 30, 0], ['kei', { color: '#a8d6c6', roofColor: '#f2f0ea', rim: 'steel', name: 'mint kei car', plate: 'ELM 55K', metal: 0.2 }, 157.4, 46, 0],
       ['sedan', { color: '#f0c41c', rim: 'steel', name: 'cab', plate: 'ELM T41', livery: LIVERIES.taxi, metal: 0.15 }, 120, 3.7, Math.PI / 2], ['pickup', { color: '#5e6e52', rim: 'alloy', name: 'pickup', plate: 'ELM 7P8', chromeGrille: true }, 204, -3.6, -Math.PI / 2],
       ['coupe', { color: '#1b3a78', rim: 'black', name: 'blue coupe', plate: 'ELM 9C3' }, 164.6, -40, Math.PI]],
@@ -97,18 +98,31 @@ const AREAS = {
       { const PP = { x: 288, z: -77 }, pk = makePocketPark(); pk.position.set(PP.x, 0, PP.z); for (const [x0, x1, z0, z1] of pk.userData.colliders) rect(PP.x + x0, PP.x + x1, PP.z + z0, PP.z + z1); areas.push({ minX: PP.x - 19.8, maxX: PP.x + 19.8, minZ: PP.z - 0.6, maxZ: PP.z + 16.8 }); put(pk); floors.push([268, 308, -77, -60, 0]); }
       { const NM = { x: 259, z: -77 }, m = makeMallPassage(); m.position.set(NM.x, 0.14, NM.z); m.rotation.y = Math.PI; for (const c of m.userData.colliders) rect(...piMap(NM.x, NM.z, c)); for (const a of m.userData.areas) { const [minX, maxX, minZ, maxZ] = piMap(NM.x, NM.z, [a.minX, a.maxX, a.minZ, a.maxZ]); areas.push({ minX, maxX, minZ, maxZ }); } put(m); floors.push([252.5, 265.5, -77.4, -61, 0.14]); } } },
   // the northern old town, lifted across from the big town as it stands (src/areas/oldsquare.js). On foot only.
-  old: { name: 'Old Town Square', exits: [{ to: 'west', test: (x, z) => x > 8.4 && z > 5 && z < 12, label: 'Back to Midtown', spawn: [59.5, 0, -Math.PI / 2] }],
+  old: { name: 'Old Town Square', exits: [{ to: 'south', test: (x, z) => x > 8.4 && z > 5 && z < 12, label: 'Through to the lot', spawn: [10.6, 8.5, -Math.PI / 2] }],
     build(S) { const r = buildOldSquare(S); const { root } = S, wallM = new THREE.MeshStandardMaterial({ map: (() => { const t = new THREE.TextureLoader().load('assets/textures/wall_red_brick.png'); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(12, 5); return t; })(), roughness: 0.9 });
       // the restaurant block stood east of the plaza and north of the strip; until it is brought across, a brick wall closes those two sides
       const wall = (x0, x1, z0, z1, h = 5.5) => { const m = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, h, z1 - z0), wallM); m.position.set((x0 + x1) / 2, h / 2, (z0 + z1) / 2); root.add(m); S.rect(x0, x1, z0, z1); };
       wall(-9.0, -8.6, -14, 5.3); wall(-9.0, 9.4, 4.9, 5.3); wall(9.0, 9.4, 4.9, 6.2, 5.5); wall(9.0, 9.4, 10.9, 12.2, 5.5);
-      { const lint = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1.6, 4.7), wallM); lint.position.set(9.2, 4.7, 8.55); root.add(lint); S.sign('Midtown  \u2192', 8.2, 6.0, Math.PI / 2, 0); }
+      { const lint = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1.6, 4.7), wallM); lint.position.set(9.2, 4.7, 8.55); root.add(lint); S.sign('The lot \u00b7 Midtown  \u2192', 8.2, 6.0, Math.PI / 2, 0); }
+      for (const [sd, x, z, ry] of [[1, -24.5, -3.5, 0.6], [2, -27.5, 31, Math.PI], [3, -30, 60.5, 1.2], [4, 4.5, 64, -1.6], [5, -15.5, 8.2, 2.4]]) standAny(S, 'old', sd, x, z, ry, 0.01);
+      return r; } },
+  // the southern old town, lifted across the same way (src/areas/oldsouth.js): the lot between the square and Midtown. On foot only.
+  south: { name: 'Old Town South', hole: [900, 901, 900, 901], streamScale: 0.35,   /* (a great many small parts in a small space: they are drawn from much nearer than elsewhere) */ exits: [{ to: 'west', test: (x) => x > 65.3, label: 'Back to Midtown', spawn: [59.5, 0, -Math.PI / 2] }, { to: 'old', test: (x, z) => x < 8.8 && z > 5.4 && z < 11.7, label: 'Old Town Square', spawn: [6.2, 8.6, Math.PI / 2] }],
+    build(S) { const r = buildOldSouth(S); const { root } = S, wallM = new THREE.MeshStandardMaterial({ map: (() => { const t = new THREE.TextureLoader().load('assets/textures/wall_red_brick.png'); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(8, 2); return t; })(), roughness: 0.9 });
+      // the restaurant itself is not brought across yet: its block stands shut
+      { const m = new THREE.Mesh(new THREE.BoxGeometry(16.6, 3.6, 10.6), wallM); m.position.set(0, 1.8, 0); root.add(m); S.rect(-8.3, 8.3, -5.3, 5.3); }
+      S.sign('\u2190  Old Town Square', 9.4, 6.0, -Math.PI / 2, 0); S.sign('Midtown  \u2192', 63.5, 4.6, Math.PI / 2, 0);
+      // the cars left about the place stand where they were left
+      for (const [type, opt, x, z, h] of r.cars) { const c = makeCar({ type, ...opt }); c.position.set(x, 0, z); c.rotation.y = h; root.add(c); const sn = Math.sin(h), cs = Math.cos(h), u = c.userData; for (const lz of [u.half.zF - u.half.x, 0, u.half.zR + u.half.x]) S.circle(x + lz * sn, z + lz * cs, u.half.x); }
+      for (const [sd, x, z, ry] of [[1, 20, 3.5, -1.2], [2, 27.5, -9.2, 0], [3, 31, 10.2, Math.PI], [4, 47, -20, 1.6], [5, 14, 8.4, 2.2]]) standAny(S, 'south', sd, x, z, ry, 0.01);
       return r; } },
 };
 
 const PARK = [['sedan', { color: '#2a2c30', name: 'black sedan', plate: 'ELM 4B1', rim: 'alloy' }], ['hatch', { color: '#d8d4c8', name: 'white hatch', plate: 'ELM 8W2', rim: 'steel' }], ['kei', { color: '#c87a2a', name: 'orange kei car', plate: 'ELM 3K9', rim: 'steel' }], ['pickup', { color: '#6a2a26', name: 'red pickup', plate: 'ELM 6R5', rim: 'steel' }], ['van', { color: '#d9d6cc', name: 'white van', plate: 'ELM 2V6', rim: 'steel' }], ['scout', { color: '#3f5a46', name: 'green 4x4', plate: 'ELM 9S4', rim: 'steel' }], ['wagon', { color: '#6f7f8c', name: 'grey estate', plate: 'ELM 5E1', rails: true }]];
 // someone who stands at a place: a body of the right sex, a collider, and their part from lines.js
 function stand(S, id, x, z, ry, y) { const who = character(id); let body = null; for (let sd = 500 + id.length * 7, k = 0; k < 40; sd++, k++) { const b = makePerson(sd); if (b.userData.sex === who.sex) { body = b; break; } } if (!body) return; body.position.set(x, y, z); body.rotation.y = ry; S.root.add(body); colliders.push({ type: 'circle', x, z, r: 0.3 }); S.npcs.push({ who, x, z, mesh: body, reach: 2.7, ry }); }
+// an ordinary person standing about (areas without sidewalks to walk): who they are comes from the area and a number
+function standAny(S, areaId, seed, x, z, ry, y) { const body = makePerson(700 + seed * 13 + areaId.length); body.position.set(x, y, z); body.rotation.y = ry; S.root.add(body); colliders.push({ type: 'circle', x, z, r: 0.3 }); S.npcs.push({ who: whoIs(areaId, 's' + seed, body.userData.sex), x, z, mesh: body, reach: 2.6, ry }); }
 // things knocked over by a car, falling: each { a (angle), v (its speed), set(angle) } drops under its own weight, bounces once, and lies still
 const falls = [];
 function tickFalls(dt) { for (let i = falls.length - 1; i >= 0; i--) { const f = falls[i]; f.v += (0.4 + Math.sin(f.a) * 5.5) * dt; f.a += f.v * dt; if (f.a >= 1.5) { f.a = 1.5; if (f.v > 1.2 && !f.b) { f.b = true; f.v *= -0.25; } else { f.set(1.5); falls.splice(i, 1); continue; } } f.set(f.a); } }
@@ -120,7 +134,7 @@ function signpost(root, text, x, z, ry, y) { const c = document.createElement('c
 // an area that is not a street grid: its own build function places everything (the hand-built old town pieces)
 function buildCustomArea(id, def, root) {
   const lights = [];
-  const S = { root, colliders, rect: (x0, x1, z0, z1) => colliders.push({ type: 'box', minX: x0, maxX: x1, minZ: z0, maxZ: z1 }), circle: (x, z, r) => colliders.push({ type: 'circle', x, z, r }), sign: (text, x, z, ry, y = 0) => signpost(root, text, x, z, ry, y) };
+  const S = { root, colliders, npcs: [], rect: (x0, x1, z0, z1) => colliders.push({ type: 'box', minX: x0, maxX: x1, minZ: z0, maxZ: z1 }), circle: (x, z, r) => colliders.push({ type: 'circle', x, z, r }), sign: (text, x, z, ry, y = 0) => signpost(root, text, x, z, ry, y) };
   S.add = (o) => { root.add(o); return o; };
   const r = def.build(S);
   // the dark base everything stands on (with a hole where the underground mall's stair goes down), and a far skyline
@@ -130,7 +144,11 @@ function buildCustomArea(id, def, root) {
       for (let k = 0; k < 10; k++) { const q = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 1.6), wm); const ang = Math.atan2(-15 - bx, 40 - bz); q.position.set(bx + Math.sin(ang) * (w / 2 + 0.2) + Math.cos(ang) * (rnd() - 0.5) * w * 0.8, 4 + rnd() * (h - 8), bz + Math.cos(ang) * (w / 2 + 0.2) - Math.sin(ang) * (rnd() - 0.5) * w * 0.8); q.rotation.y = ang; sky.add(q); } }
     root.add(sky); mergeStatic(sky); }
   // each set's fixed parts merge by material; lights inside the sets are found (the nearest few are lit: see the frame loop); things that animate keep running
-  for (const o of [...root.children]) if (!o.isLight) mergeStatic(o);
+  // (a mesh with several materials cannot be merged as it is: it is first split into one mesh a material, in place.
+  // Anything under a part that moves is left alone.)
+  const splitMulti = (set) => { const list = []; const visit = (o, moving) => { const ud = o.userData || {}; const mv = moving || (o !== set && (ud.noMerge || typeof ud.tick === 'function' || typeof ud.update === 'function' || typeof ud.setOpen === 'function')); if (o.isMesh && !mv && Array.isArray(o.material) && !o.isInstancedMesh && !o.isSkinnedMesh && o.geometry.groups.length) list.push(o); for (const c of o.children) visit(c, mv); }; visit(set, false);
+    for (const m of list) { const g = m.geometry, idx = g.index ? g.index.array : null; for (const gr of g.groups) { const mat = m.material[gr.materialIndex]; if (!mat || !gr.count) continue; const ng = new THREE.BufferGeometry(); for (const k of Object.keys(g.attributes)) ng.setAttribute(k, g.attributes[k]); const ia = new Uint32Array(gr.count); for (let i = 0; i < gr.count; i++) ia[i] = idx ? idx[gr.start + i] : gr.start + i; ng.setIndex(new THREE.BufferAttribute(ia, 1)); const nm = new THREE.Mesh(ng, mat); nm.position.copy(m.position); nm.quaternion.copy(m.quaternion); nm.scale.copy(m.scale); nm.castShadow = m.castShadow; nm.receiveShadow = m.receiveShadow; nm.renderOrder = m.renderOrder; m.parent.add(nm); } for (const c of [...m.children]) { /* (children stay with the first piece's frame) */ const holder = new THREE.Group(); holder.position.copy(m.position); holder.quaternion.copy(m.quaternion); holder.scale.copy(m.scale); m.parent.add(holder); holder.add(c); } m.parent.remove(m); } };
+  for (const o of [...root.children]) if (!o.isLight) { splitMulti(o); mergeStatic(o); }
   const tickers = []; root.traverse((o) => { if (o.isLight) { o.castShadow = false; if (o.isPointLight || o.isSpotLight) lights.push(o); } if (o.userData && typeof o.userData.tick === 'function') tickers.push(o); });
   // the old town's sets carry hundreds of drawn signs and labels at full size (about 900 MB of graphics memory in all,
   // more than a phone gives a page): they are swapped for copies no bigger than `canvasMax` pixels
@@ -139,9 +157,9 @@ function buildCustomArea(id, def, root) {
   root.traverse((o) => { for (const m of [].concat(o.material || [])) for (const k in m) { const t = m[k]; if (t && t.isTexture && t.source && t.source._orig && !tickers.length) { const cv = t.source._orig; t.source._orig = null; cv.width = cv.height = 1; } } });
   walkAreas.push(...r.areas);
   drive.rebuild();
-  const streamer = makeStreamer(root, { phone: true, max: 260 }); streamer.setScale(PHONE ? 0.8 : 1);
+  const streamer = makeStreamer(root, { phone: true, max: 260 }); streamer.setScale(+(qs.get('ss') ?? def.streamScale ?? (PHONE ? 0.8 : 1)));
   console.log('area', id, ': sets', root.children.length, 'lights', lights.length, 'animated', tickers.length, 'signs resized', nShrunk);
-  return { id, def, root, district: null, interiors: null, people: null, streamer, floors: [], ground: r.ground, tick: null, lights, tickers };
+  return { id, def, root, district: null, interiors: null, people: null, streamer, floors: [], ground: r.ground, tick: r.tick ? (dt) => r.tick(t, dt, walk.position, walk.gy || 0) : null, lights, tickers, npcs: S.npcs };
 }
 function buildArea(id, carried) {
   const def = AREAS[id], root = new THREE.Group(); root.name = 'area_' + id; scene.add(root);
@@ -276,7 +294,7 @@ function frame() {
 }
 // ---- start: ?area=east starts in the other area
 { const id = AREAS[qs.get('area')] ? qs.get('area') : 'west'; A = buildArea(id, null);
-  walk.position.set(+(qs.get('x') ?? (id === 'west' ? 163.5 : id === 'old' ? -20 : 327)), 0, +(qs.get('z') ?? (id === 'old' ? 4 : 20))); walk.yaw = +(qs.get('yaw') ?? 0.15); walk.pitch = 0.02; setMode('walk'); walk.apply(); }
+  walk.position.set(+(qs.get('x') ?? (id === 'west' ? 163.5 : id === 'old' ? -20 : id === 'south' ? 20 : 327)), 0, +(qs.get('z') ?? (id === 'old' ? 4 : id === 'south' ? 3 : 20))); walk.yaw = +(qs.get('yaw') ?? 0.15); walk.pitch = 0.02; setMode('walk'); walk.apply(); }
 window.__scene = { renderer, scene, camera, walk, drive, setMode, use, talk, shop, get shopPad() { return A.shopPad; }, get talkTo() { return talkTo; }, get npcs() { return A.npcs || []; }, travel: (to) => travel({ to, label: 'Going' }), peopleTick: (dt) => peopleTick(mode === 'walk' ? walk.position : drive.state, dt), areaIds: Object.keys(AREAS), get area() { return A.id; }, get busy() { return busy; }, get interiors() { return A.interiors; }, get people() { return A.people; }, get district() { return A.district; }, get areaRoot() { return A.root; }, get streamer() { return A.streamer; },
   stats: () => ({ area: A.id, fps, pr, calls: renderer.info.render.calls, tris: renderer.info.render.triangles, tex: renderer.info.memory.textures, geo: renderer.info.memory.geometries }) };
 requestAnimationFrame(frame);
