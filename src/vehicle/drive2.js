@@ -58,8 +58,8 @@ export function makeDriver2({ scene, camera, areas, colliders, ground, hooks = {
   const hud = document.createElement('div'); hud.id = 'drivehud';
   hud.innerHTML = `<div class="spd"><b>0</b><i>km/h</i></div><div class="hp"><i></i></div><div class="msg"></div>
     <div class="tip help-mouse"><b>W/S</b> gas / brake + reverse · <b>A/D</b> steer · <b>Space</b> handbrake · <b>E</b> get out · hold <b>C</b> look back</div>
-    <div class="wheel"><div class="nub"></div></div>
-    <div class="pads"><button data-k="hand">HAND<br>BRAKE</button><button data-k="brake">BRAKE</button><button data-k="gas">GAS</button></div>
+    <div class="dpad"><button data-k="left">&#9664;</button><button data-k="right">&#9654;</button></div>
+    <div class="pads"><button data-k="out" class="y">Y<i>get out</i></button><button data-k="brake" class="x">X<i>brake / reverse</i></button><button data-k="hand" class="b">B<i>handbrake</i></button><button data-k="gas" class="a">A<i>accelerate</i></button></div>
     <button class="look">&#8635;</button>`;
   const css = document.createElement('style');
   css.textContent = `#drivehud{position:fixed;inset:0;pointer-events:none;display:none;font-family:system-ui,sans-serif;color:#fff;user-select:none;-webkit-user-select:none}
@@ -70,26 +70,29 @@ export function makeDriver2({ scene, camera, areas, colliders, ground, hooks = {
   #drivehud .hp i{display:block;height:100%;width:100%;background:#5fd05a;transition:width .15s}
   #drivehud .msg{position:absolute;left:50%;top:22%;transform:translateX(-50%);font:800 30px system-ui;letter-spacing:.06em;text-shadow:0 3px 10px #000;opacity:0;transition:opacity .4s;white-space:nowrap}
   #drivehud .tip{position:absolute;left:50%;transform:translateX(-50%);top:64px;background:#0008;padding:8px 12px;border-radius:10px;font-size:13px;max-width:70vw}
-  #drivehud .pads,#drivehud .wheel,#drivehud .look{display:none}
+  #drivehud .pads,#drivehud .dpad,#drivehud .look{display:none}
   @media (pointer:coarse){#drivehud .tip{display:none}
-  #drivehud .pads{display:grid;position:absolute;right:10px;bottom:calc(14px + env(safe-area-inset-bottom,0px));grid-template-columns:64px 74px 86px;gap:8px;align-items:end}
-  #drivehud .pads button{pointer-events:auto;height:74px;border-radius:16px;background:#0007;color:#fff;font-weight:700;font-size:13px;line-height:1.15;border:2px solid #fff4;touch-action:none}
-  #drivehud .pads button.on{background:#fff4} #drivehud .pads [data-k=gas]{height:112px;font-size:16px} #drivehud .pads [data-k=hand]{height:60px;font-size:11px}
-  #drivehud .wheel{display:block;position:absolute;left:14px;bottom:calc(22px + env(safe-area-inset-bottom,0px));width:150px;height:60px;border-radius:30px;border:2px solid #fff4;background:#0005}
-  #drivehud .wheel .nub{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;background:#fffc}
+  #drivehud .pads{display:block;position:absolute;right:8px;bottom:calc(10px + env(safe-area-inset-bottom,0px));width:196px;height:196px}
+  #drivehud .pads button,#drivehud .dpad button{pointer-events:auto;position:absolute;width:70px;height:70px;border-radius:50%;background:#000a;color:#fff;font:800 24px/1 system-ui;border:3px solid #fff6;touch-action:none;padding:0}
+  #drivehud .pads button i{display:block;font:600 8.5px/1.1 system-ui;font-style:normal;opacity:.85;margin-top:2px;white-space:nowrap}
+  #drivehud .pads .a{left:63px;top:126px;border-color:#5fd05a;color:#8be886} #drivehud .pads .b{left:126px;top:63px;border-color:#e0524a;color:#ff8a82}
+  #drivehud .pads .x{left:0;top:63px;border-color:#4a8ae0;color:#8ab8ff} #drivehud .pads .y{left:63px;top:0;border-color:#e0c040;color:#ffe27a}
+  #drivehud .pads button.on,#drivehud .dpad button.on{background:#fff5}
+  #drivehud .dpad{display:block;position:absolute;left:10px;bottom:calc(52px + env(safe-area-inset-bottom,0px));width:180px;height:84px}
+  #drivehud .dpad button{width:84px;height:84px;border-radius:18px;font-size:30px} #drivehud .dpad [data-k=right]{left:96px}
   #drivehud .look{display:block;position:absolute;left:12px;top:calc(12px + env(safe-area-inset-top,0px));pointer-events:auto;width:46px;height:46px;border-radius:50%;border:2px solid #fff5;background:#000a;color:#fff;font-size:22px}
-  #drivehud .spd{bottom:calc(140px + env(safe-area-inset-bottom,0px))} #drivehud .hp{bottom:calc(196px + env(safe-area-inset-bottom,0px))}}`;
+  #drivehud .spd{right:auto;left:16px;text-align:left;bottom:calc(150px + env(safe-area-inset-bottom,0px))} #drivehud .hp{right:auto;left:16px;bottom:calc(206px + env(safe-area-inset-bottom,0px))}}`;
   document.head.appendChild(css); document.body.appendChild(hud);
-  const touch = { steer: 0, gas: 0, brake: 0, hand: 0 };
-  hud.querySelectorAll('.pads button').forEach((b) => { const k = b.dataset.k, on = (v) => (e) => { touch[k] = v; b.classList.toggle('on', !!v); e.preventDefault(); };
+  const touch = { steer: 0, gas: 0, brake: 0, hand: 0, left: 0, right: 0 };
+  hud.querySelectorAll('.pads button, .dpad button').forEach((b) => { const k = b.dataset.k, on = (v) => (e) => { e.preventDefault(); b.classList.toggle('on', !!v); if (k === 'out') { if (v) document.getElementById('use')?.click(); return; } touch[k] = v; touch.steer = touch.right - touch.left; };
     b.addEventListener('touchstart', on(1), { passive: false }); b.addEventListener('touchend', on(0)); b.addEventListener('touchcancel', on(0)); b.addEventListener('mousedown', on(1)); b.addEventListener('mouseup', on(0)); b.addEventListener('mouseleave', on(0)); });
-  const spdEl = hud.querySelector('.spd b'), hpBar = hud.querySelector('.hp i'), msgEl = hud.querySelector('.msg'), nub = hud.querySelector('.nub'), lookBtn = hud.querySelector('.look');
+  const spdEl = hud.querySelector('.spd b'), hpBar = hud.querySelector('.hp i'), msgEl = hud.querySelector('.msg'), lookBtn = hud.querySelector('.look');
   { const on = (v) => (e) => { S.camMode = v; e.preventDefault(); }; lookBtn.addEventListener('touchstart', on(1), { passive: false }); lookBtn.addEventListener('touchend', on(0)); lookBtn.addEventListener('touchcancel', on(0)); }
   // steering thumb + look drag (touches that don't land on a button)
   { const T = new Map(), dom = document.body;
-    dom.addEventListener('touchstart', (e) => { if (!api.active || (e.target.closest && e.target.closest('button'))) return; for (const t of e.changedTouches) { const steer = t.clientX < innerWidth * 0.5 && t.clientY > innerHeight * 0.35 && ![...T.values()].some((v) => v.steer); T.set(t.identifier, { steer, x0: t.clientX, x: t.clientX, y: t.clientY }); } }, { passive: true });
-    dom.addEventListener('touchmove', (e) => { if (!api.active) return; for (const t of e.changedTouches) { const s = T.get(t.identifier); if (!s) continue; if (s.steer) { touch.steer = clamp((t.clientX - s.x0) / 58, -1, 1); nub.style.transform = `translateX(${touch.steer * 48}px)`; } else { S.lookYaw -= (t.clientX - s.x) * 0.006; S.lookPitch = clamp(S.lookPitch + (t.clientY - s.y) * 0.004, -0.25, 0.5); S.lookT = 1.6; } s.x = t.clientX; s.y = t.clientY; } }, { passive: true });
-    const end = (e) => { for (const t of e.changedTouches) { const s = T.get(t.identifier); if (s && s.steer) { touch.steer = 0; nub.style.transform = ''; } T.delete(t.identifier); } }; dom.addEventListener('touchend', end); dom.addEventListener('touchcancel', end); }
+    dom.addEventListener('touchstart', (e) => { if (!api.active || (e.target.closest && e.target.closest('button'))) return; for (const t of e.changedTouches) { const steer = false; T.set(t.identifier, { steer, x0: t.clientX, x: t.clientX, y: t.clientY }); } }, { passive: true });
+    dom.addEventListener('touchmove', (e) => { if (!api.active) return; for (const t of e.changedTouches) { const s = T.get(t.identifier); if (!s) continue; { S.lookYaw -= (t.clientX - s.x) * 0.006; S.lookPitch = clamp(S.lookPitch + (t.clientY - s.y) * 0.004, -0.25, 0.5); S.lookT = 1.6; } s.x = t.clientX; s.y = t.clientY; } }, { passive: true });
+    const end = (e) => { for (const t of e.changedTouches) { const s = T.get(t.identifier); T.delete(t.identifier); } }; dom.addEventListener('touchend', end); dom.addEventListener('touchcancel', end); }
   let msgT = 0; const say = (t, secs = 2.2) => { msgEl.textContent = t; msgEl.style.opacity = 1; msgT = secs; };
 
   // ---- sound: a two-oscillator engine through a filter, tyre noise, and noise bursts for knocks and bangs
@@ -326,7 +329,7 @@ export function makeDriver2({ scene, camera, areas, colliders, ground, hooks = {
     // getting out: at speed the car rolls on by itself
     exit() { const g = car; if (!g) return null; api.active = false; const u = g.userData, s = Math.sin(S.h), c = Math.cos(S.h);
       if (S.mode === 'wheels') { const d = dyn(g); d.vx = S.vx; d.vz = S.vz; d.w = S.r; } pose(0.016); api.syncCols(g); for (const k of u.cols) k.active = true; if (headLight) g.remove(headLight);
-      if (au) { au.master.gain.setTargetAtTime(0, au.ctx.currentTime, 0.1); au.sq.gain.setTargetAtTime(0, au.ctx.currentTime, 0.05); } camera.fov = 62; camera.updateProjectionMatrix(); car = null; touch.steer = touch.gas = touch.brake = touch.hand = 0;
+      if (au) { au.master.gain.setTargetAtTime(0, au.ctx.currentTime, 0.1); au.sq.gain.setTargetAtTime(0, au.ctx.currentTime, 0.05); } camera.fov = 62; camera.updateProjectionMatrix(); car = null; touch.steer = touch.gas = touch.brake = touch.hand = touch.left = touch.right = 0; hud.querySelectorAll('button.on').forEach((b) => b.classList.remove('on'));
       for (const [lx, lz] of [[u.half.x + 0.8, 0.3], [-u.half.x - 0.8, 0.3], [0, u.half.zR - 1.0], [0, u.half.zF + 1.0]]) { const x = S.x + lx * c + lz * s, z = S.z - lx * s + lz * c; if (inArea(x, z)) return { x, z, yaw: S.h + Math.PI }; }
       return { x: S.x + (u.half.x + 0.8) * c, z: S.z - (u.half.x + 0.8) * s, yaw: S.h + Math.PI }; },
     // every frame, driving or not: the other cars, fires, smoke; and the driven car when there is one

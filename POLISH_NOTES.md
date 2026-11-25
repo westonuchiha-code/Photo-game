@@ -784,3 +784,10 @@ inside the view cone at five fixed camera spots, `tools/devtests/where2.js`), th
 - Not done: keepers for the hand-built places (pottery, izakaya, gallery, temple); disposition / reputation; things
   doing anything once owned; keepers share the pedestrians' looks; Old Town Square has nobody in it.
 - `tools/devtests/talktest.js` walks through a pedestrian, Hank, a shop and a trade.
+
+## 115 Controller buttons for driving (touch)
+- Owner: the steering slider and GAS / BRAKE pads were not what a car game's controls should be.
+- Left: two arrow buttons steer. Right: a pad's four face buttons. A accelerate, X brake (hold on when stopped to
+  reverse), B handbrake, Y get out. Each is labelled. Speed and health moved above the arrows. Dragging elsewhere
+  on the screen still looks round. Keyboard unchanged.
+- `tools/devtests/ctltest.js` presses them in portrait and landscape.
