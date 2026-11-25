@@ -738,3 +738,8 @@ inside the view cone at five fixed camera spots, `tools/devtests/where2.js`), th
   HUD: speed, health bar, messages.
 - Not done in this stage: the car models themselves; traffic; police; sounds beyond the synth engine and thumps;
   the photo-faced character cannot be hit; nothing can kill the player.
+
+## 112 No flip button
+- Owner: no way to flip a car back; in the older open-city games a car that goes over catches fire and blows up.
+  The "Flip car" button, the R key and `drive.flip` are removed. A car resting on its roof starts to burn at once
+  (explodes about 6 s later); one left on its side does the same after 4 s. Get out or go up with it.

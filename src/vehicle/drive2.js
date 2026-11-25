@@ -10,7 +10,7 @@
 //   - what the car does to people on the street is reported through `hooks` (see people96.js)
 //   const drive = makeDriver2({ scene, camera, areas, colliders, ground, hooks })
 //   drive.addCar(car, { name })  .nearest(pos)  .enter(car)  .exit() -> { x, z, yaw }  .update(dt) (every frame)
-//   drive.active  .state (x, z, h, vx, vz ...)  .cars  .rebuild()  .adopt(car)  .flip()  .sim(secs, input)
+//   drive.active  .state (x, z, h, vx, vz ...)  .cars  .rebuild()  .adopt(car)  .sim(secs, input)
 import * as THREE from 'three';
 
 const UP = new THREE.Vector3(0, 1, 0), G = 9.81;
@@ -57,10 +57,10 @@ export function makeDriver2({ scene, camera, areas, colliders, ground, hooks = {
   // where it lands: the further, the more lock); gas, brake and handbrake are on the right; drag the top of the screen to look round.
   const hud = document.createElement('div'); hud.id = 'drivehud';
   hud.innerHTML = `<div class="spd"><b>0</b><i>km/h</i></div><div class="hp"><i></i></div><div class="msg"></div>
-    <div class="tip help-mouse"><b>W/S</b> gas / brake + reverse · <b>A/D</b> steer · <b>Space</b> handbrake · <b>E</b> get out · <b>R</b> flip · hold <b>C</b> look back</div>
+    <div class="tip help-mouse"><b>W/S</b> gas / brake + reverse · <b>A/D</b> steer · <b>Space</b> handbrake · <b>E</b> get out · hold <b>C</b> look back</div>
     <div class="wheel"><div class="nub"></div></div>
     <div class="pads"><button data-k="hand">HAND<br>BRAKE</button><button data-k="brake">BRAKE</button><button data-k="gas">GAS</button></div>
-    <button class="flip" hidden>Flip car</button><button class="look">&#8635;</button>`;
+    <button class="look">&#8635;</button>`;
   const css = document.createElement('style');
   css.textContent = `#drivehud{position:fixed;inset:0;pointer-events:none;display:none;font-family:system-ui,sans-serif;color:#fff;user-select:none;-webkit-user-select:none}
   body[data-mode=drive] #drivehud{display:block}
@@ -70,7 +70,7 @@ export function makeDriver2({ scene, camera, areas, colliders, ground, hooks = {
   #drivehud .hp i{display:block;height:100%;width:100%;background:#5fd05a;transition:width .15s}
   #drivehud .msg{position:absolute;left:50%;top:22%;transform:translateX(-50%);font:800 30px system-ui;letter-spacing:.06em;text-shadow:0 3px 10px #000;opacity:0;transition:opacity .4s;white-space:nowrap}
   #drivehud .tip{position:absolute;left:50%;transform:translateX(-50%);top:64px;background:#0008;padding:8px 12px;border-radius:10px;font-size:13px;max-width:70vw}
-  #drivehud .pads,#drivehud .wheel,#drivehud .look{display:none} #drivehud .flip{position:absolute;left:50%;top:38%;transform:translateX(-50%);pointer-events:auto;font:700 17px system-ui;padding:12px 18px;border-radius:14px;border:2px solid #fff6;background:#000b;color:#fff}
+  #drivehud .pads,#drivehud .wheel,#drivehud .look{display:none}
   @media (pointer:coarse){#drivehud .tip{display:none}
   #drivehud .pads{display:grid;position:absolute;right:10px;bottom:calc(14px + env(safe-area-inset-bottom,0px));grid-template-columns:64px 74px 86px;gap:8px;align-items:end}
   #drivehud .pads button{pointer-events:auto;height:74px;border-radius:16px;background:#0007;color:#fff;font-weight:700;font-size:13px;line-height:1.15;border:2px solid #fff4;touch-action:none}
@@ -83,8 +83,7 @@ export function makeDriver2({ scene, camera, areas, colliders, ground, hooks = {
   const touch = { steer: 0, gas: 0, brake: 0, hand: 0 };
   hud.querySelectorAll('.pads button').forEach((b) => { const k = b.dataset.k, on = (v) => (e) => { touch[k] = v; b.classList.toggle('on', !!v); e.preventDefault(); };
     b.addEventListener('touchstart', on(1), { passive: false }); b.addEventListener('touchend', on(0)); b.addEventListener('touchcancel', on(0)); b.addEventListener('mousedown', on(1)); b.addEventListener('mouseup', on(0)); b.addEventListener('mouseleave', on(0)); });
-  const spdEl = hud.querySelector('.spd b'), hpBar = hud.querySelector('.hp i'), msgEl = hud.querySelector('.msg'), nub = hud.querySelector('.nub'), flipBtn = hud.querySelector('.flip'), lookBtn = hud.querySelector('.look');
-  flipBtn.addEventListener('click', () => api.flip());
+  const spdEl = hud.querySelector('.spd b'), hpBar = hud.querySelector('.hp i'), msgEl = hud.querySelector('.msg'), nub = hud.querySelector('.nub'), lookBtn = hud.querySelector('.look');
   { const on = (v) => (e) => { S.camMode = v; e.preventDefault(); }; lookBtn.addEventListener('touchstart', on(1), { passive: false }); lookBtn.addEventListener('touchend', on(0)); lookBtn.addEventListener('touchcancel', on(0)); }
   // steering thumb + look drag (touches that don't land on a button)
   { const T = new Map(), dom = document.body;
@@ -203,9 +202,10 @@ export function makeDriver2({ scene, camera, areas, colliders, ground, hooks = {
       S.phiV += -vL * 0.9 * dt * Math.abs(Math.cos(S.phi)) * (spd > 3 ? 1 : 0);
       const fr = Math.exp(-(0.55 * G / Math.max(2, spd)) * dt); S.vx *= fr; S.vz *= fr; S.r *= Math.exp(-1.6 * dt); S.h += S.r * dt; S.steer = damp(S.steer, 0, 6, dt);
       if (spd > 4 && Math.random() < dt * 30) puff(S.x + (Math.random() - 0.5), S.y + 0.2, S.z + (Math.random() - 0.5), { color: '#ffd28a', size: 0.1, grow: 0.1, life: 0.25, vy: 1.5, spread: 3, glow: true, a: 0.9 });
-      // settled? on its wheels again it drives on; on its side or roof it stays (see flip)
+      // settled? on its wheels again it drives on. There is no putting a car back: on its roof it catches fire at once and
+      // burns down; left on its side it does the same after a few seconds.
       const rest = wrapA(S.phi), near = Math.round(rest / (Math.PI / 2)) * (Math.PI / 2);
-      if (Math.abs(S.phiV) < 0.5 && Math.abs(rest - near) < 0.12 && spd < 6) { if (Math.abs(wrapA(near)) < 0.01) { S.mode = 'wheels'; S.phi = 0; S.phiV = 0; S.roll = 0; S.rollV = 0; } else { S.phi = near; S.phiV = 0; S.stuckT += dt; if (Math.abs(Math.abs(wrapA(near)) - Math.PI) < 0.1 && S.stuckT > 0.6 && !u.wreck) u.hp = Math.min(u.hp, hd.hpMax * 0.099); } }
+      if (Math.abs(S.phiV) < 0.5 && Math.abs(rest - near) < 0.12 && spd < 6) { if (Math.abs(wrapA(near)) < 0.01) { S.mode = 'wheels'; S.phi = 0; S.phiV = 0; S.roll = 0; S.rollV = 0; } else { S.phi = near; S.phiV = 0; S.stuckT += dt; if (S.stuckT > (Math.abs(Math.abs(wrapA(near)) - Math.PI) < 0.1 ? 0.6 : 4) && !u.wreck) u.hp = Math.min(u.hp, hd.hpMax * 0.099); } }
       S.aLong = 0; S.aLat = 0; S.slip = 0; S.drift = 0;
     } else if (S.air) {
       S.r = damp(S.r, inp.steer * 0.8, 2, dt); S.h += S.r * dt; S.steer = damp(S.steer, inp.steer * 0.3, 4, dt); const k = 1 - 0.004 * spd * dt; S.vx *= k; S.vz *= k; S.aLong = 0; S.aLat = 0; S.slip = 0; S.drift = 0;
@@ -303,7 +303,6 @@ export function makeDriver2({ scene, camera, areas, colliders, ground, hooks = {
     if (smokeF && Math.random() < dt * 14) { const w = u.wheels[Math.random() < 0.5 ? 0 : 1].pivot.position; puff(S.x + w.x * c + w.z * s, S.y + 0.15, S.z - w.x * s + w.z * c, { color: '#d0d0d0', size: 0.25, grow: 1.1, life: 0.7, vy: 0.4, a: 0.22 }); }
     spdEl.textContent = Math.round(Math.hypot(S.vx, S.vz) * 3.6);
     const f = u.hp / hd.hpMax; hpBar.style.width = Math.round(f * 100) + '%'; hpBar.style.background = f > 0.6 ? '#5fd05a' : f > 0.3 ? '#e6c234' : '#e0482e';
-    flipBtn.hidden = !(S.mode === 'tumble' && S.stuckT > 0.8 && !u.wreck);
     if (au) { const t = au.ctx.currentTime, vF = Math.abs(S.vF), gears = [0, 9, 17, 26, 36, 60]; let g = 1; while (g < 5 && vF > gears[g]) g++; const lo = gears[g - 1], hi = gears[g], thr = u.wreck ? 0 : input().gas;
       const rpm = clamp(0.25 + 0.75 * clamp((vF - lo) / (hi - lo), 0, 1) + (S.spinR && thr ? 0.35 : 0), 0.2, 1.2), fq = (38 + rpm * 95) * hd.note * (f < 0.2 ? 0.92 + Math.random() * 0.12 : 1);
       au.o1.frequency.setTargetAtTime(fq, t, 0.05); au.o2.frequency.setTargetAtTime(fq * 0.5, t, 0.05); au.lp.frequency.setTargetAtTime(300 + rpm * 900 + thr * 600, t, 0.08);
@@ -330,8 +329,6 @@ export function makeDriver2({ scene, camera, areas, colliders, ground, hooks = {
       if (au) { au.master.gain.setTargetAtTime(0, au.ctx.currentTime, 0.1); au.sq.gain.setTargetAtTime(0, au.ctx.currentTime, 0.05); } camera.fov = 62; camera.updateProjectionMatrix(); car = null; touch.steer = touch.gas = touch.brake = touch.hand = 0;
       for (const [lx, lz] of [[u.half.x + 0.8, 0.3], [-u.half.x - 0.8, 0.3], [0, u.half.zR - 1.0], [0, u.half.zF + 1.0]]) { const x = S.x + lx * c + lz * s, z = S.z - lx * s + lz * c; if (inArea(x, z)) return { x, z, yaw: S.h + Math.PI }; }
       return { x: S.x + (u.half.x + 0.8) * c, z: S.z - (u.half.x + 0.8) * s, yaw: S.h + Math.PI }; },
-    // put a car that is on its side or roof back on its wheels (the driven one, or one you're standing by)
-    flip(g = car) { if (!g) return; if (g === car) { if (S.mode !== 'tumble') return; S.mode = 'wheels'; S.phi = S.phiV = 0; S.stuckT = 0; S.air = true; S.vy = 2.6; S.y += 0.3; S.vx = S.vz = S.r = 0; } else { g.rotation.set(0, g.rotation.y, 0); g.position.y = ground(g.position.x, g.position.z); g.userData.flipped = false; } },
     // every frame, driving or not: the other cars, fires, smoke; and the driven car when there is one
     update(dt) { tickOthers(dt); tickParts(dt); if (msgT > 0 && (msgT -= dt) <= 0) msgEl.style.opacity = 0; if (!car) return; const inp = input(), n = 4; for (let i = 0; i < n; i++) step(dt / n, inp); pose(dt); chase(dt, false); fx(dt);
       if (S.mode === 'tumble' && Math.abs(Math.abs(wrapA(S.phi)) - Math.PI / 2) < 0.2) car.userData.flipped = true; },
@@ -339,7 +336,7 @@ export function makeDriver2({ scene, camera, areas, colliders, ground, hooks = {
     hurt, explode, say,
     get car() { return car; },
   };
-  addEventListener('keydown', (e) => { if (!api.active) return; if (e.code === 'KeyC' && !e.repeat) S.camMode = 1; if (e.code === 'KeyR' && !e.repeat) api.flip(); });
+  addEventListener('keydown', (e) => { if (!api.active) return; if (e.code === 'KeyC' && !e.repeat) S.camMode = 1; });
   addEventListener('keyup', (e) => { if (e.code === 'KeyC') S.camMode = 0; });
   return api;
 }
