@@ -705,3 +705,36 @@ inside the view cone at five fixed camera spots, `tools/devtests/where2.js`), th
 - Phone file: 235 of 534 textures, 35.2 MB. Not yet tried on the real phone.
 - Still to bring across: restaurant, lot, tire shop, street row, grocery, apartments, houses, dirt site, shrines,
   nature trail, vehicles (each a further area or two).
+
+## 111 Cars, stage 1: a new driving system for the phone build (src/vehicle/drive2.js)
+- Owner asked for an in-depth pass on the cars with an early-2000s open-city feel: types that drive differently,
+  damage and health, flipping, pedestrians that dive clear or get hit and die, better drifting and controls, better
+  models; and after that an NPC conversation / shop system. This is stage 1 (how cars drive and what they do). The
+  big town keeps src/drive.js unchanged.
+- Model: front and rear axle grip separately. Load shifts with braking / power; what a tyre uses along the car
+  is not there across it (so power and the handbrake use up rear grip); slip angles give the side forces; below
+  walking pace the car follows its front wheels. Assists: yaw damping, stronger front bite when you steer into a
+  slide, and extra damping past about 35 degrees of slide so a drift can be held.
+- `CLASS` / `handlingFor`: sports, sedan, hatch, kei, pickup, offroad, van, truck: drive wheels, pull and top speed,
+  grip, rear grip share, steering lock and fade, turn-in, brakes, height of the centre of mass, toughness, body roll,
+  engine note. The kart drift-charge and boost are gone here.
+- Measured with tools/devtests/drv.js (0-60 km/h, braking, cornering at 30 / 60 / 90, handbrake turn, power slide,
+  crash). After tuning: 0-60 in 2.2 s (sports) to 4.9 s (kei); yaw about 60 deg/s at 30 km/h; a handbrake turn at
+  60 km/h swings 70-105 degrees in 0.9 s; rear-drive cars power-slide from a slow corner, front-drive ones don't.
+- Health (1000 x toughness): impacts cost speed squared, dent the bodywork round the contact point, kill lamps;
+  below 62% the engine smokes, below 40% / 20% it loses power, below 10% it burns down and explodes into a burnt
+  wreck (blast shoves and hurts nearby cars, throws people). A 70-85 km/h head-on costs roughly 15-25%.
+- Going over: a `tumble` mode. The car rolls as a box over its edges, sliding on its bodywork, losing energy at each
+  edge; it can come back onto its wheels, or rest on its side or roof (on the roof it starts to burn). Triggered by
+  hard sideways hits, or by cornering force against the height of the weight for tall / narrow cars at speed.
+  "Flip car" button (R) puts it back.
+- Other cars are bodies too: a parked car that is hit is shoved, spun, dented; a car you jump out of rolls on.
+- Pedestrians (people96.js, only when the phone driver supplies the car's outline): they throw themselves clear of
+  a car coming at them (fewer manage the faster it comes), are shouldered aside at a crawl, are thrown when struck
+  (dead above about 27 km/h, otherwise they get up and run), others nearby run; blasts throw and scatter them.
+  tools/devtests/pedtest.js: at 35 km/h all ten tried dived clear; at 60 km/h seven of ten were hit.
+- Controls: touch has a steering slider under the left thumb (analog), gas / brake+reverse / handbrake on the right,
+  a look-back button, and a drag on the screen looks round; keys W/S A/D Space, E out, R flip, C look back.
+  HUD: speed, health bar, messages.
+- Not done in this stage: the car models themselves; traffic; police; sounds beyond the synth engine and thumps;
+  the photo-faced character cannot be hit; nothing can kill the player.

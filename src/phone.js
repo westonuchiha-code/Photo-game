@@ -15,7 +15,7 @@ import { placeStreetServices } from './models/street92.js';
 import { makeInteriors } from './interiors.js';
 import { makePeople, makeCharacter, CHARACTERS } from './models/people96.js';
 import { useLowDetailBodies } from './models/body97.js';
-import { makeDriver } from './drive.js';
+import { makeDriver2 } from './vehicle/drive2.js';
 import { makeCar, LIVERIES, carEnv } from './vehicle/carbody.js';
 import { makeSky } from './models/sky.js';
 import { makeAqueductGarden, makeIzakaya, makePotteryGallery, makeBarrelPlanter, makeCurvedBench, makeWifiStand, makeWeepingMaple, makePizzaAFrame, makeComicVending, makeStickerPost, makeMural as makeRainbowMural } from './models/inspo70.js';
@@ -46,7 +46,10 @@ scene.environment = carEnv(renderer); scene.environmentIntensity = 0.14;
 const colliders = [], walkAreas = [], driveAreas = [];
 let A = null;   // the area that is built now
 const walk = new WalkControls(camera, renderer.domElement, { bounds: null, areas: walkAreas, colliders, speed: 2.75 });   // (25% faster than the big town's 2.2 m/s)
-const drive = makeDriver({ scene, camera, areas: driveAreas, colliders, pads: [], ground: (x, z) => (A && A.district ? A.district.userData.floorY(x, z) ?? 0 : 0) });
+const drive = makeDriver2({ scene, camera, areas: driveAreas, colliders, ground: (x, z) => (A && A.district ? A.district.userData.floorY(x, z) ?? 0 : 0),
+  hooks: { blast: (x, z, r) => { if (A && A.people) A.people.blast(x, z, r); }, wrecked: () => { if (mode === 'drive') use(); } } });
+// what the pedestrians are told about the car being driven, and what hitting one does to it
+const carInfo = { x: 0, z: 0, vx: 0, vz: 0, h: 0, half: null, onHit: (speed, dead, x, z) => { const S = drive.state; S.vx *= 0.94; S.vz *= 0.94; S.shake = Math.min(1, S.shake + 0.25); if (drive.car) drive.hurt(drive.car, 14 + speed * 2.2, x, z, 0.7); } };
 walk.ground = (x, z, prevY) => { if (!A) return 0; if (A.ground) return A.ground(x, z, prevY); for (const [x0, x1, z0, z1, y] of A.floors) if (x > x0 && x < x1 && z > z0 && z < z1) return typeof y === 'function' ? y(x, z) : y; return A.interiors.floorY(x, z) ?? A.district.userData.floorY(x, z) ?? 0; };
 
 // ---- the areas. Both are halves of the big town's district, at the same coordinates, so a street keeps its place
@@ -198,10 +201,11 @@ async function travel(exit) {
 const statEl = document.getElementById('stats'); let statOn = qs.has('stats'), taps = 0; statEl.hidden = !statOn;
 addEventListener('pointerdown', (e) => { if (e.clientX < 70 && e.clientY < 70) { if (++taps >= 3) { taps = 0; statOn = !statOn; statEl.hidden = !statOn; } } else taps = 0; });
 const clock = new THREE.Clock(); let t = 0, tick = 0, acc = 0, nfr = 0, fps = 0, slow = 0, fast = 0;
+function peopleTick(pos, dt) { if (!A.people) return; let ci = null; if (mode === 'drive' && drive.car) { const S = drive.state; ci = carInfo; ci.x = S.x; ci.z = S.z; ci.vx = S.vx; ci.vz = S.vz; ci.h = S.h; ci.half = drive.car.userData.half; } A.people.update(pos, dt, ci, mode === 'walk'); }
 function frame() {
   if (window.__loadingHold || busy || !A) { clock.getDelta(); requestAnimationFrame(frame); return; }
   const raw = clock.getDelta(), dt = Math.min(raw, 0.05); t += dt;
-  if (mode === 'walk') walk.update(dt); else drive.update(dt);
+  if (mode === 'walk') walk.update(dt); drive.update(dt);   // (the driver runs every frame: parked cars that were hit, fires, smoke)
   sky.userData.update(camera, t);
   const pos = mode === 'walk' ? walk.position : drive.state;
   if (A.interiors) { A.interiors.update(mode === 'walk' ? walk.position : camera.position, dt, mode !== 'drive'); const e = A.interiors.enclosed(); if (e !== shutIn) setShutIn(e); }
@@ -210,7 +214,7 @@ function frame() {
     if (A.lights && A.lights.length) { const P3 = camera.position, W = new THREE.Vector3(); for (const l of A.lights) { l.getWorldPosition(W); l.userData._d = W.distanceToSquared(P3); } A.lights.sort((a, b) => a.userData._d - b.userData._d); A.lights.forEach((l, i) => { l.visible = i < 3; }); } }
   if (A.tick) A.tick(dt);
   if (A.tickers) for (const o of A.tickers) o.userData.tick(t, dt);
-  if (A.people) A.people.update(pos, dt, mode === 'drive' ? drive.state : null, mode === 'walk');
+  peopleTick(pos, dt);
   const car = mode === 'walk' ? drive.nearest(walk.position) : null;
   useBtn.hidden = mode === 'walk' && !car; useBtn.textContent = mode === 'drive' ? 'Get out' : car ? `Drive the ${car.userData.driveName}` : '';
   renderer.render(scene, camera);
@@ -224,7 +228,7 @@ function frame() {
 // ---- start: ?area=east starts in the other area
 { const id = AREAS[qs.get('area')] ? qs.get('area') : 'west'; A = buildArea(id, null);
   walk.position.set(+(qs.get('x') ?? (id === 'west' ? 163.5 : id === 'old' ? -20 : 327)), 0, +(qs.get('z') ?? (id === 'old' ? 4 : 20))); walk.yaw = +(qs.get('yaw') ?? 0.15); walk.pitch = 0.02; setMode('walk'); walk.apply(); }
-window.__scene = { renderer, scene, camera, walk, drive, setMode, use, travel: (to) => travel({ to, label: 'Going' }), areaIds: Object.keys(AREAS), get area() { return A.id; }, get busy() { return busy; }, get interiors() { return A.interiors; }, get people() { return A.people; }, get district() { return A.district; }, get areaRoot() { return A.root; }, get streamer() { return A.streamer; },
+window.__scene = { renderer, scene, camera, walk, drive, setMode, use, travel: (to) => travel({ to, label: 'Going' }), peopleTick: (dt) => peopleTick(mode === 'walk' ? walk.position : drive.state, dt), areaIds: Object.keys(AREAS), get area() { return A.id; }, get busy() { return busy; }, get interiors() { return A.interiors; }, get people() { return A.people; }, get district() { return A.district; }, get areaRoot() { return A.root; }, get streamer() { return A.streamer; },
   stats: () => ({ area: A.id, fps, pr, calls: renderer.info.render.calls, tris: renderer.info.render.triangles, tex: renderer.info.memory.textures, geo: renderer.info.memory.geometries }) };
 requestAnimationFrame(frame);
 finishLoading(renderer, scene, camera);
