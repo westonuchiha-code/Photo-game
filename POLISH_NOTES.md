@@ -797,3 +797,23 @@ inside the view cone at five fixed camera spots, `tools/devtests/where2.js`), th
   fading to nothing ahead and at the sides, brightest a few metres out. Smashed lamps throw no light.
 - 116b: the new cones were laid out backwards (running under the car). Turned to run forward from the lamps;
   `tools/devtests/beamshots.js` photographs them from above, the side and the front.
+
+## 117 Car animations, burnout, horn, finer car detail
+- Getting in: the driver's door swings open, the view glides from where you stood to behind the car, someone sits
+  down at the wheel, the door shuts (with a thump). Getting out (standing still, on its wheels): door opens, you
+  are out, door shuts behind you. At speed, on its side or wrecked you are simply out, as before.
+  The door is three meshes cut from the shell (paint, glass, lining) hung on its front edge; the steering wheel is
+  its own part and turns with the steering; the driver is one figure posed sitting, leaned back to fit low roofs.
+- Burnout: hold accelerate and brake together below about 18 km/h. Rear-drive cars hold the front wheels, spin the
+  rears, pour smoke, lay marks and swing the tail round as you steer (donuts); let go of the brake and it launches.
+  Front-drive cars sit and smoke the fronts. Four-wheel-drive ones do not.
+- Horn: HORN button by the pad (H on a keyboard). People ahead and close hurry off along the sidewalk.
+- Car detail: belt mouldings, drip rails, rubbing strips, bonnet and boot shut lines, a dark scuttle under the
+  windscreen, amber corner lamps and white reversing lamps at the back, side repeaters, high brake lamp, aerial,
+  filler cap, plate surrounds, a badge, a silencer, bumper inserts, mud flaps on the trucks, wheel nuts, steering
+  column and rear-view mirror. About 8,500 triangles and 20 draws a car now.
+- For later (owner's idea, not started): a drive-in body shop. Park inside, a menu opens with the car shown at a
+  good angle: respray any colour, full repair, and bolt-on parts shared across all cars (spoilers, wheels /
+  hubcaps, window tint, and so on). `carbody2.js` already takes these as plain options (color, rim, rimColor, wing,
+  roofSpoiler, lip, rails, fog), so the shop would rebuild the car from its spec with the options changed.
+- `tools/devtests/caranim.js` photographs the door, the driver, both burnouts and counts who runs from the horn.

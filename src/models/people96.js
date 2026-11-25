@@ -90,5 +90,7 @@ export function makePeople({ scene, grid, sidewalkY = 0.14, count = 40 }) {
     first = false; }
   // an explosion: people close by are thrown, the rest of the street runs
   function blast(bx, bz, rad) { for (const p of P) { if (!p.active) continue; const dx = p.mesh.position.x - bx, dz = p.mesh.position.z - bz, d = Math.hypot(dx, dz) || 1; if (d < rad && p.st !== 'dead') strike(p, dx / d * 8 * (1 - d / rad) + (r() - 0.5), dz / d * 8 * (1 - d / rad) + (r() - 0.5), 4 + 3 * (1 - d / rad), d < rad * 0.7); else if (d < 45) scare(p, bx, bz, 8); } }
-  return { group, update, blast, count, list: P };
+  // a car horn: people ahead of it and close hurry off along the sidewalk
+  function honk(hx, hz, h) { const fx = Math.sin(h), fz = Math.cos(h); for (const p of P) { if (!p.active) continue; const dx = p.mesh.position.x - hx, dz = p.mesh.position.z - hz, d = Math.hypot(dx, dz); if (d < 18 && (dx * fx + dz * fz > -2 || d < 5)) scare(p, hx, hz, 2.5 + r() * 1.5); } }
+  return { group, update, blast, honk, count, list: P };
 }

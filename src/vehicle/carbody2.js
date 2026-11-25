@@ -109,6 +109,7 @@ function makeWheel(R, tw, side, style, rimC) {
       K.geo('rim', g, { matrix: new THREE.Matrix4().makeRotationX(a).multiply(new THREE.Matrix4().makeTranslation(o * (h * 0.78), rr * 0.55, 0)), color: rimC }); }
     lathe('rim', [[rr * 0.24, f * 0.7], [rr * 0.22, f * 0.95], [rr * 0.1, f * 1.0], [0.001, f * 1.0]], rimC, 14);
   }
+  for (let k = 0; k < 5; k++) { const a = k / 5 * Math.PI * 2 + 0.3; K.geo('rim', new THREE.CylinderGeometry(0.011, 0.011, 0.02, 6), { x: f * (style === 'steel' ? 0.86 : 0.98), y: Math.cos(a) * rr * 0.16, z: Math.sin(a) * rr * 0.16, rz: Math.PI / 2, color: C.steel }); }
   const t = K.mesh('tyre', m.tyre), r = K.mesh('rim', m.rim); t.castShadow = true; spin.add(t, r);
   return { pivot, spin };
 }
@@ -158,6 +159,8 @@ export function makeCar(opts = {}) {
   if (P.quarter) { const zq = c0 + Math.max(0.3, (zBp - c0) * (doors4 ? 0.3 : 0.5)); pillars.push([zq - 0.04, zq + 0.04, doors4 ? 'paint' : 'dark']); P._zq = zq; }
   if (!P.sail) pillars.push([c0, c0 + 0.07, 'paint']);
   for (const [a, b] of pillars) { addZ(a); addZ(b); }
+  const zD1 = Math.min(c1 + P.ws * 0.42, axF - d0 - 0.07), zDr = zBp + 0.045; addZ(zD1);   // the driver's door runs zDr..zD1 on the left (+x)
+  const inDoor = (zm) => zm > zDr && zm < zD1;
   if (P.bed) { addZ(zb - 0.022, 'bed'); addZ(zR + 0.075, 'bed'); addZ(zR + 0.052); }
   zs.sort((a, b) => a.z - b.z);
   for (let i = zs.length - 2; i >= 0; i--) { const gap = zs[i + 1].z - zs[i].z, n = Math.ceil(gap / 0.26); for (let k = n - 1; k >= 1; k--) zs.splice(i + 1, 0, { z: zs[i].z + gap * k / n }); }
@@ -181,7 +184,7 @@ export function makeCar(opts = {}) {
     if (c <= 1) return ['misc', 0, C.dark];
     if (c === 2 && P.clad) return ['misc', 1, C.trim];
     if (zn === 1 && c >= 4) return c === 9 ? ['misc', 2, C.liner] : P.roundLamps ? ['paint', 30] : c <= 5 ? ['misc', 5, C.amber] : ['head', 0];
-    if (zn === 7 && c >= 4) return c === 9 || P.roundLamps ? ['paint', 31] : ['tail', 0];
+    if (zn === 7 && c >= 4) return c === 9 || P.roundLamps ? ['paint', 31] : c === 4 ? ['misc', 6, C.amber] : c === 8 ? ['misc', 7, C.white] : ['tail', 0];
     if (c <= 3) return ['paint', 1];
     if (c === 4) return ['paint', 2];
     if (zn === 2) return ['paint', 10];
@@ -195,13 +198,14 @@ export function makeCar(opts = {}) {
   const NP = 20, pt = (i, k) => { const q = k <= 10 ? secs[i][k] : secs[i][20 - k]; return [k <= 10 ? q[0] : -q[0], q[1], zs[i].z]; };
   const vmap = new Map(); const vid = (key, grp, i, k, col) => { const kk = (k === 0 || k === 10) ? k : k; const id = key + '|' + grp + '|' + i + '|' + kk; let v = vmap.get(id); if (v === undefined) { const q = pt(i, k); v = K.vert(key, q[0], q[1], q[2], col); vmap.set(id, v); } return v; };
   const lining = [];
-  for (let i = 0; i < NS - 1; i++) for (let k = 0; k < NP; k++) { const c = k < 10 ? k : 19 - k, [key, grp, col] = face(i, c), k1 = (k + 1) % NP;
+  for (let i = 0; i < NS - 1; i++) for (let k = 0; k < NP; k++) { const c = k < 10 ? k : 19 - k; let [key, grp, col] = face(i, c); const k1 = (k + 1) % NP;
     const A = pt(i, k), Bq = pt(i, k1); if (Math.abs(A[0] - Bq[0]) + Math.abs(A[1] - Bq[1]) < 1e-5) { const A2 = pt(i + 1, k), B2 = pt(i + 1, k1); if (Math.abs(A2[0] - B2[0]) + Math.abs(A2[1] - B2[1]) < 1e-5) continue; }
-    const sg = grp + (c >= 5 || key !== 'paint' ? 0 : 0), a = vid(key, sg, i, k, col), b = vid(key, sg, i, k1, col), cc = vid(key, sg, i + 1, k, col), d = vid(key, sg, i + 1, k1, col);
+    const zm0 = (zs[i].z + zs[i + 1].z) / 2, dr = k < 10 && c >= 2 && c <= 6 && inDoor(zm0), key0 = key; if (dr) key = 'd_' + key;
+    const sg = grp, a = vid(key, sg, i, k, col), b = vid(key, sg, i, k1, col), cc = vid(key, sg, i + 1, k, col), d = vid(key, sg, i + 1, k1, col);
     K.get(key).idx.push(a, b, cc, b, d, cc);
-    const zm = (zs[i].z + zs[i + 1].z) / 2; if (zm > zb && zm < zc && c >= 2 && key !== 'glass') lining.push([i, k, k1]); }
+    const zm = (zs[i].z + zs[i + 1].z) / 2; if (zm > zb && zm < zc && c >= 2 && key0 !== 'glass') lining.push([i, k, k1, dr]); }
   // the cabin's inside skin: the same panels seen from within
-  for (const [i, k, k1] of lining) { const a = vid('misc', 90, i, k, C.cabin), b = vid('misc', 90, i, k1, C.cabin), cc = vid('misc', 90, i + 1, k, C.cabin), d = vid('misc', 90, i + 1, k1, C.cabin); K.get('misc').idx.push(a, cc, b, b, cc, d); }
+  for (const [i, k, k1, dr] of lining) { const kk = dr ? 'd_misc' : 'misc', a = vid(kk, 90, i, k, C.cabin), b = vid(kk, 90, i, k1, C.cabin), cc = vid(kk, 90, i + 1, k, C.cabin), d = vid(kk, 90, i + 1, k1, C.cabin); K.get(kk).idx.push(a, cc, b, b, cc, d); }
   // end faces (the panels behind the bumpers)
   for (const [i, front] of [[NS - 1, true], [0, false]]) { let cy = 0; for (let k = 0; k < NP; k++) cy += pt(i, k)[1] / NP; const ctr = K.vert('paint', 0, cy, zs[i].z); for (let k = 0; k < NP; k++) { const a = vid('paint', front ? 40 : 41, i, k), b = vid('paint', front ? 40 : 41, i, (k + 1) % NP); if (front) K.get('paint').idx.push(ctr, a, b); else K.get('paint').idx.push(ctr, b, a); } }
 
@@ -218,6 +222,7 @@ export function makeCar(opts = {}) {
     const zFrom = front ? Math.max(zE - rc - 0.16, ax + d0 + 0.035) : Math.min(zE + rc + 0.16, ax - d0 - 0.035), top = front ? yBT : yRT, yv = Yb(zE), y0 = bumpKey === 'paint' ? yv + 0.07 : Math.max(yv + 0.1, top - 0.2), o = P.upright ? 0.05 : 0.032;
     const pa = endPath(front, o, zFrom); for (const p of pa.pts) p.y = 0;
     K.sweep(bumpKey, pa.pts, pa.outs, pa.ups, [[-0.02, y0], [o, y0 + 0.02], [o, top - 0.025], [-0.02, top + 0.004]], bumpCol);
+    if (bumpKey === 'paint') K.sweep('misc', pa.pts, pa.outs, pa.ups, [[o + 0.004, lerp(y0, top, 0.42)], [o + 0.004, lerp(y0, top, 0.62)]], C.trim);   // a dark rubbing strip let into a painted bumper
     // the valance under it, tucked back
     const pv = endPath(front, 0.006, zFrom); K.sweep('misc', pv.pts, pv.outs, pv.ups, [[-0.03, yv - 0.01], [0.006, yv + 0.01], [0.006, Math.min(y0, yv + 0.08) + 0.01]], C.dark);
     if (y0 > yv + 0.09) K.sweep('paint', pv.pts, pv.outs, pv.ups, [[0.006, yv + 0.085], [0.006, y0 + 0.01]], C.dark);
@@ -241,24 +246,48 @@ export function makeCar(opts = {}) {
     { const top = Math.min(axY + archR, E0(az) - 0.06), bot = P.clr + 0.02; K.box('misc', 0.02, top - bot, archR * 2 + 0.04, s * (W - 0.4), (top + bot) / 2, az, { color: C.liner }); } }
   // ---- shut lines: thin dark strips that follow the panels (doors, bonnet, boot)
   const sideLine = (z, yTopMax = 9) => { const sc = section({ z, g: z <= zb || z >= zc ? 0 : z < c0 ? (z - zb) / (c0 - zb) : z > c1 ? (zc - z) / (zc - c1) : 1 }); for (const s of [-1, 1]) { const pts = [2, 3, 4, 5].map((j) => V(s * (sc[j][0] + 0.0025), Math.min(sc[j][1], yTopMax), z)); pts[0].y += 0.02; K.sweep('misc', pts, pts.map(() => V(s, 0, 0)), pts.map(() => V(0, 0, 1)), [[0, 0.006], [0, -0.006]], C.liner); } };
-  const zD1 = Math.min(c1 + P.ws * 0.42, axF - d0 - 0.07), zD3 = doors4 ? Math.max(c0 + 0.02, Math.min(zBp - 0.75, axR + d0 * 0.5)) : null;
+  const zD3 = doors4 ? Math.max(c0 + 0.02, Math.min(zBp - 0.75, axR + d0 * 0.5)) : null;
   sideLine(zD1); sideLine(zBp); if (zD3 !== null) sideLine(zD3); if (!doors4 && P.type === 'van' && P._zq) sideLine(P._zq);
   const topLine = (za, zb_, j, lift = 0.003) => { const st = zs.filter((q) => q.z >= za - 1e-6 && q.z <= zb_ + 1e-6); if (st.length < 2) return; for (const s of [-1, 1]) { const pts = st.map((q) => { const sc = secs[zs.indexOf(q)]; return V(s * sc[j][0], sc[j][1] + lift, q.z); }); K.sweep('misc', pts, pts.map(() => UP), pts.map(() => V(s, 0, 0)), [[0, -0.005], [0, 0.005]], C.liner); } };
   topLine(zc, zLead, 6); if (!P.bed && zb - zLeadR > 0.35) topLine(zLeadR, zb, 6);
+  // ---- trim that follows the body. rail(j, z0, z1, ...) runs a strip along point j of the sections on both sides; where it
+  // crosses the driver's door, that length belongs to the door
+  const railRun = (key, st, j, s, prof, col, up) => { if (st.length < 2) return; const pts = st.map((q) => { const sc = secs[zs.indexOf(q)]; return V(s * sc[j][0], sc[j][1], q.z); }); K.sweep(key, pts, pts.map(() => V(s, 0, 0)), pts.map(() => up), prof, col); };
+  const rail = (j, z0, z1, prof, key, col, up = UP) => { const st = zs.filter((q) => q.z >= z0 - 1e-6 && q.z <= z1 + 1e-6); railRun(key, st, j, -1, prof, col, up);
+    railRun(key, st.filter((q) => q.z <= zDr + 1e-6), j, 1, prof, col, up); railRun('d_' + key, st.filter((q) => q.z >= zDr - 1e-6 && q.z <= zD1 + 1e-6), j, 1, prof, col, up); railRun(key, st.filter((q) => q.z >= zD1 - 1e-6), j, 1, prof, col, up); };
+  const brightK = P.bumper === 'chrome' ? 'chrome' : 'misc';
+  rail(6, zb, zc, [[0.004, -0.014], [0.009, 0], [0.004, 0.014]], brightK, C.trim);                         // belt moulding under the side glass
+  rail(7, c0, c1, [[0.003, -0.012], [0.008, 0.004], [0.0, 0.016]], 'misc', C.trim);                        // drip rail over the doors
+  if (!P.clad && P.rub !== false) rail(3, axR + d0 + 0.05, axF - d0 - 0.05, [[0.002, -0.022], [0.013, -0.013], [0.013, 0.013], [0.002, 0.022]], 'misc', C.trim);   // rubbing strip down the side
+  // lines across the car: the bonnet's leading edge, the scuttle under the windscreen, the boot lid's trailing edge
+  const cross = (z, lift, w, col, j0 = 5) => { const i = zs.findIndex((q) => Math.abs(q.z - z) < 1e-6); if (i < 0) return; const half = []; for (let j = j0; j <= 10; j++) half.push(V(secs[i][j][0], secs[i][j][1] + lift, z)); const pts = [...half, ...half.slice(0, -1).reverse().map((q) => V(-q.x, q.y, q.z))]; K.sweep('misc', pts, pts.map(() => UP), pts.map(() => V(0, 0, 1)), [[0, w], [0, -w]], col); };
+  cross(zLead, 0.003, 0.006, C.liner); cross(zc, 0.004, 0.03, C.trim, 6); if (!P.bed && zb - zLeadR > 0.2) cross(zLeadR, 0.003, 0.006, C.liner);
+  // small things: side repeaters, a high brake lamp, aerial, filler cap, plate surrounds, mud flaps, a silencer, a badge
+  for (const s of [-1, 1]) K.box('misc', 0.012, 0.03, 0.07, s * (Wz(axF - d0 - 0.12) + 0.004), lerp(Yb(0), E0(axF), 0.72), axF - d0 - 0.12, { color: C.amber });
+  if (!P.bed) K.box('tail', Math.min(0.3, W * 0.4), 0.022, 0.03, 0, P.H - 0.075, c0 - P.rw * 0.1 + 0.02); else K.box('tail', 0.3, 0.025, 0.02, 0, P.H - 0.03, c0 - P.rw - 0.01);
+  K.geo('misc', new THREE.CylinderGeometry(0.003, 0.005, 0.36, 5), { x: -W * P.roofW * 0.8, y: P.H + 0.15, z: c0 + 0.1, rx: -0.35, color: C.liner });
+  K.geo('misc', new THREE.TorusGeometry(0.07, 0.004, 4, 16), { x: -(Wz(axR - d0 - 0.2) + 0.002), y: lerp(Yb(0), P.belt, 0.7), z: Math.max(zR + 0.25, axR - d0 - 0.2), ry: Math.PI / 2, color: C.liner });
+  K.box('misc', 0.4, 0.21, 0.006, 0, (bF.y0 + bF.top) / 2, zF + bF.o - 0.002, { color: C.liner });
+  K.box('chrome', 0.07, 0.035, 0.012, 0, lerp(P.nose - crownH * 0.4, yBT, 0.18), lerp(zLead, zF, 0.18) + 0.012, { rx: -Math.atan2(P.nose - yBT, fz) + Math.PI / 2 });
+  K.geo('misc', new THREE.CylinderGeometry(0.08, 0.08, 0.5, 10), { x: -W * 0.45, y: Yb(zR) + 0.03, z: zR + 0.42, rz: Math.PI / 2, color: C.disc });
+  if (P.clad || P.bed) for (const s of [-1, 1]) K.box('misc', 0.26, 0.26, 0.02, s * (W - 0.15), P.clr + 0.07, axR - d0 - 0.06, { rx: 0.12, color: C.dark });
   // ---- mirrors, door handles, wipers, plates, exhaust
   const zM = c1 + P.ws * 0.5, wM = Wz(zM) - 0.055, yM = lerp(P.belt, E0(zM), 0.5) + 0.06;
   for (const s of [-1, 1]) { K.box('misc', 0.09, 0.03, 0.05, s * (wM + 0.0), yM - 0.03, zM, { color: C.trim }); K.box(P.bumper === 'dark' ? 'misc' : 'paint', 0.17, 0.11, 0.07, s * (wM + 0.085), yM + 0.02, zM, { ry: s * -0.12, color: C.trim }); K.box('chrome', 0.14, 0.085, 0.004, s * (wM + 0.085), yM + 0.02, zM - 0.037, { ry: s * -0.12 });
-    const hy = P.belt - 0.14, hk = P.bumper === 'dark' ? 'misc' : 'chrome'; K.box(hk, 0.018, 0.028, 0.15, s * (W + 0.006), hy, zBp + 0.16, { color: C.dark }); if (zD3 !== null) K.box(hk, 0.018, 0.028, 0.15, s * (Wz(zD3 + 0.16) + 0.006), hy, zD3 + 0.16, { color: C.dark });
+    const hy = P.belt - 0.14, hk = P.bumper === 'dark' ? 'misc' : 'chrome'; K.box((s > 0 ? 'd_' : '') + hk, 0.018, 0.028, 0.15, s * (W + 0.006), hy, zBp + 0.2, { color: C.dark }); if (zD3 !== null) K.box(hk, 0.018, 0.028, 0.15, s * (Wz(zD3 + 0.16) + 0.006), hy, zD3 + 0.16, { color: C.dark });
     K.box('misc', 0.46, 0.012, 0.018, s * 0.27 - 0.08, lerp(E0(zc), P.H, 0.07) + 0.05, zc - P.ws * 0.07, { rz: 0.06, color: C.liner }); }
   const pt_ = plateT(opts.plate || 'ELM 4' + Math.floor(100 + Math.random() * 899)), plateM = new THREE.MeshStandardMaterial({ map: pt_, roughness: 0.5 });
   K.geo('plate', new THREE.PlaneGeometry(0.36, 0.18), { x: 0, y: (bF.y0 + bF.top) / 2, z: zF + bF.o + 0.004 });
   const plateRearHigh = !P.bed && !P.roundLamps && yRT - bR.y0 < 0.34; K.geo('plate', new THREE.PlaneGeometry(0.36, 0.18), { x: 0, y: plateRearHigh ? (P.tail + yRT) / 2 - 0.01 : (bR.y0 + bR.top) / 2, z: plateRearHigh ? zR + fzR * 0.5 + 0.0 - 0.012 : zR - bR.o - 0.004, ry: Math.PI, rx: 0 });
   const exR = P.bigExhaust ? 0.05 : 0.032; K.geo('chrome', new THREE.CylinderGeometry(exR, exR, 0.16, 12), { x: -W * 0.55, y: Yb(zR) + 0.0, z: zR + 0.03, rx: Math.PI / 2 });
   // ---- inside: floor, bulkheads, dashboard, wheel, seats
+  let seat = null;
   { const fy = Math.min(P.clr + 0.16, P.H - 1.16), wI = W - 0.1, seatZ = Math.min(zBp + 0.42, c1 - 0.25), rear = doors4 || P.quarter;
     K.box('misc', wI * 2, 0.03, zc - zb - 0.1, 0, fy, (zc + zb) / 2, { color: C.cabin }); K.box('misc', wI * 2, P.belt - fy, 0.04, 0, (P.belt + fy) / 2, zb + 0.06, { color: C.cabin });
     K.box('misc', wI * 2, 0.2, Math.min(0.5, P.ws * 0.75), 0, lerp(E0(zc), P.belt, 0.5) - 0.07, c1 + P.ws * 0.52, { color: C.trim }); K.box('misc', wI * 2, lerp(E0(zc), P.belt, 0.5) - fy, 0.04, 0, (lerp(E0(zc), P.belt, 0.5) + fy) / 2 - 0.05, zc - 0.08, { color: C.cabin });
-    K.geo('misc', new THREE.TorusGeometry(0.17, 0.018, 6, 16), { x: W * 0.45, y: P.belt + 0.0, z: c1 + P.ws * 0.2, rx: -0.45, color: C.liner });
+    K.geo('steer', new THREE.TorusGeometry(0.17, 0.018, 6, 16), { color: C.liner }); K.box('steer', 0.32, 0.035, 0.02, 0, 0, 0, { color: C.liner }); K.box('steer', 0.035, 0.17, 0.02, 0, -0.085, 0, { color: C.liner });
+    K.box('misc', 0.05, 0.05, 0.3, W * 0.45, P.belt - 0.06, c1 + P.ws * 0.2 + 0.14, { rx: 0.45, color: C.liner }); K.box('misc', 0.2, 0.06, 0.03, 0, P.H - 0.14, c1 - 0.02, { color: C.liner });   // column; rear-view mirror
+    seat = { x: W * 0.45, y: fy + 0.315, z: seatZ };
     for (const s of [-1, 1]) { K.box('misc', 0.48, 0.13, 0.5, s * W * 0.45, fy + 0.25, seatZ, { color: C.seat }); K.box('misc', 0.48, 0.62, 0.12, s * W * 0.45, fy + 0.6, seatZ - 0.28, { rx: -0.16, color: C.seat }); K.box('misc', 0.24, 0.16, 0.09, s * W * 0.45, fy + 1.0, seatZ - 0.35, { rx: -0.16, color: C.seat }); }
     if (rear && seatZ - 0.95 > zb + 0.25) { K.box('misc', wI * 1.8, 0.14, 0.46, 0, fy + 0.25, seatZ - 0.95, { color: C.seat }); K.box('misc', wI * 1.8, 0.56, 0.12, 0, fy + 0.56, seatZ - 1.2, { rx: -0.2, color: C.seat }); } }
   // ---- options: spoilers, a body kit, roof rails
@@ -270,14 +299,18 @@ export function makeCar(opts = {}) {
   if (opts.livery) opts.livery({ K, body, P, W, c0, c1, zF, zR, Wz });
   // ---- one mesh per material
   const lookup = { paint, paint2, glass: m.glass, misc: m.misc, chrome: m.chrome, head: headM, tail: tailM, plate: plateM };
-  for (const k of Object.keys(K.B)) { const me = K.mesh(k, lookup[k]); if (!me) continue; if (k === 'glass') me.renderOrder = 2; if (k === 'paint' || k === 'paint2') me.castShadow = true; body.add(me); }
+  // (the driver's door is three of them, hung on its front edge so it can swing; the steering wheel turns on its column)
+  const door = [], hinge = [Wz(zD1) - 0.02, zD1]; let steer = null;
+  for (const k of Object.keys(K.B)) { const dk = k.startsWith('d_'), me = K.mesh(k, k === 'steer' ? m.misc : lookup[dk ? k.slice(2) : k]); if (!me) continue; if (k.endsWith('glass')) me.renderOrder = 2; if (k === 'paint' || k === 'paint2') me.castShadow = true; body.add(me);
+    if (dk) { me.geometry.translate(-hinge[0], 0, -hinge[1]); me.position.set(hinge[0], 0, hinge[1]); door.push(me); }
+    if (k === 'steer') { me.position.set(W * 0.45, P.belt, c1 + P.ws * 0.2); me.rotation.set(-0.45, 0, 0); steer = me; } }
   // ---- wheels: pivots on the unsprung root, so the body can roll over them
   const wheels = [], style = opts.rim === 'steel' ? 'steel' : opts.rim === 'six' || opts.rim === 'multi' ? opts.rim : P.upright ? 'six' : 'five';
   const rimC = P.rimColor ? new THREE.Color(P.rimColor) : opts.rim === 'black' ? C.black : opts.rim === 'steel' ? C.steel : C.alloy;
   const tw = Math.min(0.27, P.W * 0.125) * (P.clad ? 1.1 : 1), trackX = W - tw / 2 - 0.035;
   for (const [az, front] of [[axF, true], [axR, false]]) for (const s of [-1, 1]) { const w = makeWheel(P.R, tw, s, style, rimC); w.pivot.position.set(s * trackX, axY, az); g.add(w.pivot); wheels.push({ ...w, front, side: s }); }
   const lamp = (mat) => ({ material: mat, userData: { own: true } });
-  g.userData = { noStream: true, spec: P, wheels, body, lamps: { head: [lamp(headM)], tail: [lamp(tailM)] }, paint, axF, axR, axY, half: { x: W, zF, zR } };
+  g.userData = { noStream: true, spec: P, wheels, body, lamps: { head: [lamp(headM)], tail: [lamp(tailM)] }, door, steer, seat, paint, axF, axR, axY, half: { x: W, zF, zR } };
   return g;
 }
 

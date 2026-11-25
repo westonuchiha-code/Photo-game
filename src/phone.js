@@ -49,7 +49,8 @@ const colliders = [], walkAreas = [], driveAreas = [];
 let A = null;   // the area that is built now
 const walk = new WalkControls(camera, renderer.domElement, { bounds: null, areas: walkAreas, colliders, speed: 2.75 });   // (25% faster than the big town's 2.2 m/s)
 const drive = makeDriver2({ scene, camera, areas: driveAreas, colliders, ground: (x, z) => (A && A.district ? A.district.userData.floorY(x, z) ?? 0 : 0),
-  hooks: { blast: (x, z, r) => { if (A && A.people) A.people.blast(x, z, r); }, wrecked: () => { if (mode === 'drive') use(); } } });
+  hooks: { blast: (x, z, r) => { if (A && A.people) A.people.blast(x, z, r); }, wrecked: () => { if (mode === 'drive') use(); }, horn: (x, z, h) => { if (A && A.people) A.people.honk(x, z, h); } },
+  driver: makePerson(4242) });   // (whoever is at the wheel while you drive)
 // what the pedestrians are told about the car being driven, and what hitting one does to it
 const carInfo = { x: 0, z: 0, vx: 0, vz: 0, h: 0, half: null, onHit: (speed, dead, x, z) => { const S = drive.state; S.vx *= 0.94; S.vz *= 0.94; S.shake = Math.min(1, S.shake + 0.25); if (drive.car) drive.hurt(drive.car, 14 + speed * 2.2, x, z, 0.7); } };
 walk.ground = (x, z, prevY) => { if (!A) return 0; if (A.ground) return A.ground(x, z, prevY); for (const [x0, x1, z0, z1, y] of A.floors) if (x > x0 && x < x1 && z > z0 && z < z1) return typeof y === 'function' ? y(x, z) : y; return A.interiors.floorY(x, z) ?? A.district.userData.floorY(x, z) ?? 0; };
@@ -180,7 +181,7 @@ function clearArea(carried) {
 // ---- modes: on foot, or in a car (the one button gets you in and out)
 let mode = 'walk', myCar = null; const useBtn = document.getElementById('use');
 const setMode = (m) => { mode = m; walk.enabled = m === 'walk'; document.body.dataset.mode = m; };
-const use = () => { if (busy || talk.active) return; if (mode === 'walk' && talkTo && !useCar) { startTalk(talkTo); return; } if (mode === 'drive') { const out = drive.exit(); if (out) { walk.position.set(out.x, 0, out.z); walk.yaw = out.yaw; walk.pitch = -0.05; } myCar = null; setMode('walk'); walk.apply(); } else { const c = drive.nearest(walk.position); if (c) { drive.enter(c); myCar = c; setMode('drive'); } } };
+const use = () => { if (busy || talk.active) return; if (mode === 'walk' && talkTo && !useCar) { startTalk(talkTo); return; } if (mode === 'drive') { drive.leave(() => { const out = drive.exit(); if (out) { walk.position.set(out.x, 0, out.z); walk.yaw = out.yaw; walk.pitch = -0.05; } myCar = null; setMode('walk'); walk.apply(); }); } else { const c = drive.nearest(walk.position); if (c) { drive.enter(c); myCar = c; setMode('drive'); } } };
 // ---- talking: the nearest person in reach (someone on the street, a shopkeeper across their counter, a character)
 let talkTo = null, useCar = false, talkPed = null;
 const talk = makeTalk({ onClose: () => { if (talkPed && talkPed.st === 'talk') talkPed.st = 'walk'; talkPed = null; walk.enabled = mode === 'walk'; } });
