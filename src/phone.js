@@ -16,7 +16,7 @@ import { makeInteriors } from './interiors.js';
 import { makePeople, makeCharacter, CHARACTERS } from './models/people96.js';
 import { useLowDetailBodies } from './models/body97.js';
 import { makeDriver2 } from './vehicle/drive2.js';
-import { makeCar, LIVERIES, carEnv } from './vehicle/carbody.js';
+import { makeCar, LIVERIES, carEnv } from './vehicle/carbody2.js';
 import { makeSky } from './models/sky.js';
 import { makeAqueductGarden, makeIzakaya, makePotteryGallery, makeBarrelPlanter, makeCurvedBench, makeWifiStand, makeWeepingMaple, makePizzaAFrame, makeComicVending, makeStickerPost, makeMural as makeRainbowMural } from './models/inspo70.js';
 import { makePinkHouse } from './models/inspo71.js';
@@ -100,7 +100,7 @@ const AREAS = {
       return r; } },
 };
 
-const PARK = [['sedan', { color: '#2a2c30', name: 'black sedan', plate: 'ELM 4B1', rim: 'alloy' }], ['hatch', { color: '#d8d4c8', name: 'white hatch', plate: 'ELM 8W2', rim: 'steel' }], ['kei', { color: '#c87a2a', name: 'orange kei car', plate: 'ELM 3K9', rim: 'steel' }], ['pickup', { color: '#6a2a26', name: 'red pickup', plate: 'ELM 6R5', rim: 'steel' }]];
+const PARK = [['sedan', { color: '#2a2c30', name: 'black sedan', plate: 'ELM 4B1', rim: 'alloy' }], ['hatch', { color: '#d8d4c8', name: 'white hatch', plate: 'ELM 8W2', rim: 'steel' }], ['kei', { color: '#c87a2a', name: 'orange kei car', plate: 'ELM 3K9', rim: 'steel' }], ['pickup', { color: '#6a2a26', name: 'red pickup', plate: 'ELM 6R5', rim: 'steel' }], ['van', { color: '#d9d6cc', name: 'white van', plate: 'ELM 2V6', rim: 'steel' }], ['scout', { color: '#3f5a46', name: 'green 4x4', plate: 'ELM 9S4', rim: 'steel' }], ['wagon', { color: '#6f7f8c', name: 'grey estate', plate: 'ELM 5E1', rails: true }]];
 // a signpost: a green board on a post, on the sidewalk (y)
 function signpost(root, text, x, z, ry, y) { const c = document.createElement('canvas'); c.width = 512; c.height = 128; const g = c.getContext('2d'); g.fillStyle = '#1d4a2a'; g.fillRect(0, 0, 512, 128); g.strokeStyle = '#f2ead0'; g.lineWidth = 6; g.strokeRect(8, 8, 496, 112); g.fillStyle = '#f2ead0'; g.textAlign = 'center'; g.textBaseline = 'middle'; let fs = 62; do { g.font = `600 ${fs}px system-ui, sans-serif`; fs -= 4; } while (g.measureText(text).width > 470 && fs > 20); g.fillText(text, 256, 68);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; const grp = new THREE.Group(), dk = new THREE.MeshStandardMaterial({ color: '#2a2c2e', roughness: 0.6, metalness: 0.4 }); const post = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 3.1, 8), dk); post.position.y = 1.55; grp.add(post);

@@ -743,3 +743,22 @@ inside the view cone at five fixed camera spots, `tools/devtests/where2.js`), th
 - Owner: no way to flip a car back; in the older open-city games a car that goes over catches fire and blows up.
   The "Flip car" button, the R key and `drive.flip` are removed. A car resting on its roof starts to burn at once
   (explodes about 6 s later); one left on its side does the same after 4 s. Get out or go up with it.
+
+## 113 New car models (phone areas)
+- `src/vehicle/carbody2.js`, used by `src/phone.js` only; the big town keeps `carbody.js` untouched.
+- One shell lofted through cross-sections that all share the same eleven points a side (sill, body side, shoulder
+  crease, belt, window, cant rail, roof), so glass, lamps, grille, cladding and the pickup bed are faces of the shell
+  with another material and always follow the body. Corners are rounded in plan, the lamp panels lean back, arches are
+  true cut-outs with lips and liners. Bumpers, valances, arch lips and shut lines are swept along the same curves.
+- Per type: hatch, sedan, coupe, kei, wagon, pickup, van, scout (4x4), bigtruck, keitruck, keivan, keiold, keisport,
+  oldvan, each with its own proportions and style numbers (corner radius, lamp height, doors, quarter glass, sail
+  panel, bumper kind, cladding).
+- Wheels: rounded tyre with tread grooves, dished rim with five / six / ten spokes or a pressed steel wheel + hubcap.
+- One indexed mesh per material: 16 draws and about 7,000 triangles a car (was 44 draws, 14,000). Dents keep the
+  panels smooth. Each car has its own lamp materials: parked cars are dim, the one you drive lights up, a hard hit
+  kills that end's lamps.
+- Fixed on the way: the old bodies had open holes at the nose and tail.
+- Back courts can now also hold a van, a 4x4 and an estate (Eastside gets the van and the 4x4).
+- Not carried over (big-town-only options): crash-posed bodies, flat tyres, colour bands, side lettering, brush guard.
+- `tools/devtests/carstudio.html?mod=carbody2[&only=n&a=deg&h=&d=]` shows the cars in daylight; `carshot2.js`,
+  `cargame.js`, `cargame2.js` take the pictures. `docs/cars_new.png` is the line-up.

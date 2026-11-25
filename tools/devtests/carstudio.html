@@ -1,0 +1,18 @@
+<!doctype html><meta charset="utf-8"><style>body{margin:0;background:#222}canvas{display:block}</style>
+<script type="importmap">{ "imports": { "three": "../../vendor/three/three.module.js", "three/addons/": "../../vendor/three/addons/" } }</script>
+<base href="../../">
+<script type="module">
+import * as THREE from 'three';
+const q = new URLSearchParams(location.search), mod = await import('../../src/vehicle/' + (q.get('mod') || 'carbody') + '.js');
+const r = new THREE.WebGLRenderer({ antialias: true }); r.setSize(innerWidth, innerHeight); r.setPixelRatio(1); document.body.append(r.domElement);
+r.toneMapping = THREE.ACESFilmicToneMapping; mod.carEnv(r);
+const sc = new THREE.Scene(); sc.background = new THREE.Color(q.get('night') ? '#0b0e18' : '#8a94a0');
+sc.add(new THREE.HemisphereLight('#dfe8ff', '#3a3a34', q.get('night') ? 0.75 : 1.6)); const d = new THREE.DirectionalLight('#fff', q.get('night') ? 0.5 : 2.2); d.position.set(4, 8, 5); sc.add(d);
+const g = new THREE.Mesh(new THREE.PlaneGeometry(80, 80), new THREE.MeshStandardMaterial({ color: '#4a4c50', roughness: 1 })); g.rotation.x = -Math.PI / 2; sc.add(g);
+const L = mod.LIVERIES, list = [['hatch', { color: '#b3242a' }], ['kei', { color: '#a8d6c6', roofColor: '#f2f0ea', rim: 'steel', metal: 0.2 }], ['sedan', { color: '#f0c41c', rim: 'steel', livery: L.taxi, metal: 0.15 }], ['pickup', { color: '#5e6e52', chromeGrille: true }], ['coupe', { color: '#1b3a78', rim: 'black' }], ['sedan', { color: '#2a2c30' }], ['wagon', { color: '#7a8a96' }], ['van', { color: '#e8e4d8', rim: 'steel' }]];
+const only = q.get('only'); const cars = [];
+list.forEach(([type, o], i) => { if (only !== null && +only !== i) return; const c = mod.makeCar({ type, ...o, plate: 'ELM 2K7' }); c.position.set(only !== null ? 0 : (i % 4 - 1.5) * 3.2, 0, only !== null ? 0 : (i < 4 ? 0 : -7)); sc.add(c); cars.push(c); });
+const cam = new THREE.PerspectiveCamera(+(q.get('fov') || 32), innerWidth / innerHeight, 0.1, 200); const a = +(q.get('a') || 35) * Math.PI / 180, dist = +(q.get('d') || (only !== null ? 8 : 19)), h = +(q.get('h') || (only !== null ? 2.2 : 7));
+const cz = only !== null ? 0 : -3.5; cam.position.set(Math.sin(a) * dist, h, cz + Math.cos(a) * dist); cam.lookAt(0, 0.7, cz);
+let tris = 0, draws = 0; r.render(sc, cam); await new Promise((r) => setTimeout(r, 1200)); r.info.reset(); r.render(sc, cam); window.__info = { tris: r.info.render.triangles, calls: r.info.render.calls }; window.__done = true; window.__cars = cars;
+</script>

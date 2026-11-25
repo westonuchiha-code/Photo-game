@@ -1,0 +1,4 @@
+const { chromium } = require('playwright');
+(async () => { const [, , out, ...qs] = process.argv; const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] }); const p = await b.newPage({ viewport: { width: 1400, height: 800 } }); const errs = []; p.on('pageerror', (e) => errs.push(e.message)); p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text()); });
+  for (let i = 0; i < qs.length; i++) { await p.goto('http://localhost:8123/tools/devtests/carstudio.html?' + qs[i]); await p.waitForFunction('window.__done', null, { timeout: 60000 }); await p.screenshot({ path: `${out}_${i}.png` }); console.log(qs[i], JSON.stringify(await p.evaluate('window.__info'))); }
+  console.log('errors', errs.length, errs.slice(0, 3).join(' | ')); await b.close(); })();
