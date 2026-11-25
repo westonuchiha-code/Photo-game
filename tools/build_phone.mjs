@@ -1,13 +1,20 @@
 // Builds the phone test area as ONE self-contained file: dist-phone/photo-town-phone.html.
 //   node tools/build_phone.mjs
 // Same recipe as build_web.mjs + build_single.mjs, for src/phone.js + phone.html, with one difference that matters on
-// a phone: only the textures this build can ask for are packed. They are found by reading the source: every file
-// src/phone.js imports (directly or through others) is scanned for texture names, and each name brings its normal /
-// roughness / glow maps with it. That over-includes a little and can't miss a texture that a room built later needs.
+// a phone: only the textures this build can ask for are packed. Two ways of finding them, used together:
+//   - reading the source of the GENERATOR pieces (district, interiors, furniture, street, people...): every texture
+//     name in those files, with its normal / roughness / glow maps. Rooms are built later with random variety, so
+//     what one run asks for is not the whole set; reading the source can't miss one.
+//   - running the game for the HAND-BUILT sets (the photo batches): they are built whole when their area loads, and
+//     their files also hold many pieces the phone build doesn't place, so reading them would pack far too much.
+//     The build opens the dev page in a headless browser, visits every area and notes each texture requested.
+// Needs: python3 (a throwaway local server) and Playwright's Chromium.
 import { build } from './node/node_modules/esbuild/lib/main.js';
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
+import { spawn } from 'node:child_process';
+import { createRequire } from 'node:module';
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..'), DIST = path.join(ROOT, 'dist-phone'), TEX = path.join(ROOT, 'assets/textures');
 fs.rmSync(DIST, { recursive: true, force: true }); fs.mkdirSync(path.join(DIST, 'packs'), { recursive: true });
 
@@ -18,7 +25,8 @@ while (todo.length) { const f = todo.pop(); if (files.has(f)) continue; files.ad
 const all = fs.readdirSync(TEX), base = new Map(all.filter((n) => n.endsWith('.png')).map((n) => [n.slice(0, -4), n]));
 const normalOf = JSON.parse(fs.readFileSync(path.join(ROOT, 'src/normals.js'), 'utf8').match(/NORMAL_OF = (\{[\s\S]*?\});/)[1]);
 const want = new Set();
-for (const f of files) { if (f.endsWith('normals.js')) continue;   // (it lists every texture's normal map: not a use)
+const GENERATORS = /[\\/](phone|district|interiors|interiors91|furniture88|kitchen89|office90|civic93|street92|kit|people96|body97|carbody|trees|sky|house94|factory95|garden87)\.js$/;   // read by scanning; every other file by running
+for (const f of files) { if (!GENERATORS.test(f)) continue;
   const src = fs.readFileSync(f, 'utf8');
   for (const m of src.matchAll(/['"`]([A-Za-z0-9_]+)['"`]/g)) if (base.has(m[1])) want.add(m[1]);          // 'name'
   for (const m of src.matchAll(/([A-Za-z0-9_]+)\.png/g)) if (base.has(m[1])) want.add(m[1]);               // .../name.png
@@ -26,6 +34,17 @@ for (const f of files) { if (f.endsWith('normals.js')) continue;   // (it lists 
   for (const m of src.matchAll(/([A-Za-z0-9_]*)\$\{[^}]+\}([A-Za-z0-9_]*)/g)) { const [, pre, suf] = m; if (pre.length < 3 && (suf.length < 4 || /^_(n|e|normal|rough)$/.test(suf))) continue;
     for (const n of base.keys()) if (n.startsWith(pre) && n.endsWith(suf) && (pre.length >= 3 || suf.length >= 4)) want.add(n); } }
 for (const n of [...want]) for (const c of [normalOf[n], n + '_n', n + '_normal', n + '_e', n + '_rough']) if (c && base.has(c)) want.add(c);
+const scanned = want.size;
+{ const PORT = 8137, srv = spawn('python3', ['-m', 'http.server', String(PORT)], { cwd: ROOT, stdio: 'ignore' });
+  try { const { chromium } = createRequire(import.meta.url)('playwright'); await new Promise((r) => setTimeout(r, 1200));
+    const br = await chromium.launch(), pg = await br.newPage({ viewport: { width: 412, height: 800 } }), seen = new Set();
+    pg.on('request', (q) => { const m = q.url().match(/assets\/textures\/([A-Za-z0-9_]+)\.png/); if (m) seen.add(m[1]); });
+    await pg.goto(`http://localhost:${PORT}/phone.html`, { waitUntil: 'commit', timeout: 300000 }); await pg.waitForFunction(() => window.__scene && !document.getElementById('loader'), null, { timeout: 300000, polling: 500 });
+    const ids = await pg.evaluate(() => window.__scene.areaIds);
+    for (const id of ids.slice(1)) { await pg.evaluate((to) => window.__scene.travel(to), id); await pg.waitForTimeout(600); await pg.waitForFunction(() => !window.__scene.busy, null, { timeout: 300000, polling: 300 }); await pg.waitForTimeout(2500); }
+    await br.close(); for (const n of seen) if (base.has(n)) want.add(n);
+    console.log(`recorded ${seen.size} textures requested across ${ids.length} areas (${want.size - scanned} beyond the source scan)`);
+  } finally { srv.kill(); } }
 const list = [...want].map((n) => base.get(n)).concat(all.filter((n) => !n.endsWith('.png')));
 const listFile = path.join(DIST, 'textures.json'); fs.writeFileSync(listFile, JSON.stringify(list));
 console.log(`phone build: ${files.size} source files, ${want.size} of ${base.size} textures`);

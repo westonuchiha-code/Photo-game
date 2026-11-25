@@ -24,7 +24,10 @@ const SW_H = 0.14;                // sidewalk top
 // A smaller, self-contained district (the phone test area): call before makeDistrict(). Replaces the street lines and
 // the ring the edge streets run out to, drops the reserved lots, and (`solo`) builds no link to the old town.
 // `lots`: ids of the reserved lots to keep (places built by hand stand on them; the generator leaves them empty).
-export function configureDistrict({ xs, zs, ring, solo = true, lots = [] }) { GRID.xs = xs; GRID.zs = zs; if (ring) GRID.ring = ring; GRID.solo = solo; const keep = LOTS.filter((l) => lots.includes(l.id)); LOTS.length = 0; LOTS.push(...keep); }
+// `westStub`: the cross streets run on west through the west row (the way into the next area on that side).
+// It can be called again before each makeDistrict() to build a different area.
+let ALL_LOTS = null;
+export function configureDistrict({ xs, zs, ring, solo = true, lots = [], westStub = false }) { if (!ALL_LOTS) ALL_LOTS = LOTS.slice(); GRID.xs = xs; GRID.zs = zs; if (ring) GRID.ring = ring; GRID.solo = solo; GRID.westStub = westStub; const keep = ALL_LOTS.filter((l) => lots.includes(l.id)); LOTS.length = 0; LOTS.push(...keep); }
 // reserved lots: kept empty of generated buildings (front = the street side)
 export const LOTS = [
   { id: 'dentist', x0: 82, x1: 108, z0: 28, z1: 50, face: 'w', built: true },   // Brightwater Dental (item 57)
@@ -335,7 +338,8 @@ function backCourt(bin, r, bx0, bx1, bz0, bz1) {
   const D = 16, cx0 = bx0 + D, cx1 = bx1 - D, cz0 = bz0 + D, cz1 = bz1 - D, mx = (cx0 + cx1) / 2, mz = (cz0 + cz1) / 2;
   bin.push('asphalt', flatQuad(bx0, bx1, bz0, bz1, 0.014, 3, 3)); SOLO.areas.push({ minX: cx0 + 0.3, maxX: cx1 - 0.3, minZ: cz0 + 0.3, maxZ: cz1 - 0.3 });
   for (let i = 0; i <= 6; i++) bin.push('paint_w', flatQuad(mx - 8.1 + i * 2.7 - 0.05, mx - 8.1 + i * 2.7 + 0.05, cz0 + 1.2, cz0 + 6.0, 0.022));
-  const dumpster = (x, z, alongX) => { const hx = alongX ? 0.95 : 0.6, hz = alongX ? 0.6 : 0.95, col = r() < 0.5 ? 'dumpA' : 'dumpB'; bin.push(col, boxGeo(x - hx, x + hx, 0.12, 1.15, z - hz, z + hz)); bin.push('iron', boxGeo(x - hx - 0.04, x + hx + 0.04, 1.15, 1.22, z - hz - 0.04, z + hz + 0.04));
+  const inLot = (x, z) => LOTS.some((l) => x > l.x0 - 1 && x < l.x1 + 1 && z > l.z0 - 1 && z < l.z1 + 1);
+  const dumpster = (x, z, alongX) => { if (inLot(x, z)) return; const hx = alongX ? 0.95 : 0.6, hz = alongX ? 0.6 : 0.95, col = r() < 0.5 ? 'dumpA' : 'dumpB'; bin.push(col, boxGeo(x - hx, x + hx, 0.12, 1.15, z - hz, z + hz)); bin.push('iron', boxGeo(x - hx - 0.04, x + hx + 0.04, 1.15, 1.22, z - hz - 0.04, z + hz + 0.04));
     for (const sx of [-1, 1]) for (const sz of [-1, 1]) bin.push('iron', boxGeo(x + sx * (hx - 0.15) - 0.06, x + sx * (hx - 0.15) + 0.06, 0, 0.12, z + sz * (hz - 0.15) - 0.06, z + sz * (hz - 0.15) + 0.06));
     bin.push('iron', alongX ? boxGeo(x - hx - 0.1, x - hx, 0.7, 0.8, z - 0.25, z + 0.25) : boxGeo(x - 0.25, x + 0.25, 0.7, 0.8, z - hz - 0.1, z - hz)); SOLO.cols.push({ type: 'box', minX: x - hx, maxX: x + hx, minZ: z - hz, maxZ: z + hz }); };
   dumpster(cx0 + 1.2, cz0 + 9 + r() * 14, false); dumpster(cx1 - 1.2, cz0 + 6 + r() * 16, false); dumpster(cx0 + 8 + r() * 18, cz1 - 1.0, true); if (r() < 0.6) dumpster(cx0 + 4 + r() * 6, cz1 - 1.0, true);
@@ -388,7 +392,8 @@ export function makeDistrict() {
   for (const [a, b] of spans(ZMIN, ZMAX, zs)) fillBlock(bin, r, XMAX, XMAX + 16, a, b, ['w'], 0.6);
   for (const [a, b] of spans(XMIN, XMAX, xs)) fillBlock(bin, r, a, b, ZMIN - 16, ZMIN, ['s'], 0.6);
   for (const [a, b] of spans(XMIN, XMAX, xs)) fillBlock(bin, r, a, b, ZMAX, ZMAX + 16, ['n'], 0.6);
-  if (GRID.solo) fillBlock(bin, r, 50, XMIN, ZMIN, ZMAX, ['e'], 0.6);   // (no old town to leave a gap for)
+  if (GRID.solo && GRID.westStub) { for (const [a, b] of spans(ZMIN, ZMAX, zs)) fillBlock(bin, r, 50, XMIN, a, b, ['e'], 0.6); }   // (the cross streets run on through this row)
+  else if (GRID.solo) fillBlock(bin, r, 50, XMIN, ZMIN, ZMAX, ['e'], 0.6);   // (no old town to leave a gap for)
   else { fillBlock(bin, r, 50, XMIN, ZMIN, -70, ['e'], 0.6);
   fillBlock(bin, r, 50, XMIN, 14, ZMAX, ['e'], 0.6); }
 
@@ -399,6 +404,7 @@ export function makeDistrict() {
   for (const x of xs) for (const z of zs) segs.push([x - RH, x + RH, z - RH, z + RH]);
   // the E-W main street at z = 0 also runs west from the avenue into the old town's road
   if (!GRID.solo) segs.push([62.4, xs[0] - RH, -RH, RH]);
+  if (GRID.westStub) for (const z of zs) segs.push([XMIN - 18, xs[0] - RH, z - RH, z + RH]);
   // connectors out to Elm Loop: each N-S street north + south, each E-W street east
   const RG = GRID.ring, cut = (list, a, b, gaps, w) => { let p = a; for (const g0 of gaps) { if (g0 - w > p) list.push([p, g0 - w]); p = g0 + w; } if (b > p) list.push([p, b]); };
   for (const x of xs) { segs.push([x - RH, x + RH, ZMAX - 2, RG.n - RG.hw + 0.05]); segs.push([x - RH, x + RH, RG.s + RG.hw - 0.05, ZMIN + 2]); }
@@ -416,7 +422,8 @@ export function makeDistrict() {
     for (const x of xs) for (const sd of [-1, 1]) { const a = x + sd * RH, b = x + sd * WH; walks.push([Math.min(a, b), Math.max(a, b), ZMAX, ZMAX + 16], [Math.min(a, b), Math.max(a, b), ZMIN - 16, ZMIN]); }
     for (const z of zs) for (const sd of [-1, 1]) { const a = z + sd * RH, b = z + sd * WH; walks.push([XMAX, XMAX + 16, Math.min(a, b), Math.max(a, b)]); } }
   walks.push(...SOLO.walks);   // (phone area: forecourts)
-  walks.push([XMIN, XMIN + 2, ZMIN + 2, -RH], [XMIN, XMIN + 2, RH, ZMAX - 2]);   // avenue west sidewalk (gap where the main street comes in)
+  if (GRID.westStub) { let p = ZMIN + 2; for (const z of zs) { if (z - RH > p) walks.push([XMIN, XMIN + 2, p, z - RH]); p = z + RH; } if (ZMAX - 2 > p) walks.push([XMIN, XMIN + 2, p, ZMAX - 2]); for (const z of zs) for (const sd of [-1, 1]) { const a = z + sd * RH, b = z + sd * WH; walks.push([XMIN - 16, XMIN, Math.min(a, b), Math.max(a, b)]); } }
+  else walks.push([XMIN, XMIN + 2, ZMIN + 2, -RH], [XMIN, XMIN + 2, RH, ZMAX - 2]);   // avenue west sidewalk (gap where the main street comes in)
   for (const [a, b, c, d] of walks) { bin.push('walk', flatQuad(a, b, c, d, SW_H, 2, 2)); bin.push('curb', boxGeo(a, b, 0, SW_H - 0.005, c, d, 1, 1)); }
   // lane markings: dashed centre lines, stop bars and zebra crosswalks at every intersection
   for (const x of xs) for (let z = ZMIN + 4; z < ZMAX - 4; z += 6) { if (zs.some((q) => Math.abs(z - q) < RH + 4)) continue; bin.push('paint_y', flatQuad(x - 0.08, x + 0.08, z, z + 3, 0.02)); }
@@ -539,7 +546,7 @@ export function makeDistrict() {
   // ---- walking: the streets (road + sidewalks) are walkable; blocks are not (their buildings line the edges)
   const areas = [];
   for (const x of xs) areas.push({ minX: x - WH + 0.3, maxX: x + WH - 0.3, minZ: ZMIN + 0.3, maxZ: ZMAX - 0.3 });
-  for (const z of zs) areas.push({ minX: XMIN + 0.3, maxX: XMAX - 0.3, minZ: z - WH + 0.3, maxZ: z + WH - 0.3 });
+  for (const z of zs) areas.push({ minX: XMIN + 0.3 - (GRID.westStub ? 18 : 0), maxX: XMAX - 0.3, minZ: z - WH + 0.3, maxZ: z + WH - 0.3 });
   if (!GRID.solo) areas.push({ minX: 60, maxX: XMIN + 1, minZ: -47.5, maxZ: 11.7 });
   { const RG = GRID.ring;   // the connectors out to Elm Loop
     for (const x of xs) { areas.push({ minX: x - WH + 0.3, maxX: x + WH - 0.3, minZ: ZMAX - 1, maxZ: RG.n - RG.hw + 0.5 }, { minX: x - WH + 0.3, maxX: x + WH - 0.3, minZ: RG.s + RG.hw - 0.5, maxZ: ZMIN + 1 }); }

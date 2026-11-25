@@ -22,14 +22,14 @@ export function makeDriver({ scene, camera, areas, colliders, ground, pads = [] 
   // ---- collider grid (built once, 8 m cells) so the car only tests what's nearby
   const CELL = 8, grid = new Map();
   const cellKey = (i, j) => i * 100003 + j;
-  for (const c of colliders) {
+  const fileColliders = () => { grid.clear(); for (const c of colliders) {
     if (c.y0 !== undefined && c.y0 > 1.0) continue;    // upper floors
     const [x0, x1, z0, z1] = c.type === 'circle' ? [c.x - c.r, c.x + c.r, c.z - c.r, c.z + c.r] : [c.minX, c.maxX, c.minZ, c.maxZ];
     if (x1 - x0 > 400 || z1 - z0 > 400) continue;
     for (let i = Math.floor(x0 / CELL); i <= Math.floor(x1 / CELL); i++) for (let j = Math.floor(z0 / CELL); j <= Math.floor(z1 / CELL); j++) {
       const k = cellKey(i, j); if (!grid.has(k)) grid.set(k, []); grid.get(k).push(c);
     }
-  }
+  } }; fileColliders();
   const nearCols = (x, z) => { const out = new Set(); const i0 = Math.floor(x / CELL), j0 = Math.floor(z / CELL); for (let i = i0 - 1; i <= i0 + 1; i++) for (let j = j0 - 1; j <= j0 + 1; j++) { const l = grid.get(cellKey(i, j)); if (l) for (const c of l) out.add(c); } return out; };
   const inArea = (x, z) => areas.some((a) => a.y0 === undefined && x >= a.minX && x <= a.maxX && z >= a.minZ && z <= a.maxZ);
 
@@ -273,6 +273,10 @@ export function makeDriver({ scene, camera, areas, colliders, ground, pads = [] 
 
   const api = {
     active: false, cars, state: S,
+    // (the phone build swaps whole areas: the caller empties + refills the same `areas` / `colliders` arrays and the car
+    // list, then has the collider grid rebuilt. A car carried across keeps its own colliders: adopt() files them again.)
+    rebuild: fileColliders,
+    adopt(g) { if (!cars.includes(g)) cars.push(g); for (const c of g.userData.cols) if (!colliders.includes(c)) colliders.push(c); api.syncCols(g); },
     addCar(g, { name = 'car' } = {}) { g.userData.driveName = name; cars.push(g); const col = { type: 'circle', x: 0, z: 0, r: 0, car: g, active: true }; g.userData.cols = [];
       // parked: the car blocks the walker (and other cars) with 3 circles kept in sync with its pose
       for (let i = 0; i < 3; i++) { const c = { type: 'circle', x: 0, z: 0, r: g.userData.half.x * 0.96, car: g, active: true }; colliders.push(c); g.userData.cols.push(c); }

@@ -662,3 +662,25 @@ inside the view cone at five fixed camera spots, `tools/devtests/where2.js`), th
   dressing (frames, sills, ironwork) was one mesh, so all four blocks' detail was drawn at once. In the phone area
   it is now grouped in 28 m squares (`bin.cell`), shown within 55 m. Street views about 400 k, a back court 180 k.
 - `tools/devtests/phspot.js` reports draw calls / triangles / textures standing at given spots.
+
+## 109 Phone build: areas with a loading step between them
+- First real-phone numbers (Galaxy S21 Ultra, street view): 60 fps at resolution x2.00, 216 draws, 390 k triangles.
+- src/phone.js is now an engine plus `AREAS`. One area is built at a time. `buildArea(id, carriedCar)` configures the
+  district generator, places that area's hand-built sets, cars, people, interiors and streamer under one root group.
+  `clearArea` disposes every geometry, material and texture under that root and empties the shared collider / area
+  lists. `travel(exit)` shows the #travel overlay, swaps areas, waits for the new textures (8 s at most), compiles
+  shaders. Exits are tests on position (`exits: [{ to, test }]`); a car being driven is lifted out and adopted by
+  the new area (`drive.adopt`, `drive.rebuild`: small additions to drive.js, no change to how driving behaves).
+- Both areas are halves of the big town's district at the same world coordinates, so you arrive where you left.
+  Midtown (west): pottery, izakaya, aqueduct garden, mural plaza, pink house, kei garage, the photo-faced character.
+  Eastside (east): the art gallery, the lantern temple with its plaza and stairs, the pocket park, the Nakamachi
+  Arcade passage. `configureDistrict({ westStub })` runs the cross streets out through the west row. Signposts stand
+  at the street ends that lead across; the other ends keep their barriers.
+- Measured in the slow test browser: a crossing takes 1.2-2.5 s; after seven crossings GPU textures (about 100-150)
+  and geometries (about 200-430) are no higher than after the first, so nothing accumulates there. JS-side image
+  caches (texcache, kit) are not cleared: not measured on a real phone.
+- Build: textures are now found two ways. Generator files are scanned for names (rooms vary at random, so a run
+  can't see them all); every other file is covered by running the dev page headless through every area and recording
+  texture requests (hand-built files hold many pieces the phone doesn't place: scanning them packed 211 textures,
+  recording packs 156). 21.3 MB. `phtravel.js` / `phfile.js ...?area=east` must report 0 failed requests.
+- Not done: the old town (restaurant, grocery, apartments, mall...) as a third area; corner store; dentist; storage.
