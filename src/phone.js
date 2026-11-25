@@ -4,7 +4,7 @@
 // comes with you. Each area is assembled from the modular pieces (district generator, on-demand interiors, street
 // services, cars, people) plus the hand-built photo sets that stand on its reserved lots.
 // Its own page (phone.html) and its own build (tools/build_phone.mjs), which packs only the textures these imports use.
-import './texcache.js';   // (first: it routes every texture load; phones get textures at 512 px)
+import { shrinkCanvases } from './texcache.js';   // (first: it routes every texture load; phones get textures at 512 px)
 import * as THREE from 'three';
 import { finishLoading } from './loading.js';
 import { fontsReady } from './fonts.js';
@@ -25,6 +25,7 @@ import { makeArtGallery } from './models/inspo68.js';
 import { makeTempleFront } from './models/inspo72.js';
 import { makePocketPark } from './models/batch73.js';
 import { makeMallPassage } from './models/batch75.js';
+import { buildOldSquare } from './areas/oldsquare.js';
 await fontsReady;
 
 const qs = new URLSearchParams(location.search), PHONE = matchMedia('(pointer: coarse)').matches;
@@ -45,15 +46,15 @@ scene.environment = carEnv(renderer); scene.environmentIntensity = 0.14;
 const colliders = [], walkAreas = [], driveAreas = [];
 let A = null;   // the area that is built now
 const walk = new WalkControls(camera, renderer.domElement, { bounds: null, areas: walkAreas, colliders, speed: 2.75 });   // (25% faster than the big town's 2.2 m/s)
-const drive = makeDriver({ scene, camera, areas: driveAreas, colliders, pads: [], ground: (x, z) => (A ? A.district.userData.floorY(x, z) ?? 0 : 0) });
-walk.ground = (x, z) => { if (!A) return 0; for (const [x0, x1, z0, z1, y] of A.floors) if (x > x0 && x < x1 && z > z0 && z < z1) return typeof y === 'function' ? y(x, z) : y; return A.interiors.floorY(x, z) ?? A.district.userData.floorY(x, z) ?? 0; };
+const drive = makeDriver({ scene, camera, areas: driveAreas, colliders, pads: [], ground: (x, z) => (A && A.district ? A.district.userData.floorY(x, z) ?? 0 : 0) });
+walk.ground = (x, z, prevY) => { if (!A) return 0; if (A.ground) return A.ground(x, z, prevY); for (const [x0, x1, z0, z1, y] of A.floors) if (x > x0 && x < x1 && z > z0 && z < z1) return typeof y === 'function' ? y(x, z) : y; return A.interiors.floorY(x, z) ?? A.district.userData.floorY(x, z) ?? 0; };
 
 // ---- the areas. Both are halves of the big town's district, at the same coordinates, so a street keeps its place
 // when you cross: you (or your car) arrive at the spot you left. `exits`: where an area hands over to another.
 const RING_W = { n: 121, s: -121, e: 282, hw: 9 }, RING_E = { n: 121, s: -121, e: 450, hw: 9 };
 const AREAS = {
-  west: { name: 'Midtown', xs: [75, 161, 245], zs: [-84, 0, 84], ring: RING_W, lots: ['pottery', 'izakaya', 'ruins', 'pinkhouse', 'keigarage'], westStub: false,
-    exits: [{ to: 'east', test: (x) => x > 262, label: 'Heading east' }], open: { e: true },
+  west: { name: 'Midtown', xs: [75, 161, 245], zs: [-84, 0, 84], ring: RING_W, lots: ['pottery', 'izakaya', 'ruins', 'pinkhouse', 'keigarage'], westStub: true,
+    exits: [{ to: 'east', side: 'e', test: (x) => x > 262, label: 'Heading east' }, { to: 'old', side: 'w', test: (x) => x < 56.5, label: 'Walking into the old town', onFoot: true, spawn: [6.2, 8.6, Math.PI / 2] }], open: { e: true, w: true },
     cars: [['hatch', { color: '#b3242a', name: 'red hatch', plate: 'ELM 2K7' }, 157.4, 30, 0], ['kei', { color: '#a8d6c6', roofColor: '#f2f0ea', rim: 'steel', name: 'mint kei car', plate: 'ELM 55K', metal: 0.2 }, 157.4, 46, 0],
       ['sedan', { color: '#f0c41c', rim: 'steel', name: 'cab', plate: 'ELM T41', livery: LIVERIES.taxi, metal: 0.15 }, 120, 3.7, Math.PI / 2], ['pickup', { color: '#5e6e52', rim: 'alloy', name: 'pickup', plate: 'ELM 7P8', chromeGrille: true }, 204, -3.6, -Math.PI / 2],
       ['coupe', { color: '#1b3a78', rim: 'black', name: 'blue coupe', plate: 'ELM 9C3' }, 164.6, -40, Math.PI]],
@@ -75,7 +76,7 @@ const AREAS = {
       const hank = makeCharacter(CHARACTERS.hank); hank.position.set(166.4, S.SW, 25.5); hank.rotation.y = Math.PI * 0.82; S.root.add(hank); colliders.push({ type: 'circle', x: 166.4, z: 25.5, r: 0.3 });
       S.tick = (dt) => { const hb = hank.userData.bones, dx = camera.position.x - hank.position.x, dz = camera.position.z - hank.position.z; if (dx * dx + dz * dz < 144) { let a = Math.atan2(dx, dz) - hank.rotation.y; a = Math.atan2(Math.sin(a), Math.cos(a)); const want = Math.max(-1.1, Math.min(1.1, a)); hb.head.rotation.y += (want * 0.7 - hb.head.rotation.y) * Math.min(1, dt * 5); hb.neck.rotation.y = hb.head.rotation.y * 0.4; } }; } },
   east: { name: 'Eastside', xs: [245, 329, 413], zs: [-84, 0, 84], ring: RING_E, lots: ['gallery', 'temple', 'pocketpark', 'nakamachi'], westStub: true,
-    exits: [{ to: 'west', test: (x) => x < 229, label: 'Heading west' }], open: { w: true },
+    exits: [{ to: 'west', side: 'w', test: (x) => x < 229, label: 'Heading west' }], open: { w: true },
     cars: [['sedan', { color: '#7a1c22', name: 'maroon sedan', plate: 'ELM 5M3', rim: 'alloy' }, 325.4, 30, 0], ['hatch', { color: '#e8e2d0', name: 'cream hatch', plate: 'ELM 1H8', rim: 'steel' }, 290, 3.7, Math.PI / 2], ['kei', { color: '#3a6a8a', name: 'blue kei car', plate: 'ELM 7K2', rim: 'steel' }, 332.6, -44, Math.PI]],
     sites(S) { const { put, rect, areas, floors } = S, piMap = (X, Z, c) => [X - c[1], X - c[0], Z - c[3], Z - c[2]];   // local rect -> world for a set turned half round
       // the art gallery (the owner's paintings), facing the main street
@@ -86,11 +87,50 @@ const AREAS = {
       // the pocket park and the Nakamachi Arcade passage beside it (the street at z = -84)
       { const PP = { x: 288, z: -77 }, pk = makePocketPark(); pk.position.set(PP.x, 0, PP.z); for (const [x0, x1, z0, z1] of pk.userData.colliders) rect(PP.x + x0, PP.x + x1, PP.z + z0, PP.z + z1); areas.push({ minX: PP.x - 19.8, maxX: PP.x + 19.8, minZ: PP.z - 0.6, maxZ: PP.z + 16.8 }); put(pk); floors.push([268, 308, -77, -60, 0]); }
       { const NM = { x: 259, z: -77 }, m = makeMallPassage(); m.position.set(NM.x, 0.14, NM.z); m.rotation.y = Math.PI; for (const c of m.userData.colliders) rect(...piMap(NM.x, NM.z, c)); for (const a of m.userData.areas) { const [minX, maxX, minZ, maxZ] = piMap(NM.x, NM.z, [a.minX, a.maxX, a.minZ, a.maxZ]); areas.push({ minX, maxX, minZ, maxZ }); } put(m); floors.push([252.5, 265.5, -77.4, -61, 0.14]); } } },
+  // the northern old town, lifted across from the big town as it stands (src/areas/oldsquare.js). On foot only.
+  old: { name: 'Old Town Square', exits: [{ to: 'west', test: (x, z) => x > 8.4 && z > 5 && z < 12, label: 'Back to Midtown', spawn: [59.5, 0, -Math.PI / 2] }],
+    build(S) { const r = buildOldSquare(S); const { root } = S, wallM = new THREE.MeshStandardMaterial({ map: (() => { const t = new THREE.TextureLoader().load('assets/textures/wall_red_brick.png'); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(12, 5); return t; })(), roughness: 0.9 });
+      // the restaurant block stood east of the plaza and north of the strip; until it is brought across, a brick wall closes those two sides
+      const wall = (x0, x1, z0, z1, h = 5.5) => { const m = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, h, z1 - z0), wallM); m.position.set((x0 + x1) / 2, h / 2, (z0 + z1) / 2); root.add(m); S.rect(x0, x1, z0, z1); };
+      wall(-9.0, -8.6, -14, 5.3); wall(-9.0, 9.4, 4.9, 5.3); wall(9.0, 9.4, 4.9, 6.2, 5.5); wall(9.0, 9.4, 10.9, 12.2, 5.5);
+      { const lint = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1.6, 4.7), wallM); lint.position.set(9.2, 4.7, 8.55); root.add(lint); S.sign('Midtown  \u2192', 8.2, 6.0, Math.PI / 2, 0); }
+      return r; } },
 };
 
 const PARK = [['sedan', { color: '#2a2c30', name: 'black sedan', plate: 'ELM 4B1', rim: 'alloy' }], ['hatch', { color: '#d8d4c8', name: 'white hatch', plate: 'ELM 8W2', rim: 'steel' }], ['kei', { color: '#c87a2a', name: 'orange kei car', plate: 'ELM 3K9', rim: 'steel' }], ['pickup', { color: '#6a2a26', name: 'red pickup', plate: 'ELM 6R5', rim: 'steel' }]];
+// a signpost: a green board on a post, on the sidewalk (y)
+function signpost(root, text, x, z, ry, y) { const c = document.createElement('canvas'); c.width = 512; c.height = 128; const g = c.getContext('2d'); g.fillStyle = '#1d4a2a'; g.fillRect(0, 0, 512, 128); g.strokeStyle = '#f2ead0'; g.lineWidth = 6; g.strokeRect(8, 8, 496, 112); g.fillStyle = '#f2ead0'; g.textAlign = 'center'; g.textBaseline = 'middle'; let fs = 62; do { g.font = `600 ${fs}px system-ui, sans-serif`; fs -= 4; } while (g.measureText(text).width > 470 && fs > 20); g.fillText(text, 256, 68);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; const grp = new THREE.Group(), dk = new THREE.MeshStandardMaterial({ color: '#2a2c2e', roughness: 0.6, metalness: 0.4 }); const post = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 3.1, 8), dk); post.position.y = 1.55; grp.add(post);
+  const board = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.5, 0.05), [dk, dk, dk, dk, new THREE.MeshBasicMaterial({ map: t }), new THREE.MeshBasicMaterial({ map: t })]); board.position.y = 2.85; grp.add(board); grp.position.set(x, y, z); grp.rotation.y = ry; root.add(grp); colliders.push({ type: 'circle', x, z, r: 0.12 }); }
+// an area that is not a street grid: its own build function places everything (the hand-built old town pieces)
+function buildCustomArea(id, def, root) {
+  const lights = [];
+  const S = { root, colliders, rect: (x0, x1, z0, z1) => colliders.push({ type: 'box', minX: x0, maxX: x1, minZ: z0, maxZ: z1 }), circle: (x, z, r) => colliders.push({ type: 'circle', x, z, r }), sign: (text, x, z, ry, y = 0) => signpost(root, text, x, z, ry, y) };
+  S.add = (o) => { root.add(o); return o; };
+  const r = def.build(S);
+  // the dark base everything stands on (with a hole where the underground mall's stair goes down), and a far skyline
+  { const gm = new THREE.MeshStandardMaterial({ color: '#232428', roughness: 1 }), H = def.hole || [0.2, 3.8, 50.9, 58.7], E = 420; for (const [x0, x1, z0, z1] of [[-E, H[0], -E, E], [H[1], E, -E, E], [H[0], H[1], -E, H[2]], [H[0], H[1], H[3], E]]) { const m = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, z1 - z0, 6, 6), gm); m.rotation.x = -Math.PI / 2; m.position.set((x0 + x1) / 2, -0.06, (z0 + z1) / 2); root.add(m); }
+    const fm = new THREE.MeshStandardMaterial({ color: '#14171c', roughness: 1 }), wm = new THREE.MeshBasicMaterial({ color: '#e8c070' }), sky = new THREE.Group(); let sd = 7; const rnd = () => ((sd = (sd * 16807) % 2147483647) / 2147483647);
+    for (let i = 0; i < 46; i++) { const a = rnd() * Math.PI * 2, d = 170 + rnd() * 160, w = 14 + rnd() * 22, h = 22 + rnd() * 70, bx = -15 + Math.cos(a) * d, bz = 40 + Math.sin(a) * d, b = new THREE.Mesh(new THREE.BoxGeometry(w, h, w), fm); b.position.set(bx, h / 2, bz); sky.add(b);
+      for (let k = 0; k < 10; k++) { const q = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 1.6), wm); const ang = Math.atan2(-15 - bx, 40 - bz); q.position.set(bx + Math.sin(ang) * (w / 2 + 0.2) + Math.cos(ang) * (rnd() - 0.5) * w * 0.8, 4 + rnd() * (h - 8), bz + Math.cos(ang) * (w / 2 + 0.2) - Math.sin(ang) * (rnd() - 0.5) * w * 0.8); q.rotation.y = ang; sky.add(q); } }
+    root.add(sky); mergeStatic(sky); }
+  // each set's fixed parts merge by material; lights inside the sets are found (the nearest few are lit: see the frame loop); things that animate keep running
+  for (const o of [...root.children]) if (!o.isLight) mergeStatic(o);
+  const tickers = []; root.traverse((o) => { if (o.isLight) { o.castShadow = false; if (o.isPointLight || o.isSpotLight) lights.push(o); } if (o.userData && typeof o.userData.tick === 'function') tickers.push(o); });
+  // the old town's sets carry hundreds of drawn signs and labels at full size (about 900 MB of graphics memory in all,
+  // more than a phone gives a page): they are swapped for copies no bigger than `canvasMax` pixels
+  const nShrunk = shrinkCanvases(root, +(qs.get('cmax') ?? def.canvasMax ?? 320));
+  // ...and the full-size drawings themselves are let go (nothing here redraws its signs: `tickers` is checked below)
+  root.traverse((o) => { for (const m of [].concat(o.material || [])) for (const k in m) { const t = m[k]; if (t && t.isTexture && t.source && t.source._orig && !tickers.length) { const cv = t.source._orig; t.source._orig = null; cv.width = cv.height = 1; } } });
+  walkAreas.push(...r.areas);
+  drive.rebuild();
+  const streamer = makeStreamer(root, { phone: true, max: 260 }); streamer.setScale(PHONE ? 0.8 : 1);
+  console.log('area', id, ': sets', root.children.length, 'lights', lights.length, 'animated', tickers.length, 'signs resized', nShrunk);
+  return { id, def, root, district: null, interiors: null, people: null, streamer, floors: [], ground: r.ground, tick: null, lights, tickers };
+}
 function buildArea(id, carried) {
   const def = AREAS[id], root = new THREE.Group(); root.name = 'area_' + id; scene.add(root);
+  if (def.build) return buildCustomArea(id, def, root);
   configureDistrict({ xs: def.xs, zs: def.zs, ring: def.ring, lots: def.lots, westStub: def.westStub });
   const district = makeDistrict(); root.add(district); const SW = district.userData.sidewalkY;
   colliders.push(...district.userData.colliders);   // (dumpsters, court lamps and tree beds)
@@ -103,10 +143,7 @@ function buildArea(id, carried) {
       colliders.push(alongX ? { type: 'box', minX: x - WH, maxX: x + WH, minZ: z - 0.15, maxZ: z + 0.15 } : { type: 'box', minX: x - 0.15, maxX: x + 0.15, minZ: z - WH, maxZ: z + WH }); };
     for (const x of xs) { barrier(x, R.n - R.hw - 1.2, true); barrier(x, R.s + R.hw + 1.2, true); } for (const z of zs) { if (!def.open.e) barrier(R.e - R.hw - 1.2, z, false); if (!def.open.w) barrier(xs[0] - WH - 0.6 + 1.2, z, false); } }
   // a signpost on the sidewalk at each street end that leads to another area
-  { const sign = (text, x, z, ry) => { const c = document.createElement('canvas'); c.width = 512; c.height = 128; const g = c.getContext('2d'); g.fillStyle = '#1d4a2a'; g.fillRect(0, 0, 512, 128); g.strokeStyle = '#f2ead0'; g.lineWidth = 6; g.strokeRect(8, 8, 496, 112); g.fillStyle = '#f2ead0'; g.font = '600 62px system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(text, 256, 68);
-      const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; const grp = new THREE.Group(), dk = new THREE.MeshStandardMaterial({ color: '#2a2c2e', roughness: 0.6, metalness: 0.4 }); const post = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 3.1, 8), dk); post.position.y = 1.55; grp.add(post);
-      const board = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.5, 0.05), [dk, dk, dk, dk, new THREE.MeshBasicMaterial({ map: t }), new THREE.MeshBasicMaterial({ map: t })]); board.position.y = 2.85; grp.add(board); grp.position.set(x, SW, z); grp.rotation.y = ry; root.add(grp); colliders.push({ type: 'circle', x, z, r: 0.12 }); };
-    for (const ex of def.exits) for (const z of def.zs) { if (def.open.e) sign(AREAS[ex.to].name + '  \u2192', def.ring.e - 26, z - 6.1, Math.PI / 2); if (def.open.w) sign('\u2190  ' + AREAS[ex.to].name, def.xs[0] - 12, z + 6.1, Math.PI / 2); } }
+  for (const ex of def.exits) for (const z of def.zs) { if (ex.side === 'e') signpost(root, AREAS[ex.to].name + '  \u2192', def.ring.e - 26, z - 6.1, Math.PI / 2, SW); if (ex.side === 'w') signpost(root, '\u2190  ' + AREAS[ex.to].name, def.xs[0] - 12, z + 6.1, Math.PI / 2, SW); }
   // the hand-built places on this area's reserved lots
   const S = { root, SW, areas: [], floors: [], cars: def.cars.slice(), tick: null, rect: (x0, x1, z0, z1) => colliders.push({ type: 'box', minX: x0, maxX: x1, minZ: z0, maxZ: z1 }) };
   S.put = (o) => { root.add(o); mergeStatic(o); return o; };   // (each set's fixed parts merge by material: far fewer things to draw)
@@ -126,7 +163,7 @@ function buildArea(id, carried) {
 }
 // leaving an area: everything it built comes off the graphics card, and the shared lists are emptied
 function clearArea(carried) {
-  setShutIn(null); if (carried) scene.add(carried);   // (the car you're in is lifted out first)
+  if (shutIn) setShutIn(null); if (carried) scene.add(carried);   // (the car you're in is lifted out first)
   drive.cars.length = 0; colliders.length = 0; walkAreas.length = 0; driveAreas.length = 0;
   A.root.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.isInstancedMesh) o.dispose(); for (const m of [].concat(o.material || [])) { for (const k in m) { const v = m[k]; if (v && v.isTexture) v.dispose(); } m.dispose(); } });
   scene.remove(A.root); A = null;
@@ -151,7 +188,7 @@ const frames = (n) => new Promise((r) => { let k = 0; const f = () => (++k >= n 
 async function travel(exit) {
   if (busy) return; busy = true; const t0 = performance.now(), carried = mode === 'drive' ? myCar : null;
   travelEl.querySelector('b').textContent = AREAS[exit.to].name; travelEl.querySelector('i').textContent = exit.label + '…'; travelEl.hidden = false; await frames(3);
-  clearArea(carried); A = buildArea(exit.to, carried); if (mode === 'walk') walk.apply();
+  clearArea(carried); A = buildArea(exit.to, carried); if (exit.spawn && mode === 'walk') { walk.position.set(exit.spawn[0], 0, exit.spawn[1]); walk.yaw = exit.spawn[2]; walk.pitch = 0; walk.gy = 0; } if (mode === 'walk') walk.apply();
   pending = 0; await frames(2); for (let i = 0; i < 80 && pending > 0; i++) await new Promise((r) => setTimeout(r, 100));   // let this area's textures arrive (8 s at most)
   try { if (renderer.compileAsync) await renderer.compileAsync(scene, camera); } catch (e) { /* ignore */ }
   travelEl.hidden = true; clock.getDelta(); busy = false; console.log('travel to', exit.to, Math.round(performance.now() - t0), 'ms');
@@ -167,15 +204,17 @@ function frame() {
   if (mode === 'walk') walk.update(dt); else drive.update(dt);
   sky.userData.update(camera, t);
   const pos = mode === 'walk' ? walk.position : drive.state;
-  A.interiors.update(mode === 'walk' ? walk.position : camera.position, dt, mode !== 'drive');
-  { const e = A.interiors.enclosed(); if (e !== shutIn) setShutIn(e); }
-  if (!shutIn && (tick = (tick + 1) % 10) === 0) { A.streamer.update(camera.position); A.district.userData.lodTick(camera.position, PHONE ? 55 : 110); }
+  if (A.interiors) { A.interiors.update(mode === 'walk' ? walk.position : camera.position, dt, mode !== 'drive'); const e = A.interiors.enclosed(); if (e !== shutIn) setShutIn(e); }
+  if (!shutIn && (tick = (tick + 1) % 10) === 0) { A.streamer.update(camera.position); if (A.district) A.district.userData.lodTick(camera.position, PHONE ? 55 : 110);
+    // real lights (the old town's lamps and rooms): only the nearest three are lit, always exactly that many, so no shader changes
+    if (A.lights && A.lights.length) { const P3 = camera.position, W = new THREE.Vector3(); for (const l of A.lights) { l.getWorldPosition(W); l.userData._d = W.distanceToSquared(P3); } A.lights.sort((a, b) => a.userData._d - b.userData._d); A.lights.forEach((l, i) => { l.visible = i < 3; }); } }
   if (A.tick) A.tick(dt);
-  A.people.update(pos, dt, mode === 'drive' ? drive.state : null, mode === 'walk');
+  if (A.tickers) for (const o of A.tickers) o.userData.tick(t, dt);
+  if (A.people) A.people.update(pos, dt, mode === 'drive' ? drive.state : null, mode === 'walk');
   const car = mode === 'walk' ? drive.nearest(walk.position) : null;
   useBtn.hidden = mode === 'walk' && !car; useBtn.textContent = mode === 'drive' ? 'Get out' : car ? `Drive the ${car.userData.driveName}` : '';
   renderer.render(scene, camera);
-  for (const ex of A.def.exits) if (ex.test(pos.x, pos.z)) { travel(ex); break; }
+  for (const ex of A.def.exits) if (ex.test(pos.x, pos.z) && !(ex.onFoot && mode === 'drive')) { travel(ex); break; }
   // once a second: measure, show, and step the resolution (down fast when slow, back up slowly when there's room)
   acc += raw; nfr++; if (acc >= 1) { fps = nfr / acc; acc = 0; nfr = 0;
     if (!qs.has('pr')) { if (fps < 26) { fast = 0; if (++slow >= 2 && pr > 0.8) { pr = Math.max(0.8, pr - 0.25); renderer.setPixelRatio(pr); slow = 0; } } else if (fps > 52) { slow = 0; if (++fast >= 6 && pr < Math.min(DPR, 2)) { pr = Math.min(DPR, 2, pr + 0.25); renderer.setPixelRatio(pr); fast = 0; } } else { slow = 0; fast = 0; } }
@@ -184,8 +223,8 @@ function frame() {
 }
 // ---- start: ?area=east starts in the other area
 { const id = AREAS[qs.get('area')] ? qs.get('area') : 'west'; A = buildArea(id, null);
-  walk.position.set(+(qs.get('x') ?? (id === 'west' ? 163.5 : 327)), 0, +(qs.get('z') ?? 20)); walk.yaw = +(qs.get('yaw') ?? 0.15); walk.pitch = 0.02; setMode('walk'); walk.apply(); }
-window.__scene = { renderer, scene, camera, walk, drive, setMode, use, travel: (to) => travel({ to, label: 'Going' }), areaIds: Object.keys(AREAS), get area() { return A.id; }, get busy() { return busy; }, get interiors() { return A.interiors; }, get people() { return A.people; }, get district() { return A.district; }, get streamer() { return A.streamer; },
+  walk.position.set(+(qs.get('x') ?? (id === 'west' ? 163.5 : id === 'old' ? -20 : 327)), 0, +(qs.get('z') ?? (id === 'old' ? 4 : 20))); walk.yaw = +(qs.get('yaw') ?? 0.15); walk.pitch = 0.02; setMode('walk'); walk.apply(); }
+window.__scene = { renderer, scene, camera, walk, drive, setMode, use, travel: (to) => travel({ to, label: 'Going' }), areaIds: Object.keys(AREAS), get area() { return A.id; }, get busy() { return busy; }, get interiors() { return A.interiors; }, get people() { return A.people; }, get district() { return A.district; }, get areaRoot() { return A.root; }, get streamer() { return A.streamer; },
   stats: () => ({ area: A.id, fps, pr, calls: renderer.info.render.calls, tris: renderer.info.render.triangles, tex: renderer.info.memory.textures, geo: renderer.info.memory.geometries }) };
 requestAnimationFrame(frame);
 finishLoading(renderer, scene, camera);

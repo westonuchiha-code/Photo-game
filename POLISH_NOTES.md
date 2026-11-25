@@ -684,3 +684,24 @@ inside the view cone at five fixed camera spots, `tools/devtests/where2.js`), th
   texture requests (hand-built files hold many pieces the phone doesn't place: scanning them packed 211 textures,
   recording packs 156). 21.3 MB. `phtravel.js` / `phfile.js ...?area=east` must report 0 failed requests.
 - Not done: the old town (restaurant, grocery, apartments, mall...) as a third area; corner store; dentist; storage.
+
+## 110 Phone build: Old Town Square (third area)
+- The old town is 435 sets and about 3 M triangles: it comes across as several areas. First: its northern part, as
+  src/areas/oldsquare.js. The placement code is main.js lines 975-1190 and 1297-1312 copied unchanged inside
+  `buildOldSquare({ add, rect, circle, colliders })`: city plaza, old-town shopping street, strip shops (shutter shop,
+  junk shop, thrift corner), street props, station gateway, lotus pond, rock bar door, underground mall + forecourt,
+  Go-club stair, market alley, bar alley + teahouse, noodle shop + food, abandoned office, Knot Room. It returns the
+  walk areas and `ground(x, z, prevY)` (mall hall and stairs are below street level).
+- phone.js: `buildCustomArea` for areas that are not a street grid (no generated district, interiors, people or cars):
+  dark base with a hole at the mall stair well, a simple far skyline, sets merged by material, animated sets ticked.
+  Real lights inside the sets (92) are budgeted: the nearest three are lit, always three.
+- Reached on foot only from Midtown's west street ends (signposted; `configureDistrict` westStub for Midtown);
+  exits can carry a `spawn` since this area is not at Midtown's coordinates. A brick wall stands where the
+  restaurant block would be, with the way back through it.
+- Memory: this area needed about 930 MB of texture memory at phone settings (721 canvas-drawn signs and labels,
+  156 megapixels) against 164 / 216 MB for Midtown / Eastside. `shrinkCanvases(root, max)` (new `max` argument)
+  caps them at 320 px and the full-size canvases are released: about 220 MB. Signs stay readable up close.
+  `tools/devtests/phmem.js` estimates an area's texture memory.
+- Phone file: 235 of 534 textures, 35.2 MB. Not yet tried on the real phone.
+- Still to bring across: restaurant, lot, tire shop, street row, grocery, apartments, houses, dirt site, shrines,
+  nature trail, vehicles (each a further area or two).

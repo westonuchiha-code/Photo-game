@@ -64,13 +64,13 @@ THREE.TextureLoader.prototype.load = function (url, onLoad, onProgress, onError)
 
 // Shrink oversized canvases at upload time (the first time three.js asks for the texture's data).
 const shrunk = new WeakMap();
-function shrink(cv) {
+function shrink(cv, max = CANVAS_MAX) {
   if (!(cv instanceof HTMLCanvasElement)) return cv;
   const m = Math.max(cv.width, cv.height);
-  if (m <= CANVAS_MAX) return cv;
+  if (m <= max) return cv;
   let s = shrunk.get(cv);
   if (!s) {
-    const k = CANVAS_MAX / m;
+    const k = max / m;
     s = document.createElement('canvas');
     s.width = Math.max(1, Math.round(cv.width * k)); s.height = Math.max(1, Math.round(cv.height * k));
     shrunk.set(cv, s);
@@ -81,11 +81,12 @@ function shrink(cv) {
 const desc = Object.getOwnPropertyDescriptor(THREE.Source.prototype, 'needsUpdate');
 // Source only has a needsUpdate setter; when a shrunk canvas changes, redraw the small copy first.
 Object.defineProperty(THREE.Source.prototype, 'needsUpdate', {
-  set(v) { if (v === true && this._orig) this.data = shrink(this._orig); desc.set.call(this, v); },
+  set(v) { if (v === true && this._orig) this.data = shrink(this._orig, this._max); desc.set.call(this, v); },
   configurable: true,
 });
 // Call once after the world is built: every oversized canvas texture gets the small copy.
-export function shrinkCanvases(scene) {
+// (`max`: a different size limit for this call; the phone build's old-town areas use one)
+export function shrinkCanvases(scene, max = CANVAS_MAX) {
   let n = 0;
   scene.traverse((o) => {
     if (!o.material) return;
@@ -93,7 +94,7 @@ export function shrinkCanvases(scene) {
       const t = m[k];
       if (!t || !t.isTexture || !t.source || t.source._orig) continue;
       const cv = t.source.data;
-      if (cv instanceof HTMLCanvasElement && Math.max(cv.width, cv.height) > CANVAS_MAX) { t.source._orig = cv; t.source.data = shrink(cv); t.source.version++; n++; }
+      if (cv instanceof HTMLCanvasElement && Math.max(cv.width, cv.height) > max) { t.source._orig = cv; t.source._max = max; t.source.data = shrink(cv, max); t.source.version++; n++; }
     }
   });
   return n;
