@@ -124,6 +124,8 @@ export function makeCar(opts = {}) {
   const paint2 = P.roofColor ? paintMat(P.roofColor, P.metal ?? 0.45) : null;
   const headM = new THREE.MeshStandardMaterial({ color: '#dfe6ee', emissive: '#e8f0ff', emissiveIntensity: 0.22, roughness: 0.12, metalness: 0.2 });   // (dim until someone drives it)
   const tailM = new THREE.MeshStandardMaterial({ color: '#b01218', emissive: '#7a0008', emissiveIntensity: 0.6, roughness: 0.18 });
+  // window tint (a body-shop option): its own glass, lighter or darker than standard
+  const TINT = { light: [0.5, '#1a242c'], dark: [0.93, '#06080a'], limo: [0.985, '#020203'] }[P.tint]; let glassM = m.glass; if (TINT) { glassM = m.glass.clone(); glassM.opacity = TINT[0]; glassM.color.set(TINT[1]); _envMats.push(glassM); }
   const K = buckets();
   const L = P.L, W = P.W / 2, zF = L / 2, zR = -L / 2, axF = zF - P.ovF, axR = axF - P.WB, axY = P.R, archR = P.R + 0.05;
   const [c0, c1] = P.cabin, zc = Math.min(c1 + P.ws, zF - 0.1), zb = Math.max(c0 - P.rw, zR + 0.05);
@@ -298,7 +300,7 @@ export function makeCar(opts = {}) {
   if (P.bed) for (const s of [-1, 1]) K.box('misc', 0.05, 0.02, zb - zR - 0.2, s * (W - 0.075), P.belt + 0.022, (zb + zR) / 2, { color: C.dark });   // bed-rail caps
   if (opts.livery) opts.livery({ K, body, P, W, c0, c1, zF, zR, Wz });
   // ---- one mesh per material
-  const lookup = { paint, paint2, glass: m.glass, misc: m.misc, chrome: m.chrome, head: headM, tail: tailM, plate: plateM };
+  const lookup = { paint, paint2, glass: glassM, misc: m.misc, chrome: m.chrome, head: headM, tail: tailM, plate: plateM };
   // (the driver's door is three of them, hung on its front edge so it can swing; the steering wheel turns on its column)
   const door = [], hinge = [Wz(zD1) - 0.02, zD1]; let steer = null;
   for (const k of Object.keys(K.B)) { const dk = k.startsWith('d_'), me = K.mesh(k, k === 'steer' ? m.misc : lookup[dk ? k.slice(2) : k]); if (!me) continue; if (k.endsWith('glass')) me.renderOrder = 2; if (k === 'paint' || k === 'paint2') me.castShadow = true; body.add(me);
@@ -310,7 +312,7 @@ export function makeCar(opts = {}) {
   const tw = Math.min(0.27, P.W * 0.125) * (P.clad ? 1.1 : 1), trackX = W - tw / 2 - 0.035;
   for (const [az, front] of [[axF, true], [axR, false]]) for (const s of [-1, 1]) { const w = makeWheel(P.R, tw, s, style, rimC); w.pivot.position.set(s * trackX, axY, az); g.add(w.pivot); wheels.push({ ...w, front, side: s }); }
   const lamp = (mat) => ({ material: mat, userData: { own: true } });
-  g.userData = { noStream: true, spec: P, wheels, body, lamps: { head: [lamp(headM)], tail: [lamp(tailM)] }, door, steer, seat, paint, axF, axR, axY, half: { x: W, zF, zR } };
+  g.userData = { noStream: true, spec: P, opts, wheels, body, lamps: { head: [lamp(headM)], tail: [lamp(tailM)] }, door, steer, seat, paint, axF, axR, axY, half: { x: W, zF, zR } };
   return g;
 }
 

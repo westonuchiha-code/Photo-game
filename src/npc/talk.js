@@ -130,6 +130,7 @@ export function makeTalk({ onOpen = null, onClose = null, use = {} } = {}) {
     close() { if (!api.active) return; api.active = false; delete document.body.dataset.talk; el.hidden = true; const w = who; who = null; if (onClose) onClose(w); },
     // someone was run down in front of these people (their ids): they think less of you, and the area hears of it
     witness(ids, area, dead) { for (const id of ids) mem(id).d -= dead ? 22 : 12; wallet.rep[area] = clamp((wallet.rep[area] || 0) - (dead ? 2 : 1), -30, 10); saveWallet(wallet); },
+    sync() { saveWallet(wallet); cash(); },
     reset() { wallet.money = 60; wallet.items = { 'Pocket radio': 1 }; wallet.people = {}; wallet.rep = {}; saveWallet(wallet); cash(); } };
   return api;
 }

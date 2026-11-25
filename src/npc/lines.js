@@ -44,6 +44,7 @@ export const RUMOURS = [
   "The noodle place changed cooks again. Third one since spring.",
   "Someone left a kei car in the garage off the main street and never came back. It's grey with dust.",
   "Half these shops keep the stock-room door locked even from their own staff.",
+  "There's a spray booth in one of the back courts. Drive in, and you drive out another colour with the dents gone.",
 ];
 
 // ---- the areas. topics: [id, label]. answers[topic][temper]

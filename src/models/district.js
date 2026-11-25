@@ -351,7 +351,7 @@ function backCourt(bin, r, bx0, bx1, bz0, bz1) {
   // two utility poles with crossarms and sagging wires strung across the court
   { const P = [[cx0 + 2.2, cz0 + 2.2], [cx1 - 2.6, cz1 - 2.4]], H = 7.6; for (const [x, z] of P) { bin.push('wood', cylGeo(0.1, 0.13, H, x, 0, z, 8)); bin.push('wood', boxGeo(x - 0.9, x + 0.9, H - 0.75, H - 0.63, z - 0.05, z + 0.05)); for (const o of [-0.8, 0, 0.8]) bin.push('iron', cylGeo(0.03, 0.03, 0.14, x + o, H - 0.63, z, 6)); bin.push('equip', cylGeo(0.2, 0.2, 0.55, x + 0.28, H - 1.9, z, 10)); SOLO.cols.push({ type: 'circle', x, z, r: 0.2 }); }
     for (const o of [-0.8, 0, 0.8]) { const N = 8; let prev = null; for (let i = 0; i <= N; i++) { const t = i / N, p = [P[0][0] + o + (P[1][0] - P[0][0]) * t, H - 0.5 - Math.sin(Math.PI * t) * 1.1, P[0][1] + (P[1][1] - P[0][1]) * t]; if (prev) bin.push('iron', barGeo(prev, p, 0.022, 0.022)); prev = p; } } }
-  SOLO.courts.push({ bays: Array.from({ length: 6 }, (_, i) => [mx - 8.1 + 2.7 * (i + 0.5), cz0 + 3.7]) });
+  SOLO.courts.push({ bays: Array.from({ length: 6 }, (_, i) => [mx - 8.1 + 2.7 * (i + 0.5), cz0 + 3.7]), rect: [cx0, cx1, cz0, cz1] });
   SOLO.lamps.push([mx + 6, mz + 3, 1]); SOLO.cols.push({ type: 'circle', x: mx + 6, z: mz + 3, r: 0.18 });
   const tx = mx - 8 + r() * 4, tz = mz + 6 + r() * 5; SOLO.trees.push([tx, tz]); SOLO.cols.push({ type: 'circle', x: tx, z: tz, r: 0.9 });
   bin.push('curb', boxGeo(tx - 1.1, tx + 1.1, 0, SW_H, tz - 1.1, tz + 1.1, 1, 1)); bin.push('lot', flatQuad(tx - 0.95, tx + 0.95, tz - 0.95, tz + 0.95, SW_H + 0.004, 2.4, 2.4));

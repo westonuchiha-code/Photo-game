@@ -133,7 +133,7 @@ export function makeDriver2({ scene, camera, areas, colliders, ground, hooks = {
       for (let i = 0; i < p.count; i++) { const x = p.getX(i) + m.position.x, y = p.getY(i) + m.position.y, z = p.getZ(i) + m.position.z, dx = x - lx, dy = y - ly, dz = z - lz, d2 = dx * dx + dy * dy + dz * dz; if (d2 > rad * rad) continue;
         const k = depth * (1 - Math.sqrt(d2) / rad) ** 1.5, cx = -x, cz = (g.userData.half.zF + g.userData.half.zR) / 2 - z, cl = Math.hypot(cx, cz) || 1, j = (Math.sin(i * 12.9898) * 43758.5453) % 1;
         p.setXYZ(i, p.getX(i) + cx / cl * k * (0.8 + 0.4 * j), p.getY(i) - k * 0.18 * (y > 0.9 ? 1 : -0.3), p.getZ(i) + cz / cl * k * (0.8 + 0.4 * j)); hit = true; }
-      if (hit) { p.needsUpdate = true; m.geometry.computeVertexNormals(); } }); }
+      if (hit) { p.needsUpdate = true; m.geometry.computeVertexNormals(); g.userData.dented = true; } }); }
   function hurt(g, amount, wx, wz, wy = 0.6) {   // world point of contact
     const u = g.userData; if (u.wreck) return; u.hp = Math.max(0, u.hp - amount);
     if (amount > 25) { const s = Math.sin(g.rotation.y), c = Math.cos(g.rotation.y), dx = wx - g.position.x, dz = wz - g.position.z; dent(g, dx * c - dz * s, wy, dx * s + dz * c, clamp(amount / 900, 0.03, 0.3), clamp(0.5 + amount / 500, 0.6, 1.5)); }
@@ -190,7 +190,7 @@ export function makeDriver2({ scene, camera, areas, colliders, ground, hooks = {
     if (S.mode === 'wheels' && Math.abs(side) > 0.7 && imp > 7.5 * (0.8 / hd.cg) * 0.8) tip(-Math.sign(side) * clamp(imp * 0.22, 1.2, 4)); }
   function tip(v) { if (S.mode !== 'wheels') return; S.mode = 'tumble'; S.phi = S.roll; S.phiV = v; S.tipT = 0; S.stuckT = 0; }
 
-  function input() { if (api.force) return { gas: 0, brake: 0, steer: 0, hand: false, ...api.force }; if (anim) return { gas: 0, brake: 0, steer: 0, hand: true };
+  function input() { if (api.force) return { gas: 0, brake: 0, steer: 0, hand: false, ...api.force }; if (anim || api.lock) return { gas: 0, brake: 0, steer: 0, hand: true };
     const a = (...c) => c.some((q) => keys.has(q));
     return { gas: Math.max(a('KeyW', 'ArrowUp') ? 1 : 0, touch.gas), brake: Math.max(a('KeyS', 'ArrowDown') ? 1 : 0, touch.brake), steer: clamp((a('KeyA', 'ArrowLeft') ? 1 : 0) - (a('KeyD', 'ArrowRight') ? 1 : 0) - touch.steer, -1, 1), hand: a('Space', 'ShiftLeft', 'ShiftRight') || !!touch.hand }; }
 
@@ -378,6 +378,7 @@ export function makeDriver2({ scene, camera, areas, colliders, ground, hooks = {
       const inp = input(), n = 4; for (let i = 0; i < n; i++) step(dt / n, inp); pose(dt); chase(dt, !!anim); fx(dt);
       // first person: getting in, your head goes from where you stood down into the seat, the door shuts, and the view
       // draws back to behind the car; getting out, it comes forward into the seat first (then you stand up: see the caller)
+      if (api.view) { api.view(camera, dt); hud.style.opacity = 0; } else
       if (anim) { const ease = (k) => { k = clamp(k, 0, 1); return k * k * (3 - 2 * k); }, a = anim, g = car; headAt(g); doorSide(g);
         if (a.kind === 'in') {
           if (a.t < a.tA) { const e = ease(a.t / a.tA); camera.position.lerpVectors(_p0, _wp, e); camera.position.y += Math.abs(Math.sin(e * Math.PI * 2)) * 0.025; camera.quaternion.slerpQuaternions(_q0, _qA, e); }                                   // step to the open door
@@ -391,7 +392,10 @@ export function makeDriver2({ scene, camera, areas, colliders, ground, hooks = {
         hud.style.opacity = a.kind === 'out' || a.t < a.tC + 0.2 ? 0 : 1; } else if (hud.style.opacity !== '') hud.style.opacity = '';
       if (S.mode === 'tumble' && Math.abs(Math.abs(wrapA(S.phi)) - Math.PI / 2) < 0.2) car.userData.flipped = true; },
     sim(secs, force) { api.force = force; for (let i = 0; i < secs * 60; i++) api.update(1 / 60); api.force = null; },
-    hurt, explode, say, input,
+    hurt, explode, say, input, lock: false, view: null,   // lock: the car is held (a shop menu is up); view(camera, dt): someone else aims the camera
+    // a car rebuilt in place (resprayed, repaired, new parts): `fresh` is a new makeCar(); the old group keeps its identity
+    refit(g, fresh) { const u = g.userData, f = fresh.userData; g.remove(u.body); for (const w of u.wheels) g.remove(w.pivot); u.body.traverse((o) => { if (o.geometry) o.geometry.dispose(); }); for (const w of u.wheels) w.pivot.traverse((o) => { if (o.geometry) o.geometry.dispose(); });
+      g.add(f.body); for (const w of f.wheels) g.add(w.pivot); for (const k of ['spec', 'opts', 'wheels', 'body', 'lamps', 'door', 'steer', 'seat', 'paint', 'axF', 'axR', 'axY', 'half']) u[k] = f[k]; u.doorA = 0; u.dented = false; u.warned = false; u.hd = handlingFor(u.spec.type || 'sedan', u.spec); if (g === car) u.lamps.head.forEach((h) => { h.material.emissiveIntensity = 2.4; }); },
     get car() { return car; },
   };
   addEventListener('keydown', (e) => { if (!api.active) return; if (e.code === 'KeyC' && !e.repeat) S.camMode = 1; });

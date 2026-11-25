@@ -881,3 +881,18 @@ inside the view cone at five fixed camera spots, `tools/devtests/where2.js`), th
   standing by (30% / 15% of its health). Lottery ticket: scratch it.
 - Stored with the wallet (`phototown.wallet.v1`: money, items, people, rep).
 - `tools/devtests/npc2.js` visits every standing person, gives gifts, uses the bag, mends a car, checks witnesses.
+
+## 123 The body shop
+- `src/shop/bodyshop.js`. "ELM AUTO BODY": a brick spray booth at the far side of the first back court in Midtown
+  and in Eastside, opening toward the parking bays. Park in it (below walking pace) and the menu opens; the car is
+  held and shown from a slow sweep behind it, kept inside the booth so no wall gets in the way.
+- Repair (priced by damage, up to $120: health full, dents and dead lamps gone). Paint: 14 colours at $40, metallic
+  or flat finish. Wheels (five / six / multi-spoke alloys, steel + hubcaps), wheel colour, spoiler (boot wing, body
+  colour wing, roof spoiler), windows (light, dark, limo), extras (front lip, fog lamps, roof rails, two-tone roof).
+  Tap to buy and fit; fitted parts are marked. Money is the same purse as the shops.
+- How it works: a car is its options (`carbody2.js makeCar`, kept in `userData.opts`). Every job builds the same car
+  again with one option changed and swaps it in under you (`drive.refit`): same car object, same health unless
+  repaired. A new part is one line in PARTS plus whatever makeCar does with the option. New in makeCar: `tint`.
+- `drive.lock` holds the car; `drive.view(camera, dt)` lets something else aim the camera.
+- `tools/devtests/shop.js` crashes a cab, drives it in, repairs, resprays, fits parts, drives out.
+- Not done: the fitted parts are not saved between visits; no previews before paying; one booth an area.
