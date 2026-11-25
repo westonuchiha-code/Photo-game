@@ -37,7 +37,9 @@ export function makeTraffic({ xs, zs, drive, spawn, count = 5, onFoot = () => nu
   function release(c) { const i = T.indexOf(c); if (i >= 0) T.splice(i, 1); c.g.userData.trafficRef = null; if (drive.cars.includes(c.g)) drive.moving(c.g, false); if (!c.police) spawnT = 14; }
   function update(dt) {
     const nPol = T.reduce((n, c) => n + (c.police ? 1 : 0), 0), tgt = police ? police.target() : null;
-    if (T.length - nPol < count && drive.cars.length < 26 && (spawnT -= dt) <= 0) { spawnT = 2.5; add(); }
+    if (!api.quiet && T.length - nPol < count && drive.cars.length < 26 && (spawnT -= dt) <= 0) { spawnT = 2.5; add(); }
+    // a quiet spell: nothing new sets out, and what is on the road is gone once it is well away from you
+    if (api.quiet) { const me = drive.car ? drive.state : onFoot(); for (const c of T.slice()) if (!c.police && (!me || Math.hypot(c.x - me.x, c.z - me.z) > 58)) { T.splice(T.indexOf(c), 1); c.g.userData.trafficRef = null; drive.remove(c.g); } }
     if (police && nPol < police.want() && drive.cars.length < 30 && (polT -= dt) <= 0) { polT = 3.5; add(true); }
     // police with nobody to chase leave once you cannot see them
     if (police && !tgt) for (const c of T.slice()) if (c.police) { const me = drive.car ? drive.state : onFoot(); if (!me || Math.hypot(c.x - me.x, c.z - me.z) > 75) { const i = T.indexOf(c); T.splice(i, 1); c.g.userData.trafficRef = null; drive.remove(c.g); } }
@@ -89,5 +91,5 @@ export function makeTraffic({ xs, zs, drive, spawn, count = 5, onFoot = () => nu
     if (okF) { c.x = nx; c.z = nz; } else c.v = 0;
     c.stuck = c.v < 0.3 && target > 1 ? c.stuck + dt : 0; if (c.stuck > 2.5 && c.direct) { c.stuck = 0; c.noDirect = 7; const a = nearNode(c.x, c.z); c.prev = a; c.node = a; }
     c.spin += c.v / sp.R * dt; c.g.position.set(c.x, 0, c.z); c.g.rotation.set(0, c.h, 0); drive.follow(c.g); for (const w of u.wheels) { w.spin.rotation.x = c.spin; if (w.front) w.pivot.rotation.y = c.steer; } }
-  return { update, cars: T, reset() { T.length = 0; spawnT = 1.5; } };
+  const api = { quiet: false, update, cars: T, reset() { T.length = 0; spawnT = 1.5; } }; return api;
 }

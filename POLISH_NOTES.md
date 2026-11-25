@@ -976,3 +976,29 @@ inside the view cone at five fixed camera spots, `tools/devtests/where2.js`), th
   people, from what you find; a clock with day and night; exteriors almost black and white, interiors in colour;
   no other cars or people on the streets, which reviewers say is what makes it eerie; rough and unfinished, and
   remembered for its atmosphere, not its systems.
+
+## 128 Mood pass (owner chose 2-9 of nine; no outdoor hum)
+- Kept as they are by the owner's answers: traffic, pedestrians being hit, the lighting and colour.
+- `src/mood/sound.js` (all synthesised, no files; outdoors is silent on purpose):
+  2. Room tone by kind of interior: a shop's fridge hum that cuts in and out, strip-light buzz and vents in offices,
+     clinics, police and schools, a quiet flat with a clock ticking; louder once the street door has shut behind you.
+  3. Footsteps, one a stride, left and right slightly different: street, tile, carpet, wood, stone.
+  4. Voices: whoever speaks murmurs a wordless run of notes as long as the line; pitch by sex and person, pace and
+     steadiness by temperament (gruff low and slow, nervous high and quick, dreamy slow and wandering).
+- 5. Two people in each street area do not walk. One stands and watches you; one stands with their face to the wall.
+     Both can be spoken to. Now and then, on foot, everyone within 26 m stops and looks at you for a couple of seconds.
+- 6. Changed only where you are not looking: the watcher is somewhere else when you look again (always out of your
+     view when it moves); a door you passed stands ajar, and is shut again after you have been to it; a parked car is
+     a little way along from where it was (never one you are using, never into anything).
+- 7. One more subject in every area, asked like the rest, that nobody agrees about: Midtown "last Tuesday", Eastside
+     "the lanterns going out", Old Town Square "the last train", Old Town South "the night of the argument". Six
+     answers each (some deny it, some contradict each other). Four new rumours point at the rest of this list.
+- 8. `src/mood/wrong.js`: one door in Midtown and one in Eastside is always a little open. Through Midtown's is a
+     corridor 66 m long (the building is 9 m deep) of the same door again and again; through Eastside's a hall 44 m
+     square, dark, with a table, one chair pulled out and a lamp. The door at the far end puts you back on the street
+     where you went in. A blink covers the step. They are built off to one side of the area; the general light is
+     turned down while you are in one. No real lights (painted glow), so no cost to the rest of the area.
+- 9. Quiet spells: every four to seven minutes, for a minute or so, nobody new comes onto the street and the traffic
+     is gone once it is away from you (14 people -> 2, 4 cars -> 0 in the test), then it fills again.
+- `tools/devtests/mood.js` and `watcher.js` check each of these; `docs/mood.png` shows them.
+- Not judged by ear: every sound here was only checked as "running", in a browser with no speakers.

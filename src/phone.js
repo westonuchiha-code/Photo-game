@@ -18,6 +18,8 @@ import { makeTalk, whoIs, keeperOf, character } from './npc/talk.js';
 import { SHOP_KINDS } from './npc/lines.js';
 import { makeBooth, makeShopMenu } from './shop/bodyshop.js';
 import { makeTraffic } from './vehicle/traffic.js';
+import { makeSound } from './mood/sound.js';
+import { makeWrongPlace } from './mood/wrong.js';
 import { useLowDetailBodies } from './models/body97.js';
 import { makeDriver2 } from './vehicle/drive2.js';
 import { makeCar, LIVERIES, carEnv } from './vehicle/carbody2.js';
@@ -45,7 +47,7 @@ const camera = new THREE.PerspectiveCamera(65, innerWidth / innerHeight, 0.1, 24
 addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
 const sky = makeSky(); scene.add(sky);
 const moon = new THREE.DirectionalLight('#b9c6dd', 0.5); moon.position.copy(sky.userData.moonDir).multiplyScalar(50); scene.add(moon);
-scene.add(new THREE.HemisphereLight('#dfe6f0', '#5e544a', 0.75));   // (there are no real street lights here, only lamp glow)
+const hemi = new THREE.HemisphereLight('#dfe6f0', '#5e544a', 0.75); scene.add(hemi);   // (there are no real street lights here, only lamp glow)
 scene.environment = carEnv(renderer); scene.environmentIntensity = 0.14;
 // the walker and the driver keep these three arrays for good: an area fills them, leaving it empties them
 const colliders = [], walkAreas = [], driveAreas = [];
@@ -204,15 +206,20 @@ function buildArea(id, carried) {
       for (const [x0, x1, z0, z1] of booth.userData.colliders) colliders.push({ type: 'box', minX: bx + x0, maxX: bx + x1, minZ: bz + z0, maxZ: bz + z1 }); const p = booth.userData.pad; shopPad = [bx + p[0], bx + p[1], bz + p[2], bz + p[3]]; shopPad.room = [bx - 2.15, bx + 2.15, bz - 5, bz + 6.7]; } }
   if (carried) { root.add(carried); drive.adopt(carried); }
   drive.rebuild();
+  // the door that is always a little open, and the place behind it (mood/wrong.js), built far off to one side of the area
+  let wrong = null; { const kind = id === 'east' ? 'hall' : 'corridor', cand = interiors.list.filter((e) => e.type === 'studio' || e.type === 'flat' || e.type === 'office'), e = cand[(id === 'east' ? 7 : 3) % Math.max(1, cand.length)];
+    if (e) { const wp = makeWrongPlace(kind), ox = (def.xs[0] + def.xs[2]) / 2, oz = def.zs[0] - 520; wp.group.position.set(ox, 0, oz); root.add(wp.group); mergeStatic(wp.group);
+      for (const a of wp.areas) walkAreas.push({ minX: ox + a.minX, maxX: ox + a.maxX, minZ: oz + a.minZ, maxZ: oz + a.maxZ }); for (const [x0, x1, z0, z1] of wp.colliders || []) colliders.push({ type: 'box', minX: ox + x0, maxX: ox + x1, minZ: oz + z0, maxZ: oz + z1 });
+      S.floors.push([ox - 30, ox + 30, oz - 2, oz + 70, 0.004]); e.ajar = 0.3; wrong = { e, wp, ox, oz, kind, inside: false }; } }
   // traffic: a few cars that drive the grid by themselves (see vehicle/traffic.js)
   const traffic = makeTraffic({ xs: def.xs, zs: def.zs, drive, count: PHONE ? 4 : 6, onFoot: () => (mode === 'walk' ? walk.position : null),
     police: !LAW_ON ? null : { want: () => stars(), target: () => (stars() && downT <= 0 ? (mode === 'drive' ? { x: drive.state.x, z: drive.state.z, v: Math.hypot(drive.state.vx, drive.state.vz), foot: false } : { x: walk.position.x, z: walk.position.z, v: 0, foot: true }) : null),
       spawn: (i) => { const c = makeCar({ type: 'sedan', color: '#eef0f2', roofColor: '#15171a', rim: 'steel', livery: LIVERIES.police, name: 'police car', plate: 'ELM P' + (10 + i % 90) }); root.add(c); drive.addCar(c, { name: 'police car' }); return c; } },
     spawn: (i) => { const [type, opt] = TRAFFIC[(i * 5 + (id === 'east' ? 3 : 0)) % TRAFFIC.length], c = makeCar({ type, ...opt, plate: 'ELM ' + (100 + (i * 37) % 900) }); root.add(c); drive.addCar(c, { name: opt.name }); return c; } });
-  const people = makePeople({ scene: root, grid: GRID, sidewalkY: SW, count: PHONE ? 14 : 20, ok: (x, z) => driveAreas.some((a) => x >= a.minX && x <= a.maxX && z >= a.minZ && z <= a.maxZ) });
+  const people = makePeople({ scene: root, grid: GRID, sidewalkY: SW, count: PHONE ? 14 : 20, odd: 2, ok: (x, z) => driveAreas.some((a) => x >= a.minX && x <= a.maxX && z >= a.minZ && z <= a.maxZ) });
   const streamer = makeStreamer(root, { phone: true, max: 300 }); streamer.setScale(PHONE ? 0.8 : 1);
   console.log('area', id, ': buildings', district.userData.buildings.length, 'interiors', JSON.stringify(interiors.stats()));
-  return { id, def, root, district, interiors, people, streamer, floors: S.floors, tick: S.tick, npcs: S.npcs, shopPad, traffic };
+  return { id, def, root, district, interiors, people, streamer, floors: S.floors, tick: S.tick, npcs: S.npcs, shopPad, traffic, wrong };
 }
 // leaving an area: everything it built comes off the graphics card, and the shared lists are emptied
 function clearArea(carried) {
@@ -267,10 +274,38 @@ function tickLaw(dt) { if (!LAW_ON) return;
   lawEl.textContent = n ? '★'.repeat(n) + '☆'.repeat(3 - n) : ''; lawEl.className = n && seen ? 'seen' : '';
   if (hurtT > 0) hurtT -= dt; else if (health < 100) health = Math.min(100, health + dt * 1.2);
   hpEl.style.display = health < 99.5 ? '' : 'none'; hpEl.firstChild.style.width = health + '%'; }
+// ---- the mood: sound on foot, things that change when you are not looking, the door that is ajar, quiet spells
+const sound = makeSound(); const blinkEl = document.createElement('div');
+{ blinkEl.style.cssText = 'position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:35;transition:opacity .16s'; document.body.appendChild(blinkEl); }
+let blinkT = 0, blinkFn = null; const blink = (fn) => { if (blinkT > 0) return; blinkT = 0.42; blinkFn = fn; blinkEl.style.opacity = 1; };
+const ROOM_FLOOR = { shop: 'tile', clinic: 'tile', office: 'carpet', police: 'carpet', school: 'carpet', flat: 'wood', studio: 'wood' };
+const lastPos = new THREE.Vector3(); let strangeT = 30, quietT = 200 + Math.random() * 150, quietLeft = 0; const ajar = [];
+function tickMood(dt) {
+  if (blinkT > 0) { const b = blinkT; blinkT -= dt; if (b > 0.22 && blinkT <= 0.22 && blinkFn) { blinkFn(); blinkFn = null; } if (blinkT <= 0.2) blinkEl.style.opacity = 0; }
+  const onFoot = mode === 'walk', p = walk.position, w = A.wrong;
+  // the door that is ajar: step through and you are somewhere the building has no room for; its far door lets you out where you came in
+  if (w && onFoot && blinkT <= 0) { if (!w.inside) { const r = w.e.inner; if (p.x > r.minX && p.x < r.maxX && p.z > r.minZ && p.z < r.maxZ) blink(() => { w.inside = true; walk.position.set(w.ox + w.wp.start[0], 0, w.oz + w.wp.start[1]); walk.yaw = w.wp.start[2]; walk.pitch = 0; walk.apply(); hemi.intensity = w.wp.light; moon.intensity = 0;  A.streamer.update(camera.position); }); }
+    else { const [x0, x1, z0, z1] = w.wp.exit; if (p.x > w.ox + x0 && p.x < w.ox + x1 && p.z > w.oz + z0 && p.z < w.oz + z1) blink(() => { w.inside = false; const [x, z] = w.e.W(w.e.doorX, -1.9); walk.position.set(x, 0, z); walk.yaw = w.e.th; walk.pitch = 0; walk.apply(); hemi.intensity = 0.75; moon.intensity = 0.5;  A.streamer.update(camera.position); }); } }
+  // sound: what room you are in, how fast you are walking and on what
+  let inside = null; if (w && w.inside) inside = w.kind === 'hall' ? 'wrong' : 'wrong'; else if (onFoot && A.interiors) for (const e of A.interiors.list) if (e.group && inRoom(e, p)) { inside = e.type; break; }
+  const speed = onFoot && dt > 0 ? Math.hypot(p.x - lastPos.x, p.z - lastPos.z) / dt : 0; lastPos.copy(p);
+  sound.tick(dt, { inside, shut: !!shutIn || !!(w && w.inside), speed: speed > 12 ? 0 : speed, onFoot: onFoot && !talk.active, surface: w && w.inside ? (w.kind === 'hall' ? 'wood' : 'carpet') : inside ? ROOM_FLOOR[inside] || 'tile' : A.district ? 'street' : 'stone' });
+  if (!A.district || (w && w.inside)) return;
+  // quiet spells: every few minutes the street empties (nobody new comes, the cars are gone), and later fills again
+  if (quietLeft > 0) { if ((quietLeft -= dt) <= 0) { A.people.quiet = false; A.traffic.quiet = false; quietT = 240 + Math.random() * 200; } } else if ((quietT -= dt) <= 0) { quietLeft = 70 + Math.random() * 45; A.people.quiet = true; A.traffic.quiet = true; }
+  // things that are not as you left them, changed only where you are not looking: a door standing open, a parked car that has moved
+  const fx = -Math.sin(walk.yaw), fz = -Math.cos(walk.yaw), unseen = (x, z) => { const dx = x - p.x, dz = z - p.z, d = Math.hypot(dx, dz) || 1; return (dx * fx + dz * fz) / d < 0.15; };
+  for (let i = ajar.length - 1; i >= 0; i--) { const e = ajar[i]; if (e.d < 3.2) e.seenOpen = true; else if (e.seenOpen && e.d > 7 || e.d > 60) { e.ajar = 0; e.seenOpen = false; ajar.splice(i, 1); } }
+  if (onFoot && (strangeT -= dt) <= 0) { strangeT = 22 + Math.random() * 30;
+    if (Math.random() < 0.5 && ajar.length < 3) { const c = A.interiors.list.filter((e) => e.group && !e.ajar && e.d > 8 && e.d < 26 && unseen(e.door[0], e.door[1])); if (c.length) { const e = c[Math.floor(Math.random() * c.length)]; e.ajar = 0.28 + Math.random() * 0.2; ajar.push(e); } }
+    else { const c = drive.cars.filter((g) => { const u = g.userData, d = Math.hypot(g.position.x - p.x, g.position.z - p.z); return !u.trafficRef && !u.wreck && g !== myCar && d > 22 && d < 75 && !(u.dyn && (u.dyn.vx || u.dyn.vz)) && unseen(g.position.x, g.position.z); });
+      if (c.length) { const g = c[Math.floor(Math.random() * c.length)], h = g.rotation.y, step = (Math.random() < 0.5 ? -1 : 1) * (1.2 + Math.random() * 2.6), nx = g.position.x + Math.sin(h) * step, nz = g.position.z + Math.cos(h) * step, u = g.userData;
+        const fits = [u.half.zF, u.half.zR, 0].every((lz) => driveAreas.some((a) => nx + Math.sin(h) * lz >= a.minX + 0.9 && nx + Math.sin(h) * lz <= a.maxX - 0.9 && nz + Math.cos(h) * lz >= a.minZ + 0.9 && nz + Math.cos(h) * lz <= a.maxZ - 0.9)) && !drive.cars.some((o) => o !== g && Math.hypot(o.position.x - nx, o.position.z - nz) < 5.5) && !colliders.some((k) => !k.car && k.active !== false && (k.type === 'circle' ? Math.hypot(k.x - nx, k.z - nz) < k.r + 2.6 : nx > k.minX - 2.6 && nx < k.maxX + 2.6 && nz > k.minZ - 2.6 && nz < k.maxZ + 2.6));
+        if (fits) { g.position.x = nx; g.position.z = nz; drive.syncCols(g); } } } } }
 // ---- talking: the nearest person in reach (someone on the street, a shopkeeper across their counter, a character)
 let talkTo = null, useCar = false, talkPed = null, rise = null;   // rise: standing up out of a car (the view comes up from the seat)
 let briskT = 0, shopUsed = false;
-const talk = makeTalk({ onOpen: () => { walk.enabled = false; }, onClose: () => { if (talkPed && talkPed.st === 'talk') talkPed.st = 'walk'; talkPed = null; walk.enabled = mode === 'walk'; },
+const talk = makeTalk({ onSay: (who, text) => sound.voice(who, text), onOpen: () => { walk.enabled = false; }, onClose: () => { sound.hush(); if (talkPed && talkPed.st === 'talk') talkPed.st = 'walk'; talkPed = null; walk.enabled = mode === 'walk'; },
   // things used from the bag: tape or a hammer patch up the car you are standing by; a drink quickens your step for a while
   use: { mend: (name) => { const c = drive.nearest(walk.position); if (!c || c.userData.wreck) return null; const u = c.userData, add = name === 'Hammer' ? 0.15 : 0.3; if (u.hp >= u.hd.hpMax) return null; u.hp = Math.min(u.hd.hpMax, u.hp + u.hd.hpMax * add); return `You patch up the ${u.driveName}. It will hold.`; },
     brisk: () => { briskT = 90; walk.speed = 2.75 * 1.25; return 'That wakes you up. You walk faster for a while.'; },
@@ -300,7 +335,7 @@ const frames = (n) => new Promise((r) => { let k = 0; const f = () => (++k >= n 
 async function travel(exit) {
   if (busy) return; busy = true; const t0 = performance.now(), carried = mode === 'drive' ? myCar : null;
   travelEl.querySelector('b').textContent = AREAS[exit.to].name; travelEl.querySelector('i').textContent = exit.label + '…'; travelEl.hidden = false; await frames(3);
-  talk.close(); shop.close(); falls.length = 0; clearArea(carried); A = buildArea(exit.to, carried); if (exit.spawn && mode === 'walk') { walk.position.set(exit.spawn[0], 0, exit.spawn[1]); walk.yaw = exit.spawn[2]; walk.pitch = 0; walk.gy = 0; } if (mode === 'walk') walk.apply();
+  talk.close(); shop.close(); falls.length = 0; ajar.length = 0; quietLeft = 0; hemi.intensity = 0.75; moon.intensity = 0.5; clearArea(carried); A = buildArea(exit.to, carried); if (exit.spawn && mode === 'walk') { walk.position.set(exit.spawn[0], 0, exit.spawn[1]); walk.yaw = exit.spawn[2]; walk.pitch = 0; walk.gy = 0; } if (mode === 'walk') walk.apply();
   pending = 0; await frames(2); for (let i = 0; i < 80 && pending > 0; i++) await new Promise((r) => setTimeout(r, 100));   // let this area's textures arrive (8 s at most)
   try { if (renderer.compileAsync) await renderer.compileAsync(scene, camera); } catch (e) { /* ignore */ }
   travelEl.hidden = true; clock.getDelta(); busy = false; console.log('travel to', exit.to, Math.round(performance.now() - t0), 'ms');
@@ -310,7 +345,7 @@ async function travel(exit) {
 const statEl = document.getElementById('stats'); let statOn = qs.has('stats'), taps = 0; statEl.hidden = !statOn;
 addEventListener('pointerdown', (e) => { if (e.clientX < 70 && e.clientY < 70) { if (++taps >= 3) { taps = 0; statOn = !statOn; statEl.hidden = !statOn; } } else taps = 0; });
 const clock = new THREE.Clock(); let t = 0, tick = 0, acc = 0, nfr = 0, fps = 0, slow = 0, fast = 0;
-function peopleTick(pos, dt) { if (!A.people) return; let ci = null; if (mode === 'drive' && drive.car) { const S = drive.state; ci = carInfo; ci.x = S.x; ci.z = S.z; ci.vx = S.vx; ci.vz = S.vz; ci.h = S.h; ci.half = drive.car.userData.half; } A.people.update(pos, dt, ci, mode === 'walk'); }
+function peopleTick(pos, dt) { if (!A.people) return; let ci = null; if (mode === 'drive' && drive.car) { const S = drive.state; ci = carInfo; ci.x = S.x; ci.z = S.z; ci.vx = S.vx; ci.vz = S.vz; ci.h = S.h; ci.half = drive.car.userData.half; } A.people.update(pos, dt, ci, mode === 'walk', mode === 'walk' ? { fx: -Math.sin(walk.yaw), fz: -Math.cos(walk.yaw) } : null); }
 function frame() {
   if (window.__loadingHold || busy || !A) { clock.getDelta(); requestAnimationFrame(frame); return; }
   const raw = clock.getDelta(), dt = Math.min(raw, 0.05); t += dt;
@@ -325,7 +360,7 @@ function frame() {
   if (!shutIn && (tick = (tick + 1) % 10) === 0) { A.streamer.update(camera.position); if (A.district) A.district.userData.lodTick(camera.position, PHONE ? 55 : 110);
     // real lights (the old town's lamps and rooms): only the nearest three are lit, always exactly that many, so no shader changes
     if (A.lights && A.lights.length) { const P3 = camera.position, W = new THREE.Vector3(); for (const l of A.lights) { l.getWorldPosition(W); l.userData._d = W.distanceToSquared(P3); } A.lights.sort((a, b) => a.userData._d - b.userData._d); A.lights.forEach((l, i) => { l.visible = i < 3; }); } }
-  if (A.traffic) A.traffic.update(dt); tickLaw(dt);
+  if (A.traffic) A.traffic.update(dt); tickLaw(dt); tickMood(dt);
   if (A.tick) A.tick(dt);
   if (A.tickers) for (const o of A.tickers) o.userData.tick(t, dt);
   peopleTick(pos, dt);
@@ -348,8 +383,8 @@ function frame() {
 // ---- start: ?area=east starts in the other area
 { const id = AREAS[qs.get('area')] ? qs.get('area') : 'west'; A = buildArea(id, null);
   walk.position.set(+(qs.get('x') ?? (id === 'west' ? 163.5 : id === 'old' ? -20 : id === 'south' ? 20 : 327)), 0, +(qs.get('z') ?? (id === 'old' ? 4 : id === 'south' ? 3 : 20))); walk.yaw = +(qs.get('yaw') ?? 0.15); walk.pitch = 0.02; setMode('walk'); walk.apply(); }
-window.tickLaw = tickLaw;
-window.__scene = { renderer, scene, camera, walk, drive, setMode, use, talk, shop, law, crime, hurtPlayer, get health() { return health; }, get stars() { return stars(); }, get traffic() { return A.traffic; }, get shopPad() { return A.shopPad; }, get talkTo() { return talkTo; }, get npcs() { return A.npcs || []; }, travel: (to) => travel({ to, label: 'Going' }), peopleTick: (dt) => peopleTick(mode === 'walk' ? walk.position : drive.state, dt), areaIds: Object.keys(AREAS), get area() { return A.id; }, get busy() { return busy; }, get interiors() { return A.interiors; }, get people() { return A.people; }, get district() { return A.district; }, get areaRoot() { return A.root; }, get streamer() { return A.streamer; },
+window.tickLaw = tickLaw; window.tickMood = tickMood;
+window.__scene = { renderer, scene, camera, walk, drive, setMode, use, talk, shop, sound, get wrong() { return A.wrong; }, get quiet() { return quietLeft > 0; }, startQuiet() { quietT = 0; }, strangeNow() { strangeT = 0; }, get ajar() { return ajar.length; }, law, crime, hurtPlayer, get health() { return health; }, get stars() { return stars(); }, get traffic() { return A.traffic; }, get shopPad() { return A.shopPad; }, get talkTo() { return talkTo; }, get npcs() { return A.npcs || []; }, travel: (to) => travel({ to, label: 'Going' }), peopleTick: (dt) => peopleTick(mode === 'walk' ? walk.position : drive.state, dt), areaIds: Object.keys(AREAS), get area() { return A.id; }, get busy() { return busy; }, get interiors() { return A.interiors; }, get people() { return A.people; }, get district() { return A.district; }, get areaRoot() { return A.root; }, get streamer() { return A.streamer; },
   stats: () => ({ area: A.id, fps, pr, calls: renderer.info.render.calls, tris: renderer.info.render.triangles, tex: renderer.info.memory.textures, geo: renderer.info.memory.geometries }) };
 requestAnimationFrame(frame);
 finishLoading(renderer, scene, camera);

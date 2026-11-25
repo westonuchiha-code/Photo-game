@@ -34,11 +34,13 @@ export const CHARACTERS = {   // made-up names
 export function makePerson(seed = 1, { worker = false } = {}) { const r = rng(seed * 104729 + 7), sex = r() < 0.5 ? 'f' : 'm', L = look(sex, worker ? seed : seed % 9, worker), g = makeBody(sex, L.m); addHair(g, L.style, L.hm);
   const sc = 0.95 + r() * 0.1; g.scale.set(sc * (0.96 + r() * 0.1), sc, sc * (0.96 + r() * 0.1)); return g; }
 
-export function makePeople({ scene, grid, sidewalkY = 0.14, count = 40, ok = null }) {
+// odd: how many of them are a bit off (phone areas): they do not walk. One kind stands and watches you wherever you
+// go, and is somewhere else when you look again; the other stands facing the wall.
+export function makePeople({ scene, grid, sidewalkY = 0.14, count = 40, ok = null, odd = 0 }) {
   const group = new THREE.Group(); group.name = 'people'; scene.add(group); const { xs, zs } = grid, r = rng(9601), P = [];
   const poolM = new THREE.MeshBasicMaterial({ color: '#3a0a0c', transparent: true, opacity: 0.7, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3 }), poolG = new THREE.CircleGeometry(0.55, 14); poolG.rotateX(-Math.PI / 2);
   for (let i = 0; i < count; i++) { const mesh = makePerson(i + 1); mesh.visible = false; group.add(mesh); const pool = new THREE.Mesh(poolG, poolM); pool.visible = false; group.add(pool);
-    P.push({ mesh, pool, seed: i + 1, active: false, u: 0, dir: 1, sp: 1.3, v: 0, ph: r() * 6, h: 0, ox: 0, oz: 0, lane: 0, blk: null, st: 'walk', t: 0, vx: 0, vz: 0, vy: 0, y: 0, tum: 0, nerve: 0.6 + r() * 0.4, seen: 0 }); }
+    P.push({ mesh, pool, seed: i + 1, odd: i < odd ? (i % 2 ? 'wall' : 'watch') : null, stare: 0, moveT: 20 + i * 9, active: false, u: 0, dir: 1, sp: 1.3, v: 0, ph: r() * 6, h: 0, ox: 0, oz: 0, lane: 0, blk: null, st: 'walk', t: 0, vx: 0, vz: 0, vy: 0, y: 0, tum: 0, nerve: 0.6 + r() * 0.4, seen: 0 }); }
   // a block's sidewalk ring, walked as a rounded rectangle: u metres along it -> position + heading
   const ring = (p) => { const [i, j] = p.blk, o = 6.05 + p.lane, x0 = xs[i] + o, x1 = xs[i + 1] - o, z0 = zs[j] + o, z1 = zs[j + 1] - o, w = x1 - x0, d = z1 - z0, per = 2 * (w + d); let u = ((p.u % per) + per) % per, x, z, h;
     if (u < w) { x = x0 + u; z = z0; h = Math.PI / 2; } else if (u < w + d) { x = x1; z = z0 + (u - w); h = 0; } else if (u < 2 * w + d) { x = x1 - (u - w - d); z = z1; h = -Math.PI / 2; } else { x = x0; z = z1 - (u - 2 * w - d); h = Math.PI; }
@@ -53,10 +55,17 @@ export function makePeople({ scene, grid, sidewalkY = 0.14, count = 40, ok = nul
   let first = true;
   // car: null, or the car being driven { x, z, vx, vz, h, half: { x, zF, zR }, onHit(speed, dead) }. Without `half`
   // (the big town's driver) people only stop and step clear, as before.
-  function update(pos, dt, car, onFoot) { const cx = pos.x, cz = pos.z; let budget = first ? count : 2;
+  // view: { fx, fz } the way you are facing (so that things can change only where you are not looking)
+  let stareT = 45 + r() * 40; const api = { quiet: false };
+  function update(pos, dt, car, onFoot, view = null) { const cx = pos.x, cz = pos.z; let budget = first ? count : api.quiet ? 0 : 2;
+    const unseen = (x, z, d) => d > 60 || (view && ((x - cx) * view.fx + (z - cz) * view.fz) / (d || 1) < 0.15);
+    // now and then, on foot, everyone near you stops and looks at you for a moment
+    if (onFoot && odd && (stareT -= dt) <= 0) { stareT = 55 + r() * 70; for (const p of P) if (p.active && p.st === 'walk' && !p.odd && Math.hypot(p.mesh.position.x - cx, p.mesh.position.z - cz) < 26) p.stare = 2.2 + r() * 0.9; }
     const ks = car ? Math.hypot(car.vx || 0, car.vz || 0) : 0, live = car && car.half, sh = live ? Math.sin(car.h) : 0, ch = live ? Math.cos(car.h) : 0;
     for (const p of P) { const m = p.mesh;
-      if (p.active && Math.hypot(m.position.x - cx, m.position.z - cz) > 84) { p.active = false; m.visible = false; p.pool.visible = false; }
+      if (p.active && Math.hypot(m.position.x - cx, m.position.z - cz) > (api.quiet && !p.odd ? 30 : 84)) { p.active = false; m.visible = false; p.pool.visible = false; }
+      // the watcher: when you are not looking, it is somewhere else, nearer
+      if (p.active && p.odd === 'watch' && p.st === 'walk' && onFoot && (p.moveT -= dt) <= 0) { const d0 = Math.hypot(m.position.x - cx, m.position.z - cz); if (unseen(m.position.x, m.position.z, d0)) { p.moveT = 25 + r() * 35; const keep = [p.blk, p.u, p.lane, p.dir]; let done = false; for (let t = 0; t < 10 && !done; t++) { if (!spawn(p, cx, cz, 13)) continue; const q = m.position, d = Math.hypot(q.x - cx, q.z - cz); if (d < 34 && unseen(q.x, q.z, d)) done = true; } if (!done) { [p.blk, p.u, p.lane, p.dir] = keep; } } else p.moveT = 2; }
       if (!p.active) { if (budget > 0) { budget--; spawn(p, cx, cz, first ? 8 : 34); } if (!p.active) continue; }
       let [x, z, h] = ring(p); x += p.ox; z += p.oz;
       /* walls stop people too: pushed, diving or thrown, nobody goes through one (`ok` says where a person can be) */
@@ -71,7 +80,9 @@ export function makePeople({ scene, grid, sidewalkY = 0.14, count = 40, ok = nul
       // ---- on their feet
       let target = p.st === 'flee' ? 4.4 : p.sp, look = null;
       if (p.st === 'flee' && (p.t -= dt) <= 0) p.st = 'walk';
-      if (p.st === 'talk') { target = 0; look = Math.atan2(cx - x, cz - z); }   /* in conversation: stands and faces you */
+      if (p.st === 'talk') { target = 0; look = Math.atan2(cx - x, cz - z); }
+      if (p.stare > 0 && p.st === 'walk') { p.stare -= dt; target = 0; look = Math.atan2(cx - x, cz - z); }
+      if (p.odd && p.st === 'walk') { target = 0; if (p.odd === 'watch') look = Math.atan2(cx - x, cz - z); else { const [bi, bj] = p.blk; look = Math.atan2((xs[bi] + xs[bi + 1]) / 2 - x, (zs[bj] + zs[bj + 1]) / 2 - z); } }   /* in conversation: stands and faces you */
       if (p.st === 'dive') { p.t -= dt; p.ox += p.vx * dt; p.oz += p.vz * dt; m.position.set(x, sidewalkY + Math.max(0, Math.sin((1 - p.t / 0.42) * Math.PI)) * 0.35, z); m.rotation.set(0.55, Math.atan2(p.vx, p.vz), 0); m.userData.pose(p.ph += dt * 14, 1.2); if (p.t <= 0) { stand(p); p.st = 'flee'; p.t = 4; p.h = m.rotation.y; } continue; }
       if (onFoot && p.st === 'walk' && dd < 1.5) { const ax = Math.sin(h), az = Math.cos(h); if ((cx - x) * ax + (cz - z) * az > -0.2) { target = 0; look = Math.atan2(cx - x, cz - z); } }
       if (car) { const kx = x - car.x, kz = z - car.z, kd = Math.hypot(kx, kz);
@@ -95,5 +106,5 @@ export function makePeople({ scene, grid, sidewalkY = 0.14, count = 40, ok = nul
   function blast(bx, bz, rad) { for (const p of P) { if (!p.active) continue; const dx = p.mesh.position.x - bx, dz = p.mesh.position.z - bz, d = Math.hypot(dx, dz) || 1; if (d < rad && p.st !== 'dead') strike(p, dx / d * 8 * (1 - d / rad) + (r() - 0.5), dz / d * 8 * (1 - d / rad) + (r() - 0.5), 4 + 3 * (1 - d / rad), d < rad * 0.7); else if (d < 45) scare(p, bx, bz, 8); } }
   // a car horn: people ahead of it and close hurry off along the sidewalk
   function honk(hx, hz, h) { const fx = Math.sin(h), fz = Math.cos(h); for (const p of P) { if (!p.active) continue; const dx = p.mesh.position.x - hx, dz = p.mesh.position.z - hz, d = Math.hypot(dx, dz); if (d < 18 && (dx * fx + dz * fz > -2 || d < 5)) scare(p, hx, hz, 2.5 + r() * 1.5); } }
-  return { group, update, blast, honk, count, list: P };
+  return Object.assign(api, { group, update, blast, honk, count, list: P });
 }

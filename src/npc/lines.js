@@ -30,6 +30,7 @@ export const VOICE = {
     away: "Is that far? Everything feels far.", no: "I had a thought about that once. It's gone." },
 };
 
+// (each area also has one more subject, `odd`: the thing nobody quite agrees about. It is asked about like the rest.)
 // rumours: known everywhere. Each person has their own two or three out of these.
 export const RUMOURS = [
   "Somebody's been tearing round at night in cars that aren't theirs. Three wrecks this week.",
@@ -44,14 +45,26 @@ export const RUMOURS = [
   "The noodle place changed cooks again. Third one since spring.",
   "Someone left a kei car in the garage off the main street and never came back. It's grey with dust.",
   "Half these shops keep the stock-room door locked even from their own staff.",
+  "There's a door in [Midtown] that's always a little open. I've never seen anyone go in. I've seen people come out.",
+  "Don't use the door that's ajar on the east side. It's bigger inside than the building is. I paced it.",
+  "Some nights the street just empties. No cars, nobody. Then it fills up again like nothing happened.",
+  "There's one who stands with their face to the wall. Don't speak to them. I mean, you can. They answer.",
   "There's a spray booth in one of the back courts. Drive in, and you drive out another colour with the dents gone.",
 ];
 
 // ---- the areas. topics: [id, label]. answers[topic][temper]
 export const AREAS = {
   west: { name: 'Midtown', wants: ['media', 'gift'],
-    topics: [['midtown', 'Midtown'], ['aqueduct', 'aqueduct ruins'], ['kiln', 'Kiln & Co.'], ['mural', 'rainbow mural'], ['traffic', 'the traffic']],
+    topics: [['midtown', 'Midtown'], ['aqueduct', 'aqueduct ruins'], ['kiln', 'Kiln & Co.'], ['mural', 'rainbow mural'], ['traffic', 'the traffic']], odd: ['tuesday', 'last Tuesday'],
     answers: {
+      tuesday: {
+        warm: "Oh, the lamps? They flickered, that's all. A fault at the substation, they said. Though... every one, at once, and then every one back. I made tea and didn't look out again.",
+        gruff: "Nothing happened last Tuesday.",
+        gossip: "Now. I was up. I saw it. The lamps went, and for as long as they were out there was nobody on the street. Nobody. And when they came back, everybody was a step to the left of where they'd been. Don't tell people I said that.",
+        nervous: "I don't talk about Tuesday. I was indoors. I was indoors the whole time. Ask anyone. Don't ask anyone.",
+        proud: "A power cut. People in this town will make a ghost story of a blown fuse.",
+        dreamy: "Was that Tuesday? I thought it hadn't happened yet.",
+      },
       midtown: {
         warm: "It's the middle of everything. Shops under, flats over, and a back court behind nearly every block. You'll find the [aqueduct ruins] and the [rainbow mural] up on the main street.",
         gruff: "Shops. Flats. Noise. Go west on the main street and you hit Old Town Square, go east and it's [Eastside].",
@@ -89,8 +102,16 @@ export const AREAS = {
         dreamy: "The little kei cars are my favourite. They sound like sewing machines." },
     } },
   east: { name: 'Eastside', wants: ['tool', 'clothes'],
-    topics: [['eastside', 'Eastside'], ['temple', 'lantern temple'], ['gallery', 'art gallery'], ['arcade', 'Nakamachi Arcade'], ['park', 'pocket park']],
+    topics: [['eastside', 'Eastside'], ['temple', 'lantern temple'], ['gallery', 'art gallery'], ['arcade', 'Nakamachi Arcade'], ['park', 'pocket park']], odd: ['lanterns', 'the lanterns going out'],
     answers: {
+      lanterns: {
+        warm: "They never go out, dear. That's the whole point of them. ...Who told you they went out?",
+        gruff: "They didn't. Electric now. Can't go out.",
+        gossip: "All of them, for the length of a breath, the same night the lamps went in [Midtown]. The keeper says he was at the switch the whole time. He was not at the switch. He was standing in the road looking up.",
+        nervous: "If they went out I didn't see it, and if I saw it I've forgotten, and I'd like to go on forgetting.",
+        proud: "The temple lanterns have burned without a break since before your grandparents. I will not hear otherwise.",
+        dreamy: "They didn't go out. Everything else went out, and the lanterns were what was left. It's different.",
+      },
       eastside: {
         warm: "Quieter than [Midtown] and all the better for it. You've the [lantern temple] on the main street and the [pocket park] down the back.",
         gruff: "It's the east side. Things cost less and break more.",
@@ -128,8 +149,16 @@ export const AREAS = {
         dreamy: "There's one tree that turns before all the others. I think it's in a hurry." },
     } },
   old: { name: 'Old Town Square', wants: ['food', 'health'],
-    topics: [['square', 'Old Town Square'], ['mall', 'underground mall'], ['baralley', 'bar alley'], ['pond', 'lotus pond'], ['station', 'the station']],
+    topics: [['square', 'Old Town Square'], ['mall', 'underground mall'], ['baralley', 'bar alley'], ['pond', 'lotus pond'], ['station', 'the station']], odd: ['lasttrain', 'the last train'],
     answers: {
+      lasttrain: {
+        warm: "It left years ago, love. Before the gate was painted. ...No, that's not right, I saw it last week. How odd. I've got both of those in my head at once.",
+        gruff: "There's no train.",
+        gossip: "It still comes. Not on the rails. You hear it under the [underground mall] about four in the morning, going the wrong way.",
+        nervous: "I was meant to be on it. I'm very glad I wasn't. I don't know why I'm glad.",
+        proud: "It ran to time for sixty years and it stopped at this station last of all. That is all anyone needs to know.",
+        dreamy: "I wait for it. Not to get on. I just want to see who gets off.",
+      },
       square: {
         warm: "The oldest paving in town, and still the nicest place to sit. Benches by the white building, lamps all round.",
         gruff: "Square. Benches. Pigeons, when there were pigeons.",
@@ -167,8 +196,16 @@ export const AREAS = {
         dreamy: "I wait there sometimes. Not for a train. Just to be somebody waiting." },
     } },
   south: { name: 'Old Town South', wants: ['tool', 'food'],
-    topics: [['lot', 'the lot'], ['tires', 'tire shop'], ['restaurant', 'the restaurant'], ['grocery', 'the grocery'], ['shrines', 'roadside shrines']],
+    topics: [['lot', 'the lot'], ['tires', 'tire shop'], ['restaurant', 'the restaurant'], ['grocery', 'the grocery'], ['shrines', 'roadside shrines']], odd: ['argument', 'the night of the argument'],
     answers: {
+      argument: {
+        warm: "At [the restaurant]? Raised voices, a plate or two. Every kitchen has a night like that. They'll open again. They will.",
+        gruff: "Wasn't an argument. Only one of them was talking.",
+        gossip: "I'll tell you what I heard through the wall. One voice. Arguing, pausing, answering, like a telephone call. There's no telephone in that kitchen.",
+        nervous: "The lights went off in there and nobody came out. I counted. Nobody came out. I've stopped counting now.",
+        proud: "A disagreement among staff. Hardly the first. It is vulgar to keep on about it.",
+        dreamy: "The soup was still warm in the morning. Three days running. That's what I think about.",
+      },
       lot: {
         warm: "Just a cracked old car park, but everything round here faces onto it, so it's where you meet people.",
         gruff: "Concrete. Weeds. A storefront nobody's opened in years.",
@@ -207,7 +244,7 @@ export const AREAS = {
     } },
 };
 // a topic label -> [area id, topic id], for links and for "that's not round here"
-export const TOPIC_INDEX = (() => { const m = new Map(); for (const [aid, a] of Object.entries(AREAS)) for (const [id, label] of a.topics) m.set(label.toLowerCase(), [aid, id, label]); return m; })();
+export const TOPIC_INDEX = (() => { const m = new Map(); for (const [aid, a] of Object.entries(AREAS)) for (const [id, label] of [...a.topics, ...(a.odd ? [a.odd] : [])]) m.set(label.toLowerCase(), [aid, id, label]); return m; })();
 
 // ---- goods. [name, price, category]
 // shops are indexed as the district's shopfront list (src/models/district.js SHOPS)

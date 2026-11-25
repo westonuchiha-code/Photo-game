@@ -70,7 +70,7 @@ export function makeInteriors({ scene, district, colliders, areas, onBuild = nul
       let best = null; for (const e of near) if (e.group && (inside(e, pos.x, pos.z) || e.d < 5) && (!best || e.d < best.d)) best = e;
       if (best && best !== litFor) { litFor = best; best.lights.forEach((p, i) => lamps[i].position.set(p[0], p[1], p[2])); } }
     let changed = false;
-    for (const e of near) { e.target = canOpen && e.group && e.d < 3.2 ? 1 : 0; /* (the door shuts behind you once you're well inside: see `enclosed`) */ if (e.t !== e.target) { e.t += Math.sign(e.target - e.t) * Math.min(Math.abs(e.target - e.t), dt * 2.8); e.doorCol.active = e.t < 0.6; setDoor(list.indexOf(e)); changed = true; } }
+    for (const e of near) { e.target = Math.max(canOpen && e.group && e.d < 3.2 ? 1 : 0, e.ajar || 0);   /* (ajar: left a little open by nobody) */ /* (the door shuts behind you once you're well inside: see `enclosed`) */ if (e.t !== e.target) { e.t += Math.sign(e.target - e.t) * Math.min(Math.abs(e.target - e.t), dt * 2.8); e.doorCol.active = e.t < 0.6; setDoor(list.indexOf(e)); changed = true; } }
     if (changed) doors.instanceMatrix.needsUpdate = true;
     // shut in: inside a built interior with its street door fully closed. Nothing outside can be seen, so main.js stops drawing it.
     encl = null; for (const e of near) if (e.group && e.t === 0 && pos.x > e.inner.minX && pos.x < e.inner.maxX && pos.z > e.inner.minZ && pos.z < e.inner.maxZ) { encl = e; break; }

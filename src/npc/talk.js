@@ -51,7 +51,7 @@ body[data-mode=drive] #purse, body[data-talk] #purse, body[data-talk] .help, bod
 `;
 
 // use: { mend() -> message or null, brisk() -> message }: what the game does when a thing from the bag is used
-export function makeTalk({ onOpen = null, onClose = null, use = {} } = {}) {
+export function makeTalk({ onOpen = null, onClose = null, onSay = null, use = {} } = {}) {
   const st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st);
   const el = document.createElement('div'); el.id = 'talk'; el.hidden = true;
   el.innerHTML = '<div class="hd"><b></b><span class="tt"></span><span class="like" hidden><i></i></span><span class="cash"></span></div><div class="log"></div><div class="barter" hidden><div class="col ctheirs"><h4>For sale</h4><div class="list theirs"></div></div><div class="col"><h4 class="yh">Your things</h4><div class="list yours"></div></div></div><div class="topics"></div><div class="ft"><button class="trade">Barter</button><button class="gift">Give a gift</button><button class="bye">Goodbye</button></div>';
@@ -89,8 +89,8 @@ export function makeTalk({ onOpen = null, onClose = null, use = {} } = {}) {
     const a = AREAS[areaId]; if (a && a.answers[tid]) return a.answers[tid][who.temper];
     const ix = TOPIC_INDEX.get((label || '').toLowerCase()); if (ix && ix[0] !== areaId) return v.away;
     return v.no; }
-  function ask(tid, label) { setView('talk'); asked++; say(esc(label), 'q'); say(rich(answer(tid, label))); }
-  function topicList() { const a = AREAS[areaId], list = [['_self', 'Background']]; if (who.kind) list.push(['_trade', 'My trade']); for (const t of who.topics || []) list.push(t); if (a) for (const t of a.topics) list.push(t); list.push(['_rumour', 'Latest rumours']); if (liking(who) >= 70) list.push(['_tip', 'A word of advice']); for (const t of known) if (!list.some((q) => q[1].toLowerCase() === t[1].toLowerCase())) list.push(t); return list; }
+  function ask(tid, label) { setView('talk'); asked++; say(esc(label), 'q'); const a = answer(tid, label); say(rich(a)); if (onSay) onSay(who, a); }
+  function topicList() { const a = AREAS[areaId], list = [['_self', 'Background']]; if (who.kind) list.push(['_trade', 'My trade']); for (const t of who.topics || []) list.push(t); if (a) for (const t of a.topics) list.push(t); list.push(['_rumour', 'Latest rumours']); if (a && a.odd) list.push(a.odd); if (liking(who) >= 70) list.push(['_tip', 'A word of advice']); for (const t of known) if (!list.some((q) => q[1].toLowerCase() === t[1].toLowerCase())) list.push(t); return list; }
   function drawTopics() { topicsEl.innerHTML = ''; for (const [tid, label] of topicList()) { const b = document.createElement('button'); b.textContent = label; b.addEventListener('click', () => ask(tid, label)); topicsEl.appendChild(b); } }
   log.addEventListener('click', (e) => { const t = e.target.closest('a'); if (!t || !who) return; const label = t.dataset.t, own = (who.topics || []).find((q) => q[1].toLowerCase() === label.toLowerCase()), ix = TOPIC_INDEX.get(label.toLowerCase()), tid = own ? own[0] : ix ? ix[1] : label;
     if (ix && ix[0] !== areaId && !known.some((q) => q[1] === ix[2])) { known.push([ix[1], ix[2]]); drawTopics(); } ask(tid, own ? own[1] : ix ? ix[2] : label); });
@@ -110,7 +110,7 @@ export function makeTalk({ onOpen = null, onClose = null, use = {} } = {}) {
   const done = () => { saveWallet(wallet); cash(); drawLists(); };
   // a gift: worth more the dearer it is, half as much again if it is the kind of thing they like
   function give(name) { const it = ITEM.get(name); if (!it || !wallet.items[name]) return; take(name); const liked = it.cat === who.likes, d = Math.round(clamp(3 + it.price * 0.35, 3, 14) * (liked ? 1.5 : 1)); mem(who.id).d += d; saveWallet(wallet); cash(); setView('talk');
-    say(`You give ${esc(who.name.split(' ')[0])} the ${esc(name.toLowerCase())}.`, 'sys'); say(esc(VOICE[who.temper].thanks) + (liked ? ' Just the thing.' : '')); showLike(); drawTopics(); }
+    say(`You give ${esc(who.name.split(' ')[0])} the ${esc(name.toLowerCase())}.`, 'sys'); say(esc(VOICE[who.temper].thanks) + (liked ? ' Just the thing.' : '')); if (onSay) onSay(who, VOICE[who.temper].thanks); showLike(); drawTopics(); }
   function useItem(name) { const kind = USES[name]; if (!kind || !wallet.items[name]) return; let msg = null;
     if (kind === 'luck') { const r = Math.random(), win = r < 0.55 ? 0 : r < 0.85 ? 5 : r < 0.97 ? 20 : 100; wallet.money += win; msg = win ? `You scratch the ticket: $${win}!` : 'You scratch the ticket. Nothing.'; }
     else if (use[kind]) msg = use[kind](name);
@@ -124,7 +124,7 @@ export function makeTalk({ onOpen = null, onClose = null, use = {} } = {}) {
   const api = { active: false, wallet, get who() { return who; }, liking,
     open(w, area) { who = w; areaId = area; asked = 0; known = []; api.active = true; document.body.dataset.talk = '1'; el.hidden = false; log.innerHTML = ''; setView('talk');
       $('.hd b').textContent = who.name; $('.hd .tt').textContent = who.title || ''; tradeBtn.hidden = !who.kind || !who.kind.goods.length; giftBtn.hidden = false; $('.bye').textContent = 'Goodbye'; cash(); showLike();
-      const m = mem(who.id), v = VOICE[who.temper], L = liking(who); say(esc(L < 25 ? v.cold : m.met ? pick(v.again, who.h, m.met) : pick(who.hello || v.hello, who.h, 7))); if (!m.met) m.d += 1; m.met++; saveWallet(wallet); drawTopics(); if (onOpen) onOpen(who); },
+      const m = mem(who.id), v = VOICE[who.temper], L = liking(who); { const hi = L < 25 ? v.cold : m.met ? pick(v.again, who.h, m.met) : pick(who.hello || v.hello, who.h, 7); say(esc(hi)); if (onSay) onSay(who, hi); } if (!m.met) m.d += 1; m.met++; saveWallet(wallet); drawTopics(); if (onOpen) onOpen(who); },
     // your own things, away from anyone: tap one to use it
     openBag() { who = null; api.active = true; document.body.dataset.talk = '1'; el.hidden = false; log.innerHTML = ''; $('.hd b').textContent = 'Your things'; $('.hd .tt').textContent = ''; $('.like').hidden = true; tradeBtn.hidden = giftBtn.hidden = true; $('.bye').textContent = 'Close'; cash(); setView('bag'); if (onOpen) onOpen(null); },
     close() { if (!api.active) return; api.active = false; delete document.body.dataset.talk; el.hidden = true; const w = who; who = null; if (onClose) onClose(w); },
