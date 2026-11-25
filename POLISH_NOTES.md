@@ -762,3 +762,25 @@ inside the view cone at five fixed camera spots, `tools/devtests/where2.js`), th
 - Not carried over (big-town-only options): crash-posed bodies, flat tyres, colour bands, side lettering, brush guard.
 - `tools/devtests/carstudio.html?mod=carbody2[&only=n&a=deg&h=&d=]` shows the cars in daylight; `carshot2.js`,
   `cargame.js`, `cargame2.js` take the pictures. `docs/cars_new.png` is the line-up.
+
+## 114 Talking to people, shopkeepers, buying and selling (first version, phone areas)
+- `src/npc/lines.js` is all the words, as plain data; `src/npc/talk.js` is the panel and the rules.
+- Every area has five topics everybody there knows, and each topic has one answer per temperament (warm, gruff,
+  gossip, nervous, proud, dreamy): thirty answers an area. Midtown: Midtown, aqueduct ruins, Kiln & Co., rainbow
+  mural, the traffic. Eastside: Eastside, lantern temple, art gallery, Nakamachi Arcade, pocket park.
+  Known everywhere: Background, Latest rumours, and My trade for people who run a shop.
+- A word in [brackets] in an answer is a link: tap it to ask about it. A topic from another area gets "that's not
+  round here" in the speaker's own voice, and joins the topic list for that conversation.
+- Who someone is (name, job, temperament) comes from their seed, so the same person is always the same person.
+  Pedestrians: 14 an area. The button reads "Talk to the man / the woman" until you have spoken, then their name.
+- Shopkeepers: one stands behind the counter of every shop interior (15 kinds, matched to the shopfront sign), made
+  with the interior and removed with it. Barter: tap theirs to buy, yours to sell. A shop only buys its own kind of
+  goods (the mart buys anything, cheaply); each area pays half as much again for two kinds (Midtown: media, gifts;
+  Eastside: tools, clothes); temperament moves prices about 10% either way. You start with $60 and a pocket radio;
+  money and things are kept in the browser's storage where it allows.
+- Hank has his own lines and an extra topic (kei garage).
+- Additive hooks in shared files (the big town does not use them): `interiors91` userData.keeper, `interiors`
+  onBuild, `district` exports SHOPS, `people96` 'talk' state + seed.
+- Not done: keepers for the hand-built places (pottery, izakaya, gallery, temple); disposition / reputation; things
+  doing anything once owned; keepers share the pedestrians' looks; Old Town Square has nobody in it.
+- `tools/devtests/talktest.js` walks through a pedestrian, Hank, a shop and a trade.

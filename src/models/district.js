@@ -105,7 +105,7 @@ function boxGeo(x0, x1, y0, y1, z0, z1, tw = 1, th = 1) {
 }
 
 // ---- shopfront atlas (drawn here: made-up names, lit interiors) -----------------------------------------------
-const SHOPS = [
+export const SHOPS = [
   ['HANA NOODLE', '#b8262a', '#f6e6c8', F.brush], ['BLUE DOOR CAFE', '#1f4f8a', '#f2f2ea', F.roman], ['QUICK WASH LAUNDRY', '#2a8ac8', '#ffffff', F.label],
   ['MAPLE HARDWARE', '#2f5a2a', '#f2e6c0', F.heavy], ['LUCKY 8 MART', '#d8262a', '#ffe14a', F.heavy], ['PIXEL GAMES', '#141414', '#3ae0ff', F.retro],
   ['SUNNY FLOWERS', '#f2c21a', '#3a2a10', F.marker], ['IRON & OAK BARBER', '#1c1c1c', '#e8c878', F.roman], ['GOOD DAY PHARMACY', '#f2f4f2', '#1a7a4a', F.label],

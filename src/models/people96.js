@@ -38,7 +38,7 @@ export function makePeople({ scene, grid, sidewalkY = 0.14, count = 40 }) {
   const group = new THREE.Group(); group.name = 'people'; scene.add(group); const { xs, zs } = grid, r = rng(9601), P = [];
   const poolM = new THREE.MeshBasicMaterial({ color: '#3a0a0c', transparent: true, opacity: 0.7, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3 }), poolG = new THREE.CircleGeometry(0.55, 14); poolG.rotateX(-Math.PI / 2);
   for (let i = 0; i < count; i++) { const mesh = makePerson(i + 1); mesh.visible = false; group.add(mesh); const pool = new THREE.Mesh(poolG, poolM); pool.visible = false; group.add(pool);
-    P.push({ mesh, pool, active: false, u: 0, dir: 1, sp: 1.3, v: 0, ph: r() * 6, h: 0, ox: 0, oz: 0, lane: 0, blk: null, st: 'walk', t: 0, vx: 0, vz: 0, vy: 0, y: 0, tum: 0, nerve: 0.6 + r() * 0.4, seen: 0 }); }
+    P.push({ mesh, pool, seed: i + 1, active: false, u: 0, dir: 1, sp: 1.3, v: 0, ph: r() * 6, h: 0, ox: 0, oz: 0, lane: 0, blk: null, st: 'walk', t: 0, vx: 0, vz: 0, vy: 0, y: 0, tum: 0, nerve: 0.6 + r() * 0.4, seen: 0 }); }
   // a block's sidewalk ring, walked as a rounded rectangle: u metres along it -> position + heading
   const ring = (p) => { const [i, j] = p.blk, o = 6.05 + p.lane, x0 = xs[i] + o, x1 = xs[i + 1] - o, z0 = zs[j] + o, z1 = zs[j + 1] - o, w = x1 - x0, d = z1 - z0, per = 2 * (w + d); let u = ((p.u % per) + per) % per, x, z, h;
     if (u < w) { x = x0 + u; z = z0; h = Math.PI / 2; } else if (u < w + d) { x = x1; z = z0 + (u - w); h = 0; } else if (u < 2 * w + d) { x = x1 - (u - w - d); z = z1; h = -Math.PI / 2; } else { x = x0; z = z1 - (u - 2 * w - d); h = Math.PI; }
@@ -68,6 +68,7 @@ export function makePeople({ scene, grid, sidewalkY = 0.14, count = 40 }) {
       // ---- on their feet
       let target = p.st === 'flee' ? 4.4 : p.sp, look = null;
       if (p.st === 'flee' && (p.t -= dt) <= 0) p.st = 'walk';
+      if (p.st === 'talk') { target = 0; look = Math.atan2(cx - x, cz - z); }   /* in conversation: stands and faces you */
       if (p.st === 'dive') { p.t -= dt; p.ox += p.vx * dt; p.oz += p.vz * dt; m.position.set(x, sidewalkY + Math.max(0, Math.sin((1 - p.t / 0.42) * Math.PI)) * 0.35, z); m.rotation.set(0.55, Math.atan2(p.vx, p.vz), 0); m.userData.pose(p.ph += dt * 14, 1.2); if (p.t <= 0) { stand(p); p.st = 'flee'; p.t = 4; p.h = m.rotation.y; } continue; }
       if (onFoot && p.st === 'walk' && dd < 1.5) { const ax = Math.sin(h), az = Math.cos(h); if ((cx - x) * ax + (cz - z) * az > -0.2) { target = 0; look = Math.atan2(cx - x, cz - z); } }
       if (car) { const kx = x - car.x, kz = z - car.z, kd = Math.hypot(kx, kz);

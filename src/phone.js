@@ -13,7 +13,9 @@ import { makeStreamer, mergeStatic } from './stream.js';
 import { makeDistrict, configureDistrict, GRID } from './models/district.js';
 import { placeStreetServices } from './models/street92.js';
 import { makeInteriors } from './interiors.js';
-import { makePeople, makeCharacter, CHARACTERS } from './models/people96.js';
+import { makePeople, makePerson, makeCharacter, CHARACTERS } from './models/people96.js';
+import { makeTalk, whoIs, keeperOf, character } from './npc/talk.js';
+import { SHOP_KINDS } from './npc/lines.js';
 import { useLowDetailBodies } from './models/body97.js';
 import { makeDriver2 } from './vehicle/drive2.js';
 import { makeCar, LIVERIES, carEnv } from './vehicle/carbody2.js';
@@ -76,7 +78,7 @@ const AREAS = {
       { const KG = { x: 186.5, z: 77 }, kgar = makeKeiGarage({ car: false }); kgar.position.set(KG.x, 0.02, KG.z); for (const [x0, x1, z0, z1] of kgar.userData.colliders) rect(KG.x + x0, KG.x + x1, KG.z + z0, KG.z + z1); for (const a of kgar.userData.areas) areas.push({ minX: a.minX + KG.x, maxX: a.maxX + KG.x, minZ: a.minZ + KG.z, maxZ: a.maxZ + KG.z });
         S.cars.push(['keiold', { name: 'dusty kei car', color: '#4a78b8', dust: 0.9, rim: 'steel', plate: 'ELM 360' }, KG.x + kgar.userData.carPose.x, KG.z + kgar.userData.carPose.z, 0]); put(kgar); }
       // the first photo-faced character, standing on the sidewalk by the start (he turns his head to watch you)
-      const hank = makeCharacter(CHARACTERS.hank); hank.position.set(166.4, S.SW, 25.5); hank.rotation.y = Math.PI * 0.82; S.root.add(hank); colliders.push({ type: 'circle', x: 166.4, z: 25.5, r: 0.3 });
+      const hank = makeCharacter(CHARACTERS.hank); hank.position.set(166.4, S.SW, 25.5); hank.rotation.y = Math.PI * 0.82; S.root.add(hank); colliders.push({ type: 'circle', x: 166.4, z: 25.5, r: 0.3 }); S.npcs.push({ who: character('hank'), x: 166.4, z: 25.5, mesh: hank, reach: 2.4 });
       S.tick = (dt) => { const hb = hank.userData.bones, dx = camera.position.x - hank.position.x, dz = camera.position.z - hank.position.z; if (dx * dx + dz * dz < 144) { let a = Math.atan2(dx, dz) - hank.rotation.y; a = Math.atan2(Math.sin(a), Math.cos(a)); const want = Math.max(-1.1, Math.min(1.1, a)); hb.head.rotation.y += (want * 0.7 - hb.head.rotation.y) * Math.min(1, dt * 5); hb.neck.rotation.y = hb.head.rotation.y * 0.4; } }; } },
   east: { name: 'Eastside', xs: [245, 329, 413], zs: [-84, 0, 84], ring: RING_E, lots: ['gallery', 'temple', 'pocketpark', 'nakamachi'], westStub: true,
     exits: [{ to: 'west', side: 'w', test: (x) => x < 229, label: 'Heading west' }], open: { w: true },
@@ -148,12 +150,15 @@ function buildArea(id, carried) {
   // a signpost on the sidewalk at each street end that leads to another area
   for (const ex of def.exits) for (const z of def.zs) { if (ex.side === 'e') signpost(root, AREAS[ex.to].name + '  \u2192', def.ring.e - 26, z - 6.1, Math.PI / 2, SW); if (ex.side === 'w') signpost(root, '\u2190  ' + AREAS[ex.to].name, def.xs[0] - 12, z + 6.1, Math.PI / 2, SW); }
   // the hand-built places on this area's reserved lots
-  const S = { root, SW, areas: [], floors: [], cars: def.cars.slice(), tick: null, rect: (x0, x1, z0, z1) => colliders.push({ type: 'box', minX: x0, maxX: x1, minZ: z0, maxZ: z1 }) };
+  const S = { root, SW, areas: [], floors: [], npcs: [], cars: def.cars.slice(), tick: null, rect: (x0, x1, z0, z1) => colliders.push({ type: 'box', minX: x0, maxX: x1, minZ: z0, maxZ: z1 }) };
   S.put = (o) => { root.add(o); mergeStatic(o); return o; };   // (each set's fixed parts merge by material: far fewer things to draw)
   S.placeL = (o, x, z, ry = 0, y = 0.14) => { o.position.set(x, y, z); o.rotation.y = ry; const c = o.userData.collider; if (c) { const q = Math.round(ry / (Math.PI / 2)) & 3, [a0, b0, c0, c1] = c; const r = q === 0 ? [a0, b0, c0, c1] : q === 2 ? [-b0, -a0, -c1, -c0] : q === 1 ? [c0, c1, -b0, -a0] : [-c1, -c0, a0, b0]; S.rect(x + r[0], x + r[1], z + r[2], z + r[3]); } return S.put(o); };
   def.sites(S);
   walkAreas.push(...district.userData.areas, ...S.areas); driveAreas.push(...walkAreas);   // (cars keep this list: interiors are added to the walker's only)
-  const interiors = makeInteriors({ scene: root, district, colliders, areas: walkAreas });
+  // someone serves behind the counter of every shop: made when its interior is built, gone when it is let go
+  const onBuild = (e, g) => { const k = g.userData.keeper; if (!k || e.b.shop < 0 || !SHOP_KINDS[e.b.shop]) return; const body = makePerson(300 + e.b.index * 3 + (id === 'east' ? 1 : 0)); body.position.set(k[0], 0, k[1]); body.rotation.y = Math.PI; g.add(body);
+    const [x, z] = e.W(k[0], k[1]); e.npc = { who: keeperOf(id, e.b.shop, e.b.index, body.userData.sex), x, z, mesh: body, reach: 2.9, room: e }; };
+  const interiors = makeInteriors({ scene: root, district, colliders, areas: walkAreas, onBuild });
   const addCar = ([type, opt, x, z, h]) => { const c = makeCar({ type, ...opt }); c.position.set(x, 0, z); c.rotation.y = h; root.add(c); drive.addCar(c, { name: opt.name }); };
   for (const c of S.cars) { if (carried && Math.hypot(c[2] - carried.position.x, c[3] - carried.position.z) < 6) continue; addCar(c); }
   district.userData.courts.forEach((ct, i) => { const [type, opt] = PARK[(i + (id === 'east' ? 2 : 0)) % PARK.length], [x, z] = ct.bays[(i * 2 + 1) % ct.bays.length]; addCar([type, opt, x, z, i % 2 ? Math.PI : 0]); });   // one more in a bay of each back court
@@ -162,7 +167,7 @@ function buildArea(id, carried) {
   const people = makePeople({ scene: root, grid: GRID, sidewalkY: SW, count: PHONE ? 14 : 20 });
   const streamer = makeStreamer(root, { phone: true, max: 300 }); streamer.setScale(PHONE ? 0.8 : 1);
   console.log('area', id, ': buildings', district.userData.buildings.length, 'interiors', JSON.stringify(interiors.stats()));
-  return { id, def, root, district, interiors, people, streamer, floors: S.floors, tick: S.tick };
+  return { id, def, root, district, interiors, people, streamer, floors: S.floors, tick: S.tick, npcs: S.npcs };
 }
 // leaving an area: everything it built comes off the graphics card, and the shared lists are emptied
 function clearArea(carried) {
@@ -175,7 +180,19 @@ function clearArea(carried) {
 // ---- modes: on foot, or in a car (the one button gets you in and out)
 let mode = 'walk', myCar = null; const useBtn = document.getElementById('use');
 const setMode = (m) => { mode = m; walk.enabled = m === 'walk'; document.body.dataset.mode = m; };
-const use = () => { if (busy) return; if (mode === 'drive') { const out = drive.exit(); if (out) { walk.position.set(out.x, 0, out.z); walk.yaw = out.yaw; walk.pitch = -0.05; } myCar = null; setMode('walk'); walk.apply(); } else { const c = drive.nearest(walk.position); if (c) { drive.enter(c); myCar = c; setMode('drive'); } } };
+const use = () => { if (busy || talk.active) return; if (mode === 'walk' && talkTo && !useCar) { startTalk(talkTo); return; } if (mode === 'drive') { const out = drive.exit(); if (out) { walk.position.set(out.x, 0, out.z); walk.yaw = out.yaw; walk.pitch = -0.05; } myCar = null; setMode('walk'); walk.apply(); } else { const c = drive.nearest(walk.position); if (c) { drive.enter(c); myCar = c; setMode('drive'); } } };
+// ---- talking: the nearest person in reach (someone on the street, a shopkeeper across their counter, a character)
+let talkTo = null, useCar = false, talkPed = null;
+const talk = makeTalk({ onClose: () => { if (talkPed && talkPed.st === 'talk') talkPed.st = 'walk'; talkPed = null; walk.enabled = mode === 'walk'; } });
+const inRoom = (e, p) => p.x > e.inner.minX && p.x < e.inner.maxX && p.z > e.inner.minZ && p.z < e.inner.maxZ;
+function findTalk() { const p = walk.position; let best = null, bd = 1e9; const tryN = (n, d, reach) => { if (d < reach && d < bd) { bd = d; best = n; } };
+  for (const n of A.npcs || []) tryN(n, Math.hypot(n.x - p.x, n.z - p.z), n.reach);
+  if (A.interiors) for (const e of A.interiors.list) if (e.group && e.npc && inRoom(e, p)) tryN(e.npc, Math.hypot(e.npc.x - p.x, e.npc.z - p.z), e.npc.reach);
+  if (A.people) for (const q of A.people.list) if (q.active && q.st === 'walk') { const d = Math.hypot(q.mesh.position.x - p.x, q.mesh.position.z - p.z); if (d < 2.8 && d < bd) { bd = d; best = q.npc || (q.npc = { who: whoIs(A.id, q.seed, q.mesh.userData.sex), ped: q, mesh: q.mesh }); } }
+  talkTo = best; talkD = bd; }
+let talkD = 0;
+function startTalk(n) { if (n.ped) { n.ped.st = 'talk'; talkPed = n.ped; } walk.enabled = false; talk.open(n.who, A.id); n.who.known = true;
+  const m = n.mesh.position, wx = n.x ?? m.x, wz = n.z ?? m.z; walk.yaw = Math.atan2(walk.position.x - wx, walk.position.z - wz); walk.pitch = innerWidth > innerHeight ? -0.05 : -0.3; walk.apply(); }   // (turn to them; look down a little so their face clears the panel)
 useBtn.addEventListener('click', use); addEventListener('keydown', (e) => { if (e.code === 'KeyE') use(); });
 
 // ---- drawing less: size-based culling; the outside is not drawn while you're shut indoors; resolution steps down if slow
@@ -191,7 +208,7 @@ const frames = (n) => new Promise((r) => { let k = 0; const f = () => (++k >= n 
 async function travel(exit) {
   if (busy) return; busy = true; const t0 = performance.now(), carried = mode === 'drive' ? myCar : null;
   travelEl.querySelector('b').textContent = AREAS[exit.to].name; travelEl.querySelector('i').textContent = exit.label + '…'; travelEl.hidden = false; await frames(3);
-  clearArea(carried); A = buildArea(exit.to, carried); if (exit.spawn && mode === 'walk') { walk.position.set(exit.spawn[0], 0, exit.spawn[1]); walk.yaw = exit.spawn[2]; walk.pitch = 0; walk.gy = 0; } if (mode === 'walk') walk.apply();
+  talk.close(); clearArea(carried); A = buildArea(exit.to, carried); if (exit.spawn && mode === 'walk') { walk.position.set(exit.spawn[0], 0, exit.spawn[1]); walk.yaw = exit.spawn[2]; walk.pitch = 0; walk.gy = 0; } if (mode === 'walk') walk.apply();
   pending = 0; await frames(2); for (let i = 0; i < 80 && pending > 0; i++) await new Promise((r) => setTimeout(r, 100));   // let this area's textures arrive (8 s at most)
   try { if (renderer.compileAsync) await renderer.compileAsync(scene, camera); } catch (e) { /* ignore */ }
   travelEl.hidden = true; clock.getDelta(); busy = false; console.log('travel to', exit.to, Math.round(performance.now() - t0), 'ms');
@@ -216,7 +233,12 @@ function frame() {
   if (A.tickers) for (const o of A.tickers) o.userData.tick(t, dt);
   peopleTick(pos, dt);
   const car = mode === 'walk' ? drive.nearest(walk.position) : null;
-  useBtn.hidden = mode === 'walk' && !car; useBtn.textContent = mode === 'drive' ? 'Get out' : car ? `Drive the ${car.userData.driveName}` : '';
+  if (mode === 'walk' && !talk.active) findTalk(); else talkTo = null;
+  if (talk.active && talkPed && talkPed.st !== 'talk') talk.close();   // (knocked down or scared off mid-sentence)
+  // a keeper turns their head to whoever is in the shop
+  if (A.interiors && mode === 'walk') for (const e of A.interiors.list) if (e.group && e.npc && inRoom(e, walk.position)) { const hb = e.npc.mesh.userData.bones; let a = Math.atan2(walk.position.x - e.npc.x, walk.position.z - e.npc.z) - (e.th + Math.PI); a = Math.atan2(Math.sin(a), Math.cos(a)); hb.head.rotation.y += (Math.max(-1, Math.min(1, a)) * 0.7 - hb.head.rotation.y) * Math.min(1, dt * 5); }
+  useCar = !!car && !(talkTo && talkD < 1.6 + (car ? Math.hypot(walk.position.x - car.position.x, walk.position.z - car.position.z) - car.userData.half.x : 0));
+  useBtn.hidden = mode === 'walk' && !car && !talkTo; useBtn.textContent = mode === 'drive' ? 'Get out' : car && useCar ? `Drive the ${car.userData.driveName}` : talkTo ? `Talk to ${talkTo.who.known ? talkTo.who.name : talkTo.who.shop !== undefined ? 'the ' + talkTo.who.title : talkTo.who.sex === 'f' ? 'the woman' : 'the man'}` : '';
   renderer.render(scene, camera);
   for (const ex of A.def.exits) if (ex.test(pos.x, pos.z) && !(ex.onFoot && mode === 'drive')) { travel(ex); break; }
   // once a second: measure, show, and step the resolution (down fast when slow, back up slowly when there's room)
@@ -228,7 +250,7 @@ function frame() {
 // ---- start: ?area=east starts in the other area
 { const id = AREAS[qs.get('area')] ? qs.get('area') : 'west'; A = buildArea(id, null);
   walk.position.set(+(qs.get('x') ?? (id === 'west' ? 163.5 : id === 'old' ? -20 : 327)), 0, +(qs.get('z') ?? (id === 'old' ? 4 : 20))); walk.yaw = +(qs.get('yaw') ?? 0.15); walk.pitch = 0.02; setMode('walk'); walk.apply(); }
-window.__scene = { renderer, scene, camera, walk, drive, setMode, use, travel: (to) => travel({ to, label: 'Going' }), peopleTick: (dt) => peopleTick(mode === 'walk' ? walk.position : drive.state, dt), areaIds: Object.keys(AREAS), get area() { return A.id; }, get busy() { return busy; }, get interiors() { return A.interiors; }, get people() { return A.people; }, get district() { return A.district; }, get areaRoot() { return A.root; }, get streamer() { return A.streamer; },
+window.__scene = { renderer, scene, camera, walk, drive, setMode, use, talk, get talkTo() { return talkTo; }, travel: (to) => travel({ to, label: 'Going' }), peopleTick: (dt) => peopleTick(mode === 'walk' ? walk.position : drive.state, dt), areaIds: Object.keys(AREAS), get area() { return A.id; }, get busy() { return busy; }, get interiors() { return A.interiors; }, get people() { return A.people; }, get district() { return A.district; }, get areaRoot() { return A.root; }, get streamer() { return A.streamer; },
   stats: () => ({ area: A.id, fps, pr, calls: renderer.info.render.calls, tris: renderer.info.render.triangles, tex: renderer.info.memory.textures, geo: renderer.info.memory.geometries }) };
 requestAnimationFrame(frame);
 finishLoading(renderer, scene, camera);

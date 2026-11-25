@@ -1,0 +1,22 @@
+const { chromium } = require('playwright');
+(async () => { const b = await chromium.launch(); const ctx = await b.newContext({ viewport: { width: 412, height: 800 }, hasTouch: true, isMobile: true }); const p = await ctx.newPage(); const errs = [];
+  p.on('pageerror', (e) => errs.push(e.message + ' @ ' + (e.stack || '').split('\n')[1])); p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text().slice(0, 160)); });
+  await p.goto(process.argv[2], { waitUntil: 'commit', timeout: 300000 }); await p.waitForFunction(() => window.__scene && !document.getElementById('loader'), null, { timeout: 300000, polling: 500 }); await p.waitForTimeout(1500);
+  const shot = async (n) => { await p.waitForTimeout(900); await p.screenshot({ path: `np/t_${n}.jpg`, type: 'jpeg', quality: 88, timeout: 300000 }); };
+  const ev = (f, a) => p.evaluate(f, a);
+  // 1. a pedestrian
+  console.log('ped', JSON.stringify(await ev(() => { const S = window.__scene, q = S.people.list.find((q) => q.active && q.st === 'walk'); if (!q) return null; const m = q.mesh.position; S.walk.position.set(m.x + 1.2, 0, m.z + 0.2); S.walk.yaw = Math.atan2(1.2, 0.2); S.walk.pitch = -0.05; S.walk.apply(); return { x: m.x, z: m.z, seed: q.seed }; })));
+  await p.waitForFunction(() => window.__scene.talkTo, null, { timeout: 20000 }); console.log('button', await ev(() => document.getElementById('use').textContent)); await ev(() => window.__scene.use()); await p.waitForTimeout(300); console.log('open', JSON.stringify(await ev(() => ({ active: window.__scene.talk.active, name: document.querySelector('#talk .hd b').textContent, title: document.querySelector('#talk .tt').textContent, topics: [...document.querySelectorAll('#talk .topics button')].map((b) => b.textContent), first: document.querySelector('#talk .log').textContent }))));
+  for (const i of [0, 2, 3]) await p.click(`#talk .topics button:nth-child(${i + 1})`); await shot('1_ped_talk');
+  const link = await p.$('#talk .log a'); if (link) { await link.click(); console.log('link ok'); } await p.click('#talk .topics button:last-child'); await shot('2_ped_more');
+  await p.click('#talk .bye'); console.log('closed', JSON.stringify(await ev(() => ({ active: window.__scene.talk.active, enabled: window.__scene.walk.enabled }))));
+  // 2. Hank
+  await ev(() => { const S = window.__scene; S.walk.position.set(166.4 - 1.3, 0, 25.5 + 0.9); S.walk.yaw = Math.atan2(-1.3, 0.9) + Math.PI; S.walk.apply(); }); await p.waitForTimeout(600); console.log('button', await ev(() => document.getElementById('use').textContent)); await p.click('#use'); await p.click('#talk .topics button:nth-child(1)'); await p.click('#talk .topics button:nth-child(2)'); await shot('3_hank'); await p.click('#talk .bye');
+  // 3. a shop
+  const shop = await ev(() => { const S = window.__scene, e = S.interiors.list.find((e) => e.type === 'shop' && e.b.shop === 3) || S.interiors.list.find((e) => e.type === 'shop'); const r = e.inner; S.walk.position.set((r.minX + r.maxX) / 2, 0, (r.minZ + r.maxZ) / 2); S.walk.apply(); return { shop: e.b.shop, th: e.th }; }); console.log('shop', JSON.stringify(shop));
+  await p.waitForTimeout(1500); console.log('keeper', JSON.stringify(await ev(() => { const S = window.__scene, e = S.interiors.list.find((e) => e.npc && e.group); if (!e) return null; const n = e.npc, P = S.walk.position, dx = P.x - n.x, dz = P.z - n.z, d = Math.hypot(dx, dz); S.walk.position.set(n.x + dx / d * 1.9, 0, n.z + dz / d * 1.9); S.walk.yaw = Math.atan2(dx, dz); S.walk.pitch = -0.08; S.walk.apply(); return { name: n.who.name, title: n.who.title, d }; })));
+  await p.waitForTimeout(800); console.log('button', await ev(() => document.getElementById('use').textContent)); await shot('4_shop_button'); await p.click('#use'); await p.click('#talk .topics button:nth-child(2)'); await shot('5_shop_talk');
+  await p.click('#talk .trade'); await shot('6_barter'); const w0 = await ev(() => JSON.stringify(window.__scene.talk.wallet));
+  await p.click('#talk .theirs button:nth-child(1)'); await p.click('#talk .theirs button:nth-child(2)'); const w1 = await ev(() => JSON.stringify(window.__scene.talk.wallet));
+  const sell = await p.$('#talk .yours button:not([disabled])'); if (sell) await sell.click(); const w2 = await ev(() => JSON.stringify(window.__scene.talk.wallet)); console.log('wallet', w0, '->', w1, '->', w2); await shot('7_barter_after'); await p.click('#talk .bye');
+  console.log('errors', errs.length, errs.slice(0, 4).join(' || ')); await b.close(); })();

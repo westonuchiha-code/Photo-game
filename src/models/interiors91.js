@@ -37,7 +37,7 @@ export function makeInterior({ U, V, doorX, type = 'flat', seed = 1 }) {
   // an inner door that stays shut (stairs / back rooms): a panelled leaf in a frame
   const shutDoor = (x, z, ry, label) => { const d = new THREE.Group(); d.position.set(x, 0, z); d.rotation.y = ry; g.add(d); const wd = mat('wood_floor', { to: pick(['#7a5a3a', '#e4e0d6', '#5a4030']), rough: 0.5 }); box(0.86, 2.02, 0.04, wd, 0, 1.01, 0.03, d, 0.9); for (const [y0, y1] of [[0.2, 0.9], [1.05, 1.85]]) box(0.6, y1 - y0, 0.01, wd, 0, (y0 + y1) / 2, 0.055, d, 0.9); for (const s of [-1, 1]) box(0.06, 2.08, 0.07, trim, s * 0.46, 1.04, 0.02, d); box(0.98, 0.06, 0.07, trim, 0, 2.08, 0.02, d); const k = new THREE.Mesh(new THREE.SphereGeometry(0.03, 12, 8), mat('i7_brass', { rough: 0.3, metal: 0.7 })); k.position.set(0.34, 1.0, 0.07); d.add(k);
     if (label) { const t = canvasT(256, 64, (x2, w, h) => { x2.fillStyle = '#f2efe4'; x2.fillRect(0, 0, w, h); x2.fillStyle = '#2a2a2c'; fitText(x2, label, w / 2, 36, w - 20, 30, F.label, { weight: 700 }); }); const p = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.1), new THREE.MeshStandardMaterial({ map: t, roughness: 0.6 })); p.position.set(0, 1.62, 0.062); d.add(p); } };
-  const lights = [[U / 2, H - 0.35, V * 0.3], [U / 2, H - 0.35, V * 0.75]];
+  const lights = [[U / 2, H - 0.35, V * 0.3], [U / 2, H - 0.35, V * 0.75]]; let keeper = null;   /* keeper: where the person serving stands (shops) */
 
   if (type === 'flat') {
     // hall straight in from the door; living room + kitchen on the low-x side, bedroom + bathroom on the high-x side
@@ -123,9 +123,9 @@ export function makeInterior({ U, V, doorX, type = 'flat', seed = 1 }) {
     // counter across the back with a till, a shut stock-room door behind it
     { const cw = Math.min(3.2, U - 2.4), cx = U - T - 0.6 - cw / 2, cz = V - T - 1.5, top = mat('laminate_oak', { to: '#b89468', rough: 0.45 }); box(cw, 0.92, 0.6, mat('wood_floor', { to: '#6a4a30', rough: 0.5 }), cx, 0.46, cz, g, 0.9); box(cw + 0.06, 0.04, 0.68, top, cx, 0.94, cz, g, 0.9); cols.push([cx - cw / 2, cx + cw / 2, cz - 0.34, cz + 0.34]);
       const till = new THREE.Group(); till.position.set(cx + cw / 2 - 0.5, 0.96, cz); till.rotation.y = PI; g.add(till); rbox(0.36, 0.14, 0.38, 0.02, plain('#3a3c40', { roughness: 0.4 }), 0, 0.07, 0, till); const kp = rbox(0.3, 0.02, 0.2, 0.006, plain('#d8d8d2', { roughness: 0.5 }), 0, 0.16, 0.06, till); kp.rotation.x = 0.35; box(0.22, 0.12, 0.03, plain('#1a2a1a', { roughness: 0.3, emissive: '#0a3a14' }), 0, 0.22, -0.13, till);
-      shutDoor(Math.min(U - 1.0, cx), V - T - 0.001, PI, 'STOCK ROOM'); }
+      shutDoor(Math.min(U - 1.0, cx), V - T - 0.001, PI, 'STOCK ROOM'); keeper = [cx - 0.45, cz + 0.8]; }
     for (let x = 1.6; x < U - 1; x += 2.6) { lightPanel(x, V * 0.3, 0.25, 1.4); lightPanel(x, V * 0.7, 0.25, 1.4); }
   }
-  g.userData = { colliders: cols, lights, type };
+  g.userData = { colliders: cols, lights, type, keeper };
   return g;
 }

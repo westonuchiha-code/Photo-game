@@ -14,7 +14,7 @@ import { mat } from './models/kit.js';
 import { mergeStatic } from './stream.js';
 import { makeWallSign } from './models/civic93.js';
 
-export function makeInteriors({ scene, district, colliders, areas }) {
+export function makeInteriors({ scene, district, colliders, areas, onBuild = null }) {
   const SW = district.userData.sidewalkY, FY = SW + 0.02, list = [];
   const DOORCOLS = ['#5a3a26', '#2a4a3a', '#6a2a22', '#2a3a5a', '#3a3a3c', '#7a5a34', '#e4e0d6', '#1c1c1e'];
   const civic = { n: 0, clinic: 0, police: 0, school: 0 };
@@ -53,7 +53,7 @@ export function makeInteriors({ scene, district, colliders, areas }) {
     const [ox, oz] = e.W(0, 0); g.position.set(ox, FY, oz); g.rotation.y = e.th; scene.add(g); g.updateMatrixWorld(true);
     for (const [x0, x1, z0, z1] of g.userData.colliders) { const [p0x, p0z] = e.W(x0, z0), [p1x, p1z] = e.W(x1, z1); const col = { type: 'box', minX: Math.min(p0x, p1x), maxX: Math.max(p0x, p1x), minZ: Math.min(p0z, p1z), maxZ: Math.max(p0z, p1z) }; colliders.push(col); e.cols.push(col); }
     e.lights = g.userData.lights.map(([x, y, z]) => { const [wx, wz] = e.W(x, z); return [wx, FY + y, wz]; });
-    mergeStatic(g); e.group = g;
+    mergeStatic(g); e.group = g; if (onBuild) onBuild(e, g);   /* (after merging: whatever the caller adds stays its own) */
   }
   function dispose(e) {
     scene.remove(e.group); e.group.traverse((o) => { if (o.geometry) o.geometry.dispose(); for (const m of [].concat(o.material || [])) if (m && !m.userData.flat) { for (const k of ['map', 'emissiveMap']) if (m[k] && m[k].isCanvasTexture) m[k].dispose(); m.dispose(); } });
