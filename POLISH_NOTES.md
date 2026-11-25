@@ -856,3 +856,12 @@ inside the view cone at five fixed camera spots, `tools/devtests/where2.js`), th
   people standing in front of a wall: 10 to 100 km/h, forward and reversing, 61 runs. The car never went through
   (the fix above covers it). People did: nothing stopped a pushed, diving or thrown person at a wall. Now walls
   stop people as well (`makePeople({ ok })`): after the change, 0 of 61 ended up through one.
+
+## 121 Lamp posts and signposts come down
+- A collider can carry `knock(dirX, dirZ, impact)` and `knockAt` (m/s). Hit harder than that by the driven car, it
+  stops being solid, the car keeps most of its speed (and takes a dent, sparks, a shake), and the thing topples the
+  way it was pushed, bounces once and lies there.
+- Street lamps (58 in Midtown; instanced, so each one's own matrices are turned about its foot, and its pool of
+  light goes out) give way above about 20 km/h; the green signposts above about 13. At walking pace both still
+  stop the car. Trees, utility poles, dumpsters and the rest stay solid.
+- `tools/devtests/lamp.js`: 12 km/h stops; 30, 60, 100 km/h knock it down and carry on.

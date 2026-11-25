@@ -103,10 +103,14 @@ const AREAS = {
 };
 
 const PARK = [['sedan', { color: '#2a2c30', name: 'black sedan', plate: 'ELM 4B1', rim: 'alloy' }], ['hatch', { color: '#d8d4c8', name: 'white hatch', plate: 'ELM 8W2', rim: 'steel' }], ['kei', { color: '#c87a2a', name: 'orange kei car', plate: 'ELM 3K9', rim: 'steel' }], ['pickup', { color: '#6a2a26', name: 'red pickup', plate: 'ELM 6R5', rim: 'steel' }], ['van', { color: '#d9d6cc', name: 'white van', plate: 'ELM 2V6', rim: 'steel' }], ['scout', { color: '#3f5a46', name: 'green 4x4', plate: 'ELM 9S4', rim: 'steel' }], ['wagon', { color: '#6f7f8c', name: 'grey estate', plate: 'ELM 5E1', rails: true }]];
+// things knocked over by a car, falling: each { a (angle), v (its speed), set(angle) } drops under its own weight, bounces once, and lies still
+const falls = [];
+function tickFalls(dt) { for (let i = falls.length - 1; i >= 0; i--) { const f = falls[i]; f.v += (0.4 + Math.sin(f.a) * 5.5) * dt; f.a += f.v * dt; if (f.a >= 1.5) { f.a = 1.5; if (f.v > 1.2 && !f.b) { f.b = true; f.v *= -0.25; } else { f.set(1.5); falls.splice(i, 1); continue; } } f.set(f.a); } }
 // a signpost: a green board on a post, on the sidewalk (y)
 function signpost(root, text, x, z, ry, y) { const c = document.createElement('canvas'); c.width = 512; c.height = 128; const g = c.getContext('2d'); g.fillStyle = '#1d4a2a'; g.fillRect(0, 0, 512, 128); g.strokeStyle = '#f2ead0'; g.lineWidth = 6; g.strokeRect(8, 8, 496, 112); g.fillStyle = '#f2ead0'; g.textAlign = 'center'; g.textBaseline = 'middle'; let fs = 62; do { g.font = `600 ${fs}px system-ui, sans-serif`; fs -= 4; } while (g.measureText(text).width > 470 && fs > 20); g.fillText(text, 256, 68);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; const grp = new THREE.Group(), dk = new THREE.MeshStandardMaterial({ color: '#2a2c2e', roughness: 0.6, metalness: 0.4 }); const post = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 3.1, 8), dk); post.position.y = 1.55; grp.add(post);
-  const board = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.5, 0.05), [dk, dk, dk, dk, new THREE.MeshBasicMaterial({ map: t }), new THREE.MeshBasicMaterial({ map: t })]); board.position.y = 2.85; grp.add(board); grp.position.set(x, y, z); grp.rotation.y = ry; root.add(grp); colliders.push({ type: 'circle', x, z, r: 0.12 }); }
+  const board = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.5, 0.05), [dk, dk, dk, dk, new THREE.MeshBasicMaterial({ map: t }), new THREE.MeshBasicMaterial({ map: t })]); board.position.y = 2.85; grp.add(board); grp.position.set(x, y, z); grp.rotation.y = ry; root.add(grp); const col = { type: 'circle', x, z, r: 0.12, knockAt: 3.5 }; colliders.push(col);
+  col.knock = (dx, dz, imp) => { const q0 = grp.quaternion.clone(), axis = new THREE.Vector3(dz, 0, -dx).normalize(), q = new THREE.Quaternion(); falls.push({ t: 0, a: 0, v: 0.8 + imp * 0.15, set(a) { grp.quaternion.copy(q.setFromAxisAngle(axis, a)).multiply(q0); } }); }; }
 // an area that is not a street grid: its own build function places everything (the hand-built old town pieces)
 function buildCustomArea(id, def, root) {
   const lights = [];
@@ -139,7 +143,11 @@ function buildArea(id, carried) {
   configureDistrict({ xs: def.xs, zs: def.zs, ring: def.ring, lots: def.lots, westStub: def.westStub });
   const district = makeDistrict(); root.add(district); const SW = district.userData.sidewalkY;
   colliders.push(...district.userData.colliders);   // (dumpsters, court lamps and tree beds)
-  for (const [x, z] of district.userData.lampPosts) colliders.push({ type: 'circle', x, z, r: 0.18 });
+  // street lamps come down when a car hits them hard: the post stops being solid and topples the way it was pushed
+  { const ims = district.children.filter((o) => o.name === 'district_lamps'), m0 = new THREE.Matrix4(), mA = new THREE.Matrix4(), mB = new THREE.Matrix4(), mR = new THREE.Matrix4(), ax = new THREE.Vector3();
+    district.userData.lampPosts.forEach(([x, z], i) => { const col = { type: 'circle', x, z, r: 0.18, knockAt: 5.5 }; colliders.push(col);
+      col.knock = (dx, dz, imp) => { const base = ims.map((im) => { im.getMatrixAt(i, m0); return m0.clone(); }); ax.set(dz, 0, -dx).normalize(); const axis = ax.clone();
+        falls.push({ t: 0, a: 0, v: 0.6 + imp * 0.12, set(a) { mA.makeTranslation(x, SW, z); mR.makeRotationAxis(axis, a); mB.makeTranslation(-x, -SW, -z); mA.multiply(mR).multiply(mB); ims.forEach((im, k) => { if (k === 3) { m0.makeScale(0, 0, 0); } else m0.multiplyMatrices(mA, base[k]); im.setMatrixAt(i, m0); im.instanceMatrix.needsUpdate = true; }); } }); }; }); }
   for (const [x, z] of district.userData.treePosts) colliders.push({ type: 'circle', x, z, r: 0.25 });
   const svc = placeStreetServices({ grid: GRID, sidewalkY: SW }); root.add(svc.group); colliders.push(...svc.colliders);
   // a striped barrier across each street end that leads nowhere (the ends that lead to another area are left open)
@@ -208,7 +216,7 @@ const frames = (n) => new Promise((r) => { let k = 0; const f = () => (++k >= n 
 async function travel(exit) {
   if (busy) return; busy = true; const t0 = performance.now(), carried = mode === 'drive' ? myCar : null;
   travelEl.querySelector('b').textContent = AREAS[exit.to].name; travelEl.querySelector('i').textContent = exit.label + '…'; travelEl.hidden = false; await frames(3);
-  talk.close(); clearArea(carried); A = buildArea(exit.to, carried); if (exit.spawn && mode === 'walk') { walk.position.set(exit.spawn[0], 0, exit.spawn[1]); walk.yaw = exit.spawn[2]; walk.pitch = 0; walk.gy = 0; } if (mode === 'walk') walk.apply();
+  talk.close(); falls.length = 0; clearArea(carried); A = buildArea(exit.to, carried); if (exit.spawn && mode === 'walk') { walk.position.set(exit.spawn[0], 0, exit.spawn[1]); walk.yaw = exit.spawn[2]; walk.pitch = 0; walk.gy = 0; } if (mode === 'walk') walk.apply();
   pending = 0; await frames(2); for (let i = 0; i < 80 && pending > 0; i++) await new Promise((r) => setTimeout(r, 100));   // let this area's textures arrive (8 s at most)
   try { if (renderer.compileAsync) await renderer.compileAsync(scene, camera); } catch (e) { /* ignore */ }
   travelEl.hidden = true; clock.getDelta(); busy = false; console.log('travel to', exit.to, Math.round(performance.now() - t0), 'ms');
@@ -222,7 +230,7 @@ function peopleTick(pos, dt) { if (!A.people) return; let ci = null; if (mode ==
 function frame() {
   if (window.__loadingHold || busy || !A) { clock.getDelta(); requestAnimationFrame(frame); return; }
   const raw = clock.getDelta(), dt = Math.min(raw, 0.05); t += dt;
-  if (mode === 'walk') walk.update(dt); drive.update(dt);
+  if (mode === 'walk') walk.update(dt); drive.update(dt); if (falls.length) tickFalls(dt);
   if (rise) { rise.t += dt; const k = Math.min(1, rise.t / 0.5), e = k * k * (3 - 2 * k); if (mode === 'walk' && k < 1) { camera.position.lerpVectors(rise.p, camera.position, e); camera.position.y += Math.sin(e * Math.PI) * 0.1; camera.quaternion.slerpQuaternions(rise.q, camera.quaternion, e); } else rise = null; }   // (the driver runs every frame: parked cars that were hit, fires, smoke)
   sky.userData.update(camera, t);
   const pos = mode === 'walk' ? walk.position : drive.state;

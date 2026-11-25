@@ -176,6 +176,9 @@ export function makeDriver2({ scene, camera, areas, colliders, ground, hooks = {
       for (const col of nearCols(px, pz)) { if (col.active === false || col.car === car) continue; const [nx, nz, pen] = overlap(px, pz, W, col); if (pen > 0) { S.x += nx * pen; S.z += nz * pen; if (!hit || pen > hit.pen) hit = { nx, nz, pen, col, px: px - nx * W, pz: pz - nz * W, lz }; } } }
     return hit; }
   function bump(hit) { const { nx, nz, col } = hit, vn = S.vx * nx + S.vz * nz; if (vn >= 0) return; const imp = -vn, u = car.userData, hd = u.hd;
+    // something that gives way (a lamp post, a signpost): hit hard enough it goes over and the car carries on, dented
+    if (col && col.knock && imp > (col.knockAt || 5)) { col.active = false; const v = Math.hypot(S.vx, S.vz) || 1; col.knock(S.vx / v, S.vz / v, imp); col.knock = null; S.vx *= 0.88; S.vz *= 0.88; S.r += (Math.random() - 0.5) * 0.3; hurt(car, 12 + imp * imp * 0.12, hit.px, hit.pz); S.shake = Math.min(1, S.shake + 0.3); thud(0.3, 900, 0.25);
+      for (let i = 0; i < 8; i++) puff(hit.px, S.y + 0.6 + Math.random(), hit.pz, { color: i % 2 ? '#ffe9a8' : '#ffd28a', size: 0.1, grow: 0.1, life: 0.35, vy: 2.5, spread: 6, glow: true, a: 0.95 }); return; }
     let e = 0.22, keep = 0.86;
     if (col && col.car) {   // another car: it takes part of the blow and moves off; the lighter car comes off worse
       const o = col.car, od = dyn(o), mr = hd.mass / (hd.mass + o.userData.hd.mass); od.vx -= nx * imp * mr * 1.5; od.vz -= nz * imp * mr * 1.5; od.w += ((hit.px - o.position.x) * -nz - (hit.pz - o.position.z) * -nx) * imp * mr * 0.35;
