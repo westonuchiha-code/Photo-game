@@ -317,7 +317,7 @@ export function makeDriver2({ scene, camera, areas, colliders, ground, hooks = {
     if (au) { const t = au.ctx.currentTime, vF = Math.abs(S.vF), gears = [0, 9, 17, 26, 36, 60]; let g = 1; while (g < 5 && vF > gears[g]) g++; const lo = gears[g - 1], hi = gears[g], thr = u.wreck ? 0 : input().gas;
       const rpm = clamp(0.25 + 0.75 * clamp((vF - lo) / (hi - lo), 0, 1) + (S.spinR && thr ? 0.35 : 0) + (S.burn ? 0.75 : 0), 0.2, 1.3), fq = (38 + rpm * 95) * hd.note * (f < 0.2 ? 0.92 + Math.random() * 0.12 : 1);
       au.o1.frequency.setTargetAtTime(fq, t, 0.05); au.o2.frequency.setTargetAtTime(fq * 0.5, t, 0.05); au.lp.frequency.setTargetAtTime(300 + rpm * 900 + thr * 600, t, 0.08);
-      au.master.gain.setTargetAtTime(u.wreck ? 0 : 0.05 + thr * 0.05, t, 0.1); au.sq.gain.setTargetAtTime(wheels && (smokeR || smokeF) ? clamp(0.012 + S.slip * 0.06, 0, 0.045) : 0, t, 0.05);
+      au.master.gain.setTargetAtTime(u.wreck || (anim && (anim.kind === 'out' ? anim.t > 0.5 : !anim.fired)) ? 0 : 0.05 + thr * 0.05, t, anim ? 0.18 : 0.1);   // (silent until the starter has turned; switched off before you get out) au.sq.gain.setTargetAtTime(wheels && (smokeR || smokeF) ? clamp(0.012 + S.slip * 0.06, 0, 0.045) : 0, t, 0.05);
       const hn = !u.wreck && !anim && (keys.has('KeyH') || touch.horn); au.horn.gain.setTargetAtTime(hn ? 0.07 : 0, t, 0.012); if (hn && !hornOn && hooks.horn) hooks.horn(S.x, S.z, S.h); hornOn = hn; }
   }
 
@@ -331,6 +331,13 @@ export function makeDriver2({ scene, camera, areas, colliders, ground, hooks = {
   const _hp = new THREE.Vector3(), _hq = new THREE.Quaternion(), _e = new THREE.Euler();
   function headAt(g) { const u = g.userData, st = u.seat || { x: u.half.x * 0.45, y: 0.5, z: 0 }; _hp.set(st.x, Math.min(st.y + 0.62, u.spec.H - 0.14), st.z - 0.02); u.body.updateMatrixWorld(true); u.body.localToWorld(_hp); _hq.setFromEuler(_e.set(-0.04, g.rotation.y + Math.PI, 0, 'YXZ')); }
   const _p0 = new THREE.Vector3(), _q0 = new THREE.Quaternion();
+  // just outside the open door at standing height (world), and the look from the seat out through the door
+  const _wp = new THREE.Vector3(), _qA = new THREE.Quaternion(), _qL = new THREE.Quaternion(), _q1 = new THREE.Quaternion(), _v1 = new THREE.Vector3(), _lm = new THREE.Matrix4(), _lq = new THREE.Quaternion();
+  function doorSide(g) { const u = g.userData, st = u.seat || { z: 0 }; _wp.set(u.half.x + 0.55, 1.5, st.z + 0.12); g.updateMatrixWorld(true); g.localToWorld(_wp); _qL.setFromEuler(_e.set(-0.1, g.rotation.y + Math.PI + 1.25, 0, 'YXZ')); }
+  const lookQ = (from, to, drop = 0) => { _lm.lookAt(from, _v1.copy(to).setY(to.y + drop), UP); return _lq.setFromRotationMatrix(_lm); };
+  // small sounds: a latch click, and the starter turning over before the engine is heard
+  const click = (v) => thud(v, 1800, 0.03);
+  function starter() { if (!au) return; for (let i = 0; i < 5; i++) setTimeout(() => thud(0.07, 700, 0.05), i * 75); setTimeout(() => { S.shake = Math.max(S.shake, 0.12); }, 380); }
   const api = {
     active: false, cars, state: S, rebuild: fileColliders,
     addCar(g, { name = 'car' } = {}) { const u = g.userData; u.driveName = name; u.hd = handlingFor(u.spec.type || 'sedan', u.spec); u.hp = u.hd.hpMax; cars.push(g); u.cols = [];
@@ -349,9 +356,9 @@ export function makeDriver2({ scene, camera, areas, colliders, ground, hooks = {
         const mat = new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.5, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -6 }); headLight = new THREE.Group();
         for (const s of [-1, 1]) { const geo = new THREE.PlaneGeometry(7, 17); geo.translate(0, 8.5, 0); const b = new THREE.Mesh(geo, mat); b.rotation.x = Math.PI / 2; b.rotation.z = s * -0.045; b.position.set(s * 0.55, 0.035, -0.1);   /* (turned so the cone runs forward from the lamps) */ headLight.add(b); } }
       g.add(headLight); headLight.position.set(0, 0, g.userData.half.zF); const a = audio(); a?.ctx.resume?.(); chase(0, true);
-      if (g.userData.door && g.userData.door.length && !g.userData.wreck) { anim = { kind: 'in', t: 0 }; swing(g, 1, 0, 0.25); swing(g, 0, 0.62); camera.position.copy(_p0); camera.quaternion.copy(_q0); } else anim = null; },
+      if (g.userData.door && g.userData.door.length && !g.userData.wreck && !g.userData.dyn?.vx) { doorSide(g); headAt(g); const d = _p0.distanceTo(_wp), tA = clamp(d / 3.2, 0.3, 0.9); anim = { kind: 'in', t: 0, tA, tB: tA + 0.55, tC: tA + 1.0, tD: tA + 1.65, shut: false, fired: false }; swing(g, 1, 0, Math.min(0.3, tA)); _qA.copy(lookQ(_wp, _hp, -0.12)); camera.position.copy(_p0); camera.quaternion.copy(_q0); click(0.05); } else anim = null; },
     // get out with the door (standing still, on its wheels); otherwise straight out. `done` does the actual leaving.
-    leave(done) { const g = car; if (!g) return; if (anim) { if (anim.kind === 'in') return; return; } if (g.userData.wreck || S.mode !== 'wheels' || Math.hypot(S.vx, S.vz) > 2.5 || !g.userData.door || !g.userData.door.length) { done(); return; } _p0.copy(camera.position); _q0.copy(camera.quaternion); anim = { kind: 'out', t: 0, done }; swing(g, 1, 0.1, 0.25); swing(g, 0, 1.0); },
+    leave(done) { const g = car; if (!g) return; if (anim) return; if (g.userData.wreck || S.mode !== 'wheels' || Math.hypot(S.vx, S.vz) > 2.5 || !g.userData.door || !g.userData.door.length) { done(); return; } _p0.copy(camera.position); _q0.copy(camera.quaternion); anim = { kind: 'out', t: 0, done, opened: false }; },
     // getting out: at speed the car rolls on by itself
     exit() { const g = car; if (!g) return null; api.active = false; anim = null; const u = g.userData, s = Math.sin(S.h), c = Math.cos(S.h);
       if (S.mode === 'wheels') { const d = dyn(g); d.vx = S.vx; d.vz = S.vz; d.w = S.r; } pose(0.016); api.syncCols(g); for (const k of u.cols) k.active = true; if (headLight) g.remove(headLight);
@@ -360,13 +367,21 @@ export function makeDriver2({ scene, camera, areas, colliders, ground, hooks = {
       return { x: S.x + (u.half.x + 0.8) * c, z: S.z - (u.half.x + 0.8) * s, yaw: S.h + Math.PI }; },
     // every frame, driving or not: the other cars, fires, smoke; and the driven car when there is one
     update(dt) { tickOthers(dt); tickParts(dt); tickDoors(dt); if (msgT > 0 && (msgT -= dt) <= 0) msgEl.style.opacity = 0; if (!car) return;
-      if (anim) { anim.t += dt; if (anim.kind === 'out' && anim.t > 0.45) { const d = anim.done; anim = null; headAt(car); camera.position.copy(_hp); camera.quaternion.copy(_hq); d(); return; } }
+      if (anim) { anim.t += dt; if (anim.kind === 'out' && anim.t > 1.25) { const d = anim.done, g = car; anim = null; swing(g, 0, 0.55); d(); return; } }
       const inp = input(), n = 4; for (let i = 0; i < n; i++) step(dt / n, inp); pose(dt); chase(dt, !!anim); fx(dt);
       // first person: getting in, your head goes from where you stood down into the seat, the door shuts, and the view
       // draws back to behind the car; getting out, it comes forward into the seat first (then you stand up: see the caller)
-      if (anim) { const ease = (k) => { k = clamp(k, 0, 1); return k * k * (3 - 2 * k); }; headAt(car);
-        if (anim.kind === 'in') { if (anim.t < 0.6) { const e = ease(anim.t / 0.6); camera.position.lerpVectors(_p0, _hp, e); camera.position.y -= Math.sin(e * Math.PI) * 0.12; camera.quaternion.slerpQuaternions(_q0, _hq, e); } else { const e = ease((anim.t - 0.6) / 0.55); camera.position.lerpVectors(_hp, camera.position, e); camera.quaternion.slerpQuaternions(_hq, camera.quaternion, e); if (e >= 1) anim = null; } }
-        else { const e = ease(anim.t / 0.45); camera.position.lerpVectors(_p0, _hp, e); camera.quaternion.slerpQuaternions(_q0, _hq, e); } }
+      if (anim) { const ease = (k) => { k = clamp(k, 0, 1); return k * k * (3 - 2 * k); }, a = anim, g = car; headAt(g); doorSide(g);
+        if (a.kind === 'in') {
+          if (a.t < a.tA) { const e = ease(a.t / a.tA); camera.position.lerpVectors(_p0, _wp, e); camera.position.y += Math.abs(Math.sin(e * Math.PI * 2)) * 0.025; camera.quaternion.slerpQuaternions(_q0, _qA, e); }                                   // step to the open door
+          else if (a.t < a.tB) { const e = ease((a.t - a.tA) / (a.tB - a.tA)); camera.position.lerpVectors(_wp, _hp, e); camera.position.y -= Math.sin(e * Math.PI) * 0.16; camera.quaternion.slerpQuaternions(_qA, _hq, e * e); _e.setFromQuaternion(camera.quaternion, 'YXZ'); _e.z = Math.sin(e * Math.PI) * 0.14; camera.quaternion.setFromEuler(_e); }   // duck in and swing round to face the bonnet
+          else if (a.t < a.tC) { const k = (a.t - a.tB) / (a.tC - a.tB); if (!a.shut) { a.shut = true; swing(g, 0, 0, 0.22); } camera.position.copy(_hp); camera.position.y -= Math.sin(Math.min(1, k * 2.2) * Math.PI) * 0.035; camera.quaternion.slerpQuaternions(_hq, _qL, Math.sin(Math.min(1, k * 1.6) * Math.PI) * 0.22); }   // settle; a glance at the door as it shuts
+          else { if (!a.fired) { a.fired = true; starter(); } const k = (a.t - a.tC) / (a.tD - a.tC), e = ease((k - 0.35) / 0.65); _v1.copy(_hp); if (k < 0.4) { _v1.x += (Math.random() - 0.5) * 0.012; _v1.y += (Math.random() - 0.5) * 0.012; } camera.position.lerpVectors(_v1, camera.position, e); camera.quaternion.slerpQuaternions(_hq, camera.quaternion, e); if (k >= 1) anim = null; }   // the engine catches, then the view draws back
+        } else {
+          if (a.t < 0.5) { const e = ease(a.t / 0.5); camera.position.lerpVectors(_p0, _hp, e); camera.quaternion.slerpQuaternions(_q0, _hq, e); }                              // back into the seat
+          else if (a.t < 0.8) { if (!a.opened) { a.opened = true; swing(g, 1, 0, 0.25); click(0.05); } const e = ease((a.t - 0.5) / 0.3); camera.position.copy(_hp); camera.quaternion.slerpQuaternions(_hq, _qL, e * 0.8); }   // look to the door, open it
+          else { const e = ease((a.t - 0.8) / 0.45); camera.position.lerpVectors(_hp, _wp, e); camera.position.y -= Math.sin(e * Math.PI) * 0.12; _q1.slerpQuaternions(_hq, _qL, 0.8); camera.quaternion.slerpQuaternions(_q1, _qL, e); } }                    // swing out and up
+        hud.style.opacity = a.kind === 'out' || a.t < a.tC + 0.2 ? 0 : 1; } else if (hud.style.opacity !== '') hud.style.opacity = '';
       if (S.mode === 'tumble' && Math.abs(Math.abs(wrapA(S.phi)) - Math.PI / 2) < 0.2) car.userData.flipped = true; },
     sim(secs, force) { api.force = force; for (let i = 0; i < secs * 60; i++) api.update(1 / 60); api.force = null; },
     hurt, explode, say, input,

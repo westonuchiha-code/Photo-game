@@ -6,9 +6,9 @@ const { chromium } = require('playwright');
   await p.waitForTimeout(1500); await ev(() => { window.__loadingHold = true; const S = window.__scene; S.renderer.render(S.scene, S.camera); }); await shot();
   await ev(() => { const S = window.__scene; S.use(); });
   const stepR = (t) => ev((t) => { const S = window.__scene; for (let k = 0; k < Math.round(t * 60); k++) S.drive.update(1 / 60); S.renderer.render(S.scene, S.camera); }, t);
-  for (const t of [0.25, 0.3, 0.25, 0.4]) { await stepR(t); await shot(); }
+  for (const t of [0.3, 0.3, 0.25, 0.25, 0.35, 0.5, 0.6]) { await stepR(t); await shot(); }
   console.log('horn', JSON.stringify(await ev(async () => { const D = window.__scene.drive; for (const k of ['left', 'right']) document.querySelector(`#drivehud [data-k=${k}]`).dispatchEvent(new Event('touchstart', { cancelable: true })); const r = { buttons: document.querySelectorAll('#drivehud .pads button').length, steer: D.input().steer }; for (const k of ['left', 'right']) document.querySelector(`#drivehud [data-k=${k}]`).dispatchEvent(new Event('touchend')); return r; })));
-  await stepR(1); await ev(() => window.__scene.use()); for (const t of [0.25, 0.25]) { await stepR(t); await shot(); }
+  await stepR(1); await ev(() => window.__scene.use()); for (const t of [0.45, 0.3, 0.25, 0.18]) { await stepR(t); await shot(); } await stepR(0.2);
   // now on foot: step the walker's rise by hand
-  console.log('mode', await ev(() => document.body.dataset.mode)); await ev(() => { window.__loadingHold = false; }); await p.waitForTimeout(250); await shot(); await p.waitForTimeout(1500); await shot();
+  console.log('mode', await ev(() => document.body.dataset.mode)); await ev(() => { window.__loadingHold = false; }); await p.waitForTimeout(1800); await shot();
   console.log('errors', errs.length, errs.slice(0, 3).join(' | ')); await b.close(); })();

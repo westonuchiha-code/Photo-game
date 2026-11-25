@@ -827,3 +827,12 @@ inside the view cone at five fixed camera spots, `tools/devtests/where2.js`), th
 - The HORN button is removed. Horn = both steering arrows pressed together (as clicking the stick would be), or H.
 - Rule for later work: copy an idea from a third-person game only after turning it into what you would see in
   first person.
+
+## 119 Getting in and out, polished (first person)
+- In: the latch clicks and the door swings; you step to the open door looking down at the seat (the time depends on
+  how far away you stood); you duck in with a tilt of the head and swing round to face the bonnet; you settle with a
+  glance at the door as it thumps shut; the starter turns, the engine catches with a small shake; only then the view
+  draws back and the driving buttons appear. The engine is silent until the starter has turned.
+- Out: the view comes forward into the seat, the engine stops, you look to the door and open it, swing out and up,
+  stand beside the car, and the door shuts behind you.
+- `tools/devtests/carfp.js` steps through both and saves the frames.
