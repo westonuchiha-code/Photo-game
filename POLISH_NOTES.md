@@ -1063,3 +1063,19 @@ Nothing from this batch is placed in the game yet.
   cars, shop goods, rooms, wrong places and people so they show too; a Textures page (grid, search, tap for large /
   tiled); fits a tall phone screen. `node tools/build_viewer.mjs` -> `dist-viewer/photo-town-library.html`, one file
   with every texture (76 MB). 562 models, 562 textures, all build without error (tools/devtests/viewtest.js).
+
+## 132. Street photos, second half -> library
+
+All 47 street photos are now processed. Nothing from 131 / 132 is placed in the game (owner: a repository; use where
+it belongs).
+
+- Textures (`tools/tex_132.py`, 8 + normals + 1 cut-out): g132_stoneblocks, stoneface, asphalt_coarse,
+  metal_scratched, metal_pitted, galv_streaked, rustpaint, brick_tan; g132_litter.
+- Models (`src/models/props132.js`): roll-off skip (with rubble), tall skip, portable toilet, traffic cone, shipping
+  container, lorry (cab + box trailer), slatted bin, cluster mailbox, pedestal box, bike rack, fat-tyre bike, wall
+  access plate, stone-block wall, neon shop front, big store sign, yellow litter, metal samples.
+- Not copied on purpose: every real name, logo, phone number and number plate; the restaurant's food posters
+  (someone else's advertising photographs); what the real shop sells (ours sells teas, incense, water pipes).
+- Viewer rebuilt: 579 models, 579 textures, 81 MB, all build without error.
+- Weak: the tan brick texture does not tile cleanly along its courses; the lorry and shop front are simple; the
+  bike has no chain or cables.
