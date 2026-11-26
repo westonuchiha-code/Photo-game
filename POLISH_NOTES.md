@@ -1132,3 +1132,21 @@ the walking strip, not only the 134 pieces, so walkers were inside something on 
   West 392 -> 160 steps inside something, 0 off the pavement; east 86, 0. The rest are hand-placed site clusters
   (a standing character beside a sign, a lamp beside a tree bed).
 - Photos logged: 40 in `photos/10000xxxxx.jpg` + `1000131923.jpg` (Japan / Korea street sets 1 and 2), unprocessed.
+
+## 137. Japan / Korea street photos -> library (40 photos; first pass)
+
+- Textures (`tools/tex_137.py`, 11 + normals): g137_brick_brown, pavers_grey, pavers_red, granite_wet,
+  concrete_stained, grime_wall, needle_floor, weeds, azalea, boulder, fur_tabby. Tried and dropped (bad crops):
+  rail ballast, red pine bark, peeling steel, roof tarp.
+- Models (`src/models/props137.js`, 19): tabby cat (one clouded eye), calico cat (one eye shut), sparrows at a puddle,
+  ring arch, ring-arch walk, boulder, playground slide, stepped wall, bollard, cargo trike, kiosk trailer with bike,
+  stand sign, rate-board wall, face wall, junk robot, robot-head sign, display case with number sign, ride-on arcade,
+  surface samples. Nothing placed in the game.
+- Not copied (other people's work): the anime stickers and shrine, the monster shutter mural, shop / arcade / CD
+  names and mascots, the real robot painting, the wall face (ours is a new drawing), the man under the umbrella.
+- Bug found and fixed in kit.js `canvasT`: drawings are made twice (again once fonts load) on the same canvas, so any
+  drawing that left a setting behind (erase mode) wiped itself on the second pass. Now saved / restored round each
+  draw. This also brings back the stencilled words on the 131 donation bin.
+- Still to do from these 40: arcade corridor of shutters, izakaya front, canal + rail bridge, rooftop junk terrace,
+  rail machine, brick corner building, note desk, alley, tarp roofs with tyres, overgrown bike, repair-stall front.
+- Logged, not started: 20 supermarket photos (`photos/10001xxxxx.jpg`: coolers, aisles, pallets, back room, bread racks).
