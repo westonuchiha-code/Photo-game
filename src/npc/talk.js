@@ -9,6 +9,7 @@
 // What they think of you ("liking", 0..100): starts from their temperament, moved by the area's opinion of you (people
 // talk), by gifts, and by what they have seen you do. It sets how they greet you, whether they will talk at all, what
 // they charge, and whether you get the tip they keep for friends. It is remembered with your money and things.
+import { makeErrands } from './errands.js';
 import { TEMPERS, NAMES, JOBS, VOICE, RUMOURS, AREAS, TOPIC_INDEX, SHOP_KINDS, PLACES, ITEM, USES, WEAR, DRESS, CHARACTERS } from './lines.js';
 
 const hash = (s) => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
@@ -51,7 +52,7 @@ body[data-mode=drive] #purse, body[data-talk] #purse, body[data-talk] .help, bod
 `;
 
 // use: { mend() -> message or null, brisk() -> message }: what the game does when a thing from the bag is used
-export function makeTalk({ onOpen = null, onClose = null, onSay = null, use = {} } = {}) {
+export function makeTalk({ onOpen = null, onClose = null, onSay = null, use = {}, world = () => [] } = {}) {
   const st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st);
   const el = document.createElement('div'); el.id = 'talk'; el.hidden = true;
   el.innerHTML = '<div class="hd"><b></b><span class="tt"></span><span class="like" hidden><i></i></span><span class="cash"></span></div><div class="log"></div><div class="barter" hidden><div class="col ctheirs"><h4>For sale</h4><div class="list theirs"></div></div><div class="col"><h4 class="yh">Your things</h4><div class="list yours"></div></div></div><div class="topics"></div><div class="ft"><button class="trade">Barter</button><button class="gift">Give a gift</button><button class="bye">Goodbye</button></div>';
@@ -62,6 +63,7 @@ export function makeTalk({ onOpen = null, onClose = null, onSay = null, use = {}
   const cash = () => { $('.cash').textContent = '$' + wallet.money; const n = Object.values(wallet.items).reduce((a, b) => a + b, 0); purse.textContent = '$' + wallet.money + (n ? ' · ' + n + (n === 1 ? ' thing' : ' things') : '') + (wallet.hunger >= 85 ? ' · starving' : wallet.hunger >= 60 ? ' · hungry' : ''); }; cash();
   for (const ev of ['pointerdown', 'pointermove', 'pointerup', 'touchstart', 'touchmove', 'touchend', 'mousedown', 'wheel']) for (const e of [el, purse]) e.addEventListener(ev, (x) => x.stopPropagation());   // (not the game's look / move surface)
 
+  const errands = makeErrands({ wallet, save: () => { saveWallet(wallet); cash(); }, world });   // (what people ask you to do: errands.js)
   // ---- what they think of you
   const mem = (id) => wallet.people[id] || (wallet.people[id] = { d: 0, met: 0 });
   const dress = (w) => { let d = 0; for (const n of Object.values(wallet.wear)) if (DRESS[n]) d += DRESS[n].like[w.temper] || 0; return d; };   // (what you have on)
@@ -84,15 +86,16 @@ export function makeTalk({ onOpen = null, onClose = null, onSay = null, use = {}
   function answer(tid, label) { const v = VOICE[who.temper];
     if (tid === '_self') return fill(who.self || v.self);
     if (liking(who) < 20) return v.cold;
-    if (tid === '_rumour') return pick(RUMOURS, who.h, 10 + asked);
+    if (tid === '_work' || tid.startsWith('_job')) return errands.answer(tid, who, areaId) || v.no;
+    if (tid === '_rumour') return (asked % 3 === 1 && !errands.greet(who) && errands.heard(areaId, who.h + asked)) || pick(RUMOURS, who.h, 10 + asked);
     if (tid === '_tip') return v.tip;
     if (tid === '_trade') return who.kind.line + (who.kind.buys.length && AREAS[areaId] ? ` People round here pay well for ${AREAS[areaId].wants.map((c) => ({ media: 'things to read, watch or play', gift: 'flowers and gifts', tool: 'tools', clothes: 'clothes' }[c] || c)).join(' and ')}, so I give a bit more for those.` : '');
     if (who.answers && who.answers[tid]) return who.answers[tid];
     const a = AREAS[areaId]; if (a && a.answers[tid]) return a.answers[tid][who.temper];
     const ix = TOPIC_INDEX.get((label || '').toLowerCase()); if (ix && ix[0] !== areaId) return v.away;
     return v.no; }
-  function ask(tid, label) { setView('talk'); asked++; say(esc(label), 'q'); const a = answer(tid, label); say(rich(a)); if (onSay) onSay(who, a); }
-  function topicList() { const a = AREAS[areaId], list = [['_self', 'Background']]; if (who.kind) list.push(['_trade', 'My trade']); for (const t of who.topics || []) list.push(t); if (a) for (const t of a.topics) list.push(t); list.push(['_rumour', 'Latest rumours']); if (a && a.odd) list.push(a.odd); if (liking(who) >= 70) list.push(['_tip', 'A word of advice']); for (const t of known) if (!list.some((q) => q[1].toLowerCase() === t[1].toLowerCase())) list.push(t); return list; }
+  function ask(tid, label) { setView('talk'); asked++; say(esc(label), 'q'); const r = answer(tid, label), a = typeof r === 'object' ? r.text : r; say(rich(a)); if (onSay) onSay(who, a); if (r.after) { for (const line of r.after) say(esc(line), 'sys'); cash(); showLike(); drawTopics(); if (use.changed) use.changed(); } }
+  function topicList() { const a = AREAS[areaId], list = [['_self', 'Background']]; if (who.kind) list.push(['_trade', 'My trade']); if (liking(who) >= 20) for (const t of errands.topics(who, areaId)) list.push(t); for (const t of who.topics || []) list.push(t); if (a) for (const t of a.topics) list.push(t); list.push(['_rumour', 'Latest rumours']); if (a && a.odd) list.push(a.odd); if (liking(who) >= 70) list.push(['_tip', 'A word of advice']); for (const t of known) if (!list.some((q) => q[1].toLowerCase() === t[1].toLowerCase())) list.push(t); return list; }
   function drawTopics() { topicsEl.innerHTML = ''; for (const [tid, label] of topicList()) { const b = document.createElement('button'); b.textContent = label; b.addEventListener('click', () => ask(tid, label)); topicsEl.appendChild(b); } }
   log.addEventListener('click', (e) => { const t = e.target.closest('a'); if (!t || !who) return; const label = t.dataset.t, own = (who.topics || []).find((q) => q[1].toLowerCase() === label.toLowerCase()), ix = TOPIC_INDEX.get(label.toLowerCase()), tid = own ? own[0] : ix ? ix[1] : label;
     if (ix && ix[0] !== areaId && !known.some((q) => q[1] === ix[2])) { known.push([ix[1], ix[2]]); drawTopics(); } ask(tid, own ? own[1] : ix ? ix[2] : label); });
@@ -124,19 +127,19 @@ export function makeTalk({ onOpen = null, onClose = null, onSay = null, use = {}
   purse.addEventListener('click', () => { if (!api.active) api.openBag(); });
   addEventListener('keydown', (e) => { if (api.active && e.code === 'Escape') api.close(); if (!api.active && e.code === 'KeyI' && document.body.dataset.mode === 'walk') api.openBag(); });
 
-  const api = { active: false, wallet, get who() { return who; }, liking,
+  const api = { active: false, wallet, errands, get who() { return who; }, liking,
     open(w, area) { who = w; areaId = area; asked = 0; known = []; api.active = true; document.body.dataset.talk = '1'; el.hidden = false; log.innerHTML = ''; setView('talk');
       $('.hd b').textContent = who.name; $('.hd .tt').textContent = who.title || ''; tradeBtn.hidden = !who.kind || !who.kind.goods.length; giftBtn.hidden = false; $('.bye').textContent = 'Goodbye'; cash(); showLike();
-      const m = mem(who.id), v = VOICE[who.temper], L = liking(who); { const hi = L < 25 ? v.cold : m.met ? pick(v.again, who.h, m.met) : pick(who.hello || v.hello, who.h, 7); say(esc(hi)); if (onSay) onSay(who, hi); }
+      const m = mem(who.id), v = VOICE[who.temper], L = liking(who); { const hi = L < 25 ? v.cold : m.met && m.met % 2 && errands.greet(who) ? errands.greet(who) : m.met ? pick(v.again, who.h, m.met) : pick(who.hello || v.hello, who.h, 7); say(esc(hi)); if (onSay) onSay(who, hi); }
       { const worn = ['Umbrella', 'Jacket', 'Scarf', 'Clean shirt'].find((n) => wallet.wear[WEAR[n]] === n); m.saw = m.saw || {}; if (worn && L >= 25 && !m.saw[worn]) { m.saw[worn] = 1; say(esc(DRESS[worn].says[who.temper])); } }   /* (the first time they see you in it) */
       if (!m.met) m.d += 1; m.met++; saveWallet(wallet); drawTopics(); if (onOpen) onOpen(who); },
     // your own things, away from anyone: tap one to use it
-    openBag() { who = null; api.active = true; document.body.dataset.talk = '1'; el.hidden = false; log.innerHTML = ''; $('.hd b').textContent = 'Your things'; $('.hd .tt').textContent = ''; $('.like').hidden = true; tradeBtn.hidden = giftBtn.hidden = true; $('.bye').textContent = 'Close'; cash(); setView('bag'); if (onOpen) onOpen(null); },
+    openBag() { who = null; api.active = true; document.body.dataset.talk = '1'; el.hidden = false; log.innerHTML = ''; $('.hd b').textContent = 'Your things'; $('.hd .tt').textContent = ''; $('.like').hidden = true; tradeBtn.hidden = giftBtn.hidden = true; $('.bye').textContent = 'Close'; cash(); setView('bag'); { const N = errands.notes(); if (N.length) { say('Notes', 'q'); for (const n of N) say(esc(n.text), n.done ? 'sys' : ''); } } if (onOpen) onOpen(null); },
     close() { if (!api.active) return; api.active = false; delete document.body.dataset.talk; el.hidden = true; const w = who; who = null; if (onClose) onClose(w); },
     // someone was run down in front of these people (their ids): they think less of you, and the area hears of it
     witness(ids, area, dead) { for (const id of ids) mem(id).d -= dead ? 22 : 12; wallet.rep[area] = clamp((wallet.rep[area] || 0) - (dead ? 2 : 1), -30, 10); saveWallet(wallet); },
     sync() { saveWallet(wallet); cash(); },
     gain(name) { wallet.items[name] = (wallet.items[name] || 0) + 1; saveWallet(wallet); cash(); },   // (a thing picked up)
-    reset() { wallet.money = 60; wallet.items = { 'Pocket radio': 1 }; wallet.people = {}; wallet.rep = {}; wallet.wear = {}; wallet.hunger = 25; wallet.stats = { eaten: 0, walked: 0 }; if (use.changed) use.changed(); saveWallet(wallet); cash(); } };
+    reset() { wallet.money = 60; wallet.items = { 'Pocket radio': 1 }; wallet.people = {}; wallet.rep = {}; wallet.jobs = {}; wallet.deeds = {}; wallet.wear = {}; wallet.hunger = 25; wallet.stats = { eaten: 0, walked: 0 }; if (use.changed) use.changed(); saveWallet(wallet); cash(); } };
   return api;
 }

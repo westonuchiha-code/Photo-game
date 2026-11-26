@@ -1027,3 +1027,20 @@ Asked first, built to the answers.
 - **Pocket radio** (in `mood/sound.js`): one synthesized tune, static, and breaks (dropout / half speed / a flat
   counting voice); static rises near the ajar door, behind it, and near the people who do not walk. Bag, or R.
 - Test: `tools/devtests/goods.js`. Headless only; the radio was confirmed running, not heard.
+
+## 130. Errands (deeper NPCs), and flashlight / radio / map on the controller buttons
+
+- **Buttons** (owner: "don't add extra buttons, assign them to the buttons we already have"): on foot the controller's
+  face buttons appear in the same place and style as in the car: **Y flashlight, X radio, B map**, each shown only once
+  you have the thing. Keys F / R / M. No A on foot (the centre button already does that job).
+- On-foot messages ("Taken: ...", hunger) now have their own line on screen; before, they went to the car's HUD, which
+  is hidden on foot, so 129's messages were never visible.
+- **Errands** (`src/npc/errands.js`): ask anyone "Any work?". Keepers, written characters and standing people always
+  have one; about two in five passers-by do (always a parcel). Three kinds: fetch a thing a shop here sells; carry a
+  parcel to a named person (sometimes in another area); ask a named person about the area's odd subject and report back.
+  Paid in money, +10 liking with the giver, +1 standing in the area.
+- **Memory**: the giver greets you differently afterwards; other people in the area bring it up under Latest rumours.
+- **Notes**: the bag lists every errand, open ones first. With a town map, the people an open errand wants you to see
+  are marked on it in red.
+- One errand per person, for good. No timed errands, no failing, no chains yet.
+- Test: `tools/devtests/errands.js` (all three kinds through the real talk window; keeper names match the real keepers).
