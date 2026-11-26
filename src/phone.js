@@ -21,7 +21,7 @@ import { makeTraffic } from './vehicle/traffic.js';
 import { makeSound } from './mood/sound.js';
 import { makeHands } from './player/hands.js';
 import { makeMap } from './player/map.js';
-import { stockShop } from './shop/goods.js';
+import { stockShop, makeGood } from './shop/goods.js';
 import { makeWrongPlace } from './mood/wrong.js';
 import { useLowDetailBodies } from './models/body97.js';
 import { makeDriver2 } from './vehicle/drive2.js';
@@ -35,6 +35,8 @@ import { makeTempleFront } from './models/inspo72.js';
 import { makePocketPark } from './models/batch73.js';
 import * as P131 from './models/props131.js';
 import * as P132 from './models/props132.js';
+import * as P137 from './models/props137.js';
+import * as P138 from './models/props138.js';
 import { makeMallPassage } from './models/batch75.js';
 import { buildOldSquare } from './areas/oldsquare.js';
 import { buildOldSouth } from './areas/oldsouth.js';
@@ -67,6 +69,21 @@ const carInfo = { x: 0, z: 0, vx: 0, vz: 0, h: 0, half: null, onHit: (speed, dea
   /* everyone near enough to see it remembers, and the area hears */ if (A && A.people) talk.witness(A.people.list.filter((q) => q.active && Math.hypot(q.mesh.position.x - x, q.mesh.position.z - z) < 25).map((q) => 'p:' + A.id + ':' + q.seed), A.id, dead);   /* (a person dents a car; it takes a wall to wreck one) */ } };
 walk.ground = (x, z, prevY) => { if (!A) return 0; if (A.ground) return A.ground(x, z, prevY); for (const [x0, x1, z0, z1, y] of A.floors) if (x > x0 && x < x1 && z > z0 && z < z1) return typeof y === 'function' ? y(x, z) : y; return A.interiors.floorY(x, z) ?? A.district.userData.floorY(x, z) ?? 0; };
 
+// ---- the market in Old Town South (the Freshway grocery the area already has): somebody on the till, things on the
+// counter that can be bought from them or simply taken, and the stock, signs and animals that belong round such a place
+function marketSite(S, gx, gz) { stand(S, 'clerk', gx - 5.5, gz + 2.7, 0, 0.01); S.picks = [];
+  const good = (name, x, z, ry = 0) => { const o = makeGood(name); if (!o) return; o.userData.noMerge = true; o.position.set(x, 0.945, z); o.rotation.y = ry; S.root.add(o); const b = o.geometry.boundingBox; S.picks.push({ name, obj: o, wx: x, wy: 0.945 + (b.max.y - b.min.y) / 2, wz: z, gone: false, goneT: 0 }); };
+  [['Loaf of bread', -6.3, 0.2], ['Tin of soup', -6.05, 0], ['Tin of soup', -5.95, 0.4], ['Carton of milk', -5.75, 0], ['Energy drink', -5.5, 0.3], ['Energy drink', -5.4, 0], ['Loaf of bread', -5.1, 1.2], ['Carton of milk', -4.85, 0], ['Bag of ice', -4.6, 0.5]].forEach(([n, x, ry]) => good(n, gx + x, gz + 3.72, ry));
+  const hit = (x0, x1, z0, z1) => colliders.some((k) => k.active !== false && (k.type === 'circle' ? k.x > x0 - k.r && k.x < x1 + k.r && k.z > z0 - k.r && k.z < z1 + k.r : k.maxX > x0 && k.minX < x1 && k.maxZ > z0 && k.minZ < z1));
+  // a library piece at the first of `spots` that is clear: [x, z, ry] relative to the shop
+  const set = (name, spots, { y = 0.012, solid = true, args = [] } = {}) => { for (const [x, z, ry = 0] of spots) { const o = lib(name, ...args), c = (o.userData.colliders || [[-0.2, 0.2, -0.2, 0.2]])[0], q = Math.round(ry / (Math.PI / 2)) & 3, [a0, b0, c0, c1] = c, w = q === 0 ? [a0, b0, c0, c1] : q === 2 ? [-b0, -a0, -c1, -c0] : q === 1 ? [c0, c1, -b0, -a0] : [-c1, -c0, a0, b0], X = gx + x, Z = gz + z; if (solid && hit(X + w[0] - 0.1, X + w[1] + 0.1, Z + w[2] - 0.1, Z + w[3] + 0.1)) continue; o.position.set(X, y, Z); o.rotation.y = ry; S.root.add(o); if (solid) colliders.push({ type: 'box', minX: X + w[0], maxX: X + w[1], minZ: Z + w[2], maxZ: Z + w[3] }); return o; } return null; };
+  const done = {}; const D = (k, o) => { done[k] = !!o; };
+  D('scanner', set('makeHandScanner', [[-6.45, 3.45, 0.4]], { y: 0.945, solid: false })); D('wetFloor', set('makeWetFloorSign', [[1.6, 4.7, 0.5], [-2.5, 4.8, 0.3], [3, 4.9, 0]])); D('shipper', set('makeShipperStand', [[6.9, 5.3, Math.PI], [5.2, 5.3, Math.PI], [-8.2, 0.5, Math.PI / 2]]));
+  // the stock room behind: pallets as they came in, a cage half unloaded
+  D('pallet', set('makePalletStack', [[7.6, -12.6], [6.0, -12.6], [1.2, -12.6], [7.6, -7.0]], { args: [{ seed: 3 }] })); D('pallet2', set('makePalletStack', [[6.0, -12.6], [4.4, -12.6], [1.2, -12.6], [1.2, -7.0]], { args: [{ seed: 8, layers: 6, color: '#2a4ab8' }] })); D('ice', set('makeIcePallet', [[2.8, -12.6], [1.2, -11.0], [7.6, -10.6]])); D('cage', set('makeRollCage', [[4.5, -8.0, 0.0], [3.0, -9.0, Math.PI / 2], [6.5, -9.5, 0]])); D('bread', set('makeBreadTrayStack', [[7.9, -9.0, Math.PI / 2], [1.0, -9.2, Math.PI / 2], [5.0, -10.5]])); D('spray', set('makeSprayBottle', [[3.6, -10.2, 1.1]], { solid: false }));
+  // outside: a bin and two posts by the doors, the cases stacked against the glass, and the cats
+  D('bin', set('makeDomeBin', [[3.2, 6.9], [-3.4, 6.9]])); D('post1', set('makeBollard', [[-2.0, 8.2]])); D('post2', set('makeBollard', [[2.0, 8.2]])); D('cases', set('makeCaseStackDisplay', [[6.2, 6.55, 0], [-6.0, 6.55, 0]])); D('tabby', set('makeTabbyCat', [[-3.6, 7.5, 0.9], [4.4, 7.6, -0.6]], { solid: false })); D('calico', set('makeCalicoCat', [[8.2, -6.3, -2.2], [7.0, 7.4, 2.4]], { solid: false }));
+  S.marketDone = done; }
 // ---- walking round things: the fixed things that stand on a pavement (benches, bins, lamps, trees, mailboxes...) are
 // looked for a little way ahead of each walker; if one is in the way they are asked to pass it on whichever side
 // leaves them on the pavement (5.3 to 6.75 m from the middle of the street) and is the smaller step.
@@ -82,7 +99,7 @@ function sidestep(def, x, z, h) { if (obstFor !== A && A) { obstFor = A; obst = 
 // utility boxes); pavements get a litter bin by some shop doors, a rack with a bike, mailboxes outside flats, a
 // pedestal box here and there, a pipeline marker, and a little litter. Each model is built once and copied, and each
 // part of town's copies are merged together, so the whole lot costs a few dozen draws.
-const libCache = new Map(); const lib = (name, ...a) => { const k = name + JSON.stringify(a); if (!libCache.has(k)) libCache.set(k, (P131[name] || P132[name])(...a)); return libCache.get(k).clone(); };
+const libCache = new Map(); const lib = (name, ...a) => { const k = name + JSON.stringify(a); if (!libCache.has(k)) libCache.set(k, (P131[name] || P132[name] || P137[name] || P138[name])(...a)); return libCache.get(k).clone(); };
 function streetLibrary(S, district, interiors, id) { const cells = new Map(), count = {}, spots = [], r = (() => { let q = id === 'east' ? 977 : 331; return () => ((q = (q * 16807) % 2147483647) / 2147483647); })();
   const hit = (x0, x1, z0, z1, m = 0.25) => colliders.some((k) => k.active !== false && (k.type === 'circle' ? k.x > x0 - k.r - m && k.x < x1 + k.r + m && k.z > z0 - k.r - m && k.z < z1 + k.r + m : k.maxX > x0 - m && k.minX < x1 + m && k.maxZ > z0 - m && k.minZ < z1 + m)) || S.areas.some((a) => a.maxX > x0 && a.minX < x1 && a.maxZ > z0 && a.minZ < z1) || drive.cars.some((c) => Math.abs(c.position.x - (x0 + x1) / 2) < 3 + (x1 - x0) / 2 && Math.abs(c.position.z - (z0 + z1) / 2) < 3 + (z1 - z0) / 2);
   // put a library piece at (x, z) turned ry (a quarter turn at a time), unless something is already there
@@ -164,6 +181,7 @@ const AREAS = {
       // the cars left about the place stand where they were left
       for (const [type, opt, x, z, h] of r.cars) { const c = makeCar({ type, ...opt }); c.position.set(x, 0, z); c.rotation.y = h; root.add(c); const sn = Math.sin(h), cs = Math.cos(h), u = c.userData; for (const lz of [u.half.zF - u.half.x, 0, u.half.zR + u.half.x]) S.circle(x + lz * sn, z + lz * cs, u.half.x); }
       for (const [sd, x, z, ry] of [[1, 20, 3.5, -1.2], [2, 27.5, -9.2, 0], [3, 31, 10.2, Math.PI], [4, 47, -20, 1.6], [5, 14, 8.4, 2.2]]) standAny(S, 'south', sd, x, z, ry, 0.01);
+      marketSite(S, 24, -41);
       return r; } },
 };
 
@@ -210,7 +228,7 @@ function buildCustomArea(id, def, root) {
   drive.rebuild();
   const streamer = makeStreamer(root, { phone: true, max: 260 }); streamer.setScale(+(qs.get('ss') ?? def.streamScale ?? (PHONE ? 0.8 : 1)));
   console.log('area', id, ': sets', root.children.length, 'lights', lights.length, 'animated', tickers.length, 'signs resized', nShrunk);
-  return { id, def, root, district: null, interiors: null, people: null, streamer, floors: [], ground: r.ground, tick: r.tick ? (dt) => r.tick(t, dt, walk.position, walk.gy || 0) : null, lights, tickers, npcs: S.npcs };
+  return { id, def, root, district: null, interiors: null, people: null, streamer, floors: [], ground: r.ground, tick: r.tick ? (dt) => r.tick(t, dt, walk.position, walk.gy || 0) : null, lights, tickers, npcs: S.npcs, picks: S.picks || null, marketDone: S.marketDone || null };
 }
 function buildArea(id, carried) {
   const def = AREAS[id], root = new THREE.Group(); root.name = 'area_' + id; scene.add(root);
@@ -367,7 +385,7 @@ function openMap() { const far = A.wrong ? A.wrong.oz + 200 : -1e9, ok = (r) => 
   // the people your errands want you to see
   for (const p of talk.errands.toSee(A.id)) { const q = worldPeople().find((o) => o.id === p.id); if (q && q.x !== undefined) marks.push({ x: q.x, z: q.z, label: '\u2192 ' + p.name, job: true }); }
   townMap.open({ name: A.def.name, roads, paths, buildings, marks, exits, you: { x: walk.position.x, z: walk.position.z, yaw: walk.yaw } }); }
-function takeGood(q) { const e = q.room; e.goods.splice(e.goods.indexOf(q), 1); q.obj.parent.remove(q.obj); goneAt.get(q.key).set(q.slot, t); talk.gain(q.name); hands.play('reach', q.name); handT = 0.6; note('Taken: ' + q.name, 1.8); pick = null; padNow(); }
+function takeGood(q) { const e = q.room; if (e) { e.goods.splice(e.goods.indexOf(q), 1); q.obj.parent.remove(q.obj); goneAt.get(q.key).set(q.slot, t); } else { q.gone = true; q.goneT = t; q.obj.visible = false; }   /* (a thing set out by hand: hidden, and back in ten minutes) */ talk.gain(q.name); hands.play('reach', q.name); handT = 0.6; note('Taken: ' + q.name, 1.8); pick = null; padNow(); }
 function tickBody(dt) { const w = talk.wallet, h0 = w.hunger; w.hunger = Math.min(100, w.hunger + dt * (100 / 1800));
   walk.speed = 2.75 * (briskT > 0 ? 1.25 : 1) * (1 - 0.4 * Math.max(0, Math.min(1, (w.hunger - 60) / 40)));
   if ((h0 < 60 && w.hunger >= 60) || (h0 < 85 && w.hunger >= 85)) { talk.sync(); note(w.hunger >= 85 ? 'You are starving. You can hardly walk.' : 'You are hungry. It is slowing you down.', 4); }
@@ -378,6 +396,7 @@ function tickBody(dt) { const w = talk.wallet, h0 = w.hunger; w.hunger = Math.mi
   if (mode === 'walk' && A.interiors) for (const e of A.interiors.list) { const open = e.target > 0.9; if (open && !e._open && e.d < 2.6 && !hands.busy) hands.play('push'); e._open = open; }
   // the thing on a shelf you are looking at
   pick = null; if (mode === 'walk' && !talk.active && !townMap.active && A.interiors) for (const e of A.interiors.list) if (e.group && e.goods && e.goods.length && inRoom(e, p)) { camera.getWorldDirection(fwd); let bc = 0.95; const c0 = camera.position; for (const q of e.goods) { const dx = q.wx - c0.x, dy = q.wy - c0.y, dz = q.wz - c0.z, dd = Math.hypot(dx, dy, dz); if (dd > 2.1) continue; const c = (dx * fwd.x + dy * fwd.y + dz * fwd.z) / dd; if (c > bc) { bc = c; pick = q; q.room = e; } } break; }
+  if (A.picks && mode === 'walk' && !talk.active && !townMap.active) { camera.getWorldDirection(fwd); let bc = 0.95; const c0 = camera.position; for (const q of A.picks) { if (q.gone) { if (t - q.goneT > 600) { q.gone = false; q.obj.visible = true; } continue; } const dx = q.wx - c0.x, dy = q.wy - c0.y, dz = q.wz - c0.z, dd = Math.hypot(dx, dy, dz); if (dd > 2.1) continue; const c = (dx * fwd.x + dy * fwd.y + dz * fwd.z) / dd; if (c > bc) { bc = c; pick = q; q.room = null; } } }
   if (handT > 0) handT -= dt; hands.hidden = (mode === 'drive' && handT <= 0) || !!(rise); hands.update(dt, d / Math.max(dt, 1e-4) > 0.4); }
 // who can be sent to from here (errands): this area's keepers and standing people, and the written characters elsewhere
 const sexOf = (seed) => { const s = seed * 104729 + 7; return ((s * 16807) % 2147483647) / 2147483647 < 0.5 ? 'f' : 'm'; };   // (as models/people96.js makePerson decides it)
@@ -488,7 +507,7 @@ function frame() {
 { const id = AREAS[qs.get('area')] ? qs.get('area') : 'west'; A = buildArea(id, null);
   walk.position.set(+(qs.get('x') ?? (id === 'west' ? 163.5 : id === 'old' ? -20 : id === 'south' ? 20 : 327)), 0, +(qs.get('z') ?? (id === 'old' ? 4 : id === 'south' ? 3 : 20))); walk.yaw = +(qs.get('yaw') ?? 0.15); walk.pitch = 0.02; setMode('walk'); walk.apply(); }
 window.tickLaw = tickLaw; window.tickMood = tickMood; window.tickBody = tickBody; wearNow();
-window.__scene = { renderer, scene, camera, walk, drive, setMode, use, talk, shop, sound, hands, worldPeople, quick, footPad, townMap, openMap, get pick() { return pick; }, get wrong() { return A.wrong; }, get libCount() { return A.libCount; }, sidestep: (x, z, h) => sidestep(A.def, x, z, h), get obstacles() { return obst; }, get quiet() { return quietLeft > 0; }, startQuiet() { quietT = 0; }, strangeNow() { strangeT = 0; }, get ajar() { return ajar.length; }, law, crime, hurtPlayer, get health() { return health; }, get stars() { return stars(); }, get traffic() { return A.traffic; }, get shopPad() { return A.shopPad; }, get talkTo() { return talkTo; }, get npcs() { return A.npcs || []; }, travel: (to) => travel({ to, label: 'Going' }), peopleTick: (dt) => peopleTick(mode === 'walk' ? walk.position : drive.state, dt), areaIds: Object.keys(AREAS), get area() { return A.id; }, get busy() { return busy; }, get interiors() { return A.interiors; }, get people() { return A.people; }, get district() { return A.district; }, get areaRoot() { return A.root; }, get streamer() { return A.streamer; },
+window.__scene = { renderer, scene, camera, walk, drive, setMode, use, talk, shop, sound, hands, worldPeople, quick, footPad, townMap, openMap, get pick() { return pick; }, get wrong() { return A.wrong; }, get libCount() { return A.libCount; }, get picks() { return A.picks; }, get marketDone() { return A.marketDone; }, sidestep: (x, z, h) => sidestep(A.def, x, z, h), get obstacles() { return obst; }, get quiet() { return quietLeft > 0; }, startQuiet() { quietT = 0; }, strangeNow() { strangeT = 0; }, get ajar() { return ajar.length; }, law, crime, hurtPlayer, get health() { return health; }, get stars() { return stars(); }, get traffic() { return A.traffic; }, get shopPad() { return A.shopPad; }, get talkTo() { return talkTo; }, get npcs() { return A.npcs || []; }, travel: (to) => travel({ to, label: 'Going' }), peopleTick: (dt) => peopleTick(mode === 'walk' ? walk.position : drive.state, dt), areaIds: Object.keys(AREAS), get area() { return A.id; }, get busy() { return busy; }, get interiors() { return A.interiors; }, get people() { return A.people; }, get district() { return A.district; }, get areaRoot() { return A.root; }, get streamer() { return A.streamer; },
   stats: () => ({ area: A.id, fps, pr, calls: renderer.info.render.calls, tris: renderer.info.render.triangles, tex: renderer.info.memory.textures, geo: renderer.info.memory.geometries }) };
 requestAnimationFrame(frame);
 finishLoading(renderer, scene, camera);

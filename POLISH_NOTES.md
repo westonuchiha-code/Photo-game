@@ -1163,3 +1163,17 @@ the walking strip, not only the 134 pieces, so walkers were inside something on 
   photos is a real brand. Signs and the one brand ("HAYWIRE") are invented. The shoppers in one photo are not used.
 - Not done from the photo sets: izakaya front, canal + rail bridge, rooftop junk terrace, brick corner building,
   note desk, graffiti alley, repair-stall front. Nothing from 137 / 138 is placed in the game.
+
+## 139. The market in Old Town South made usable (owner: "do what makes the most sense")
+
+A second supermarket would have duplicated the Freshway grocery the area already has, so that one was finished instead.
+- `marketSite()` in phone.js. A clerk on the till (`CHARACTERS.clerk`, Dell Marsh, nervous; own topics "the scanner",
+  "the stock room"; gives errands like any keeper). `PLACES.market`: bread, milk, soup, energy drink, ice.
+- Nine goods stand on the checkout counter: look and take, or buy from the clerk. Hand-set goods (`A.picks`) hide when
+  taken and return after ten minutes; the look / take code now reads both shop shelves and these.
+- New goods models: Loaf of bread, Carton of milk, Tin of soup, Energy drink (walk faster), Bag of ice. Food feeds.
+- Dressing from the library, each only if its spot is clear: scanner on the counter, wet-floor sign, crisp stand;
+  two pallets, roll cage, bread trays, a dropped spray bottle in the stock room; outside a dome bin, two bollards,
+  the case stack by the glass, the tabby by the door and the calico round the back. The ice pallet found no clear spot.
+- Test: `tools/devtests/market.js` (take, buy, eat, topics; 0 errors; 52 to 190 draws at the five views tried).
+- Not checked: whether pedestrians / cars in the lot meet the new outside pieces; the calico was not seen in a picture.

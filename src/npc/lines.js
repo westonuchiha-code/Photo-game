@@ -270,6 +270,7 @@ export const PLACES = {
   kiln: { title: 'potter', buys: ['gift', 'home'], line: "Everything here came out of the one kiln. The glaze never does the same thing twice, which is the point.", goods: [['Tea bowl', 22, 'gift'], ['Small vase', 30, 'gift'], ['Lopsided bowl', 6, 'gift']] },
   izakaya: { title: 'izakaya host', buys: ['food'], line: "Skewers off the grill, something cold to go with them. No menu. You get what's good.", goods: [['Grilled skewers', 9, 'food'], ['Pickles', 4, 'food'], ['Cold barley tea', 3, 'food']] },
   gallery: { title: 'gallery attendant', buys: [], line: "The paintings aren't for sale. I'm allowed to sell the postcards.", goods: [['Postcard of the street', 3, 'media'], ['Exhibition booklet', 8, 'media']] },
+  market: { title: 'checkout clerk', buys: ['food', 'home'], line: "Bread, milk, tins, ice. Whatever the shelves say we have. The shelves and the scanner don't always agree.", goods: [['Loaf of bread', 3, 'food'], ['Carton of milk', 3, 'food'], ['Tin of soup', 2, 'food'], ['Energy drink', 4, 'food'], ['Bag of ice', 4, 'home']] },
   temple: { title: 'temple keeper', buys: [], line: "A charm for the road, a fortune for the year. The lanterns are free.", goods: [['Road-safety charm', 10, 'gift'], ['Paper fortune', 2, 'gift']] },
 };
 // things only found, not sold (starting kit and, later, things picked up in the world)
@@ -290,7 +291,7 @@ export const DRESS = {
   'Umbrella': { on: 'You put the umbrella up.', off: 'You fold the umbrella.', like: { warm: 0, gruff: -3, gossip: 3, nervous: -4, proud: -5, dreamy: 7 },
     says: { warm: "It's not raining, dear. ...Is it? You'd know better than me.", gruff: "Put that thing down. It's dry.", gossip: "An umbrella, up, on a dry night. Oh, I am going to enjoy telling people.", nervous: "Why is it up? What do you know? What's coming down?", proud: "You look ridiculous.", dreamy: "Good. You've noticed it too. Most people don't bother keeping it off." } },
 };
-export const USES = { 'Coffee': 'brisk', 'Soda': 'brisk', 'Milkshake': 'brisk', 'Bottle of tea': 'brisk', 'Cold barley tea': 'brisk', 'Duct tape': 'mend', 'Hammer': 'mend', 'Lottery ticket': 'luck',
+export const USES = { 'Coffee': 'brisk', 'Soda': 'brisk', 'Milkshake': 'brisk', 'Bottle of tea': 'brisk', 'Cold barley tea': 'brisk', 'Duct tape': 'mend', 'Hammer': 'mend', 'Lottery ticket': 'luck', 'Energy drink': 'brisk',
   'Clean shirt': 'wear', 'Jacket': 'wear', 'Scarf': 'wear', 'Umbrella': 'wear', 'Flashlight': 'torch', 'Town map': 'map', 'Pocket radio': 'radio',
  };
 // (parked with the health bar: 'heal' for Bandages / Painkillers / Vitamins)
@@ -310,6 +311,10 @@ export const CHARACTERS = {
   keeper: { name: 'Abe Imai', title: 'temple keeper', temper: 'gruff', sex: 'm', place: 'temple', hello: ['Stairs are behind me. Take your time on them.'],
     self: "Abe. I keep the lanterns. Kept them with oil for forty years, and now it's a switch. My knees chose the switch.",
     answers: { temple: "Go up if you like. Anyone can. Leave the noise down here.", traffic: "Nobody drives fast past the temple. Not twice." } },
+  clerk: { name: 'Dell Marsh', title: 'checkout clerk, Freshway Market', temper: 'nervous', sex: 'f', place: 'market', hello: ['Oh. A customer. Sorry, I was counting.'],
+    self: "Dell. I do the till and the shelf checks. Mostly nights. There's supposed to be two of us on nights.",
+    topics: [['scanner', 'the scanner'], ['stockroom', 'the stock room']],
+    answers: { scanner: "It says an item no longer exists. I'm holding the item. So I count it, and it says I should have fourteen, and I have six. I've counted four times. It's always six. It was six yesterday as well, and I sold two.", stockroom: "Through the curtain, past the cooler. The pallets come in wrapped. I've never seen the lorry. I come in and they're there, and the wrap is still warm." } },
   hank: { name: 'Hank', title: 'keeps an eye on the street', temper: 'gruff', hello: ["Evening. You're new."],
     self: "Hank. I look after the kei garage round the corner. Mostly I stand here and watch who drives what.",
     topics: [['garage', 'kei garage']],

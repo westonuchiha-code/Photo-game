@@ -66,6 +66,7 @@ const GOODS = {
   'Sausages': ['links', '#a8482a'], 'Steak': ['tray', '#f4f2ea', '#a82a2a'],
   'Video tape': ['tape', '#1a1a1c', '#f4f2ea'], 'Blank tape': ['tape', '#1a1a1c', '#2a6ad8'], 'Popcorn': ['tub', '#c8281e', '#f4e8a0'],
   'Pocket radio': ['radio', '#3a3c40', '#8a8c90'],
+  'Loaf of bread': ['bag', '#d8a85a', '#e85a2a'], 'Carton of milk': ['box', '#f4f2ec', '#2a6ad8', 0.07, 0.2, 0.07], 'Tin of soup': ['can', '#b8322a', '#f4f2ea'], 'Energy drink': ['can', '#1c2466', '#e8242e'], 'Bag of ice': ['bag', '#eaf4f8', '#3a6ad8'],
 };
 const cache = new Map();
 export function goodGeo(name) { if (cache.has(name)) return cache.get(name); const s = GOODS[name]; if (!s) return null; const parts = SHAPES[s[0]](s[1], s[2], s[3], s[4], s[5]).map((g) => (g.index ? g.toNonIndexed() : g)); for (const g of parts) for (const k of Object.keys(g.attributes)) if (!['position', 'normal', 'color'].includes(k)) g.deleteAttribute(k); const geo = mergeGeometries(parts); geo.computeBoundingBox(); cache.set(name, geo); return geo; }
