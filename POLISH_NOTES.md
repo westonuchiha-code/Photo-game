@@ -1044,3 +1044,22 @@ Asked first, built to the answers.
   are marked on it in red.
 - One errand per person, for good. No timed errands, no failing, no chains yet.
 - Test: `tools/devtests/errands.js` (all three kinds through the real talk window; keeper names match the real keepers).
+
+## 131. Street photo dumps -> library; the viewer shows every model and every texture
+
+Owner: these are for a repository of things, not all to be placed ("use stuff, but don't use it just to use it").
+Nothing from this batch is placed in the game yet.
+
+- Photos: `photos/10001364xx.jpg` (47 so far, originals). Processed so far: 24-50. Still to do: 52-74
+  (yellow litter, stone-block wall x3, e-bike + rack, vape shop front, food window posters, wall access plate, cluster
+  mailbox, skip nameplate, slatted bin, blue skip with rubble x2, grey skip + portable toilet + cone + container,
+  scratched metal x3, green pedestal box x4), and from earlier: the lorries, the supermarket sign.
+- Textures (`tools/tex_131.py`, 14 + normals): g131_gravel, dirt, sand, asphalt, concrete, sandstone, polemetal, mat,
+  juniper, bark, pine, pearleaves; cut-outs g131_crack, leaf, wasp, pearleaf. New `seam_margin` (no doubled features).
+- Models (`src/models/props131.js`): ground samples, gravel bed, juniper bed, road crack, door mat, sandstone rock,
+  anthill, cigarette butt, dead leaf, pear leaf, wasp, pipeline sign, utility box, advertising bench, donation bin,
+  bark trunk. Every name, number and piece of artwork on them is made up (real ones in the photos were not copied).
+- Viewer (`viewer.html`): all model files listed again (was stuck at batch 86), `src/models/extras131.js` wraps the
+  cars, shop goods, rooms, wrong places and people so they show too; a Textures page (grid, search, tap for large /
+  tiled); fits a tall phone screen. `node tools/build_viewer.mjs` -> `dist-viewer/photo-town-library.html`, one file
+  with every texture (76 MB). 562 models, 562 textures, all build without error (tools/devtests/viewtest.js).

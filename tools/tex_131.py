@@ -60,7 +60,7 @@ save("g131_crack", rgba(c, tidy(biggest(g < 78, 2), 7, 2.5)))
 l = cv2.resize(crop(load("29"), 0.24, 0.42, 0.68, 0.70), (512, 512), interpolation=cv2.INTER_AREA); hsv = cv2.cvtColor(l, cv2.COLOR_BGR2HSV)
 lm = biggest(cv2.morphologyEx(((hsv[..., 1] > 34) & (hsv[..., 0] > 6) & (hsv[..., 0] < 36) & (hsv[..., 2] > 105)).astype(np.uint8), cv2.MORPH_CLOSE, np.ones((9, 9), np.uint8)) > 0, 1).astype(np.uint8)
 cs, _ = cv2.findContours(lm, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE); cv2.drawContours(lm, cs, -1, 1, -1)   # (fill it in: the middle of the leaf is paler than its edge)
-save("g131_leaf", rgba(l, tidy(lm, 3, 1.2)))
+lm = cv2.erode(cv2.morphologyEx(lm, cv2.MORPH_OPEN, np.ones((13, 13), np.uint8)), np.ones((5, 5), np.uint8)); save("g131_leaf", rgba(l, tidy(biggest(lm, 1), 3, 1.2)))
 # the wasp: black, yellow and brown wings against pale concrete
 w = cv2.resize(crop(load("25"), 0.25, 0.24, 0.70, 0.56), (512, 512), interpolation=cv2.INTER_AREA); hsv = cv2.cvtColor(w, cv2.COLOR_BGR2HSV)
 mk = (hsv[..., 2] < 95) | ((hsv[..., 1] > 95) & (hsv[..., 0] > 8) & (hsv[..., 0] < 36))
