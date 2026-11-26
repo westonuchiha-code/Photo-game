@@ -1128,3 +1128,7 @@ the walking strip, not only the 134 pieces, so walkers were inside something on 
   east 5,190 -> 86. Largest step aside 1.14 m. West still has 112 steps just off the pavement edge.
 - Not solved: the remaining hits are where two things leave no gap (a bench beside a tree bed) and at corners.
 - New photos saved, not yet processed: `photos/10000xxxxx.jpg` (20: Japan street set).
+- 136b: library pavement pieces now keep 1.5 m from anything else on the pavement, so a way past always exists.
+  West 392 -> 160 steps inside something, 0 off the pavement; east 86, 0. The rest are hand-placed site clusters
+  (a standing character beside a sign, a lamp beside a tree bed).
+- Photos logged: 40 in `photos/10000xxxxx.jpg` + `1000131923.jpg` (Japan / Korea street sets 1 and 2), unprocessed.
