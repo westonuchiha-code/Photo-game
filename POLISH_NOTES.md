@@ -1150,3 +1150,16 @@ the walking strip, not only the 134 pieces, so walkers were inside something on 
 - Still to do from these 40: arcade corridor of shutters, izakaya front, canal + rail bridge, rooftop junk terrace,
   rail machine, brick corner building, note desk, alley, tarp roofs with tyres, overgrown bike, repair-stall front.
 - Logged, not started: 20 supermarket photos (`photos/10001xxxxx.jpg`: coolers, aisles, pallets, back room, bread racks).
+
+## 138. Supermarket photos + more street scenes -> library
+
+- Textures (`tools/tex_138.py`, 4 + normals): g138_floor_polished, floor_backroom, cooler_panel, tile_dark.
+- Models (`src/models/props138.js`, 24). Shop floor: gondola shelving (juice / granola / bread / pet food), drinks
+  cooler, freezer doors, brand tower, case-stack display, cardboard shipper, wet-floor sign, dome bin, an aisle sample.
+  Back room: pallet stack, ice pallet, milk-crate stack, bread-tray stack on a dolly, roll cage, strip curtain,
+  walk-in cooler room, safety post, spray bottle, hand scanner. Street: shutter bay, arcade corridor, tarp roof with
+  tyres, bike overgrown by a hedge, rail maintenance machine.
+- Stock is instanced coloured boxes / bottles / bags (one draw per kind per fixture), no labels: every product in the
+  photos is a real brand. Signs and the one brand ("HAYWIRE") are invented. The shoppers in one photo are not used.
+- Not done from the photo sets: izakaya front, canal + rail bridge, rooftop junk terrace, brick corner building,
+  note desk, graffiti alley, repair-stall front. Nothing from 137 / 138 is placed in the game.
