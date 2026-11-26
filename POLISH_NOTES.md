@@ -1094,3 +1094,17 @@ it belongs).
 - New: `makePineTree`, `makePearTree` (instanced leaf / needle cards, one draw each). `makePineBough` / `makePearBranch`
   (the blob samples) are gone.
 - Still plain: the pear tree's crown is thin from below; skip and container are simple boxes with detail.
+
+## 134. Library pieces placed where they belong (owner: "use them where they fit")
+
+`streetLibrary()` in phone.js, Midtown and Eastside only. Each model is built once and cloned; copies are merged per
+60 m cell. Nothing is placed where a collider, a site or a car already is.
+- Back courts (not the body-shop court): one gets a roll-off skip and cone; one a fit-out site (container, portable
+  toilet, tall skip, cones); one the lorry; a donation bin where there is room; a utility box or pedestal box each.
+- Pavements, by doors: slatted bin at every 5th shop (sometimes a cigarette butt), bike rack at every 9th (a bike at
+  some), cluster mailbox at every 3rd flat, pedestal box at every other office, a pipeline marker at a few, dead leaves.
+- Counts (west): 15 bins, 8 racks, 2 bikes, 5 mailboxes, 4 pedestal boxes, 2 utility boxes, 2 pipeline signs, 1 skip,
+  1 container, 1 toilet, 1 tall skip, 1 lorry, 3 cones, 15 bits of litter. East is similar, plus a donation bin.
+- Not placed: neon shop front, big store sign, stone wall, benches, gravel / juniper beds, trees, rock, anthill, wasp,
+  road crack, door mat (no fitting spot without changing the street layout; the streets already have benches).
+- Test: `tools/devtests/placed.js`. Pedestrians do not yet steer round the new pavement pieces.

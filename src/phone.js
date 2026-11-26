@@ -33,6 +33,8 @@ import { makeKeiGarage } from './models/batch76.js';
 import { makeArtGallery } from './models/inspo68.js';
 import { makeTempleFront } from './models/inspo72.js';
 import { makePocketPark } from './models/batch73.js';
+import * as P131 from './models/props131.js';
+import * as P132 from './models/props132.js';
 import { makeMallPassage } from './models/batch75.js';
 import { buildOldSquare } from './areas/oldsquare.js';
 import { buildOldSouth } from './areas/oldsouth.js';
@@ -65,6 +67,33 @@ const carInfo = { x: 0, z: 0, vx: 0, vz: 0, h: 0, half: null, onHit: (speed, dea
   /* everyone near enough to see it remembers, and the area hears */ if (A && A.people) talk.witness(A.people.list.filter((q) => q.active && Math.hypot(q.mesh.position.x - x, q.mesh.position.z - z) < 25).map((q) => 'p:' + A.id + ':' + q.seed), A.id, dead);   /* (a person dents a car; it takes a wall to wreck one) */ } };
 walk.ground = (x, z, prevY) => { if (!A) return 0; if (A.ground) return A.ground(x, z, prevY); for (const [x0, x1, z0, z1, y] of A.floors) if (x > x0 && x < x1 && z > z0 && z < z1) return typeof y === 'function' ? y(x, z) : y; return A.interiors.floorY(x, z) ?? A.district.userData.floorY(x, z) ?? 0; };
 
+// ---- things from the street-photo library (models/props131.js, props132.js), put where that kind of thing belongs:
+// back courts get what is left in back courts (a skip, a fit-out site, a donation bin, the lorry making a delivery,
+// utility boxes); pavements get a litter bin by some shop doors, a rack with a bike, mailboxes outside flats, a
+// pedestal box here and there, a pipeline marker, and a little litter. Each model is built once and copied, and each
+// part of town's copies are merged together, so the whole lot costs a few dozen draws.
+const libCache = new Map(); const lib = (name, ...a) => { const k = name + JSON.stringify(a); if (!libCache.has(k)) libCache.set(k, (P131[name] || P132[name])(...a)); return libCache.get(k).clone(); };
+function streetLibrary(S, district, interiors, id) { const cells = new Map(), count = {}, spots = [], r = (() => { let q = id === 'east' ? 977 : 331; return () => ((q = (q * 16807) % 2147483647) / 2147483647); })();
+  const hit = (x0, x1, z0, z1, m = 0.25) => colliders.some((k) => k.active !== false && (k.type === 'circle' ? k.x > x0 - k.r - m && k.x < x1 + k.r + m && k.z > z0 - k.r - m && k.z < z1 + k.r + m : k.maxX > x0 - m && k.minX < x1 + m && k.maxZ > z0 - m && k.minZ < z1 + m)) || S.areas.some((a) => a.maxX > x0 && a.minX < x1 && a.maxZ > z0 && a.minZ < z1) || drive.cars.some((c) => Math.abs(c.position.x - (x0 + x1) / 2) < 3 + (x1 - x0) / 2 && Math.abs(c.position.z - (z0 + z1) / 2) < 3 + (z1 - z0) / 2);
+  // put a library piece at (x, z) turned ry (a quarter turn at a time), unless something is already there
+  const place = (name, x, z, ry = 0, y = 0.02, args = [], solid = true, force = false) => { const o = lib(name, ...args), c = (o.userData.colliders || [[-0.2, 0.2, -0.2, 0.2]])[0], q = Math.round(ry / (Math.PI / 2)) & 3, [a0, b0, c0, c1] = c, w = q === 0 ? [a0, b0, c0, c1] : q === 2 ? [-b0, -a0, -c1, -c0] : q === 1 ? [c0, c1, -b0, -a0] : [-c1, -c0, a0, b0];
+    if (!force && hit(x + w[0], x + w[1], z + w[2], z + w[3])) return null; o.position.set(x, y, z); spots.push([name, x, z]); o.rotation.y = ry; if (solid) S.rect(x + w[0], x + w[1], z + w[2], z + w[3]); const key = Math.floor(x / 60) + ':' + Math.floor(z / 60); if (!cells.has(key)) cells.set(key, new THREE.Group()); cells.get(key).add(o); count[name] = (count[name] || 0) + 1; return o; };
+  const first = (name, spots, y, args) => { for (const [x, z, ry] of spots) { const o = place(name, x, z, ry, y, args); if (o) return o; } return null; };
+  // back courts (the first has the body shop and is left alone)
+  district.userData.courts.forEach((ct, i) => { if (i === 0 || !ct.rect) return; const [x0, x1, z0, z1] = ct.rect, mx = (x0 + x1) / 2, mz = (z0 + z1) / 2, kind = (i + (id === 'east' ? 1 : 0)) % 4;
+    if (kind === 1) { const sk = first('makeRollOffSkip', [[mx + 3, z1 - 3.4, 0], [mx - 4, z1 - 3.4, 0], [x1 - 3.2, mz + 2, Math.PI / 2]]); if (sk) place('makeTrafficCone', sk.position.x + (sk.rotation.y ? 0 : 3.4), sk.position.z - (sk.rotation.y ? 3.4 : 1.8), 0); }
+    if (kind === 2) { const co = first('makeShippingContainer', [[mx - 3, z1 - 3.3, 0], [mx + 4, z1 - 3.3, 0], [x0 + 3.2, mz + 3, Math.PI / 2]]); if (co) { const cx = co.position.x, cz = co.position.z; first('makePortableToilet', [[cx + 4.6, cz + 0.4, Math.PI], [cx - 4.6, cz + 0.4, Math.PI], [cx, cz - 3.2, Math.PI]]); first('makeTallSkip', [[cx + 2, cz - 4.6, 0], [cx - 2, cz - 4.6, 0], [mx, mz - 2, 0]]); for (const dx of [-3.6, 3.9]) place('makeTrafficCone', cx + dx, cz - 6.6, 0); } }
+    if (kind === 3) first('makeLorry', [[mx + 1.5, z1 - 3.6, 0, 0], [mx + 1.5, mz + 2, 0, 0]], 0);
+    first('makeDonationBin', kind === 0 ? [[x1 - 1.4, z0 + 9, -Math.PI / 2], [x0 + 1.4, z0 + 9, Math.PI / 2], [x1 - 1.4, mz + 3, -Math.PI / 2]] : []);
+    first(i % 2 ? 'makeUtilityBox' : 'makePedestalBox', [[x0 + 1.3, z0 + 5.2, Math.PI / 2], [x1 - 1.3, z1 - 6, -Math.PI / 2], [x0 + 1.3, mz, Math.PI / 2]]); });
+  // pavements, by the doors (W(u, v): u along the frontage, v < 0 out from the wall)
+  let nShop = 0, nFlat = 0, nOff = 0; for (const e of interiors.list) { const at = (name, u, v, turn = Math.PI, y = S.SW, args, force) => { const [x, z] = e.W(u, v); return place(name, x, z, e.th + turn, y, args, true, force); }, side = e.doorX > e.U / 2 ? -1 : 1;
+    if (e.type === 'shop') { nShop++; if (nShop % 5 === 1) { const b = at('makeSlattedBin', e.doorX + side * 1.5, -1.05); if (b && r() < 0.7) { const [x, z] = e.W(e.doorX + side * 1.5 - 0.5, -1.5); place('makeCigaretteButt', x, z, 0, S.SW + 0.002, [], false); } }
+      if (nShop % 9 === 4) { const rk = at('makeBikeRack', e.doorX + side * 2.4, -1.15, Math.PI / 2); if (rk && r() < 0.6) at('makeFatBike', e.doorX + side * 2.4 + 0.3, -1.15, Math.PI / 2, S.SW, [], true);   /* (leaning at its own rack) */ }
+      if (nShop % 7 === 3) { const [x, z] = e.W(e.doorX - side * 1.2, -1.6 - r()); place(r() < 0.5 ? 'makeDeadLeaf' : 'makeCigaretteButt', x, z, 0, S.SW + 0.002, [], false); } }
+    else if (e.type === 'flat' || e.type === 'studio') { nFlat++; if (nFlat % 3 === 1) at('makeClusterMailbox', e.doorX + side * 1.25, -0.95); if (nFlat % 6 === 2) { const [x, z] = e.W(e.doorX - side * 1.4, -1.3 - r() * 0.8); place('makeDeadLeaf', x, z, 0, S.SW + 0.002, [], false); } }
+    else if (e.type === 'office') { nOff++; if (nOff % 2 === 1) at('makePedestalBox', e.doorX + side * 2.0, -0.9); if (nOff % 4 === 2) at('makePipelineSign', e.doorX - side * 2.2, -0.75); } }
+  for (const g of cells.values()) S.put(g); count.spots = spots; return count; }
 // ---- the areas. Both are halves of the big town's district, at the same coordinates, so a street keeps its place
 // when you cross: you (or your car) arrive at the spot you left. `exits`: where an area hands over to another.
 const RING_W = { n: 121, s: -121, e: 282, hw: 9 }, RING_E = { n: 121, s: -121, e: 450, hw: 9 };
@@ -210,6 +239,7 @@ function buildArea(id, carried) {
   // the body shop: a spray booth at the far side of the first back court, open toward the parking bays
   let shopPad = null; { const ct = district.userData.courts[0]; if (ct && ct.rect) { const [cx0, cx1, , cz1] = ct.rect, bx = (cx0 + cx1) / 2, bz = cz1 - 9.9, booth = makeBooth(); booth.position.set(bx, 0.014, bz); root.add(booth); mergeStatic(booth);
       for (const [x0, x1, z0, z1] of booth.userData.colliders) colliders.push({ type: 'box', minX: bx + x0, maxX: bx + x1, minZ: bz + z0, maxZ: bz + z1 }); const p = booth.userData.pad; shopPad = [bx + p[0], bx + p[1], bz + p[2], bz + p[3]]; shopPad.room = [bx - 2.15, bx + 2.15, bz - 5, bz + 6.7]; } }
+  const libCount = streetLibrary(S, district, interiors, id);
   if (carried) { root.add(carried); drive.adopt(carried); }
   drive.rebuild();
   // the door that is always a little open, and the place behind it (mood/wrong.js), built far off to one side of the area
@@ -225,7 +255,7 @@ function buildArea(id, carried) {
   const people = makePeople({ scene: root, grid: GRID, sidewalkY: SW, count: PHONE ? 14 : 20, odd: 2, ok: (x, z) => driveAreas.some((a) => x >= a.minX && x <= a.maxX && z >= a.minZ && z <= a.maxZ) });
   const streamer = makeStreamer(root, { phone: true, max: 300 }); streamer.setScale(PHONE ? 0.8 : 1);
   console.log('area', id, ': buildings', district.userData.buildings.length, 'interiors', JSON.stringify(interiors.stats()));
-  return { id, def, root, district, interiors, people, streamer, floors: S.floors, tick: S.tick, npcs: S.npcs, shopPad, traffic, wrong };
+  return { id, def, root, district, interiors, people, streamer, floors: S.floors, tick: S.tick, npcs: S.npcs, shopPad, traffic, wrong, libCount };
 }
 // leaving an area: everything it built comes off the graphics card, and the shared lists are emptied
 function clearArea(carried) {
@@ -446,7 +476,7 @@ function frame() {
 { const id = AREAS[qs.get('area')] ? qs.get('area') : 'west'; A = buildArea(id, null);
   walk.position.set(+(qs.get('x') ?? (id === 'west' ? 163.5 : id === 'old' ? -20 : id === 'south' ? 20 : 327)), 0, +(qs.get('z') ?? (id === 'old' ? 4 : id === 'south' ? 3 : 20))); walk.yaw = +(qs.get('yaw') ?? 0.15); walk.pitch = 0.02; setMode('walk'); walk.apply(); }
 window.tickLaw = tickLaw; window.tickMood = tickMood; window.tickBody = tickBody; wearNow();
-window.__scene = { renderer, scene, camera, walk, drive, setMode, use, talk, shop, sound, hands, worldPeople, quick, footPad, townMap, openMap, get pick() { return pick; }, get wrong() { return A.wrong; }, get quiet() { return quietLeft > 0; }, startQuiet() { quietT = 0; }, strangeNow() { strangeT = 0; }, get ajar() { return ajar.length; }, law, crime, hurtPlayer, get health() { return health; }, get stars() { return stars(); }, get traffic() { return A.traffic; }, get shopPad() { return A.shopPad; }, get talkTo() { return talkTo; }, get npcs() { return A.npcs || []; }, travel: (to) => travel({ to, label: 'Going' }), peopleTick: (dt) => peopleTick(mode === 'walk' ? walk.position : drive.state, dt), areaIds: Object.keys(AREAS), get area() { return A.id; }, get busy() { return busy; }, get interiors() { return A.interiors; }, get people() { return A.people; }, get district() { return A.district; }, get areaRoot() { return A.root; }, get streamer() { return A.streamer; },
+window.__scene = { renderer, scene, camera, walk, drive, setMode, use, talk, shop, sound, hands, worldPeople, quick, footPad, townMap, openMap, get pick() { return pick; }, get wrong() { return A.wrong; }, get libCount() { return A.libCount; }, get quiet() { return quietLeft > 0; }, startQuiet() { quietT = 0; }, strangeNow() { strangeT = 0; }, get ajar() { return ajar.length; }, law, crime, hurtPlayer, get health() { return health; }, get stars() { return stars(); }, get traffic() { return A.traffic; }, get shopPad() { return A.shopPad; }, get talkTo() { return talkTo; }, get npcs() { return A.npcs || []; }, travel: (to) => travel({ to, label: 'Going' }), peopleTick: (dt) => peopleTick(mode === 'walk' ? walk.position : drive.state, dt), areaIds: Object.keys(AREAS), get area() { return A.id; }, get busy() { return busy; }, get interiors() { return A.interiors; }, get people() { return A.people; }, get district() { return A.district; }, get areaRoot() { return A.root; }, get streamer() { return A.streamer; },
   stats: () => ({ area: A.id, fps, pr, calls: renderer.info.render.calls, tris: renderer.info.render.triangles, tex: renderer.info.memory.textures, geo: renderer.info.memory.geometries }) };
 requestAnimationFrame(frame);
 finishLoading(renderer, scene, camera);
