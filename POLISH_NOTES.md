@@ -1079,3 +1079,18 @@ it belongs).
 - Viewer rebuilt: 579 models, 579 textures, 81 MB, all build without error.
 - Weak: the tan brick texture does not tile cleanly along its courses; the lorry and shop front are simple; the
   bike has no chain or cables.
+
+## 133. Weak spots from 131 / 132 fixed (owner chose "Fix weak spots")
+
+- `tools/tex_133.py`: tan brick cut on its own repeat (2 bricks x 2 courses, found by self-correlation; tile is
+  1024 x 455, about 0.42 x 0.19 m, so set repeats from that); dead leaf and wasp cut out with GrabCut; new
+  `g131_pine_card` (needles as a round cut-out tuft, colour corrected from the lamp-lit photo).
+- Lorry rebuilt: cab drawn in side view and extruded (sloped bonnet, raked two-pane screen, sleeper, fairing), grille,
+  mirrors, exhaust stacks, tanks, twin rear wheels, fifth wheel; ribbed fridge trailer with unit, legs, doors, underrun.
+- Neon shop front rebuilt: self-lit interior (hexagon ceiling lights, shelves of stock, counter, drinks fridge, stool),
+  steel canopy with bunting, neon drawn as tube + glow on backing boards.
+- Fat bike: knobbly tyres, real mudguards, hub motor, battery in the down tube, chainset + chain + derailleur, cables,
+  levers, headlamp, tail lamp, rack stays; leans on its stand.
+- New: `makePineTree`, `makePearTree` (instanced leaf / needle cards, one draw each). `makePineBough` / `makePearBranch`
+  (the blob samples) are gone.
+- Still plain: the pear tree's crown is thin from below; skip and container are simple boxes with detail.

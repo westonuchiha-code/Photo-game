@@ -3,7 +3,7 @@
 //   ground:  makeGroundSamples, makeGravelBed, makeJuniperBed, makeRoadCrack, makeDoorMat
 //   small:   makeSandstoneRock, makeAnthill, makeCigaretteButt, makeDeadLeaf, makePearLeaf, makeWasp
 //   street:  makePipelineSign, makeUtilityBox, makeAdBench, makeDonationBin
-//   plants:  makeBarkTrunk (the pine and pear-leaf textures are in the library, not yet on a model)
+//   plants:  makePineTree, makePearTree, makeBarkTrunk
 import * as THREE from 'three';
 import { mat, plain, box, cyl, canvasT, rng } from './kit.js';
 
@@ -90,4 +90,20 @@ export function makeDonationBin() { const g = new THREE.Group(), W = 1.15, H = 1
   g.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); g.userData.colliders = [[-W / 2, W / 2, -F, F]]; return g; }
 
 // ---- plants (samples of the bark and foliage textures on simple forms)
+// a limb: a tapered tube of bark between two points
+const limb = (g, a, b, r0, r1, m) => { const A = new THREE.Vector3(...a), Bv = new THREE.Vector3(...b), d = new THREE.Vector3().subVectors(Bv, A), o = new THREE.Mesh(new THREE.CylinderGeometry(r1, r0, d.length(), 9, 1), m); o.position.copy(A).addScaledVector(d, 0.5); o.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize()); o.castShadow = true; g.add(o); return o; };
+// many flat cards of one cut-out texture, placed all at once (one draw)
+const cards = (g, name, list, w, h, o = {}) => { const m = new THREE.MeshStandardMaterial({ map: mat(name).map, alphaTest: 0.32, side: THREE.DoubleSide, roughness: 0.75, ...o }); m.userData.flat = true; const im = new THREE.InstancedMesh(new THREE.PlaneGeometry(w, h), m, list.length), M = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), c = new THREE.Color(); list.forEach(([x, y, z, rx, ry, rz, sc = 1, tint = 1], i) => { q.setFromEuler(e.set(rx, ry, rz)); M.compose(new THREE.Vector3(x, y, z), q, new THREE.Vector3(sc, sc, sc)); im.setMatrixAt(i, M); im.setColorAt(i, c.setScalar(tint)); }); im.castShadow = true; im.frustumCulled = false; g.add(im); return im; };
+// a young pine: a straight trunk, whorls of branches that shorten toward the top, tufts of needles along each
+export function makePineTree({ h = 5.2, seed = 3 } = {}) { const g = new THREE.Group(), r = rng(seed * 17 + 1), bark = tiled('g131_bark', 2, 4, { rough: 1, normal: 1.3 }), list = []; limb(g, [0, 0, 0], [0, h, 0], 0.13, 0.02, bark);
+  const tiers = Math.round(h / 0.42); for (let t = 0; t < tiers; t++) { const k = t / (tiers - 1), y = 0.8 + k * (h - 0.9), len = (1 - k) * 1.5 + 0.22, n = 5 + Math.floor(r() * 2), a0 = r() * PI; for (let i = 0; i < n; i++) { const a = a0 + i / n * PI * 2 + (r() - 0.5) * 0.3, dx = Math.cos(a), dz = Math.sin(a), droop = 0.12 + (1 - k) * 0.25, tip = [dx * len, y - len * droop + len * 0.1, dz * len]; limb(g, [0, y, 0], tip, 0.028 * (1 - k) + 0.008, 0.005, bark);
+      const m2 = Math.max(2, Math.round(len / 0.26)); for (let j = 1; j <= m2; j++) { const f = j / m2, px = dx * len * f, py = y + (tip[1] - y) * f, pz = dz * len * f, sc = 0.75 + r() * 0.5, tn = 0.75 + r() * 0.4; for (const turn of [0, PI / 2, PI / 4]) list.push([px, py + 0.05, pz, (r() - 0.5) * 0.5 - 0.2, -a + turn + (r() - 0.5) * 0.4, (r() - 0.5) * 0.4, sc, tn]); } } }
+  for (let i = 0; i < 3; i++) list.push([0, h - 0.05, 0, 0, i * PI / 3, 0, 0.7, 1.1]); cards(g, 'g131_pine_card', list, 0.62, 0.62); g.userData.colliders = [[-0.15, 0.15, -0.15, 0.15]]; return g; }
+// an ornamental pear: a short grey trunk forking into rising limbs, a crown of glossy leaves going red at the edges
+export function makePearTree({ h = 4.6, seed = 5 } = {}) { const g = new THREE.Group(), r = rng(seed * 13 + 2), bark = tiled('g131_bark', 1.5, 2, { tint: '#b8b4ac', rough: 1, normal: 1 }), list = [], ends = []; limb(g, [0, 0, 0], [0.04, 1.5, 0.02], 0.11, 0.085, bark);
+  const grow = (from, dir, len, rad, depth) => { const to = [from[0] + dir[0] * len, from[1] + dir[1] * len, from[2] + dir[2] * len]; limb(g, from, to, rad, rad * 0.62, bark); if (depth === 0) { ends.push(to); return; } const n = depth > 1 ? 3 : 2; for (let i = 0; i < n; i++) { const a = r() * PI * 2, sp = 0.35 + r() * 0.3, d = new THREE.Vector3(dir[0] + Math.cos(a) * sp, dir[1] + 0.25, dir[2] + Math.sin(a) * sp).normalize(); grow(to, [d.x, d.y, d.z], len * (0.62 + r() * 0.2), rad * 0.6, depth - 1); } ends.push(to); };
+  for (let i = 0; i < 4; i++) { const a = i / 4 * PI * 2 + r(), d = new THREE.Vector3(Math.cos(a) * 0.45, 1, Math.sin(a) * 0.45).normalize(); grow([0.04, 1.5, 0.02], [d.x, d.y, d.z], (h - 1.5) * 0.36, 0.06, 2); }
+  for (const e of ends) for (let i = 0; i < 26; i++) { const a = r() * PI * 2, el = (r() - 0.35) * PI * 0.8, rad = 0.12 + r() * 0.5; list.push([e[0] + Math.cos(a) * Math.cos(el) * rad, e[1] + Math.sin(el) * rad * 0.8, e[2] + Math.sin(a) * Math.cos(el) * rad, PI + (r() - 0.5) * 1.2, r() * PI * 2, (r() - 0.5) * 0.8, 1.3 + r() * 0.8, 0.8 + r() * 0.35]); }
+  cards(g, 'g131_pearleaf', list, 0.07, 0.13, { roughness: 0.45 }); const fruit = plain('#8a7a52', { roughness: 0.7 }); for (let i = 0; i < 7; i++) { const e = ends[Math.floor(r() * ends.length)], f = new THREE.Mesh(new THREE.SphereGeometry(0.012, 8, 6), fruit); f.position.set(e[0] + (r() - 0.5) * 0.3, e[1] - 0.1 - r() * 0.15, e[2] + (r() - 0.5) * 0.3); g.add(f); }
+  g.userData.colliders = [[-0.14, 0.14, -0.14, 0.14]]; return g; }
 export function makeBarkTrunk() { const g = new THREE.Group(), geo = new THREE.CylinderGeometry(0.2, 0.26, 2.4, 20, 8), p = geo.attributes.position, r = rng(3); for (let i = 0; i < p.count; i++) { const a = Math.atan2(p.getZ(i), p.getX(i)), k = 1 + Math.sin(a * 5 + p.getY(i) * 2) * 0.05 + (r() - 0.5) * 0.03; p.setX(i, p.getX(i) * k); p.setZ(i, p.getZ(i) * k); } geo.computeVertexNormals(); const m = new THREE.Mesh(geo, tiled('g131_bark', 2, 3, { rough: 1, normal: 1.4 })); m.position.y = 1.2; m.castShadow = true; g.add(m); return g; }
