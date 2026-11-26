@@ -1177,3 +1177,11 @@ A second supermarket would have duplicated the Freshway grocery the area already
   the case stack by the glass, the tabby by the door and the calico round the back. The ice pallet found no clear spot.
 - Test: `tools/devtests/market.js` (take, buy, eat, topics; 0 errors; 52 to 190 draws at the five views tried).
 - Not checked: whether pedestrians / cars in the lot meet the new outside pieces; the calico was not seen in a picture.
+
+## 140. The last seven scenes from the Japan / Korea photos -> library
+
+`src/models/props140.js`: izakaya front (tiled eave, lantern row, big red lantern, chalked flowers, name plaques),
+canal with a girder rail bridge and a yellow train, rooftop junk terrace, brick corner building (cut corner door,
+arched windows, cornice, awnings), note desk, graffiti alley (walkable: has `areas`), repair stall (awning, crowded
+window, number sign, OPEN, lamp; reuses the 137 display case and hi-fi robot). All names and drawings invented.
+Every photo sent so far is now processed. None of these seven is placed. Viewer: 631 models, 610 textures.
