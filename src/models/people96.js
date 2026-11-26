@@ -36,7 +36,7 @@ export function makePerson(seed = 1, { worker = false } = {}) { const r = rng(se
 
 // odd: how many of them are a bit off (phone areas): they do not walk. One kind stands and watches you wherever you
 // go, and is somewhere else when you look again; the other stands facing the wall.
-export function makePeople({ scene, grid, sidewalkY = 0.14, count = 40, ok = null, odd = 0 }) {
+export function makePeople({ scene, grid, sidewalkY = 0.14, count = 40, ok = null, odd = 0, steer = null }) {
   const group = new THREE.Group(); group.name = 'people'; scene.add(group); const { xs, zs } = grid, r = rng(9601), P = [];
   const poolM = new THREE.MeshBasicMaterial({ color: '#3a0a0c', transparent: true, opacity: 0.7, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3 }), poolG = new THREE.CircleGeometry(0.55, 14); poolG.rotateX(-Math.PI / 2);
   for (let i = 0; i < count; i++) { const mesh = makePerson(i + 1); mesh.visible = false; group.add(mesh); const pool = new THREE.Mesh(poolG, poolM); pool.visible = false; group.add(pool);
@@ -67,7 +67,10 @@ export function makePeople({ scene, grid, sidewalkY = 0.14, count = 40, ok = nul
       // the watcher: when you are not looking, it is somewhere else, nearer
       if (p.active && p.odd === 'watch' && p.st === 'walk' && onFoot && (p.moveT -= dt) <= 0) { const d0 = Math.hypot(m.position.x - cx, m.position.z - cz); if (unseen(m.position.x, m.position.z, d0)) { p.moveT = 25 + r() * 35; const keep = [p.blk, p.u, p.lane, p.dir]; let done = false; for (let t = 0; t < 10 && !done; t++) { if (!spawn(p, cx, cz, 13)) continue; const q = m.position, d = Math.hypot(q.x - cx, q.z - cz); if (d < 34 && unseen(q.x, q.z, d)) done = true; } if (!done) { [p.blk, p.u, p.lane, p.dir] = keep; } } else p.moveT = 2; }
       if (!p.active) { if (budget > 0) { budget--; spawn(p, cx, cz, first ? 8 : 34); } if (!p.active) continue; }
-      let [x, z, h] = ring(p); x += p.ox; z += p.oz;
+      let [x, z, h] = ring(p);
+      /* stepping round what stands on the pavement: `steer(x, z, h)` says how far to one side (metres, to the walker's left) they should be here */
+      if (steer) { const want = p.st === 'walk' ? steer(x, z, h) : (p.sx || 0); p.sx = (p.sx || 0) + (want - (p.sx || 0)) * Math.min(1, dt * 2.6); x += Math.cos(h) * p.sx; z -= Math.sin(h) * p.sx; }
+      x += p.ox; z += p.oz;
       /* walls stop people too: pushed, diving or thrown, nobody goes through one (`ok` says where a person can be) */
       if (ok) { if (ok(x, z)) { p.lox = p.ox; p.loz = p.oz; } else if (p.lox !== undefined) { x += p.lox - p.ox; z += p.loz - p.oz; p.ox = p.lox; p.oz = p.loz; p.vx *= -0.2; p.vz *= -0.2; if (!ok(x, z)) { x -= p.ox * 0.2; z -= p.oz * 0.2; p.ox *= 0.8; p.oz *= 0.8; p.lox = p.ox; p.loz = p.oz; } } }   /* (still out: they have walked on round a corner, so ease back onto the sidewalk) */
       const dd = Math.hypot(x - cx, z - cz); m.visible = true;

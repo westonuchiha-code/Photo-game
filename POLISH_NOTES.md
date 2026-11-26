@@ -1117,3 +1117,14 @@ it belongs).
 - Seen up close in the game (`tools/devtests/placed2.js`, free camera with a clear line): skip, tall skip, portable
   toilet, lorry, pedestal box, mailbox, bin, bike at its rack. All stand on the ground, upright, clear of walls.
 - The pipeline marker is 4 mm thick and edge-on from along the pavement; it reads only from the road or the fronts.
+
+## 136. People step round what stands on the pavement
+
+Owner: "continue with your problems". Measuring showed the street's own benches, bins, lamps and trees also stand in
+the walking strip, not only the 134 pieces, so walkers were inside something on about 5,200 of 137,000 steps per lap.
+- `sidestep()` in phone.js + a `steer` hook in people96.js (additive): each walker looks 2 m ahead for fixed things
+  under 5 m across, and eases to whichever side keeps them on the pavement (5.3 to 6.78 m from the street centre).
+- Measured (`tools/devtests/sidestep.js`, every block, 3 lanes, both ways): west 5,294 -> 392 steps inside something,
+  east 5,190 -> 86. Largest step aside 1.14 m. West still has 112 steps just off the pavement edge.
+- Not solved: the remaining hits are where two things leave no gap (a bench beside a tree bed) and at corners.
+- New photos saved, not yet processed: `photos/10000xxxxx.jpg` (20: Japan street set).
