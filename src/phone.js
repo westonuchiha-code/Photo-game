@@ -86,13 +86,15 @@ function streetLibrary(S, district, interiors, id) { const cells = new Map(), co
     if (kind === 3) first('makeLorry', [[mx + 1.5, z1 - 3.6, 0, 0], [mx + 1.5, mz + 2, 0, 0]], 0);
     first('makeDonationBin', kind === 0 ? [[x1 - 1.4, z0 + 9, -Math.PI / 2], [x0 + 1.4, z0 + 9, Math.PI / 2], [x1 - 1.4, mz + 3, -Math.PI / 2]] : []);
     first(i % 2 ? 'makeUtilityBox' : 'makePedestalBox', [[x0 + 1.3, z0 + 5.2, Math.PI / 2], [x1 - 1.3, z1 - 6, -Math.PI / 2], [x0 + 1.3, mz, Math.PI / 2]]); });
-  // pavements, by the doors (W(u, v): u along the frontage, v < 0 out from the wall)
+  // pavements, by the doors (W(u, v): u along the frontage, v < 0 out from the wall). People walk the strip 0.3 to 1 m
+  // from the fronts, so everything stands out at the kerb (KV), with the street's own bins and benches, facing in.
+  const KV = -1.96;
   let nShop = 0, nFlat = 0, nOff = 0; for (const e of interiors.list) { const at = (name, u, v, turn = Math.PI, y = S.SW, args, force) => { const [x, z] = e.W(u, v); return place(name, x, z, e.th + turn, y, args, true, force); }, side = e.doorX > e.U / 2 ? -1 : 1;
-    if (e.type === 'shop') { nShop++; if (nShop % 5 === 1) { const b = at('makeSlattedBin', e.doorX + side * 1.5, -1.05); if (b && r() < 0.7) { const [x, z] = e.W(e.doorX + side * 1.5 - 0.5, -1.5); place('makeCigaretteButt', x, z, 0, S.SW + 0.002, [], false); } }
-      if (nShop % 9 === 4) { const rk = at('makeBikeRack', e.doorX + side * 2.4, -1.15, Math.PI / 2); if (rk && r() < 0.6) at('makeFatBike', e.doorX + side * 2.4 + 0.3, -1.15, Math.PI / 2, S.SW, [], true);   /* (leaning at its own rack) */ }
+    if (e.type === 'shop') { nShop++; if (nShop % 5 === 1) { const b = at('makeSlattedBin', e.doorX + side * 1.5, KV); if (b && r() < 0.7) { const [x, z] = e.W(e.doorX + side * 1.5 - 0.5, KV + 0.3); place('makeCigaretteButt', x, z, 0, S.SW + 0.002, [], false); } }
+      if (nShop % 9 === 4) { const rk = at('makeBikeRack', e.doorX + side * 2.4, KV, Math.PI / 2); if (rk && r() < 0.6) at('makeFatBike', e.doorX + side * 2.4 + 0.3, KV, Math.PI / 2, S.SW, [], true);   /* (leaning at its own rack) */ }
       if (nShop % 7 === 3) { const [x, z] = e.W(e.doorX - side * 1.2, -1.6 - r()); place(r() < 0.5 ? 'makeDeadLeaf' : 'makeCigaretteButt', x, z, 0, S.SW + 0.002, [], false); } }
-    else if (e.type === 'flat' || e.type === 'studio') { nFlat++; if (nFlat % 3 === 1) at('makeClusterMailbox', e.doorX + side * 1.25, -0.95); if (nFlat % 6 === 2) { const [x, z] = e.W(e.doorX - side * 1.4, -1.3 - r() * 0.8); place('makeDeadLeaf', x, z, 0, S.SW + 0.002, [], false); } }
-    else if (e.type === 'office') { nOff++; if (nOff % 2 === 1) at('makePedestalBox', e.doorX + side * 2.0, -0.9); if (nOff % 4 === 2) at('makePipelineSign', e.doorX - side * 2.2, -0.75); } }
+    else if (e.type === 'flat' || e.type === 'studio') { nFlat++; if (nFlat % 3 === 1) at('makeClusterMailbox', e.doorX + side * 1.25, KV, 0); if (nFlat % 6 === 2) { const [x, z] = e.W(e.doorX - side * 1.4, -1.3 - r() * 0.8); place('makeDeadLeaf', x, z, 0, S.SW + 0.002, [], false); } }
+    else if (e.type === 'office') { nOff++; if (nOff % 2 === 1) at('makePedestalBox', e.doorX + side * 2.0, KV, 0); if (nOff % 4 === 2) at('makePipelineSign', e.doorX - side * 2.2, KV - 0.1, 0); } }
   for (const g of cells.values()) S.put(g); count.spots = spots; return count; }
 // ---- the areas. Both are halves of the big town's district, at the same coordinates, so a street keeps its place
 // when you cross: you (or your car) arrive at the spot you left. `exits`: where an area hands over to another.

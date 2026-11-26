@@ -1108,3 +1108,12 @@ it belongs).
 - Not placed: neon shop front, big store sign, stone wall, benches, gravel / juniper beds, trees, rock, anthill, wasp,
   road crack, door mat (no fitting spot without changing the street layout; the streets already have benches).
 - Test: `tools/devtests/placed.js`. Pedestrians do not yet steer round the new pavement pieces.
+
+## 135. Placed pieces checked; pavement pieces moved out of the walking strip
+
+- People walk a ring 6.05 to 6.65 m from the street centre line (0.35 to 0.95 m from the fronts; road half-width 5,
+  pavement to 7). 134 had put every pavement piece at 6.3 to 6.7: all 30 stood in that strip. They now stand at the
+  kerb (5.5 m, `KV`), mailboxes / pedestal boxes / signs facing in. Measured: west 30 pieces, east 35, none in the strip.
+- Seen up close in the game (`tools/devtests/placed2.js`, free camera with a clear line): skip, tall skip, portable
+  toilet, lorry, pedestal box, mailbox, bin, bike at its rack. All stand on the ground, upright, clear of walls.
+- The pipeline marker is 4 mm thick and edge-on from along the pavement; it reads only from the road or the fronts.
