@@ -24,3 +24,6 @@ for n, name, box in [("340", "g144_wood_grey", (0.0, 0.10, 1.0, 0.90)), ("338", 
 k = crop(load("339"), 0.0, 0.0, 1.0, 1.0); k = cv2.resize(k, (1024, int(1024 * k.shape[0] / k.shape[1])), interpolation=cv2.INTER_AREA); save("g144_wood_knot", k); save("g144_wood_knot_n", lum_normal(k, 3.0, 1.0))
 # the bin bag: black film, creased (for a liner and a heap of bags)
 t = seam_margin(crop(load("342"), 0.0, 0.62, 1.0, 0.98), 1024, 0); save("g144_binbag", t); save("g144_binbag_n", lum_normal(t, 3.0, 1.5))
+# bolted timber, its end grain checked into blocks, its face gone furry
+for n, name, box, ns in [("337", "g144_wood_bolted", (0.0, 0.0, 1.0, 1.0), 2.0), ("336", "g144_endgrain", (0.0, 0.0, 1.0, 1.0), 3.0), ("335", "g144_wood_furred", (0.0, 0.0, 1.0, 1.0), 2.0)]:
+    t = seam_margin(crop(load(n), *box), 1024, 5) if n != "337" else cv2.resize(crop(load(n), *box), (1024, 576), interpolation=cv2.INTER_AREA); save(name, t); save(name + "_n", lum_normal(t, ns, 1.0))

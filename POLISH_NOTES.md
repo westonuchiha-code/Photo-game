@@ -1215,3 +1215,15 @@ ground), two paint styles ('flowers', 'stripes'; ours, not the brands on the rea
   scratched steel door (our drawings in that manner), a station plaza (loop road, planted island, domed stair, shelter).
 - Not used: the real games, consoles' names, the toy box, the store hiring poster, the people walking, the sticker,
   the photos' shop signs. Not placed in the game.
+
+## 144. Park edge, bus stop, car park (photos/1000137323..347)
+
+- Textures (`tools/tex_144.py`): g144_corten, corten_streaked, dry_ground, dry_litter, pavement, wood_grey, wood_grey2,
+  wood_knot, binbag, wood_bolted, endgrain, wood_furred (+ normals); cut-outs g144_glass_shard, g144_leaf_dry.
+- Models (`src/models/props144.js`): park sign (rusted post, curved panel; name invented), rebar rubble, the bus-stop
+  litter bin with ash tray, a heap of bin bags, broken glass, twigs (modelled; the cut-out failed), dog mess in leaves,
+  a pen, a green bottle (no brand), a cup and straw, a dropped charity leaflet (our own words), bolted timber, the
+  two-basket shopping trolley, the car-park lamp, surface samples. Not placed.
+- Not used: the real food bank's leaflet text, the brand on the bin liner's cans, the store's sign behind the lamp.
+- Logged, not started: 6 more store photos (photos/1000137348..353: brown siding, sports drinks, cut fruit, a sale
+  bin, hand gel, a time-clock tablet). Packaging is all brands; the staff notice and time clock are workplace screens.
