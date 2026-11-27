@@ -64,20 +64,31 @@ export function makeBoltedTimber() { const g = new THREE.Group(), L = 2.4, W = 0
   for (let i = 0; i < 6; i++) { const x = -L / 2 + 0.25 + i * 0.4, z = (i % 2 ? 1 : -1) * 0.07; C(0.018, 0.018, 0.012, plain('#3a3c40', { metalness: 0.6, roughness: 0.5 }), x, H + 0.006, z, g, 6); C(0.022, 0.022, 0.004, plain('#2a2c30', { metalness: 0.5 }), x, H + 0.001, z, g, 12); } g.userData.colliders = [[-L / 2, L / 2, -W / 2, W / 2]]; return shadows(g); }
 export function makeSurfaceSamples144() { const g = new THREE.Group(); ['g144_corten', 'g144_corten_streaked', 'g144_dry_ground', 'g144_dry_litter', 'g144_pavement', 'g144_wood_grey', 'g144_wood_grey2', 'g144_wood_furred', 'g144_endgrain', 'g144_binbag', 'g144_wood_bolted', 'g144_wood_knot'].forEach((n, i) => B(1, 1, 0.04, mat(n, { rough: 0.9 }), (i % 4 - 1.5) * 1.1, 0.5 + Math.floor(i / 4) * 1.1, 0, g)); return shadows(g); }
 
-// ---- a two-basket shopping trolley: grey steel frame, red grip, wire baskets top and bottom, swivel wheels in front
-export function makeShoppingCart() { const g = new THREE.Group(), st = plain('#7a7e84', { roughness: 0.5, metalness: 0.4 }), wire = plain('#8a8e94', { roughness: 0.45, metalness: 0.5 }), grey = plain('#9a9ca0', { roughness: 0.6 });
-  // frame: the U at the foot running back, the uprights to the handle
-  for (const s of [-1, 1]) { tube(g, [0.42, 0.14, s * 0.2], [-0.45, 0.14, s * 0.2], 0.014, st); tube(g, [-0.45, 0.14, s * 0.2], [-0.5, 1.02, s * 0.2], 0.014, st); tube(g, [-0.5, 1.02, s * 0.2], [-0.56, 1.1, s * 0.22], 0.014, st); tube(g, [-0.36, 0.14, s * 0.2], [-0.4, 0.72, s * 0.2], 0.012, st); }
-  tube(g, [0.42, 0.14, -0.2], [0.42, 0.14, 0.2], 0.014, st); tube(g, [-0.56, 1.1, -0.24], [-0.56, 1.1, 0.24], 0.016, st); C(0.02, 0.02, 0.3, plain('#9a2a2a', { roughness: 0.5 }), -0.56, 1.1, 0, g, 10, PI / 2);
-  // a wire basket from its rim: floor grid and four walls of bars
-  const basket = (x0, x1, y0, h, w, slope = 0) => { const n = Math.round((x1 - x0) / 0.04); for (let i = 0; i <= n; i++) { const x = x0 + (x1 - x0) * i / n; tube(g, [x, y0, -w], [x, y0, w], 0.003, wire); for (const s of [-1, 1]) tube(g, [x, y0, s * w], [x + slope, y0 + h, s * w], 0.003, wire); } for (let k = 0; k <= Math.round(2 * w / 0.04); k++) { const z = -w + k * 0.04; tube(g, [x0, y0, z], [x1, y0, z], 0.003, wire); for (const x of [x0, x1]) tube(g, [x, y0, z], [x + (x === x1 ? slope : 0), y0 + h, z], 0.003, wire); }
-    for (const y of [y0 + h * 0.5, y0 + h]) for (const s of [-1, 1]) tube(g, [x0, y, s * w], [x1 + slope * ((y - y0) / h), y, s * w], 0.005, wire); for (const s of [-1, 1]) B(0.06, 0.05, 0.04, grey, x1 + slope, y0 + h, s * w, g); };
-  basket(-0.46, 0.26, 0.82, 0.24, 0.22, 0.06); basket(-0.36, 0.3, 0.26, 0.28, 0.22, 0.12); tube(g, [-0.46, 0.82, 0], [-0.46, 1.08, 0], 0.003, wire);
-  B(0.02, 0.18, 0.24, plain('#16161a'), -0.47, 0.96, 0, g); decalX(-0.481, 0.96, 0, 0.22, 0.16, g, sheet(120, 90, (x, w, h) => { x.fillStyle = '#1a1a1c'; x.fillRect(0, 0, w, h); x.fillStyle = '#c8322a'; x.fillRect(8, 8, 50, 74); x.fillStyle = '#e8c41e'; x.fillRect(64, 8, 48, 34); text(x, 'SALE', 88, 25, 'bold 14px Arial', '#1a1a1c'); x.fillStyle = '#e8e6e0'; x.fillRect(64, 48, 48, 34); }));
-  // wheels: castors in front, fixed at the back
-  const wheel = (x, z, fork) => { const w = new THREE.Group(); w.position.set(x, 0.065, z); g.add(w); C(0.065, 0.065, 0.032, plain('#141416', { roughness: 0.8 }), 0, 0, 0, w, 18, PI / 2); C(0.03, 0.03, 0.034, plain('#c8ccd0', { roughness: 0.4 }), 0, 0, 0, w, 12, PI / 2); if (fork) for (const s of [-1, 1]) B(0.05, 0.1, 0.006, plain('#b8bcc0', { metalness: 0.6, roughness: 0.4 }), -0.01, 0.04, s * 0.02, w); };
-  for (const s of [-1, 1]) { wheel(0.38, s * 0.2, true); wheel(-0.44, s * 0.18, false); }
-  g.userData.colliders = [[-0.6, 0.45, -0.26, 0.26]]; return shadows(g); }
+// ---- a two-basket shopping trolley (from the side-on photo). x: forward (the front is +x), z: across.
+// The frame is one bent tube a side: along the ground from the front castor back to the rear wheel, then up and back to
+// the red grip. The top basket hangs off the frame at its back. The bottom basket sits on the base; its back wall is
+// tall and leans back, reaching up almost to the top basket's floor. A short tray of wire sits low between the rear wheels.
+export function makeShoppingCart() { const g = new THREE.Group(), st = plain('#73777d', { roughness: 0.5, metalness: 0.45 }), wire = plain('#868a90', { roughness: 0.45, metalness: 0.5 }), cap = plain('#a2a4a8', { roughness: 0.6 }), W = 0.21, rw = 0.0026;
+  const bar = (a, b, r = rw, m = wire) => tube(g, a, b, r, m);
+  // the frame: base rails, rear uprights, grip, and the strut from the base up behind the bottom basket
+  for (const s of [-1, 1]) { const z = s * (W + 0.01); bar([0.44, 0.13, z], [-0.3, 0.13, z], 0.014, st); bar([-0.3, 0.13, z], [-0.34, 0.2, z], 0.014, st); bar([-0.34, 0.2, z], [-0.47, 1.0, z], 0.014, st); bar([-0.47, 1.0, z], [-0.5, 1.08, z * 1.08], 0.014, st); bar([-0.22, 0.13, z * 0.8], [-0.36, 0.7, z * 0.8], 0.011, st); }
+  bar([0.44, 0.13, -W - 0.01], [0.44, 0.13, W + 0.01], 0.014, st); bar([-0.5, 1.08, -W * 1.1], [-0.5, 1.08, W * 1.1], 0.015, st); C(0.021, 0.021, 0.3, plain('#9c2c2c', { roughness: 0.5 }), -0.5, 1.08, 0, g, 12, PI / 2);
+  // a wire basket: floor from x0 to x1 at y0; its back top edge at (xb, yb), front top edge at (xf, yf)
+  const basket = (x0, x1, y0, xb, yb, xf, yf, step = 0.045) => { const L = (t) => [x0 + (x1 - x0) * t, y0], T = (t) => [xb + (xf - xb) * t, yb + (yf - yb) * t];
+    const n = Math.round((x1 - x0) / step); for (let i = 0; i <= n; i++) { const t = i / n, [bx, by] = L(t), [tx, ty] = T(t); for (const s of [-1, 1]) bar([bx, by, s * W], [tx, ty, s * W]); bar([bx, by, -W], [bx, by, W]); }
+    const m = Math.round(2 * W / step); for (let k = 0; k <= m; k++) { const z = -W + 2 * W * k / m; bar([x0, y0, z], [x1, y0, z]); bar([x0, y0, z], [xb, yb, z]); bar([x1, y0, z], [xf, yf, z]); }
+    for (const f of [0.5, 1]) { const [ax, ay] = [x0 + (xb - x0) * f, y0 + (yb - y0) * f], [cx, cy] = [x1 + (xf - x1) * f, y0 + (yf - y0) * f]; for (const s of [-1, 1]) bar([ax, ay, s * W], [cx, cy, s * W], f === 1 ? 0.005 : rw); bar([ax, ay, -W], [ax, ay, W], f === 1 ? 0.005 : rw); bar([cx, cy, -W], [cx, cy, W], f === 1 ? 0.005 : rw); }
+    for (const s of [-1, 1]) B(0.05, 0.045, 0.035, cap, xf, yf, s * W, g); };
+  basket(-0.44, 0.24, 0.76, -0.46, 1.0, 0.3, 0.99);        // top: almost square, the front lip a touch forward
+  basket(-0.3, 0.3, 0.2, -0.43, 0.7, 0.4, 0.5, 0.05);       // bottom: the tall leaning back fills the gap under the top
+  // the low tray between the rear wheels
+  for (let i = 0; i <= 4; i++) bar([-0.3 + i * 0.03, 0.11, -W * 0.8], [-0.3 + i * 0.03, 0.11, W * 0.8]); for (const s of [-1, 1]) bar([-0.3, 0.11, s * W * 0.8], [-0.18, 0.11, s * W * 0.8], 0.004);
+  // the advert card on the back of the top basket
+  B(0.012, 0.17, 0.24, plain('#16161a'), -0.465, 0.88, 0, g); decalX(-0.473, 0.88, 0, 0.22, 0.15, g, sheet(120, 82, (x, w, h) => { x.fillStyle = '#1a1a1c'; x.fillRect(0, 0, w, h); x.fillStyle = '#c8322a'; x.fillRect(6, 6, 52, 70); x.fillStyle = '#e8c41e'; x.fillRect(64, 6, 50, 32); text(x, 'SALE', 89, 22, 'bold 14px Arial', '#1a1a1c'); x.fillStyle = '#e8e6e0'; x.fillRect(64, 44, 50, 32); }));
+  // wheels: swivel castors at the front, fixed at the back, each in a steel fork
+  const wheel = (x, z, swivel) => { const w = new THREE.Group(); w.position.set(x, 0.065, z); g.add(w); C(0.065, 0.065, 0.03, plain('#131315', { roughness: 0.8 }), 0, 0, 0, w, 20, PI / 2); C(0.032, 0.032, 0.032, plain('#c4c8cc', { roughness: 0.4 }), 0, 0, 0, w, 12, PI / 2); for (const t of [-1, 1]) B(swivel ? 0.07 : 0.05, 0.1, 0.005, plain('#b4b8bc', { metalness: 0.6, roughness: 0.4 }), swivel ? -0.02 : 0, 0.035, t * 0.021, w); B(0.05, 0.012, 0.05, plain('#b4b8bc', { metalness: 0.6, roughness: 0.4 }), swivel ? -0.03 : 0, 0.068, 0, w); };
+  for (const s of [-1, 1]) { wheel(0.42, s * (W + 0.01), true); wheel(-0.3, s * (W + 0.01), false); }
+  g.userData.colliders = [[-0.52, 0.46, -0.25, 0.25]]; return shadows(g); }
 function decalX(x, y, z, w, h, g, m) { const p = new THREE.Mesh(new THREE.PlaneGeometry(w, h), m); p.position.set(x, y, z); p.rotation.y = -PI / 2; g.add(p); return p; }
 // ---- a car-park lamp: a dark tapered pole on a cast foot, a bracket arm and tie rod, a bell-shaped lantern
 export function makeCarParkLamp() { const g = new THREE.Group(), m = plain('#2c2e30', { roughness: 0.5, metalness: 0.4 }), H = 5.2; C(0.2, 0.24, 0.35, plain('#3a3c3e', { roughness: 0.6, metalness: 0.3 }), 0, 0.175, 0, g, 18); C(0.13, 0.16, 0.08, m, 0, 0.38, 0, g, 18); C(0.07, 0.1, 1.6, m, 0, 1.2, 0, g, 16); C(0.06, 0.07, H - 2, m, 0, 1.9 + (H - 2) / 2, 0, g, 16); C(0.065, 0.065, 0.06, m, 0, H + 0.1, 0, g, 16); B(0.08, 0.25, 0.03, m, 0, 0.9, 0.08, g);

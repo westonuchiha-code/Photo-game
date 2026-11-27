@@ -1227,3 +1227,4 @@ ground), two paint styles ('flowers', 'stripes'; ours, not the brands on the rea
 - Not used: the real food bank's leaflet text, the brand on the bin liner's cans, the store's sign behind the lamp.
 - Logged, not started: 6 more store photos (photos/1000137348..353: brown siding, sports drinks, cut fruit, a sale
   bin, hand gel, a time-clock tablet). Packaging is all brands; the staff notice and time clock are workplace screens.
+- Shopping cart rebuilt after the owner's markup (the gap between the baskets): one bent frame tube a side, the bottom basket's tall leaning back reaching up under the top basket, finer wire, low tray between the rear wheels, forked castors. Logged: 3 more photos (two speckled counter tops, hanging toys).
