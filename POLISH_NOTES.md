@@ -1197,3 +1197,10 @@ Every photo sent so far is now processed. None of these seven is placed. Viewer:
 - Not placed. The game's sky is night; the backdrops are daylight, so using them would change the look (owner said
   leave the look) - they wait for a daytime area or the owner's say. The person's shadow in the billboard photo is not
   in any texture.
+
+## 142. Figure lamp posts -> library (3 photos)
+
+`src/models/props142.js`: `makeFigureLamp` (a post bent into a figure: knee, hip, a second short leg, narrow chest,
+pale joint caps, one arm holding a lit round sign, a globe lamp in a wire cage for a head, painted light pool on the
+ground), two paint styles ('flowers', 'stripes'; ours, not the brands on the real ones), `makeFigureLampPair`,
+`makeWoodPowerPole` (cross-arms, insulators, transformer, wires). Not placed.
