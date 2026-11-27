@@ -1228,3 +1228,18 @@ ground), two paint styles ('flowers', 'stripes'; ours, not the brands on the rea
 - Logged, not started: 6 more store photos (photos/1000137348..353: brown siding, sports drinks, cut fruit, a sale
   bin, hand gel, a time-clock tablet). Packaging is all brands; the staff notice and time clock are workplace screens.
 - Shopping cart rebuilt after the owner's markup (the gap between the baskets): one bent frame tube a side, the bottom basket's tall leaning back reaching up under the top basket, finer wire, low tray between the rear wheels, forked castors. Logged: 3 more photos (two speckled counter tops, hanging toys).
+
+## 145. Store, desk, out and about (29 photos: 1000137348..357, 10000751xx..86095)
+
+Owner: "don't leave anything out, just change stuff if you need to... if you have an issue ask me first."
+- Textures (`tools/tex_145.py`): cedar siding, two speckled counter tops, glitter airport tile, dock concrete,
+  freezer wall, sealed shop floor, dragon skin; the owner's four drawings cut from the paper (used as drawn); the
+  owner's notes page as photographed.
+- Models (`src/models/props145.js`, 25): produce sale bin, cut-fruit cooler, sports-drink rack ("Surge"), time clock,
+  hand gel ("CleanHands"), hanging squeeze toys ("Squishies"), dairy rack on rollers, aluminium stock cart, step stool,
+  shelf-counting robot ("Dot"), blue soda shelf ("Orbit VOLT", from the game-branded soda), dragon pipe, note card
+  (numbers changed), gamepad ("Pixelworks"), purple handheld with chews and a tea can ("Mesa"), console tub ("Orbis"),
+  notes page, drawing cards, sketch wall, used SUV with dealer tags ("Elm Auto"), airport kiosk ("Tern Air"), gallery
+  wall text (invented artist "Oda Merrin", our own text), night shop window with hero cut-outs (our silhouettes), a
+  katakana sign ("Capsule King!" in the same lettering), surface samples. Not placed.
+- Changed, not dropped: every brand, the airline, the game soda, the real artist / curators / museum, the card numbers.
