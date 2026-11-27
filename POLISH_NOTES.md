@@ -1185,3 +1185,15 @@ canal with a girder rail bridge and a yellow train, rooftop junk terrace, brick 
 arched windows, cornice, awnings), note desk, graffiti alley (walkable: has `areas`), repair stall (awning, crowded
 window, number sign, OPEN, lamp; reuses the 137 display case and hi-fi robot). All names and drawings invented.
 Every photo sent so far is now processed. None of these seven is placed. Viewer: 631 models, 610 textures.
+
+## 141. High-plains photos -> library (6 photos)
+
+- Textures (`tools/tex_141.py`): g141_rust_roof, siding_white, sand_pebbles, dry_brush, dry_grass (+ normals),
+  g141_plywood (one sheet), and two backdrops made to wrap round (each half mirrored): g141_horizon (cloud over the
+  mountains), g141_clouds (layered cloud).
+- Models (`src/models/props141.js`): arched barn (curved rusted roof in strips, white corrugated walls), junk pile
+  against it, billboard on one pole with catwalk and caged ladder (advertiser invented: "Ridgeline Roofing", 555-0172),
+  speed limit sign, bare tree, tumbleweed, dry lot, horizon backdrop ring.
+- Not placed. The game's sky is night; the backdrops are daylight, so using them would change the look (owner said
+  leave the look) - they wait for a daytime area or the owner's say. The person's shadow in the billboard photo is not
+  in any texture.
