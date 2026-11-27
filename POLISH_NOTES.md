@@ -1243,3 +1243,14 @@ Owner: "don't leave anything out, just change stuff if you need to... if you hav
   wall text (invented artist "Oda Merrin", our own text), night shop window with hero cut-outs (our silhouettes), a
   katakana sign ("Capsule King!" in the same lettering), surface samples. Not placed.
 - Changed, not dropped: every brand, the airline, the game soda, the real artist / curators / museum, the card numbers.
+
+## 146. Everything left out of earlier batches, now made (owner: "don't just disregard the pictures I send")
+
+`src/models/props146.js` (17): fan's shrine table (our idol group "STELLA / HOSHI 4", our girl drawn by `girl()`),
+sticker set (watching-eye, occult girl, bean bun), pole sticker (our ramen shop), railing face, no-smoking standee (our
+girl), the man under the umbrella (an invented figure, same place and pose, our green sign), shoppers with trolleys
+(invented people), a long shadow with nobody casting it, plum sour can, hamburger-sandwich packs, banana-cake snack,
+CD shelf (our covers), boxed figures (our heroes), hiring poster (ours, adults only), retro screen (our pixel game and
+line), cheese-chicken shop front ("Milo's Melt"), grey facade with air-conditioners. Not placed.
+Still open from older notes, not in these batches: the orange full moon and the inspo7 lakeshore / snowy forest
+(sky ideas), and the face profile photos for the photo-faced character.
