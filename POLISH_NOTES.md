@@ -1204,3 +1204,14 @@ Every photo sent so far is now processed. None of these seven is placed. Viewer:
 pale joint caps, one arm holding a lit round sign, a globe lamp in a wire cage for a head, painted light pool on the
 ground), two paint styles ('flowers', 'stripes'; ours, not the brands on the real ones), `makeFigureLampPair`,
 `makeWoodPowerPole` (cross-arms, insulators, transformer, wires). Not placed.
+
+## 143. Odds and ends from the owner's photos (15 photos)
+
+- Textures (`tools/tex_143.py`): g143_clay_cracked, wood_counter, steel_scratched, plaza_tile, pole_steel, plaster,
+  foam (+ normals).
+- Models (`src/models/props143.js`): two dried clay heads, plaster bust being painted, an old brick-shaped handheld
+  console ("Tinker POCKET", invented), a case of 16 cartridges with invented games, a tin of oddments (two pocket pets,
+  cartridges in sleeves), a ten-ounce silver bar (our own die), a drink and a foil wrap, two ink drawings on a
+  scratched steel door (our drawings in that manner), a station plaza (loop road, planted island, domed stair, shelter).
+- Not used: the real games, consoles' names, the toy box, the store hiring poster, the people walking, the sticker,
+  the photos' shop signs. Not placed in the game.
