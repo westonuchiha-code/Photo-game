@@ -1406,3 +1406,7 @@ change the night look, which the owner asked to keep). Every photo sent so far i
   - floor: a patterned rug with fringe, bathmat, doormat (WE'RE HOME), a stained mattress;
   - shelves: a TAKE A BOOK street shelf stocked by stock();
   - bathroom and baskets: woven baskets with laundry and apples, bottles and packs with made-up brands, a toilet roll with core and flap, a straw broom, a ribbed hot-water bottle.
+- 153l: exercise, construction and finances detailed by hand (`psx_exercise.js`, `psx_construction.js`, `psx_finances.js`):
+  - exercise: seamed balls; drawn dartboards with darts; a hoop with rim and net; goals and nets; a table-tennis table with lines and net; pool tile with grout, lane stripes and depth markings; numbered starting blocks; floats with sprinkles and stripes; a plywood parkour course;
+  - construction: yellow-railed grating catwalks; scaffold with boards and couplers; an ELM BUILD CO. site fence banner; a stencilled skip full of rubble; a cement-dusted barrow;
+  - finances: banded 'COUNTY SCRIP' notes (made-up, no real currency); stamped ELM ASSAY bars; shrink-wrapped money pallets; made-up cards; ATM, wire machine and card reader with screens and keys; a vault door with rivets, rings and a spoked wheel.
