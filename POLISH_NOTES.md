@@ -1262,4 +1262,6 @@ forest -> `g147_lake_fog`, `g147_snow_forest` + `makeLakeFogBackdrop`, `makeSnow
 change the night look, which the owner asked to keep). Every photo sent so far is now used in the library.
 - 147b weak spots refined: boxed figures now in open window boxes (figure visible, contrasting colour); the umbrella hangs from where the posed hand actually is; the lake backdrop shows the shore, stumps and the tree.
 - 147c: the foggy-lake backdrop removed (owner: it made no sense; the mirroring doubled the stumps). Owner's rule:
-  if a photo has nothing usable for a thing, don't force it into one. The lake photo stays in photos/ unused.
+  if a photo has nothing usable for a thing, don't force it into one. The lake photo was then deleted at the owner's word.
+- Owner's rule (147c): when a photo has nothing useful, say so; the owner will usually say to delete it, and then the
+  photo itself is deleted from photos/, not left unused.
