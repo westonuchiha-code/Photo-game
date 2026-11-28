@@ -1344,3 +1344,16 @@ change the night look, which the owner asked to keep). Every photo sent so far i
 - Phone build: px_* model files are packed only when an imported file names them, and all px_ch_ textures are packed when psx_rig is in. The phone file is 48.1 MB (was 44.7).
 - Library: "PSX pack: people walking" (one walker, a walking row of 8).
 - 152b: the owner's tools pack (Axe01, Pickaxe01 OBJ) is in "PSX pack: street props" (`objTool`, OBJLoader vendored from r170). Its texture AxePickaxe01_a.jpg was not in the zip (the .mtl points at the author's disk), so for now the head is library steel and the handle oak. Swap in the real texture if it comes.
+
+## 153: The owner's OBJ packs, dressed from library textures only (owner: "use the textures we have")
+- The owner leaves the packs' own textures out on purpose. Every model is dressed from library textures instead, through fill_kit `T()`, so the no-repeat shader, the shared grade and colour matching apply. The pack UVs point into atlases we don't have, so faces get real-world UVs by facing direction (`objDress` in psx_kit). Card foliage keeps its own UVs (`keepUV`) with our cut-out textures.
+- Packs: tools, lights, office, signs, buildings and fairground (hand-made, `psx_objs.js`, 24). Then by generator: exercise 41, foliage 16, traffic 22, utilities 40, vehicles 19, residential 25, outdoors 28, misc 37, furniture 22, food 32, finances 20, construction 13, electronics 42.
+- `tools/gen_psx_objs.py <unpacked pack dirs...>` copies each model to `px_o_<pack>_<name>.obj` and writes `src/models/psx_g_<pack>.js`, one `E()` line per model. The look comes from a keyword table on the name: base skin, zones, real size, sign faces.
+- `src/models/psx_auto.js` is the rule engine:
+  - skins are short strings ('paint:#hex' colour-matched, 'wood', 'rubber', 'net', 'stripes', 'tile', 'cut:<tex>', ...);
+  - shared part rules: wheels, tyres and tracks rubber; windows glass; hoses rubber; nets wire;
+  - zones: top, low, up, side, height bands, an axis split, a trunk radius, and a lamp glow at the underside of the top;
+  - drawn faces on signs, screens, the ATM, arcades, the billboard and the dartboard, all with made-up names.
+- The pool's Godot water shader stands in as `makePxPoolWater` (animated sewer-kit water texture).
+- Line elements in the OBJs (ropes, guides) are stripped before parsing, because OBJLoader turns a whole part into lines otherwise. The tarp and the tennis racket keep theirs as ropes and strings.
+- Re-run the generator when packs are re-sent; tune looks in its table, not in the generated files.

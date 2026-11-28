@@ -94,7 +94,7 @@ export async function objTool(file, headMat, handleMat, { largest = 0.8, handleR
 // an OBJ dressed from the library: every face gets a material key from pick({ obj, mtl, n, c, b, ob }) (n face normal,
 // c face centre, b whole-model box, ob the part's box) and real-world UVs (`tile` metres per repeat, by face direction),
 // since the pack's own UVs point into atlases we don't use. Line elements are dropped unless keepLines (as dark rope).
-export async function objDress(file, mats, pick, { scale = null, height = null, largest = null, tile = 1, keepLines = false, lineMat = null } = {}) {
+export async function objDress(file, mats, pick, { scale = null, height = null, largest = null, tile = 1, keepLines = false, lineMat = null, keepUV = [] } = {}) {
   const src = await objSrc(file), parts = []; src.updateMatrixWorld(true);
   src.traverse((o) => { if (o.isMesh) parts.push(o); });
   const all = new THREE.Box3(); for (const o of parts) all.expandByObject(o); if (scale === null && height === null && largest === null) scale = 1;
@@ -103,7 +103,7 @@ export async function objDress(file, mats, pick, { scale = null, height = null, 
     for (const gr of grp) { const mtl = (mt[gr.materialIndex] || mt[0]).name;
       for (let f = gr.start; f < gr.start + gr.count; f += 3) { A.fromBufferAttribute(p, f); B.fromBufferAttribute(p, f + 1); C.fromBufferAttribute(p, f + 2); N.subVectors(C, B).cross(B.clone().sub(A)).normalize(); N.negate(); c.copy(A).add(B).add(C).divideScalar(3);
         const k = pick({ obj: o.name, mtl, n: N, c, b: all, ob }); const bk = buckets.get(k) || buckets.get(keys[0]); const ax = Math.abs(N.x), ay = Math.abs(N.y), az = Math.abs(N.z);
-        for (const v of [A, B, C]) { bk.p.push(v.x, v.y, v.z); bk.n.push(N.x, N.y, N.z); const [u, w] = ax >= ay && ax >= az ? [v.z, v.y] : ay >= az ? [v.x, v.z] : [v.x, v.y]; bk.u.push(u / tile, w / tile); } } } }
+        const ouv = keepUV.includes(k) && g.attributes.uv; [A, B, C].forEach((v, j) => { bk.p.push(v.x, v.y, v.z); bk.n.push(N.x, N.y, N.z); if (ouv) { bk.u.push(ouv.getX(f + j), ouv.getY(f + j)); return; } const [u, w] = ax >= ay && ax >= az ? [v.z, v.y] : ay >= az ? [v.x, v.z] : [v.x, v.y]; bk.u.push(u / tile, w / tile); }); } } }
   const g = new THREE.Group();
   for (const [k, bk] of buckets) { if (!bk.p.length) continue; const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(bk.p, 3)); geo.setAttribute('normal', new THREE.Float32BufferAttribute(bk.n, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(bk.u, 2)); g.add(new THREE.Mesh(geo, mats[k])); }
   if (keepLines && src.userData.lines) src.userData.lines.traverse((o) => { if (o.isLineSegments || o.isLine) { const l = o.clone(); l.material = lineMat || new THREE.LineBasicMaterial({ color: '#2a2622' }); g.add(l); } });
