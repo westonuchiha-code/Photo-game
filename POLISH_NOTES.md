@@ -1387,3 +1387,8 @@ change the night look, which the owner asked to keep). Every photo sent so far i
   - small bits: wax candles with flames, the first-aid case, the extinguisher with gauge and hose, the bandage weave;
   - defences: burlap sandbags, rusty mossy dragon's teeth, rubble with rebar, the cinder block's holes;
   - real sizes throughout.
+- 153i: food detailed by hand in `src/models/psx_food.js`, all brands made up:
+  - drinks: bottles with labels, liquid and caps; whisky with flat labels and a cork; a can with a ring pull;
+  - bakery: bread with crust shading, score marks, flour and seeds; cake layers with drips and cherries; chip cookie; glazed pastries;
+  - packets: snack and coffee bags, a pasta box, sausage trays;
+  - produce: wrinkled walnuts, striped watermelons with seeded flesh.
