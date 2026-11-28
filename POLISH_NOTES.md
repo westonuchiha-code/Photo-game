@@ -1260,3 +1260,4 @@ Still open from older notes, not in these batches: the orange full moon and the 
 inspo6 orange full moon -> `g147_moon_orange` + `makeHarvestMoon` (props141); inspo7 foggy lakeshore and snowy pine
 forest -> `g147_lake_fog`, `g147_snow_forest` + `makeLakeFogBackdrop`, `makeSnowForestBackdrop`. Library only (they
 change the night look, which the owner asked to keep). Every photo sent so far is now used in the library.
+- 147b weak spots refined: boxed figures now in open window boxes (figure visible, contrasting colour); the umbrella hangs from where the posed hand actually is; the lake backdrop shows the shore, stumps and the tree.
