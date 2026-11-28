@@ -1380,3 +1380,10 @@ change the night look, which the owner asked to keep). Every photo sent so far i
   - Top-face 'fit' UVs flipped so art on lids reads from the front.
 - 153f: the pinball machine has painted art (`src/models/pinball_art.js`), all made up. The backglass 'MIDNIGHT TILT': night sky, a moon with a sad face behind a cloud, two skylines with lit windows, a water tower, a neon MOTEL/VACANCY sign, a road with a car's headlights, a figure under a streetlamp with red eyes, chrome-and-neon title, a frame of bulbs, '1–4 PLAYERS', 'INSERT COIN', 'ELM AMUSEMENT CO. 1987'. The playfield: the moon motif, top lanes with rollovers, a ramp, TILT targets, lit arrow inserts, bonus multipliers, inlanes and the drain.
 - 153g: furniture detailed by hand in `src/models/psx_furniture.js`: wood skins with joinery drawn in (raised panels, planks, drawer fronts, drink rings), modelled hardware (brass knobs and pulls, deadbolt, peephole, house number, strap hinges, ring pull, push bar, kick plate, brass foot rail, beer taps, candle flames), cushions, and `stock()`. It casts rays down to find every shelf surface and fills it: books, bottles, goods, hymn books.
+- 153h: misc detailed by hand in `src/models/psx_misc.js`:
+  - paper: gilt book covers with page edges and spines, titled spine runs on the stacks, a chalk menu with a chalk tray, the parcel's address label and FRAGILE stamp;
+  - cases: briefcases with stitching and latches, suitcases with straps, tags and money inside;
+  - tableware: mug slogan, floral teacup, plates with rims, biscuit and sewing tins;
+  - small bits: wax candles with flames, the first-aid case, the extinguisher with gauge and hose, the bandage weave;
+  - defences: burlap sandbags, rusty mossy dragon's teeth, rubble with rebar, the cinder block's holes;
+  - real sizes throughout.
