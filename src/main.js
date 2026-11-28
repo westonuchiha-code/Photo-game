@@ -14,6 +14,7 @@ import { makeCar, LIVERIES, carEnv } from './vehicle/carbody.js';
 import { makeDriver } from './drive.js';
 import { finishLoading } from './loading.js';
 import { shrinkCanvases } from './texcache.js';
+import './texpolish.js';   // (the no-repeat pass, POLISH_NOTES 150; owner OK'd this one line)
 import { makeTrail } from './models/trail40.js';
 import { makeMossCreature, makeMossMound } from './models/creature55.js';
 import { makeThriftCorner } from './models/fabrics56.js';
