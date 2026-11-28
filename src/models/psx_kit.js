@@ -118,7 +118,7 @@ export async function objDress(file, mats, pick, { scale = null, height = null, 
           bk.c.push(...shade(v, hy));
           if (ouv) fuv.push([ouv.getX(f + j), ouv.getY(f + j)]);
           else if (mode === 'cyl') fuv.push([Math.atan2(v.x - cx, v.z - cz) / (Math.PI * 2) + 0.5, hy]);
-          else if (mode === 'fit') { const fx = (v.x - all.min.x) / S.x, fz = (v.z - all.min.z) / S.z; fuv.push(az >= ax && az >= ay ? [N.z < 0 ? 1 - fx : fx, hy] : ax >= ay ? [N.x > 0 ? 1 - fz : fz, hy] : [fx, fz]); }   // 0..1 over the model, each side mirrored so it reads from outside
+          else if (mode === 'fit') { const fx = (v.x - all.min.x) / S.x, fz = (v.z - all.min.z) / S.z; fuv.push(az >= ax && az >= ay ? [N.z < 0 ? 1 - fx : fx, hy] : ax >= ay ? [N.x > 0 ? 1 - fz : fz, hy] : [fx, 1 - fz]); }   // 0..1 over the model, each side mirrored so it reads from outside
           else { const [u, w] = ax >= ay && ax >= az ? [v.z, v.y] : ay >= az ? [v.x, v.z] : [v.x, v.y]; fuv.push([u / tile, w / tile]); } });
         if (mode === 'cyl') { const us = fuv.map((q) => q[0]); if (Math.max(...us) - Math.min(...us) > 0.5) fuv.forEach((q) => { if (q[0] < 0.5) q[0] += 1; }); }
         for (const q of fuv) bk.u.push(q[0], q[1]); } } }

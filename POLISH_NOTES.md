@@ -1374,3 +1374,7 @@ change the night look, which the owner asked to keep). Every photo sent so far i
   - Fitted skins: a library texture painted over with the real thing's detail (ribs, seams, stencils, worn stickers, rust runs, scuffs), mapped round the object ('cyl') or per side ('fit').
   - Modelled parts: lid rims, bung caps, jerry-can handles and spout, crate corners, fuse-box handle and hinges, locker handles and padlock, radiator valve, the water in the bucket.
   - The same approach should roll out to the other packs.
+- 153e: electronics detailed by hand in `src/models/psx_electronics.js`, with the shared kit `src/models/psx_detail.js`: skins, plus parts placed on any face (screens, knobs, buttons, LEDs, key beds, vents, cables, rods, feet, labels).
+  - Made-up names: PLAYBOX, TINKER POCKET, ELMVISION, NOVA SYSTEMS, COLDWELL, ELM TONE, film and game titles.
+  - The pinball machine (owner's markup: "wallpapered over") is built as a machine: playfield art in its own tilted frame (bumpers, flippers, slings, rails, ball, glass, side rails, lockdown bar), a lit backglass with score display and grille, a coin door, plunger and flipper buttons; side art only on the sides.
+  - Top-face 'fit' UVs flipped so art on lids reads from the front.
