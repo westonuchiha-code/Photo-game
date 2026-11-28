@@ -5,6 +5,7 @@
 import * as THREE from 'three';
 import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 import { tex } from './kit.js';
 export { THREE };
@@ -74,4 +75,18 @@ export async function glbRig(file, { height = 2, hang = 0.15, seed = 1 } = {}) {
     if (hips) hips.quaternion.copy(base.get(hips)).multiply(q.setFromEuler(e.set(0, Math.sin(t * 0.5 + seed) * 0.03, Math.sin(t * 1.1 + seed) * 0.015)));
   };
   return out;
+}
+
+// a long tool from an OBJ (handle along z, head at the +z end): faces well off the handle's axis or at the tip are the
+// head; each part gets its own material (used while the pack's own texture is missing)
+export const objSrc = (name) => { const k = name + '.obj'; if (!_src.has(k)) _src.set(k, fetch(BASE + k).then((r) => { if (!r.ok) throw new Error('missing ' + k); return r.text(); }).then((t) => new OBJLoader().parse(t))); return _src.get(k); };
+export async function objTool(file, headMat, handleMat, { largest = 0.8, handleR = 0.032, tip = 0.07 } = {}) {
+  const src = await objSrc(file); let geo = null; src.traverse((o) => { if (!geo && o.isMesh) geo = o.geometry; });
+  const g = geo.index ? geo.toNonIndexed() : geo.clone(), p = g.attributes.position; let zmax = -1e9; for (let i = 0; i < p.count; i++) zmax = Math.max(zmax, p.getZ(i));
+  const head = [], handle = [];
+  for (let f = 0; f < p.count; f += 3) { let x = 0, y = 0, z = 0; for (let k = 0; k < 3; k++) { x += p.getX(f + k) / 3; y += p.getY(f + k) / 3; z += p.getZ(f + k) / 3; } (Math.hypot(x, y) > handleR || z > zmax - tip ? head : handle).push(f); }
+  const order = [...handle, ...head], out = new THREE.BufferGeometry();
+  for (const nm of Object.keys(g.attributes)) { const a = g.attributes[nm], arr = new a.array.constructor(order.length * 3 * a.itemSize); order.forEach((f, j) => { for (let k = 0; k < 3; k++) for (let c = 0; c < a.itemSize; c++) arr[(j * 3 + k) * a.itemSize + c] = a.array[(f + k) * a.itemSize + c]; }); out.setAttribute(nm, new THREE.BufferAttribute(arr, a.itemSize)); }
+  if (!out.attributes.normal) out.computeVertexNormals(); out.addGroup(0, handle.length * 3, 0); out.addGroup(handle.length * 3, head.length * 3, 1);
+  const m = new THREE.Mesh(out, [handleMat, headMat]); m.rotation.x = -Math.PI / 2; return settle(m, { largest });
 }

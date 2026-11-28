@@ -1343,3 +1343,4 @@ change the night look, which the owner asked to keep). Every photo sent so far i
 - `makePeople` takes an optional `make(i)`. The phone game preloads the 4 bases (top-level await) and makes every second person one of the 35 PSX looks.
 - Phone build: px_* model files are packed only when an imported file names them, and all px_ch_ textures are packed when psx_rig is in. The phone file is 48.1 MB (was 44.7).
 - Library: "PSX pack: people walking" (one walker, a walking row of 8).
+- 152b: the owner's tools pack (Axe01, Pickaxe01 OBJ) is in "PSX pack: street props" (`objTool`, OBJLoader vendored from r170). Its texture AxePickaxe01_a.jpg was not in the zip (the .mtl points at the author's disk), so for now the head is library steel and the handle oak. Swap in the real texture if it comes.
