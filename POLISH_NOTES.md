@@ -1366,3 +1366,7 @@ change the night look, which the owner asked to keep). Every photo sent so far i
   - military: drawn NATO, desert or field-grey camo, track links, dark road wheels and gunmetal guns;
   - the jet is two-tone with a gold canopy and white stores.
 - `objDress` now flips parts whose faces are wound inward. Car01 was inside out; the fix applies to every OBJ model.
+- 153c (owner's markup on the close-ups): car windows and the police band are no longer picked per triangle. Low-poly faces span the window line, so that came out as jagged dark wedges that read as holes.
+  - Each car now has a drawn livery per side, in 'fit' UVs: the windows are traced from the body's own roofline (sampled from the geometry), with a B pillar, door seams, handles, a sill, the police band and POLICE lettering. The front and back get a skin with a clean screen line (a van gets back doors).
+  - The roof uses the same smooth paint plus a faint pass of library scratched metal.
+- `objDress` options: `uv: { key: 'cyl' | 'fit' }` (round-wrap, or fitted 0..1 per side, mirrored so lettering reads from outside), and grime vertex colours on every OBJ model (darker toward the ground, blotchy stains; `grime: 0` turns it off).

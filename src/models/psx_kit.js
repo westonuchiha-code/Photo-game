@@ -94,11 +94,18 @@ export async function objTool(file, headMat, handleMat, { largest = 0.8, handleR
 // an OBJ dressed from the library: every face gets a material key from pick({ obj, mtl, n, c, b, ob }) (n face normal,
 // c face centre, b whole-model box, ob the part's box) and real-world UVs (`tile` metres per repeat, by face direction),
 // since the pack's own UVs point into atlases we don't use. Line elements are dropped unless keepLines (as dark rope).
-export async function objDress(file, mats, pick, { scale = null, height = null, largest = null, tile = 1, keepLines = false, lineMat = null, keepUV = [] } = {}) {
+const _vc = new Map();
+function withVC(m) { if (_vc.has(m)) return _vc.get(m); if (m.isMeshBasicMaterial || m.transparent || m.emissiveIntensity > 0.5) { _vc.set(m, m); return m; } const c = m.clone(); c.vertexColors = true; if (m.onBeforeCompile && m.hasOwnProperty('onBeforeCompile')) { c.onBeforeCompile = m.onBeforeCompile; c.customProgramCacheKey = m.customProgramCacheKey; } _vc.set(m, c); return c; }
+const hh = (x, y, z) => { const s = Math.sin(x * 12.9898 + y * 78.233 + z * 37.719) * 43758.5453; return s - Math.floor(s); };
+const vn = (x, y, z) => { const i = Math.floor(x), j = Math.floor(y), k = Math.floor(z), f = (t) => t * t * (3 - 2 * t), u = f(x - i), v = f(y - j), w = f(z - k), L = (a, b, t) => a + (b - a) * t;
+  return L(L(L(hh(i, j, k), hh(i + 1, j, k), u), L(hh(i, j + 1, k), hh(i + 1, j + 1, k), u), v), L(L(hh(i, j, k + 1), hh(i + 1, j, k + 1), u), L(hh(i, j + 1, k + 1), hh(i + 1, j + 1, k + 1), u), v), w); };
+export async function objDress(file, mats, pick, { scale = null, height = null, largest = null, tile = 1, keepLines = false, lineMat = null, keepUV = [], uv = {}, grime = 0.38 } = {}) {
   const src = await objSrc(file), parts = []; src.updateMatrixWorld(true);
+  // grime: darker toward the ground (where dirt and damp collect), and blotchy stains, as vertex colours
+  const shade = (v, hy) => { const k = 1 - grime * (1 - Math.min(1, hy / 0.3)) ** 2 * 0.9 - grime * 0.35 * Math.max(0, vn(v.x * 2.3, v.y * 2.3, v.z * 2.3) - 0.45); return [k, k * 0.985, k * 0.96]; };
   src.traverse((o) => { if (o.isMesh) parts.push(o); });
   const all = new THREE.Box3(); for (const o of parts) all.expandByObject(o); if (scale === null && height === null && largest === null) scale = 1;
-  const keys = Object.keys(mats), buckets = new Map(keys.map((k) => [k, { p: [], n: [], u: [] }])), A = new THREE.Vector3(), B = new THREE.Vector3(), C = new THREE.Vector3(), N = new THREE.Vector3(), c = new THREE.Vector3();
+  const keys = Object.keys(mats), buckets = new Map(keys.map((k) => [k, { p: [], n: [], u: [], c: [] }])), A = new THREE.Vector3(), B = new THREE.Vector3(), C = new THREE.Vector3(), N = new THREE.Vector3(), c = new THREE.Vector3();
   for (const o of parts) { const g = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry, p = g.attributes.position, ob = new THREE.Box3().setFromObject(o), mt = [].concat(o.material), grp = g.groups.length ? g.groups : [{ start: 0, count: p.count, materialIndex: 0 }];
     // faces wound inward (some pack parts are): vote by face normal against the direction from the part's centre, flip if most point in
     const oc = ob.getCenter(new THREE.Vector3()); let vote = 0; for (let f = 0; f < p.count; f += 3) { A.fromBufferAttribute(p, f); B.fromBufferAttribute(p, f + 1); C.fromBufferAttribute(p, f + 2); N.subVectors(B, A).cross(C.clone().sub(A)); c.copy(A).add(B).add(C).divideScalar(3).sub(oc); vote += Math.sign(N.dot(c)) * N.length(); }
@@ -106,9 +113,17 @@ export async function objDress(file, mats, pick, { scale = null, height = null, 
     for (const gr of grp) { const mtl = (mt[gr.materialIndex] || mt[0]).name;
       for (let f = gr.start; f < gr.start + gr.count; f += 3) { A.fromBufferAttribute(p, f); B.fromBufferAttribute(p, f + 1); C.fromBufferAttribute(p, f + 2); if (flip) { const t = B.clone(); B.copy(C); C.copy(t); } N.subVectors(B, A).cross(C.clone().sub(A)).normalize(); c.copy(A).add(B).add(C).divideScalar(3);
         const k = pick({ obj: o.name, mtl, n: N, c, b: all, ob }); const bk = buckets.get(k) || buckets.get(keys[0]); const ax = Math.abs(N.x), ay = Math.abs(N.y), az = Math.abs(N.z);
-        const ouv = keepUV.includes(k) && g.attributes.uv; [A, B, C].forEach((v, j) => { bk.p.push(v.x, v.y, v.z); bk.n.push(N.x, N.y, N.z); if (ouv) { bk.u.push(ouv.getX(f + j), ouv.getY(f + j)); return; } const [u, w] = ax >= ay && ax >= az ? [v.z, v.y] : ay >= az ? [v.x, v.z] : [v.x, v.y]; bk.u.push(u / tile, w / tile); }); } } }
+        const ouv = keepUV.includes(k) && g.attributes.uv, mode = uv[k], S = all.getSize(new THREE.Vector3()), cx = (all.min.x + all.max.x) / 2, cz = (all.min.z + all.max.z) / 2, fuv = [];
+        [A, B, C].forEach((v, j) => { bk.p.push(v.x, v.y, v.z); bk.n.push(N.x, N.y, N.z); const hy = (v.y - all.min.y) / (S.y || 1);
+          bk.c.push(...shade(v, hy));
+          if (ouv) fuv.push([ouv.getX(f + j), ouv.getY(f + j)]);
+          else if (mode === 'cyl') fuv.push([Math.atan2(v.x - cx, v.z - cz) / (Math.PI * 2) + 0.5, hy]);
+          else if (mode === 'fit') { const fx = (v.x - all.min.x) / S.x, fz = (v.z - all.min.z) / S.z; fuv.push(az >= ax && az >= ay ? [N.z < 0 ? 1 - fx : fx, hy] : ax >= ay ? [N.x > 0 ? 1 - fz : fz, hy] : [fx, fz]); }   // 0..1 over the model, each side mirrored so it reads from outside
+          else { const [u, w] = ax >= ay && ax >= az ? [v.z, v.y] : ay >= az ? [v.x, v.z] : [v.x, v.y]; fuv.push([u / tile, w / tile]); } });
+        if (mode === 'cyl') { const us = fuv.map((q) => q[0]); if (Math.max(...us) - Math.min(...us) > 0.5) fuv.forEach((q) => { if (q[0] < 0.5) q[0] += 1; }); }
+        for (const q of fuv) bk.u.push(q[0], q[1]); } } }
   const g = new THREE.Group();
-  for (const [k, bk] of buckets) { if (!bk.p.length) continue; const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(bk.p, 3)); geo.setAttribute('normal', new THREE.Float32BufferAttribute(bk.n, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(bk.u, 2)); g.add(new THREE.Mesh(geo, mats[k])); }
+  for (const [k, bk] of buckets) { if (!bk.p.length) continue; const useVC = grime > 0; const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(bk.p, 3)); geo.setAttribute('normal', new THREE.Float32BufferAttribute(bk.n, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(bk.u, 2)); if (useVC) geo.setAttribute('color', new THREE.Float32BufferAttribute(bk.c, 3)); g.add(new THREE.Mesh(geo, useVC ? withVC(mats[k]) : mats[k])); }
   if (keepLines && src.userData.lines) src.userData.lines.traverse((o) => { if (o.isLineSegments || o.isLine) { const l = o.clone(); l.material = lineMat || new THREE.LineBasicMaterial({ color: '#2a2622' }); g.add(l); } });
   return settle(g, { scale, height, largest });
 }
