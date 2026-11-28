@@ -1414,3 +1414,10 @@ change the night look, which the owner asked to keep). Every photo sent so far i
   - traffic: proper sign faces on each board, found from the model (no-parking roundel, one-way arrow, street names with block numbers, ROAD CLOSED, DETOUR via Cedar Ave, SLOW children, NO ENTRY, WORK AHEAD with lamps, NO DIVING); grey backs with bracket bolts; striped barricades and road gate with a STOP disc and lamp; an ELM SEWER manhole casting; road pieces with dashed centre and edge lines, cracks, patches and kerb drains; street lights with base plates and a pool of light;
   - foliage: grass cards painted as blades with seed heads; pine sprays drawn on cards with a bark trunk; rocks with lichen and moss only on the tops; logs with growth rings, a crack and moss.
 - With this, every PSX OBJ pack is hand-made; the generator now only builds packs not listed in its skip set.
+- 153n: second pass on the lights/office/signs/buildings group:
+  - DODGEMS arena: a lit sign, rows of coloured bulbs, a riveted floor with skid marks, corrugated roof;
+  - fisher hut: planks with a window, ELM LAKE ANGLERS stencil and an ice notice, a stove pipe, fishing rods;
+  - gas holders: ELM GAS WORKS No. 1/2 and NO SMOKING stencils, panel seams, heavy rust runs;
+  - piers: nailed decking with gull droppings, wet barnacled feet, a rope coil, a bollard; the end pier gets a lamp post and a lifebuoy;
+  - shacks: corrugated walls, a BAIT & TACKLE or ELM STORAGE sign, a window (boarded on one), a padlock and a gutter.
+- Cones: reflective collars fitted by raycasting the cone's real radius at each height.
