@@ -1334,3 +1334,12 @@ change the night look, which the owner asked to keep). Every photo sent so far i
   - PSX pack: sewer props (139);
   - PSX pack: sewer architecture (56).
 - `px_*` textures are classed `off` for the no-repeat pass (they are atlases).
+
+## 152: PSX pack people walk the town (owner's choice: "PSX people as NPCs")
+- The pack's FBX bases carry no usable rig. `src/models/psx_rig.js` rigs each one onto the same skeleton the town's own people use (body97 makeBody names and layout, facing +z) with the same walk pose, so `makePeople` walks them, steers them, and knocks them over like everyone else:
+  - joints are read off the mesh (hip width, hand tips, toes);
+  - each vertex is weighted to its two nearest bones;
+  - the A-pose arms are baked down to hang beside the body.
+- `makePeople` takes an optional `make(i)`. The phone game preloads the 4 bases (top-level await) and makes every second person one of the 35 PSX looks.
+- Phone build: px_* model files are packed only when an imported file names them, and all px_ch_ textures are packed when psx_rig is in. The phone file is 48.1 MB (was 44.7).
+- Library: "PSX pack: people walking" (one walker, a walking row of 8).

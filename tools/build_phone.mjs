@@ -45,7 +45,10 @@ const scanned = want.size;
     await br.close(); for (const n of seen) if (base.has(n)) want.add(n);
     console.log(`recorded ${seen.size} textures requested across ${ids.length} areas (${want.size - scanned} beyond the source scan)`);
   } finally { srv.kill(); } }
-const list = [...want].map((n) => base.get(n)).concat(all.filter((n) => !n.endsWith('.png')));
+// the PSX pack (px_*): models only when an imported file names them; the crowd's textures (names built at run time) whenever psx_rig is in
+const srcAll = [...files].map((f) => fs.readFileSync(f, 'utf8')).join('\n');
+if ([...files].some((f) => /psx_rig\.js$/.test(f))) for (const n of base.keys()) if (n.startsWith('px_ch_')) want.add(n);
+const list = [...want].map((n) => base.get(n)).concat(all.filter((n) => !n.endsWith('.png') && (!n.startsWith('px_') || srcAll.includes(n.replace(/\.\w+$/, '')))));
 const listFile = path.join(DIST, 'textures.json'); fs.writeFileSync(listFile, JSON.stringify(list));
 console.log(`phone build: ${files.size} source files, ${want.size} of ${base.size} textures`);
 execFileSync('python3', [path.join(ROOT, 'tools/pack_textures.py'), TEX, path.join(DIST, 'packs'), listFile], { stdio: 'inherit' });

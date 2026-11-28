@@ -30,6 +30,7 @@ import { makeCar, LIVERIES, carEnv } from './vehicle/carbody2.js';
 import { makeSky } from './models/sky.js';
 import { makeAqueductGarden, makeIzakaya, makePotteryGallery, makeBarrelPlanter, makeCurvedBench, makeWifiStand, makeWeepingMaple, makePizzaAFrame, makeComicVending, makeStickerPost, makeMural as makeRainbowMural } from './models/inspo70.js';
 import { makePinkHouse } from './models/inspo71.js';
+import { preloadPxPeople, pxPeopleReady, pxPerson } from './models/psx_rig.js';
 import { makeKeiGarage } from './models/batch76.js';
 import { makeArtGallery } from './models/inspo68.js';
 import { makeTempleFront } from './models/inspo72.js';
@@ -42,6 +43,7 @@ import { makeMallPassage } from './models/batch75.js';
 import { buildOldSquare } from './areas/oldsquare.js';
 import { buildOldSouth } from './areas/oldsouth.js';
 await fontsReady;
+await preloadPxPeople().catch((e) => console.warn('psx people', e && e.message));   // the PSX pack people (POLISH_NOTES 152): half the crowd
 
 const qs = new URLSearchParams(location.search), PHONE = matchMedia('(pointer: coarse)').matches;
 if (PHONE || qs.has('low')) useLowDetailBodies();
@@ -283,7 +285,7 @@ function buildArea(id, carried) {
     police: !LAW_ON ? null : { want: () => stars(), target: () => (stars() && downT <= 0 ? (mode === 'drive' ? { x: drive.state.x, z: drive.state.z, v: Math.hypot(drive.state.vx, drive.state.vz), foot: false } : { x: walk.position.x, z: walk.position.z, v: 0, foot: true }) : null),
       spawn: (i) => { const c = makeCar({ type: 'sedan', color: '#eef0f2', roofColor: '#15171a', rim: 'steel', livery: LIVERIES.police, name: 'police car', plate: 'ELM P' + (10 + i % 90) }); root.add(c); drive.addCar(c, { name: 'police car' }); return c; } },
     spawn: (i) => { const [type, opt] = TRAFFIC[(i * 5 + (id === 'east' ? 3 : 0)) % TRAFFIC.length], c = makeCar({ type, ...opt, plate: 'ELM ' + (100 + (i * 37) % 900) }); root.add(c); drive.addCar(c, { name: opt.name }); return c; } });
-  const people = makePeople({ scene: root, grid: GRID, sidewalkY: SW, count: PHONE ? 14 : 20, odd: 2, steer: (x, z, h) => sidestep(def, x, z, h), ok: (x, z) => driveAreas.some((a) => x >= a.minX && x <= a.maxX && z >= a.minZ && z <= a.maxZ) });
+  const people = makePeople({ scene: root, grid: GRID, sidewalkY: SW, count: PHONE ? 14 : 20, odd: 2, make: (i) => (pxPeopleReady() && i % 2 === 1 ? pxPerson(i * 3 + 1) : null), steer: (x, z, h) => sidestep(def, x, z, h), ok: (x, z) => driveAreas.some((a) => x >= a.minX && x <= a.maxX && z >= a.minZ && z <= a.maxZ) });
   const streamer = makeStreamer(root, { phone: true, max: 300 }); streamer.setScale(PHONE ? 0.8 : 1);
   console.log('area', id, ': buildings', district.userData.buildings.length, 'interiors', JSON.stringify(interiors.stats()));
   return { id, def, root, district, interiors, people, streamer, floors: S.floors, tick: S.tick, npcs: S.npcs, shopPad, traffic, wrong, libCount };

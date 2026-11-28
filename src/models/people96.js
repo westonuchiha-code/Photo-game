@@ -36,10 +36,10 @@ export function makePerson(seed = 1, { worker = false } = {}) { const r = rng(se
 
 // odd: how many of them are a bit off (phone areas): they do not walk. One kind stands and watches you wherever you
 // go, and is somewhere else when you look again; the other stands facing the wall.
-export function makePeople({ scene, grid, sidewalkY = 0.14, count = 40, ok = null, odd = 0, steer = null }) {
+export function makePeople({ scene, grid, sidewalkY = 0.14, count = 40, ok = null, odd = 0, steer = null, make = null }) {   // make(i): an optional body to use instead of makePerson (null: the usual)
   const group = new THREE.Group(); group.name = 'people'; scene.add(group); const { xs, zs } = grid, r = rng(9601), P = [];
   const poolM = new THREE.MeshBasicMaterial({ color: '#3a0a0c', transparent: true, opacity: 0.7, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3 }), poolG = new THREE.CircleGeometry(0.55, 14); poolG.rotateX(-Math.PI / 2);
-  for (let i = 0; i < count; i++) { const mesh = makePerson(i + 1); mesh.visible = false; group.add(mesh); const pool = new THREE.Mesh(poolG, poolM); pool.visible = false; group.add(pool);
+  for (let i = 0; i < count; i++) { const mesh = (make && make(i)) || makePerson(i + 1); mesh.visible = false; group.add(mesh); const pool = new THREE.Mesh(poolG, poolM); pool.visible = false; group.add(pool);
     P.push({ mesh, pool, seed: i + 1, odd: i < odd ? (i % 2 ? 'wall' : 'watch') : null, stare: 0, moveT: 20 + i * 9, active: false, u: 0, dir: 1, sp: 1.3, v: 0, ph: r() * 6, h: 0, ox: 0, oz: 0, lane: 0, blk: null, st: 'walk', t: 0, vx: 0, vz: 0, vy: 0, y: 0, tum: 0, nerve: 0.6 + r() * 0.4, seen: 0 }); }
   // a block's sidewalk ring, walked as a rounded rectangle: u metres along it -> position + heading
   const ring = (p) => { const [i, j] = p.blk, o = 6.05 + p.lane, x0 = xs[i] + o, x1 = xs[i + 1] - o, z0 = zs[j] + o, z1 = zs[j + 1] - o, w = x1 - x0, d = z1 - z0, per = 2 * (w + d); let u = ((p.u % per) + per) % per, x, z, h;
