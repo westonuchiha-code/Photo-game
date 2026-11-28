@@ -1291,3 +1291,16 @@ change the night look, which the owner asked to keep). Every photo sent so far i
   - `match: '#hex'` option: tints so the texture's average colour lands on a target, so wood, stone and tile in one piece agree.
   - `patchwork()` / `rustPaint()`: a clean painted base with rust blotches cut out of `rusty_paint` and pasted three times (as is, upside down, half turned), faint run-stains, then one grade over it. It replaced the camo-repeat rusty paint everywhere in the fill sets.
 - The kitchen run is now wood cabinets, with the worktop and tiles colour-matched.
+
+## 150: No-repeat pass on the whole game (phone game + library)
+- `src/texpolish.js` is imported right after texcache.js in `src/phone.js` and `viewer.html`. It tags every loaded texture with its file name and patches every textured material when it compiles. No model file had to change. The big-town files are not touched (frozen).
+- How each texture is treated is set in `src/tiling.js`, written by `tools/classify_tiling.py`. The script decides by seam test, name rules and hand lists, all checked by eye on contact sheets:
+  - `full`: organic surfaces. Each repeat is shifted and flipped at random, with soft seams.
+  - `flip`: square tiles, including the drop-ceiling tile ab_ceil. Each repeat is flipped at random.
+  - `tone`: grids (brick, planks, siding, paving). The layout is kept; they get a stronger light/dark wash.
+  - `off`: signs, photos, food, faces, cut-outs. Untouched.
+  - Every mode except `off` also gets the shared gentle grade.
+- The normal map follows the same shuffle and flips (bump directions flipped to match), so bumps stay on their pits.
+- Each object's position seeds the shuffle (a flat varying, rounded), so identical copies differ. A ceiling of separate identical tiles no longer repeats tile for tile.
+- `?notp` on the URL turns the pass off, for comparing.
+- New textures: rerun `python3 tools/classify_tiling.py` and check the new ones on a contact sheet.

@@ -5,6 +5,7 @@
 // services, cars, people) plus the hand-built photo sets that stand on its reserved lots.
 // Its own page (phone.html) and its own build (tools/build_phone.mjs), which packs only the textures these imports use.
 import { shrinkCanvases } from './texcache.js';   // (first: it routes every texture load; phones get textures at 512 px)
+import './texpolish.js';   // (second: the no-repeat pass, POLISH_NOTES 150)
 import * as THREE from 'three';
 import { finishLoading } from './loading.js';
 import { fontsReady } from './fonts.js';

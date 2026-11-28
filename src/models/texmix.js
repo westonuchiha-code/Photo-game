@@ -13,8 +13,10 @@ import { tex, rng } from './kit.js';
 export const HOUSE = { sat: 0.9, con: 0.94, tone: 0.16 };
 // ---- shader: no visible repeats + grade
 const NT_FUNCS = `
+flat varying vec3 vNtSeed;
 float ntH(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
-vec4 ntCell(vec2 c){ return vec4(ntH(c), ntH(c + 17.3), ntH(c + 41.9) < 0.5 ? -1.0 : 1.0, ntH(c + 73.1) < 0.5 ? -1.0 : 1.0); }
+vec2 ntS = vec2(0.0);
+vec4 ntCell(vec2 c){ c += ntS; return vec4(ntH(c), ntH(c + 17.3), ntH(c + 41.9) < 0.5 ? -1.0 : 1.0, ntH(c + 73.1) < 0.5 ? -1.0 : 1.0); }
 vec4 ntAt(sampler2D s, vec2 uv, vec2 c, vec2 dx, vec2 dy){ vec4 o = ntCell(c); return textureGrad(s, uv * o.zw + o.xy, dx * o.zw, dy * o.zw); }
 float ntN(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(ntH(i), ntH(i + vec2(1, 0)), f.x), mix(ntH(i + vec2(0, 1)), ntH(i + vec2(1, 1)), f.x), f.y); }
 vec4 ntSample(sampler2D s, vec2 uv){ vec2 c = floor(uv), f = fract(uv), dx = dFdx(uv), dy = dFdy(uv);
@@ -24,20 +26,33 @@ vec4 ntSample(sampler2D s, vec2 uv){ vec2 c = floor(uv), f = fract(uv), dx = dFd
   if (wx > 0.001) a = mix(a, ntAt(s, uv, c + vec2(f.x > 0.5 ? 1.0 : -1.0, 0.0), dx, dy), wx);
   if (wy > 0.001) a = mix(a, ntAt(s, uv, c + vec2(0.0, f.y > 0.5 ? 1.0 : -1.0), dx, dy), wy);
   return a; }
+vec3 ntNAt(sampler2D s, vec2 uv, vec2 c, vec2 dx, vec2 dy){ vec4 o = ntCell(c); vec3 n = textureGrad(s, uv * o.zw + o.xy, dx * o.zw, dy * o.zw).xyz * 2.0 - 1.0; n.xy *= o.zw; return n; }
+vec3 ntNormal(sampler2D s, vec2 uv){ vec2 c = floor(uv), f = fract(uv), dx = dFdx(uv), dy = dFdy(uv);
+  vec3 a = ntNAt(s, uv, c, dx, dy);
+  float wx = f.x > 0.5 ? 0.5 * smoothstep(0.76, 1.0, f.x) : 0.5 * (1.0 - smoothstep(0.0, 0.24, f.x));
+  float wy = f.y > 0.5 ? 0.5 * smoothstep(0.76, 1.0, f.y) : 0.5 * (1.0 - smoothstep(0.0, 0.24, f.y));
+  if (wx > 0.001) a = mix(a, ntNAt(s, uv, c + vec2(f.x > 0.5 ? 1.0 : -1.0, 0.0), dx, dy), wx);
+  if (wy > 0.001) a = mix(a, ntNAt(s, uv, c + vec2(0.0, f.y > 0.5 ? 1.0 : -1.0), dx, dy), wy);
+  return a; }
+vec3 ntNFlip(sampler2D s, vec2 uv){ vec2 c = floor(uv), dx = dFdx(uv), dy = dFdy(uv); vec4 o = ntCell(c); vec2 f = fract(uv); vec2 q = c + vec2(o.z < 0.0 ? 1.0 - f.x : f.x, o.w < 0.0 ? 1.0 - f.y : f.y); vec3 n = textureGrad(s, q, dx * o.zw, dy * o.zw).xyz * 2.0 - 1.0; n.xy *= o.zw; return n; }
+vec4 ntFlip(sampler2D s, vec2 uv){ vec2 c = floor(uv), dx = dFdx(uv), dy = dFdy(uv); vec4 o = ntCell(c); vec2 f = fract(uv); vec2 q = c + vec2(o.z < 0.0 ? 1.0 - f.x : f.x, o.w < 0.0 ? 1.0 - f.y : f.y); return textureGrad(s, q, dx * o.zw, dy * o.zw); }
 `;
-export function noTile(m, { grade = HOUSE, tile = true } = {}) {
-  const g = { ...HOUSE, ...grade }, key = `nt${tile ? 1 : 0}_${g.sat}_${g.con}_${g.tone}`, f = (v) => v.toFixed(3);
-  m.onBeforeCompile = (sh) => {
-    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\n' + NT_FUNCS)
-      .replace('#include <map_fragment>', `#ifdef USE_MAP
-  vec4 sampledDiffuseColor = ${tile ? 'ntSample(map, vMapUv)' : 'texture2D(map, vMapUv)'};
+// the shader chunk: mode 'full' shuffles + flips each repeat (soft seams), 'flip' only flips each repeat (square tiles),
+// 'tone' leaves the layout alone (grids: brick, planks), every mode gets the slow light/dark wash and the grade
+export function ntChunk(mode = 'full', grade = HOUSE) { const g = { ...HOUSE, ...grade }, f = (v) => v.toFixed(3);
+  const smp = mode === 'full' ? 'ntSample(map, vMapUv)' : mode === 'flip' ? 'ntFlip(map, vMapUv)' : 'texture2D(map, vMapUv)';
+  return `#ifdef USE_MAP
+  vec3 ntq = floor(vNtSeed * 8.0 + 0.5); ntS = floor(vec2(ntH(ntq.xz * 0.0731 + ntq.y * 0.037), ntH(ntq.zx * 0.1913 - ntq.y * 0.011)) * 997.0);
+  vec4 sampledDiffuseColor = ${smp};
   vec3 ntc = sampledDiffuseColor.rgb; float ntl = dot(ntc, vec3(0.2126, 0.7152, 0.0722));
   ntc = mix(vec3(ntl), ntc, ${f(g.sat)}); ntc = max((ntc - 0.18) * ${f(g.con)} + 0.18, 0.0);
-  ntc *= 1.0 + ${f(g.tone)} * (ntN(vMapUv * 0.37 + 3.1) * 0.7 + ntN(vMapUv * 1.3) * 0.3 - 0.5);
+  ntc *= 1.0 + ${f(g.tone * (mode === 'tone' ? 1.6 : 1))} * (ntN(vMapUv * 0.37 + 3.1 + ntS * 0.013) * 0.7 + ntN(vMapUv * 1.3 + ntS * 0.007) * 0.3 - 0.5);
   sampledDiffuseColor.rgb = ntc; diffuseColor *= sampledDiffuseColor;
-#endif`);
-  };
-  m.customProgramCacheKey = () => key; m.needsUpdate = true; return m;
+#endif`; }
+export function ntPatch(sh, mode, grade) { sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nflat varying vec3 vNtSeed;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvNtSeed = modelMatrix[3].xyz;\n#ifdef USE_INSTANCING\nvNtSeed += instanceMatrix[3].xyz;\n#endif'); sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\n' + NT_FUNCS).replace('#include <map_fragment>', ntChunk(mode, grade)); if (mode === 'full' || mode === 'flip') sh.fragmentShader = sh.fragmentShader.replace('#include <normal_fragment_maps>', THREE.ShaderChunk.normal_fragment_maps.replace('texture2D( normalMap, vNormalMapUv ).xyz * 2.0 - 1.0', mode === 'full' ? 'ntNormal( normalMap, vNormalMapUv )' : 'ntNFlip( normalMap, vNormalMapUv )')); }
+export function noTile(m, { grade = HOUSE, tile = true, mode = tile ? 'full' : 'tone' } = {}) {
+  const g = { ...HOUSE, ...grade }, key = `nt_${mode}_${g.sat}_${g.con}_${g.tone}`;
+  m.onBeforeCompile = (sh) => ntPatch(sh, mode, g); m.customProgramCacheKey = () => key; m.needsUpdate = true; return m;
 }
 // ---- wait for library images
 const imgOK = (i) => i && (i.width || i.naturalWidth) > 0 && (i.complete === undefined || i.complete);
