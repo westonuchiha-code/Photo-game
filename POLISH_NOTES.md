@@ -1268,3 +1268,6 @@ change the night look, which the owner asked to keep). Every photo sent so far i
 - 147d: snow-forest backdrop removed. Owner: a far-off backdrop works only for things that are really far off (sky,
   mountains); anything with a near tree or stump in it cannot sit on the horizon. Kept: the sky over the mountains.
 - 147e: the snowy-pine-forest photo deleted at the owner's word.
+- Owner's rule (148): do not tell the owner that something has not been tested on the phone. The owner tests when
+  they get round to it, often away from the computer, and does not report every test. Say what was checked here
+  (headless) only when it matters to a specific result, never as a standing "not tested on your phone" line.
