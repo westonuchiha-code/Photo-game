@@ -79,7 +79,7 @@ export async function glbRig(file, { height = 2, hang = 0.15, seed = 1 } = {}) {
 
 // a long tool from an OBJ (handle along z, head at the +z end): faces well off the handle's axis or at the tip are the
 // head; each part gets its own material (used while the pack's own texture is missing)
-export const objSrc = (name) => { const k = name + '.obj'; if (!_src.has(k)) _src.set(k, fetch(BASE + k).then((r) => { if (!r.ok) throw new Error('missing ' + k); return r.text(); }).then((t) => new OBJLoader().parse(t))); return _src.get(k); };
+export const objSrc = (name) => { const k = name + '.obj'; if (!_src.has(k)) _src.set(k, fetch(BASE + k).then((r) => { if (!r.ok) throw new Error('missing ' + k); return r.text(); }).then((t) => { const o = new OBJLoader().parse(t.replace(/^l .*$/gm, '')); o.userData.lines = /^l /m.test(t) ? new OBJLoader().parse(t.replace(/^f .*$/gm, '')) : null; return o; })); return _src.get(k); };
 export async function objTool(file, headMat, handleMat, { largest = 0.8, handleR = 0.032, tip = 0.07 } = {}) {
   const src = await objSrc(file); let geo = null; src.traverse((o) => { if (!geo && o.isMesh) geo = o.geometry; });
   const g = geo.index ? geo.toNonIndexed() : geo.clone(), p = g.attributes.position; let zmax = -1e9; for (let i = 0; i < p.count; i++) zmax = Math.max(zmax, p.getZ(i));
@@ -89,4 +89,23 @@ export async function objTool(file, headMat, handleMat, { largest = 0.8, handleR
   for (const nm of Object.keys(g.attributes)) { const a = g.attributes[nm], arr = new a.array.constructor(order.length * 3 * a.itemSize); order.forEach((f, j) => { for (let k = 0; k < 3; k++) for (let c = 0; c < a.itemSize; c++) arr[(j * 3 + k) * a.itemSize + c] = a.array[(f + k) * a.itemSize + c]; }); out.setAttribute(nm, new THREE.BufferAttribute(arr, a.itemSize)); }
   if (!out.attributes.normal) out.computeVertexNormals(); out.addGroup(0, handle.length * 3, 0); out.addGroup(handle.length * 3, head.length * 3, 1);
   const m = new THREE.Mesh(out, [handleMat, headMat]); m.rotation.x = -Math.PI / 2; return settle(m, { largest });
+}
+
+// an OBJ dressed from the library: every face gets a material key from pick({ obj, mtl, n, c, b, ob }) (n face normal,
+// c face centre, b whole-model box, ob the part's box) and real-world UVs (`tile` metres per repeat, by face direction),
+// since the pack's own UVs point into atlases we don't use. Line elements are dropped unless keepLines (as dark rope).
+export async function objDress(file, mats, pick, { scale = null, height = null, largest = null, tile = 1, keepLines = false, lineMat = null } = {}) {
+  const src = await objSrc(file), parts = []; src.updateMatrixWorld(true);
+  src.traverse((o) => { if (o.isMesh) parts.push(o); });
+  const all = new THREE.Box3(); for (const o of parts) all.expandByObject(o); if (scale === null && height === null && largest === null) scale = 1;
+  const keys = Object.keys(mats), buckets = new Map(keys.map((k) => [k, { p: [], n: [], u: [] }])), A = new THREE.Vector3(), B = new THREE.Vector3(), C = new THREE.Vector3(), N = new THREE.Vector3(), c = new THREE.Vector3();
+  for (const o of parts) { const g = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry, p = g.attributes.position, ob = new THREE.Box3().setFromObject(o), mt = [].concat(o.material), grp = g.groups.length ? g.groups : [{ start: 0, count: p.count, materialIndex: 0 }];
+    for (const gr of grp) { const mtl = (mt[gr.materialIndex] || mt[0]).name;
+      for (let f = gr.start; f < gr.start + gr.count; f += 3) { A.fromBufferAttribute(p, f); B.fromBufferAttribute(p, f + 1); C.fromBufferAttribute(p, f + 2); N.subVectors(C, B).cross(B.clone().sub(A)).normalize(); N.negate(); c.copy(A).add(B).add(C).divideScalar(3);
+        const k = pick({ obj: o.name, mtl, n: N, c, b: all, ob }); const bk = buckets.get(k) || buckets.get(keys[0]); const ax = Math.abs(N.x), ay = Math.abs(N.y), az = Math.abs(N.z);
+        for (const v of [A, B, C]) { bk.p.push(v.x, v.y, v.z); bk.n.push(N.x, N.y, N.z); const [u, w] = ax >= ay && ax >= az ? [v.z, v.y] : ay >= az ? [v.x, v.z] : [v.x, v.y]; bk.u.push(u / tile, w / tile); } } } }
+  const g = new THREE.Group();
+  for (const [k, bk] of buckets) { if (!bk.p.length) continue; const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(bk.p, 3)); geo.setAttribute('normal', new THREE.Float32BufferAttribute(bk.n, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(bk.u, 2)); g.add(new THREE.Mesh(geo, mats[k])); }
+  if (keepLines && src.userData.lines) src.userData.lines.traverse((o) => { if (o.isLineSegments || o.isLine) { const l = o.clone(); l.material = lineMat || new THREE.LineBasicMaterial({ color: '#2a2622' }); g.add(l); } });
+  return settle(g, { scale, height, largest });
 }
