@@ -1357,3 +1357,12 @@ change the night look, which the owner asked to keep). Every photo sent so far i
 - The pool's Godot water shader stands in as `makePxPoolWater` (animated sewer-kit water texture).
 - Line elements in the OBJs (ropes, guides) are stripped before parsing, because OBJLoader turns a whole part into lines otherwise. The tarp and the tennis racket keep theirs as ropes and strings.
 - Re-run the generator when packs are re-sent; tune looks in its table, not in the generated files.
+- 153b: vehicles are dressed by hand in `src/models/psx_vehicles.js`; the generator skips that pack. The generic pass had painted single-mesh car bodies one colour. Now:
+  - windows come from each body's cabin faces (Car01 is a van, so cab only);
+  - lights, grille, bumpers, ELM COUNTY plates and the POLICE doors are placed by raycast onto the body;
+  - the police car has a black lower band and a red/blue bar;
+  - bumper cars: glossy shell, rubber skirt, seat, spark and number;
+  - excavator: glass cab, drawn tracks and chrome rams;
+  - military: drawn NATO, desert or field-grey camo, track links, dark road wheels and gunmetal guns;
+  - the jet is two-tone with a gold canopy and white stores.
+- `objDress` now flips parts whose faces are wound inward. Car01 was inside out; the fix applies to every OBJ model.

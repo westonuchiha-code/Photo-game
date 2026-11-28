@@ -100,8 +100,11 @@ export async function objDress(file, mats, pick, { scale = null, height = null, 
   const all = new THREE.Box3(); for (const o of parts) all.expandByObject(o); if (scale === null && height === null && largest === null) scale = 1;
   const keys = Object.keys(mats), buckets = new Map(keys.map((k) => [k, { p: [], n: [], u: [] }])), A = new THREE.Vector3(), B = new THREE.Vector3(), C = new THREE.Vector3(), N = new THREE.Vector3(), c = new THREE.Vector3();
   for (const o of parts) { const g = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry, p = g.attributes.position, ob = new THREE.Box3().setFromObject(o), mt = [].concat(o.material), grp = g.groups.length ? g.groups : [{ start: 0, count: p.count, materialIndex: 0 }];
+    // faces wound inward (some pack parts are): vote by face normal against the direction from the part's centre, flip if most point in
+    const oc = ob.getCenter(new THREE.Vector3()); let vote = 0; for (let f = 0; f < p.count; f += 3) { A.fromBufferAttribute(p, f); B.fromBufferAttribute(p, f + 1); C.fromBufferAttribute(p, f + 2); N.subVectors(B, A).cross(C.clone().sub(A)); c.copy(A).add(B).add(C).divideScalar(3).sub(oc); vote += Math.sign(N.dot(c)) * N.length(); }
+    const flip = vote < 0;
     for (const gr of grp) { const mtl = (mt[gr.materialIndex] || mt[0]).name;
-      for (let f = gr.start; f < gr.start + gr.count; f += 3) { A.fromBufferAttribute(p, f); B.fromBufferAttribute(p, f + 1); C.fromBufferAttribute(p, f + 2); N.subVectors(C, B).cross(B.clone().sub(A)).normalize(); N.negate(); c.copy(A).add(B).add(C).divideScalar(3);
+      for (let f = gr.start; f < gr.start + gr.count; f += 3) { A.fromBufferAttribute(p, f); B.fromBufferAttribute(p, f + 1); C.fromBufferAttribute(p, f + 2); if (flip) { const t = B.clone(); B.copy(C); C.copy(t); } N.subVectors(B, A).cross(C.clone().sub(A)).normalize(); c.copy(A).add(B).add(C).divideScalar(3);
         const k = pick({ obj: o.name, mtl, n: N, c, b: all, ob }); const bk = buckets.get(k) || buckets.get(keys[0]); const ax = Math.abs(N.x), ay = Math.abs(N.y), az = Math.abs(N.z);
         const ouv = keepUV.includes(k) && g.attributes.uv; [A, B, C].forEach((v, j) => { bk.p.push(v.x, v.y, v.z); bk.n.push(N.x, N.y, N.z); if (ouv) { bk.u.push(ouv.getX(f + j), ouv.getY(f + j)); return; } const [u, w] = ax >= ay && ax >= az ? [v.z, v.y] : ay >= az ? [v.x, v.z] : [v.x, v.y]; bk.u.push(u / tile, w / tile); }); } } }
   const g = new THREE.Group();
