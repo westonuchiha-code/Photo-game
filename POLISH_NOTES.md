@@ -1313,3 +1313,24 @@ change the night look, which the owner asked to keep). Every photo sent so far i
   - The laundry basket's drawn checkerboard replaced with the braided library texture.
   - Viewer: 8 models crashed the triangle counter (geometry with no position data).
   - Bundled library: 22 models failed because the bundler renames clashing names (`mats` became `mats9`, `makeWallSign` became `makeWallSign2`). The build no longer renames identifiers, and the viewer's name checks ignore an added number.
+
+## 151: The owner's PSX packs, imported into the library
+- Packs: Horror-Fantasy Megapack 1, Modular PSX Sewer Kit 1, Street Furniture 1, PSX Rigged Character Bases 1.2.
+- Unpacked into `.packprev/` (git-ignored). `tools/import_psx.py` copies what is used into `assets/textures` as `px_*`:
+  - models (.glb/.fbx) ride in the texture packs as raw files;
+  - textures are capped at 512 px.
+- Left out:
+  - the "lara" textures (a famous game character's look);
+  - the underwear-only textures;
+  - the cardboard FBX (FBXLoader can't read it; the sewer kit has cardboard boxes);
+  - f_shorts_base.png (truncated in the upload).
+- The Bottles can label looked like a real beer brand and was painted over with a made-up one ("ELM PALE").
+- `src/models/psx_kit.js`: loads by URL string (so the single-file builds serve the files), parses with FBXLoader/GLTFLoader (vendored from r170 with fflate, NURBS and SkeletonUtils), and rebuilds FBX materials from px_ textures by material name.
+- The monsters only ship a T-pose, so `glbRig` poses them: arms down by world-space aim (works for both the CC_Base and Mixamo rigs), a breathing sway, and an occasional head twitch.
+- Library groups:
+  - PSX pack: monsters (23);
+  - PSX pack: people (35 dressed bases + line-up; head tone matched to each body texture);
+  - PSX pack: street props (12);
+  - PSX pack: sewer props (139);
+  - PSX pack: sewer architecture (56).
+- `px_*` textures are classed `off` for the no-repeat pass (they are atlases).

@@ -10,6 +10,7 @@ for f in sorted(os.listdir(D)):
     if not f.endswith('.png'): continue
     n = f[:-4]
     if SKIP.search(n): continue
+    if n.startswith('px_'): out[n] = 'off'; continue   # owner's PSX packs: atlases, never shuffled
     try: im = Image.open(os.path.join(D, f))
     except Exception: continue
     if im.mode in ('RGBA', 'LA', 'P'):
