@@ -17,7 +17,7 @@ const threePlugin = { name: 'three', setup(b) {
 const vhtml = fs.readFileSync(path.join(ROOT, 'viewer.html'), 'utf8');
 const vsrc = vhtml.match(/<script type="module">([\s\S]*?)<\/script>/)[1].replace(/for \(const p of \['\.\/src\/materials\.js', '\.\/src\/world\/materials\.js'\]\)/, "for (const p of ['./src/materials.js'])").replace('const m = await import(p);', "const m = await import('./src/materials.js');");
 const ventry = path.join(ROOT, '.viewer-entry.js'); fs.writeFileSync(ventry, vsrc);
-try { await build({ bundle: true, format: 'esm', target: 'es2022', minify: true, legalComments: 'none', plugins: [threePlugin], logLevel: 'warning', entryPoints: [ventry], outfile: path.join(DIST, 'viewer.js') }); } finally { fs.rmSync(ventry, { force: true }); }
+try { await build({ bundle: true, format: 'esm', target: 'es2022', minifyWhitespace: true, minifySyntax: true, legalComments: 'none', plugins: [threePlugin], logLevel: 'warning', entryPoints: [ventry], outfile: path.join(DIST, 'viewer.js') }); } finally { fs.rmSync(ventry, { force: true }); }
 const boot = fs.readFileSync(path.join(ROOT, 'tools/boot.js'), 'utf8'), idx = JSON.parse(fs.readFileSync(path.join(DIST, 'packs/packs.json'), 'utf8')), b64 = (f) => fs.readFileSync(f).toString('base64');
 const fonts = {}; for (const f of fs.readdirSync(path.join(ROOT, 'assets/fonts'))) fonts[f] = b64(path.join(ROOT, 'assets/fonts', f));
 let data = `<script>window.__packIndex=${JSON.stringify(idx)};window.__fonts=${JSON.stringify(fonts)};window.__fontURL=function(f){return window.__fonts[f]?'data:font/woff2;base64,'+window.__fonts[f]:'assets/fonts/'+f;};</script>\n`;

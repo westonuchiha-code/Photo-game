@@ -1304,3 +1304,12 @@ change the night look, which the owner asked to keep). Every photo sent so far i
 - Each object's position seeds the shuffle (a flat varying, rounded), so identical copies differ. A ceiling of separate identical tiles no longer repeats tile for tile.
 - `?notp` on the URL turns the pass off, for comparing.
 - New textures: rerun `python3 tools/classify_tiling.py` and check the new ones on a contact sheet.
+- Sweep: every library model (870) was screenshotted with the pass on and checked. No artifacts. Black items in the sweep were only textures still loading.
+- Fixed along the way:
+  - Normal maps now follow the shuffle (before, bumps landed off their pits and looked like fine noise).
+  - A seed-precision bug that drew streaks.
+  - ab_ceil moved to flip-only, because it has tile borders printed in it.
+  - Box hedge repeats made smaller.
+  - The laundry basket's drawn checkerboard replaced with the braided library texture.
+  - Viewer: 8 models crashed the triangle counter (geometry with no position data).
+  - Bundled library: 22 models failed because the bundler renames clashing names (`mats` became `mats9`, `makeWallSign` became `makeWallSign2`). The build no longer renames identifiers, and the viewer's name checks ignore an added number.

@@ -93,7 +93,7 @@ const grid = new THREE.GridHelper(1, 20, 0x888888, 0xaaaaaa); grid.material.tran
 let mats = null;
 async function getMats() {
   if (mats) return mats;
-  for (const p of ['./src/materials.js', './src/world/materials.js']) { try { const m = await import(p); if (m.makeMaterials) { mats = m.makeMaterials(); return mats; } } catch (e) { /* try next */ } }
+  for (const p of ['./src/materials.js', './src/world/materials.js']) { try { const m = await import(p); if (m.makeMaterials) { mats = m.makeMaterials(); return mats; } } catch (e) { console.warn('materials', p, e && e.message); } }
   return null;
 }
 
@@ -110,11 +110,12 @@ const ARGS = {
   makeUnit: () => [{ x0: -5, x1: 0, z0: -3, z1: 3, F: 0, FH: 3, door: { side: 'east', z: 0, w: 0.9 }, windows: [], kind: 'kitchen' }],
 };
 async function build(fn) {
-  if (ARGS[fn.name]) return fn(...ARGS[fn.name]());
+  const an = ARGS[fn.name] || ARGS[fn.name.replace(/\d+$/, '')];   // (the bundler adds a number to names that clash)
+  if (an) return fn(...an());
   const src = fn.toString(), params = src.slice(src.indexOf('(') + 1, src.indexOf(')')).trim();
-  if (/^mats\b/.test(params)) return fn(await getMats());
-  if (/^x0\s*,\s*x1/.test(params)) return fn(-2, 2, -2, 2);
-  if (/^x\s*,\s*z/.test(params)) return fn(0, 0);
+  if (/^mats\d*\b/.test(params)) return fn(await getMats());
+  if (/^x0\d*\s*,\s*x1/.test(params)) return fn(-2, 2, -2, 2);
+  if (/^x\d*\s*,\s*z/.test(params)) return fn(0, 0);
   return fn();
 }
 
