@@ -1271,3 +1271,14 @@ change the night look, which the owner asked to keep). Every photo sent so far i
 - Owner's rule (148): do not tell the owner that something has not been tested on the phone. The owner tests when
   they get round to it, often away from the computer, and does not report every test. Say what was checked here
   (headless) only when it matters to a specific result, never as a standing "not tested on your phone" line.
+
+## 148 — Filling gaps from the textures we already have
+161 new library items, built only from textures already in the library (via `src/models/fill_kit.js`), so they sit with the photographed stuff:
+- **Fill: street** (22) fences, gates, barriers, road signs, meters, flagpole, fountains, fire escape, scaffold, manhole, meter box.
+- **Fill: yard + play** (21) swings, see-saw, sandpit, hoop, picnic table, grill, shed, compost, washing line, kennel, pool, porch swing.
+- **Fill: garage + works** (19) workbench, tyres, jack, hoist, shelving, compressor, generator, fuel island, car lift, cement mixer.
+- **Fill: home** (27) piano, radiator, fireplace, fan, laundry, bunk bed, cot, fish tank, plants, water heater, fuse board, dining set.
+- **Fill: public places** (21) laundrette, gym, bar, pool table, jukebox, pews, lectern, card catalogue, carrel, ticket dispenser, stage.
+- **Fill: roofs + walls** (15) water tower, vents, dish, aerial, chimney, condenser, window AC, skylight, hatch, solar, gutter, caged ladder.
+- **Fill: rough ground** (17) boulders, rock pile, mossy rock, stump, logs, hedge, bush, dead tree, leaves, puddle, reeds, brambles, culvert.
+- **Fill: kitchens** (19) units with sink, cooker, fridge, hood, microwave, kettle, dish rack, diner prep table, fryer, range, pass, walk-in.
