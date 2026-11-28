@@ -1400,3 +1400,9 @@ change the night look, which the owner asked to keep). Every photo sent so far i
   - grill: lid handle and vents; tongs; charcoal-bag art;
   - sleeping kit: quilted and strapped bags, foam pads;
   - bins: slatted with ELM PARKS stencils; a dented barrow.
+- 153k: residential detailed by hand in `src/models/psx_residential.js`:
+  - kitchen: a stove with burner rings, knobs, oven window and handle; a dishwasher with control strip and handle; a scored cutting board;
+  - grandfather clock: dial with Roman numerals and a swinging pendulum;
+  - floor: a patterned rug with fringe, bathmat, doormat (WE'RE HOME), a stained mattress;
+  - shelves: a TAKE A BOOK street shelf stocked by stock();
+  - bathroom and baskets: woven baskets with laundry and apples, bottles and packs with made-up brands, a toilet roll with core and flap, a straw broom, a ribbed hot-water bottle.
