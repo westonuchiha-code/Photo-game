@@ -1421,3 +1421,12 @@ change the night look, which the owner asked to keep). Every photo sent so far i
   - piers: nailed decking with gull droppings, wet barnacled feet, a rope coil, a bollard; the end pier gets a lamp post and a lifebuoy;
   - shacks: corrugated walls, a BAIT & TACKLE or ELM STORAGE sign, a window (boarded on one), a padlock and a gutter.
 - Cones: reflective collars fitted by raycasting the cone's real radius at each height.
+
+## 154: Main menu with credits; PSX packs in the phone game's streets
+- `src/menu.js`: the phone game shows a main menu when loading finishes, over the running world. It has PLAY and CREDITS; CREDITS lists `src/credits.js`. `?nomenu` skips it (tests).
+- Credits list the owner's own work, the PSX Rigged Character Bases (town people), the Horror-Fantasy Megapack (creatures), the Sewer Kit, Street Furniture, and the PSX object packs.
+- Authors' names can go in `AUTHORS` in credits.js once the owner gives them; the files only carry PC user names, which are not credits.
+- `dressPSX` in phone.js runs after an area is built:
+  - back courts get clusters: bins, drums, crates, pallets, jerry can, skip and cones, sandbags;
+  - pavements get some outdoor bins, post boxes and fuse boxes;
+  - every piece is placed only where nothing stands, and is collidable.

@@ -8,6 +8,7 @@ import { shrinkCanvases } from './texcache.js';   // (first: it routes every tex
 import './texpolish.js';   // (second: the no-repeat pass, POLISH_NOTES 150)
 import * as THREE from 'three';
 import { finishLoading } from './loading.js';
+import { showMenu } from './menu.js';
 import { fontsReady } from './fonts.js';
 import { WalkControls } from './walk.js';
 import { makeStreamer, mergeStatic } from './stream.js';
@@ -31,6 +32,11 @@ import { makeSky } from './models/sky.js';
 import { makeAqueductGarden, makeIzakaya, makePotteryGallery, makeBarrelPlanter, makeCurvedBench, makeWifiStand, makeWeepingMaple, makePizzaAFrame, makeComicVending, makeStickerPost, makeMural as makeRainbowMural } from './models/inspo70.js';
 import { makePinkHouse } from './models/inspo71.js';
 import { preloadPxPeople, pxPeopleReady, pxPerson } from './models/psx_rig.js';
+import * as PXU from './models/psx_utilities.js';
+import * as PXC from './models/psx_construction.js';
+import * as PXO from './models/psx_outdoors.js';
+import * as PXT from './models/psx_traffic.js';
+import * as PXM from './models/psx_misc.js';
 import { makeKeiGarage } from './models/batch76.js';
 import { makeArtGallery } from './models/inspo68.js';
 import { makeTempleFront } from './models/inspo72.js';
@@ -126,6 +132,22 @@ function streetLibrary(S, district, interiors, id) { const cells = new Map(), co
     else if (e.type === 'flat' || e.type === 'studio') { nFlat++; if (nFlat % 3 === 1) at('makeClusterMailbox', e.doorX + side * 1.25, KV, 0); if (nFlat % 6 === 2) { const [x, z] = e.W(e.doorX - side * 1.4, -1.3 - r() * 0.8); place('makeDeadLeaf', x, z, 0, S.SW + 0.002, [], false); } }
     else if (e.type === 'office') { nOff++; if (nOff % 2 === 1) at('makePedestalBox', e.doorX + side * 2.0, KV, 0); if (nOff % 4 === 2) at('makePipelineSign', e.doorX - side * 2.2, KV - 0.1, 0); } }
   for (const g of cells.values()) S.put(g); count.spots = spots; return count; }
+// ---- the owner's PSX packs out in the streets (POLISH_NOTES 154): clutter in the back courts (bins, drums, crates,
+// pallets, a jerry can, sandbags, cones), and a few things on the pavements (outdoor bins, post boxes, fuse boxes).
+// The makers load their files, so this runs after the area is up; each piece is set down only where nothing stands.
+async function dressPSX(S, district, interiors, id, root) { let q = id === 'east' ? 4241 : 1777; const r = () => ((q = (q * 16807) % 2147483647) / 2147483647);
+  const hit = (x0, x1, z0, z1, m = 0.3) => colliders.some((k) => k.active !== false && (k.type === 'circle' ? k.x > x0 - k.r - m && k.x < x1 + k.r + m && k.z > z0 - k.r - m && k.z < z1 + k.r + m : k.maxX > x0 - m && k.minX < x1 + m && k.maxZ > z0 - m && k.minZ < z1 + m)) || S.areas.some((a) => a.maxX > x0 && a.minX < x1 && a.maxZ > z0 && a.minZ < z1) || drive.cars.some((c) => Math.abs(c.position.x - (x0 + x1) / 2) < 3 + (x1 - x0) / 2 && Math.abs(c.position.z - (z0 + z1) / 2) < 3 + (z1 - z0) / 2);
+  let n = 0; const put = async (mk, x, z, ry = 0, y = 0.02, solid = true) => { if (A.root !== root) return null; let o; try { o = await mk(); } catch (e) { return null; } if (A.root !== root) return null;
+    o.rotation.y = ry; o.updateMatrixWorld(true); const b = new THREE.Box3().setFromObject(o); if (hit(x + b.min.x, x + b.max.x, z + b.min.z, z + b.max.z)) return null;
+    o.position.set(x, y, z); root.add(o); n++; if (solid) colliders.push({ type: 'box', minX: x + b.min.x, maxX: x + b.max.x, minZ: z + b.min.z, maxZ: z + b.max.z }); return o; };
+  const CLUSTERS = [[PXU.makePxTrashContainer01, PXU.makePxBarrel01, PXU.makePxBarrel02, PXU.makePxCrate01], [PXU.makePxTrashContainer02, PXU.makePxPalette01, PXU.makePxCrate02, PXU.makePxJerryCan01], [PXC.makePxWasteContainer01, PXT.makePxTrafficCone01, PXT.makePxTrafficCone02, PXC.makePxPallete02], [PXM.makePxSandbagWall03, PXU.makePxBarrel03, PXU.makePxBarrelWood01, PXU.makePxBucket01]];
+  const courts = district.userData.courts; for (let i = 1; i < courts.length; i++) { const ct = courts[i]; if (!ct.rect) continue; const [x0, x1, z0, z1] = ct.rect, set = CLUSTERS[(i + (id === 'east' ? 2 : 0)) % CLUSTERS.length];
+    for (const [cx, cz, ry] of [[x0 + 2.2, z0 + 2.2, Math.PI / 2], [x1 - 2.2, z0 + 2.2, -Math.PI / 2]]) { let dx = 0; for (const mk of set) { await put(mk, cx + (cx < (x0 + x1) / 2 ? dx : -dx), cz + (r() - 0.5) * 0.6, ry + (r() - 0.5) * 0.3); dx += 1.2 + r() * 0.6; } } }
+  let nShop = 0, nFlat = 0, nOff = 0; for (const e of interiors.list) { const side = e.doorX > e.U / 2 ? -1 : 1, at = (mk, u, v, turn = Math.PI) => { const [x, z] = e.W(u, v); return put(mk, x, z, e.th + turn, S.SW + 0.005); };
+    if (e.type === 'shop' && nShop++ % 6 === 2) await at(PXO.makePxTrashBinOutdoor01, e.doorX - side * 2.2, -1.96);
+    else if ((e.type === 'flat' || e.type === 'studio') && nFlat++ % 5 === 3) await at(PXU.makePxPostbox01, e.doorX - side * 1.8, -1.96, 0);
+    else if (e.type === 'office' && nOff++ % 3 === 1) await at(PXU.makePxFusebox01, e.doorX - side * 2.6, -0.35, 0); }
+  console.log('psx dressing', id, n); }
 // ---- the areas. Both are halves of the big town's district, at the same coordinates, so a street keeps its place
 // when you cross: you (or your car) arrive at the spot you left. `exits`: where an area hands over to another.
 const RING_W = { n: 121, s: -121, e: 282, hw: 9 }, RING_E = { n: 121, s: -121, e: 450, hw: 9 };
@@ -273,6 +295,7 @@ function buildArea(id, carried) {
   let shopPad = null; { const ct = district.userData.courts[0]; if (ct && ct.rect) { const [cx0, cx1, , cz1] = ct.rect, bx = (cx0 + cx1) / 2, bz = cz1 - 9.9, booth = makeBooth(); booth.position.set(bx, 0.014, bz); root.add(booth); mergeStatic(booth);
       for (const [x0, x1, z0, z1] of booth.userData.colliders) colliders.push({ type: 'box', minX: bx + x0, maxX: bx + x1, minZ: bz + z0, maxZ: bz + z1 }); const p = booth.userData.pad; shopPad = [bx + p[0], bx + p[1], bz + p[2], bz + p[3]]; shopPad.room = [bx - 2.15, bx + 2.15, bz - 5, bz + 6.7]; } }
   const libCount = streetLibrary(S, district, interiors, id);
+  setTimeout(() => dressPSX(S, district, interiors, id, root), 0);
   if (carried) { root.add(carried); drive.adopt(carried); }
   drive.rebuild();
   // the door that is always a little open, and the place behind it (mood/wrong.js), built far off to one side of the area
@@ -514,4 +537,4 @@ window.__THREE = THREE;   // (for test scripts)
 window.__scene = { renderer, scene, camera, walk, drive, setMode, use, talk, shop, sound, hands, worldPeople, quick, footPad, townMap, openMap, get pick() { return pick; }, get wrong() { return A.wrong; }, get libCount() { return A.libCount; }, get picks() { return A.picks; }, get marketDone() { return A.marketDone; }, sidestep: (x, z, h) => sidestep(A.def, x, z, h), get obstacles() { return obst; }, get quiet() { return quietLeft > 0; }, startQuiet() { quietT = 0; }, strangeNow() { strangeT = 0; }, get ajar() { return ajar.length; }, law, crime, hurtPlayer, get health() { return health; }, get stars() { return stars(); }, get traffic() { return A.traffic; }, get shopPad() { return A.shopPad; }, get talkTo() { return talkTo; }, get npcs() { return A.npcs || []; }, travel: (to) => travel({ to, label: 'Going' }), peopleTick: (dt) => peopleTick(mode === 'walk' ? walk.position : drive.state, dt), areaIds: Object.keys(AREAS), get area() { return A.id; }, get busy() { return busy; }, get interiors() { return A.interiors; }, get people() { return A.people; }, get district() { return A.district; }, get areaRoot() { return A.root; }, get streamer() { return A.streamer; },
   stats: () => ({ area: A.id, fps, pr, calls: renderer.info.render.calls, tris: renderer.info.render.triangles, tex: renderer.info.memory.textures, geo: renderer.info.memory.geometries }) };
 requestAnimationFrame(frame);
-finishLoading(renderer, scene, camera);
+finishLoading(renderer, scene, camera).then(() => showMenu());
