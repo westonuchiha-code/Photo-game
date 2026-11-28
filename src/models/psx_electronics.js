@@ -2,6 +2,7 @@
 // (screens that glow, knobs, buttons, key beds, vents, ports, LEDs, cables, antennas). Front is +z unless noted.
 // Brand names are all made up; consoles carry none of the real makers' marks.
 import { objDress } from './psx_kit.js';
+import { backglass, playfield } from './pinball_art.js';
 import { THREE, P, text, skin, panel, rnd, grille, slots, noise, scan, stencil, wear, drips, bbox, at, plate, block, knob, led, buttons, keys, screen, cable, rod, feet, glowMat } from './psx_detail.js';
 
 const F = (n) => 'px_o_electronics_' + n;
@@ -114,9 +115,7 @@ export async function makePxPinballTable01() {   // the player stands at +z: pla
   const topAt = (z) => { const rc = new THREE.Raycaster(new THREE.Vector3(0, 5, z), new THREE.Vector3(0, -1, 0)), h = rc.intersectObjects(body, true)[0]; return h ? h.point.y : 1.25; };
   const zF = b.max.z - 0.04, zB = b.min.z + (b.max.z - b.min.z) * 0.22 + 0.02, yF = topAt(zF - 0.05), yB = topAt(zB + 0.05), L = Math.hypot(zF - zB, yB - yF), tilt = Math.atan2(yB - yF, zF - zB), W = (b.max.x - b.min.x) * 0.84;
   const pf = new THREE.Group(); pf.position.set(0, (yF + yB) / 2 + 0.006, (zF + zB) / 2); pf.rotation.x = tilt; g.add(pf);   // the playfield's own frame: x across, z toward the player, y up off the wood
-  const art = panel(256, 512, (x, w, h) => { const gr = x.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#1a1a5a'); gr.addColorStop(1, '#3a0a3a'); x.fillStyle = gr; x.fillRect(0, 0, w, h);
-      x.fillStyle = '#e8c86a'; x.beginPath(); x.arc(w * 0.5, h * 0.2, 40, 0, 7); x.fill(); for (const [cx, cy, c] of [[0.2, 0.55, '#ff4a8a'], [0.8, 0.55, '#4ae8ff'], [0.5, 0.65, '#ffd84a'], [0.3, 0.75, '#4ae86a'], [0.7, 0.75, '#ff7a2a']]) { x.fillStyle = c; x.beginPath(); x.moveTo(w * cx, h * cy - 14); x.lineTo(w * cx + 10, h * cy + 8); x.lineTo(w * cx - 10, h * cy + 8); x.fill(); }
-      text(x, 'MIDNIGHT', w / 2, h * 0.42, '900 30px Arial', '#ff6aa8'); text(x, 'TILT', w / 2, h * 0.47, '900 30px Arial', '#ff6aa8'); x.strokeStyle = '#f4f0e0'; x.lineWidth = 3; for (const lx of [0.15, 0.25, 0.75, 0.85]) { x.beginPath(); x.moveTo(w * lx, h * 0.05); x.lineTo(w * lx, h * 0.15); x.stroke(); } x.fillStyle = '#0a0a0a'; x.beginPath(); x.arc(w * 0.5, h * 0.98, 20, 0, 7); x.fill(); }, 0.55);
+  const art = panel(512, 1024, playfield, 0.55);
   const fld = new THREE.Mesh(new THREE.PlaneGeometry(W, L), art); fld.rotation.x = -Math.PI / 2; pf.add(fld);
   const add = (geo, m, x, y, z, ry = 0) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.rotation.y = ry; o.castShadow = true; pf.add(o); return o; };
   for (const [fx, fz, c] of [[-0.22, -0.32, '#ff4a8a'], [0.22, -0.32, '#4ae8ff'], [0, -0.2, '#ffd84a']]) { add(new THREE.CylinderGeometry(0.035, 0.04, 0.05, 12), P('#f4f0e0', { roughness: 0.4 }), fx * W, 0.025, fz * L); add(new THREE.CylinderGeometry(0.04, 0.04, 0.015, 12), glowMat(c, 1.8), fx * W, 0.055, fz * L); }
@@ -131,7 +130,7 @@ export async function makePxPinballTable01() {   // the player stands at +z: pla
   for (const s of [-1, 1]) { const bt = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.02, 10), redP()); bt.rotation.z = Math.PI / 2; bt.position.set(s * (b.max.x + 0.008), yF - 0.06, b.max.z - 0.12); g.add(bt); }
   // backbox front: lit backglass, the score display, a speaker grille
   const bf = at(g, '+z', 0.5, 0.82, b); bf.p.z = b.min.z + (b.max.z - b.min.z) * 0.2; const bw = W * 0.92;
-  plate(g, bf, bw, 0.42, panel(512, 320, (x, w, h) => { const gr = x.createLinearGradient(0, 0, w, h); gr.addColorStop(0, '#3a0a3a'); gr.addColorStop(1, '#0a0a3a'); x.fillStyle = gr; x.fillRect(0, 0, w, h); x.fillStyle = '#e8c86a'; x.beginPath(); x.arc(w * 0.75, h * 0.35, 54, 0, 7); x.fill(); x.fillStyle = '#0a0a14'; for (let i = 0; i < 7; i++) x.fillRect(w * 0.05 + i * 40, h * 0.4 - (i % 3) * 30, 30, h * 0.6); text(x, 'MIDNIGHT TILT', w / 2, h * 0.86, '900 52px Arial', '#ff6aa8'); }, 1.4), 0.01);
+  plate(g, bf, bw, 0.42, panel(1024, 640, backglass, 1.25), 0.01);
   const sc = { ...bf, p: bf.p.clone().add(new THREE.Vector3(0, -0.29, 0)) }; screen(g, sc, bw * 0.7, 0.07, panel(320, 40, (x, w, h) => { x.fillStyle = '#100800'; x.fillRect(0, 0, w, h); text(x, '000 412 800', w / 2, h / 2, 'bold 30px monospace', '#ff9a2a'); }, 1.8), 0.012, 0.008);
   plate(g, { ...bf, p: bf.p.clone().add(new THREE.Vector3(0, -0.38, 0)) }, bw * 0.8, 0.06, panel(256, 32, (x, w, h) => { x.fillStyle = '#1a1a1e'; x.fillRect(0, 0, w, h); grille(x, 0, 0, w, h, 6, 1.5, '#050505'); }, 0), 0.005);
   return g; }
