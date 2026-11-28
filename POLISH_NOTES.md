@@ -1265,3 +1265,5 @@ change the night look, which the owner asked to keep). Every photo sent so far i
   if a photo has nothing usable for a thing, don't force it into one. The lake photo was then deleted at the owner's word.
 - Owner's rule (147c): when a photo has nothing useful, say so; the owner will usually say to delete it, and then the
   photo itself is deleted from photos/, not left unused.
+- 147d: snow-forest backdrop removed. Owner: a far-off backdrop works only for things that are really far off (sky,
+  mountains); anything with a near tree or stump in it cannot sit on the horizon. Kept: the sky over the mountains.
