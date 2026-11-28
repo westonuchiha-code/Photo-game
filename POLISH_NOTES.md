@@ -1430,3 +1430,4 @@ change the night look, which the owner asked to keep). Every photo sent so far i
   - back courts get clusters: bins, drums, crates, pallets, jerry can, skip and cones, sandbags;
   - pavements get some outdoor bins, post boxes and fuse boxes;
   - every piece is placed only where nothing stands, and is collidable.
+- Phone build now packs the PSX model files used by `dressPSX` and the library textures the psx_ and kit files name. The phone file is 59.7 MB (was 48.8).

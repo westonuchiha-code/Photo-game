@@ -25,7 +25,7 @@ while (todo.length) { const f = todo.pop(); if (files.has(f)) continue; files.ad
 const all = fs.readdirSync(TEX), base = new Map(all.filter((n) => n.endsWith('.png')).map((n) => [n.slice(0, -4), n]));
 const normalOf = JSON.parse(fs.readFileSync(path.join(ROOT, 'src/normals.js'), 'utf8').match(/NORMAL_OF = (\{[\s\S]*?\});/)[1]);
 const want = new Set();
-const GENERATORS = /[\\/](phone|district|interiors|interiors91|furniture88|kitchen89|office90|civic93|street92|kit|people96|body97|carbody|trees|sky|house94|factory95|garden87)\.js$/;   // read by scanning; every other file by running
+const GENERATORS = /[\\/](phone|district|interiors|interiors91|furniture88|kitchen89|office90|civic93|street92|kit|people96|body97|carbody|trees|sky|house94|factory95|garden87|psx_[a-z_]+|fill_kit|texmix|kit)\.js$/;   // read by scanning; every other file by running
 for (const f of files) { if (!GENERATORS.test(f)) continue;
   const src = fs.readFileSync(f, 'utf8');
   for (const m of src.matchAll(/['"`]([A-Za-z0-9_]+)['"`]/g)) if (base.has(m[1])) want.add(m[1]);          // 'name'
@@ -48,7 +48,7 @@ const scanned = want.size;
 // the PSX pack (px_*): models only when an imported file names them; the crowd's textures (names built at run time) whenever psx_rig is in
 const srcAll = [...files].map((f) => fs.readFileSync(f, 'utf8')).join('\n');
 if ([...files].some((f) => /psx_rig\.js$/.test(f))) for (const n of base.keys()) if (n.startsWith('px_ch_')) want.add(n);
-const list = [...want].map((n) => base.get(n)).concat(all.filter((n) => !n.endsWith('.png') && (!n.startsWith('px_') || srcAll.includes(n.replace(/\.\w+$/, '')))));
+const list = [...want].map((n) => base.get(n)).concat(all.filter((n) => !n.endsWith('.png') && (!n.startsWith('px_') || srcAll.includes(n.replace(/\.\w+$/, '')) || (/^px_o_[a-z]+_/.test(n) && srcAll.includes("'" + n.match(/^px_o_[a-z]+_/)[0] + "'")))));
 const listFile = path.join(DIST, 'textures.json'); fs.writeFileSync(listFile, JSON.stringify(list));
 console.log(`phone build: ${files.size} source files, ${want.size} of ${base.size} textures`);
 execFileSync('python3', [path.join(ROOT, 'tools/pack_textures.py'), TEX, path.join(DIST, 'packs'), listFile], { stdio: 'inherit' });
