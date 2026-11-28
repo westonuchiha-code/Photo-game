@@ -1392,3 +1392,11 @@ change the night look, which the owner asked to keep). Every photo sent so far i
   - bakery: bread with crust shading, score marks, flour and seeds; cake layers with drips and cherries; chip cookie; glazed pastries;
   - packets: snack and coffee bags, a pasta box, sausage trays;
   - produce: wrinkled walnuts, striped watermelons with seeded flesh.
+- 153j: outdoors detailed by hand in `src/models/psx_outdoors.js`, at real sizes (the files run 2–5× large):
+  - tents: nylon with seams, a zipped door with a pull, guy ropes picked out;
+  - umbrellas: striped canopy, metal pole, concrete foot;
+  - bench: slats, iron ends, a memorial plaque;
+  - camp chairs and table: canvas, aluminium slats, steel frames;
+  - grill: lid handle and vents; tongs; charcoal-bag art;
+  - sleeping kit: quilted and strapped bags, foam pads;
+  - bins: slatted with ELM PARKS stencils; a dented barrow.
