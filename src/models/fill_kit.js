@@ -2,6 +2,8 @@
 // library, so the new things sit with the photographed ones.
 import * as THREE from 'three';
 import { mat, plain, canvasT, rng } from './kit.js';
+import { noTile, rustPaint, matchColour, patchwork, HOUSE } from './texmix.js';
+export { noTile, rustPaint, matchColour, patchwork, HOUSE };
 export { THREE, mat, plain, canvasT, rng };
 export const PI = Math.PI;
 export const B = (w, h, d, m, x, y, z, parent, rx = 0, ry = 0, rz = 0) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); o.rotation.set(rx, ry, rz); parent.add(o); return o; };
@@ -11,8 +13,8 @@ export const tube = (g, a, b, r, m, seg = 8) => { const A = new THREE.Vector3(..
 export const torus = (g, R, r, m, x, y, z, rx = 0, ry = 0, arc = Math.PI * 2) => { const o = new THREE.Mesh(new THREE.TorusGeometry(R, r, 8, 24, arc), m); o.position.set(x, y, z); o.rotation.set(rx, ry, 0); g.add(o); return o; };
 // a texture from the library, repeated rx by ry, tinted (tint multiplies the photo's own colour)
 const _T = new Map();
-export function T(name, rx = 1, ry = 1, { tint = '#ffffff', rough = 0.8, metal = 0, side = THREE.FrontSide, normal = 0.8 } = {}) { const k = [name, rx, ry, tint, rough, metal, side].join('|'); if (_T.has(k)) return _T.get(k);
-  const src = mat(name, { tint, rough, metal, side, normal }), m = src.clone(); if (src.map) { m.map = src.map.clone(); m.map.repeat.set(rx, ry); m.map.needsUpdate = true; } if (src.normalMap) { m.normalMap = src.normalMap.clone(); m.normalMap.repeat.set(rx, ry); m.normalMap.needsUpdate = true; } m.userData.flat = true; _T.set(k, m); return m; }
+export function T(name, rx = 1, ry = 1, { tint = '#ffffff', rough = 0.8, metal = 0, side = THREE.FrontSide, normal = 0.8, nt = true, grade = HOUSE, match = null, matchAmt = 0.85 } = {}) { const k = [name, rx, ry, tint, rough, metal, side, nt, JSON.stringify(grade), match, matchAmt].join('|'); if (_T.has(k)) return _T.get(k);
+  const src = mat(name, { tint, rough, metal, side, normal }), m = src.clone(); if (src.map) { m.map = src.map.clone(); m.map.repeat.set(rx, ry); m.map.needsUpdate = true; } if (src.normalMap) { m.normalMap = src.normalMap.clone(); m.normalMap.repeat.set(rx, ry); m.normalMap.needsUpdate = true; } m.userData.flat = true; if (nt) noTile(m, { grade }); if (match) matchColour(m, name, match, matchAmt); _T.set(k, m); return m; }
 export const P = (color, o = {}) => plain(color, { roughness: 0.6, ...o });
 export const text = (x, s, cx, cy, font, col, maxW) => { x.font = font; x.fillStyle = col; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(s, cx, cy, maxW); };
 export const sheet = (w, h, draw, o = {}) => new THREE.MeshStandardMaterial({ map: canvasT(w, h, draw), roughness: 0.7, ...o });
@@ -22,7 +24,7 @@ export const shadows = (g, col = null) => { g.traverse((o) => { if (o.isMesh && 
 // the usual materials, all from library textures
 export const M = {
   galv: () => T('gf_galv', 1, 1, { rough: 0.45, metal: 0.5 }), steel: () => T('g132_metal_scratched', 1, 1, { rough: 0.4, metal: 0.4, tint: '#d8dade' }), stainless: () => P('#c4c8cc', { roughness: 0.32, metalness: 0.6 }),
-  rust: () => T('b84_rust', 1, 1, { rough: 0.9, metal: 0.2 }), rustpaint: (tint = '#ffffff', r = 1) => T('g132_rustpaint', r, r, { tint, rough: 0.6, metal: 0.15 }), paint: (tint, r = 1) => T('rusty_paint', r, r, { tint, rough: 0.6 }),
+  rust: () => T('b84_rust', 1, 1, { rough: 0.9, metal: 0.2 }), rustpaint: (tint = '#8a8a84', r = 1) => rustPaint(tint, Math.round(r * 10)), paint: (tint = '#8a9a8a', r = 1) => rustPaint(tint, Math.round(r * 10) + 5, { amount: 1.2 }),
   wood: (r = 1, tint = '#ffffff') => T('wd_plank_b', r, r, { tint, rough: 0.75 }), oak: (r = 1) => T('laminate_oak', r, r, { rough: 0.5 }), walnut: (r = 1) => T('walnut_floor', r, r, { rough: 0.5 }), greywood: (r = 1) => T('g144_wood_grey', r, r, { rough: 0.9 }), cedar: (r = 1) => T('tr_cedar', r, r, { rough: 0.8 }), osb: (r = 1) => T('osb', r, r, { rough: 0.9 }), ply: (r = 1) => T('g141_plywood', r, r, { rough: 0.85 }),
   concrete: (r = 1) => T('g131_concrete', r, r, { rough: 0.95 }), conc2: (r = 1) => T('lot_concrete', r, r, { rough: 0.95 }), brick: (r = 1) => T('wall_red_brick', r, r, { rough: 0.9 }), tanbrick: (r = 1) => T('b84_tanbrick', r, r, { rough: 0.9 }), stone: (r = 1) => T('g132_stoneface', r, r, { rough: 0.95 }),
   black: () => T('b80_blackplastic', 1, 1, { rough: 0.5 }), blueplastic: () => T('b85_blueplastic', 1, 1, { rough: 0.5 }), leather: (tint = '#ffffff') => T('op_leather', 1, 1, { tint, rough: 0.55 }), vinyl: (tint = '#ffffff') => T('booth_vinyl', 1, 1, { tint, rough: 0.5 }),

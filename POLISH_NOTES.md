@@ -1282,3 +1282,12 @@ change the night look, which the owner asked to keep). Every photo sent so far i
 - **Fill: roofs + walls** (15) water tower, vents, dish, aerial, chimney, condenser, window AC, skylight, hatch, solar, gutter, caged ladder.
 - **Fill: rough ground** (17) boulders, rock pile, mossy rock, stump, logs, hedge, bush, dead tree, leaves, puddle, reeds, brambles, culvert.
 - **Fill: kitchens** (19) units with sink, cooker, fridge, hood, microwave, kettle, dish rack, diner prep table, fryer, range, pass, walk-in.
+
+## 149 — Blend textures, don't repeat them (owner's standing note)
+- Textures may be reshaded, colour-matched, filtered, cut up and recombined. Parts next to each other should sit in one
+  palette, not clash. Never let one texture visibly repeat (the old ceiling problem).
+- Tools in `src/models/texmix.js`, on by default for every fill-set texture through `T()` in fill_kit:
+  - `noTile` shader: every repeat is shifted and flipped at random, with soft seams, a slow light/dark wash, and a gentle shared grade (saturation 0.9, contrast 0.94).
+  - `match: '#hex'` option: tints so the texture's average colour lands on a target, so wood, stone and tile in one piece agree.
+  - `patchwork()` / `rustPaint()`: a clean painted base with rust blotches cut out of `rusty_paint` and pasted three times (as is, upside down, half turned), faint run-stains, then one grade over it. It replaced the camo-repeat rusty paint everywhere in the fill sets.
+- The kitchen run is now wood cabinets, with the worktop and tiles colour-matched.
