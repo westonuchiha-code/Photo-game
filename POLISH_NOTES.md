@@ -1254,3 +1254,9 @@ CD shelf (our covers), boxed figures (our heroes), hiring poster (ours, adults o
 line), cheese-chicken shop front ("Milo's Melt"), grey facade with air-conditioners. Not placed.
 Still open from older notes, not in these batches: the orange full moon and the inspo7 lakeshore / snowy forest
 (sky ideas), and the face profile photos for the photo-faced character.
+
+## 147. The last unused older photos
+
+inspo6 orange full moon -> `g147_moon_orange` + `makeHarvestMoon` (props141); inspo7 foggy lakeshore and snowy pine
+forest -> `g147_lake_fog`, `g147_snow_forest` + `makeLakeFogBackdrop`, `makeSnowForestBackdrop`. Library only (they
+change the night look, which the owner asked to keep). Every photo sent so far is now used in the library.
